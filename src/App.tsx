@@ -1,4 +1,5 @@
 import React from "react";
+import { AuthProvider } from "./context/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./theme/useTheme";
 import { AppProvider } from "./hooks/useAppStore";
@@ -11,16 +12,18 @@ const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-     <ThemeProvider>
-      <AppProvider>
-        <SafeAreaProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootNavigator />
-          </GestureHandlerRootView>
-        </SafeAreaProvider>
-      </AppProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <AppProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <RootNavigator />
+              </GestureHandlerRootView>
+            </AppProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

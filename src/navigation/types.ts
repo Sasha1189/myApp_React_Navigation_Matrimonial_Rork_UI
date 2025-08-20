@@ -9,6 +9,10 @@ export type AuthStackParamList = {
   Landing: undefined;
   PhoneSignIn: undefined;
   Splash: undefined;
+  OTPVerify: {
+    phone: string;
+    verificationId: string;
+  };
 };
 
 export type AppStackParamList = {

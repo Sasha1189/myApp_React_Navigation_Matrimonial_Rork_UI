@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,12 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { Send } from 'lucide-react-native';
+} from "react-native";
+import { Send } from "lucide-react-native";
 import { useRoute } from "@react-navigation/native";
-// import { useLocalSearchParams } from 'expo-router';
-import { theme } from '../../../constants/theme';
-import { useMatches } from '../../../hooks/useAppStore';
+import { theme } from "../../../constants/theme";
+import { useMatches } from "../../../hooks/useAppStore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface ChatMessage {
   id: string;
@@ -27,48 +27,52 @@ export default function ChatScreen() {
   const { matchId } = route.params as { matchId: string };
   // const { matchId } = useLocalSearchParams();
   const matches = useMatches();
-  const match = matches.find(m => m.id === matchId);
-  
+  const match = matches.find((m) => m.id === matchId);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: '1',
-      text: 'Hey! How are you?',
+      id: "1",
+      text: "Hey! How are you?",
       isSent: false,
       timestamp: new Date(Date.now() - 1000 * 60 * 5),
     },
     {
-      id: '2',
+      id: "2",
       text: "I'm great! How about you?",
       isSent: true,
       timestamp: new Date(Date.now() - 1000 * 60 * 3),
     },
   ]);
-  
-  const [inputText, setInputText] = useState('');
+
+  const [inputText, setInputText] = useState("");
 
   const sendMessage = () => {
     if (!inputText.trim()) return;
-    
+
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       text: inputText,
       isSent: true,
       timestamp: new Date(),
     };
-    
+
     setMessages([newMessage, ...messages]);
-    setInputText('');
+    setInputText("");
   };
 
   const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <View style={[
-      styles.messageContainer,
-      item.isSent ? styles.sentMessage : styles.receivedMessage,
-    ]}>
-      <Text style={[
-        styles.messageText,
-        item.isSent ? styles.sentMessageText : styles.receivedMessageText,
-      ]}>
+    <View
+      style={[
+        styles.messageContainer,
+        item.isSent ? styles.sentMessage : styles.receivedMessage,
+      ]}
+    >
+      <Text
+        style={[
+          styles.messageText,
+          item.isSent ? styles.sentMessageText : styles.receivedMessageText,
+        ]}
+      >
         {item.text}
       </Text>
     </View>
@@ -83,40 +87,44 @@ export default function ChatScreen() {
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMessage}
-        inverted
-        contentContainerStyle={styles.messagesContainer}
-      />
-      
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={inputText}
-          onChangeText={setInputText}
-          placeholder="Type a message..."
-          placeholderTextColor={theme.colors.textLight}
-          multiline
-          maxLength={500}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.kebcontainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessage}
+          inverted
+          contentContainerStyle={styles.messagesContainer}
         />
-        <TouchableOpacity 
-          style={styles.sendButton}
-          onPress={sendMessage}
-          disabled={!inputText.trim()}
-        >
-          <Send 
-            size={20} 
-            color={inputText.trim() ? theme.colors.primary : theme.colors.textLight} 
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="Type a message..."
+            placeholderTextColor={theme.colors.textLight}
+            multiline
+            maxLength={500}
           />
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={sendMessage}
+            disabled={!inputText.trim()}
+          >
+            <Send
+              size={20}
+              color={
+                inputText.trim() ? theme.colors.primary : theme.colors.textLight
+              }
+            />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -125,37 +133,41 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  kebcontainer: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   messagesContainer: {
     padding: theme.spacing.md,
   },
   messageContainer: {
-    maxWidth: '75%',
+    maxWidth: "75%",
     marginVertical: theme.spacing.xs,
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
   },
   sentMessage: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     backgroundColor: theme.colors.primary,
   },
   receivedMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'white',
+    alignSelf: "flex-start",
+    backgroundColor: "white",
   },
   messageText: {
     fontSize: theme.fontSize.md,
   },
   sentMessageText: {
-    color: 'white',
+    color: "white",
   },
   receivedMessageText: {
     color: theme.colors.text,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     padding: theme.spacing.md,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
@@ -174,7 +186,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
