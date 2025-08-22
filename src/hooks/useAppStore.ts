@@ -2,8 +2,8 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useMemo } from 'react';
 import { Profile, Match } from '../types/profile';
-import { mockProfiles } from '../api/mocks/profiles';
-import { mockMatches } from '../api/mocks/matches';
+import { mockProfiles } from '../mocks/profiles';
+import { mockMatches } from '../mocks/matches';
 
 interface AppState {
   currentProfileIndex: number;

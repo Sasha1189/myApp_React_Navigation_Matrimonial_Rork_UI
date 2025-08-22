@@ -1,4 +1,4 @@
-import { Match } from '../../types/profile';
+import { Match } from '../types/profile';
 
 export const mockMatches: Match[] = [
   {

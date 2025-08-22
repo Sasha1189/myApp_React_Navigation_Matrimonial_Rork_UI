@@ -1,38 +1,6 @@
-// import { useMutation, useQuery } from '@tanstack/react-query';
-// import { client } from '../client';
-// import { endpoints } from '../endpoints';
-
-// export const useProfile = (userId: string) => {
-//   return useQuery(['profile', userId], async () => {
-//     const response = await client.get(endpoints.user.profile);
-//     return response.data;
-//   });
-// };
-
-// export const useUpdateProfile = () => {
-//   return useMutation(async (data: any) => {
-//     const response = await client.put(endpoints.user.updateProfile, data);
-//     return response.data;
-//   });
-// };
-
-// export const useUserPhotos = (userId: string) => {
-//   return useQuery(['photos', userId], async () => {
-//     const response = await client.get(endpoints.user.photos);
-//     return response.data;
-//   });
-// };
-
-// export const useUserSettings = () => {
-//   return useQuery(['settings'], async () => {
-//     const response = await client.get(endpoints.user.settings);
-//     return response.data;
-//   });
-// };
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService } from '../../services/profile.service';
-import { Profile } from '../../types/profile';
+import { Profile } from '../../../types/profile';
 
 export const useProfiles = (page?: string) => {
   return useQuery({
@@ -46,6 +14,20 @@ export const useProfile = (id: string) => {
     queryKey: ['profile', id],
     queryFn: () => profileService.getProfile(id),
     enabled: !!id,
+  });
+};
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    // data must include the id + update fields
+    mutationFn: ({ id, data }: { id: string; data: Partial<Profile> }) =>
+      profileService.updateProfile(id, data),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
   });
 };
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { AuthProvider } from "./context/AuthContext";
+import { ProfileProvider } from "./context/ProfileContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./theme/useTheme";
 import { AppProvider } from "./hooks/useAppStore";
@@ -14,15 +15,17 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AppProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <RootNavigator />
-              </GestureHandlerRootView>
-            </AppProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
+        <ProfileProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <AppProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <RootNavigator />
+                </GestureHandlerRootView>
+              </AppProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </ProfileProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
