@@ -15,7 +15,7 @@ const FamilyDetailsSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="Family Details" icon={Users}>
+  <FormSection title="Family Details" icon={Users} editable={editable}>
     <InputField
       label="Father's Occupation"
       value={formData.fatherOccupation || ""}

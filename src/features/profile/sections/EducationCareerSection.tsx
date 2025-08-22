@@ -24,7 +24,11 @@ const EducationCareerSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="Education & Career" icon={GraduationCap}>
+  <FormSection
+    title="Education & Career"
+    icon={GraduationCap}
+    editable={editable}
+  >
     <PickerField
       label="Highest Education"
       value={formData.highestQualification || ""}
@@ -41,7 +45,7 @@ const EducationCareerSection: React.FC<Props> = ({
       editable={editable}
       icon={GraduationCap}
     />
-    //currentOccupation
+    {/* currentOccupation */}
     <PickerField
       label="Current Occupation"
       value={formData.currentOccupation || ""}
@@ -50,7 +54,7 @@ const EducationCareerSection: React.FC<Props> = ({
       editable={editable}
       icon={Briefcase}
     />
-    //industry
+    {/* industry */}
     <PickerField
       label="Industry"
       value={formData.industry || ""}
@@ -59,7 +63,7 @@ const EducationCareerSection: React.FC<Props> = ({
       editable={editable}
       icon={Briefcase}
     />
-    //jobTitle
+    {/* jobTitle */}
     <InputField
       label="Job Title"
       value={formData.jobTitle || ""}
@@ -76,7 +80,7 @@ const EducationCareerSection: React.FC<Props> = ({
       icon={Building2}
       editable={editable}
     />
-    //workLocation
+    {/* workLocation */}
     <InputField
       label="Work Location"
       value={formData.workLocation || ""}
@@ -85,7 +89,7 @@ const EducationCareerSection: React.FC<Props> = ({
       icon={Building2}
       editable={editable}
     />
-    //annualIncome
+    {/* annualIncome */}
     <PickerField
       label="Annual Income"
       value={formData.annualIncome || ""}

@@ -15,7 +15,7 @@ const AboutMeSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="About Me" icon={FileText}>
+  <FormSection title="About Me" icon={FileText} editable={editable}>
     <InputField
       label="Short Bio"
       value={formData.shortBio || ""}

@@ -21,7 +21,7 @@ const ContactDetailsSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="Contact Details" icon={Phone}>
+  <FormSection title="Contact Details" icon={Phone} editable={editable}>
     <InputField
       label="Mobile Number"
       value={formData.mobileNumber || ""}

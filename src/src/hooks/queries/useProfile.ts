@@ -25,8 +25,12 @@ export const useUpdateProfile = () => {
     mutationFn: ({ id, data }: { id: string; data: Partial<Profile> }) =>
       profileService.updateProfile(id, data),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    // On success, invalidate the specific profile and the list of profiles
+    onSuccess: (_data, variables) => {
+      if (variables && (variables as any).id) {
+        queryClient.invalidateQueries({ queryKey: ['profile', (variables as any).id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['profiles'] });
     },
   });
 };

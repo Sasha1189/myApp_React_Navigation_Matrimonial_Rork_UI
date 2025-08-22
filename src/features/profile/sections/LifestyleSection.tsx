@@ -24,7 +24,7 @@ const LifestyleSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="Lifestyle" icon={Coffee}>
+  <FormSection title="Lifestyle" icon={Coffee} editable={editable}>
     <PickerField
       label="Diet Preferences"
       value={formData.dietPreferences || ""}

@@ -71,7 +71,7 @@ export default function EditProfileScreen() {
   const navigation = useTabNavigation();
   const { profile } = useProfileContext();
 
-  const { mutate: updateProfile } = useUpdateProfile();
+  const updateProfileMutation = useUpdateProfile();
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -153,11 +153,14 @@ export default function EditProfileScreen() {
       return;
     }
     try {
-      // Gather only changed fields
+      // Gather only changed fields. Include explicit falsy values ("" or 0) when they differ from original.
       const changedFields: any = {};
       (Object.keys(formData) as (keyof Profile)[]).forEach((key) => {
-        if (formData[key] && formData[key] !== profile[key]) {
-          changedFields[key] = formData[key];
+        const newVal = formData[key];
+        const oldVal = (profile as any)[key];
+        const changed = !(Object.is(newVal, oldVal));
+        if (changed) {
+          changedFields[key] = newVal;
         }
       });
 
@@ -174,14 +177,16 @@ export default function EditProfileScreen() {
 
       console.log("API about to hit");
 
-      await updateProfile({ id: profile.id, data: changedFields });
+  // use mutateAsync so we can await completion and catch server errors
+  await updateProfileMutation.mutateAsync({ id: profile.id, data: changedFields });
       Alert.alert(
         "Profile Updated",
         "Your profile has been successfully updated."
       );
     } catch (error: any) {
-      console.error("Submit error:", error);
-      Alert.alert("Error", error?.message || "Something went wrong.");
+  console.error("Submit error:", error);
+  // If React Query's ApiError or other error, show message
+  Alert.alert("Error", error?.message || (error?.response?.message ?? "Something went wrong."));
     } finally {
       setLoading(false);
       setIsEditing(false);

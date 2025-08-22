@@ -23,7 +23,11 @@ const PartnerPreferencesSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="Partner Preferences" icon={HeartHandshake}>
+  <FormSection
+    title="Partner Preferences"
+    icon={HeartHandshake}
+    editable={editable}
+  >
     <PickerField
       label="Preferred Marital Status"
       value={formData.preferredMaritalStatus || ""}

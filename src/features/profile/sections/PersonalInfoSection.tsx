@@ -39,7 +39,11 @@ const PersonalInfoSection: React.FC<Props> = ({
   updateField,
   editable = true,
 }) => (
-  <FormSection title="Personal & Birth Information" icon={User}>
+  <FormSection
+    title="Personal & Birth Information"
+    icon={User}
+    editable={editable}
+  >
     <InputField
       label="Full Name"
       value={formData.fullName || ""}
