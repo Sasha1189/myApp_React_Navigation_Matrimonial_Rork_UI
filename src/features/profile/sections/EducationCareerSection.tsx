@@ -3,34 +3,96 @@ import FormSection from "../../../components/form/FormSection";
 import InputField from "../../../components/form/InputField";
 import { GraduationCap, Briefcase, Building2 } from "lucide-react-native";
 import { Profile } from "../../../types/profile";
+import { Picker } from "@react-native-picker/picker";
+import PickerField from "src/components/form/PickerField";
+import {
+  annualIncomeOptions,
+  highestQualification,
+  industryOptions,
+  occupationOptions,
+  studyFieldOptions,
+} from "src/constants/profileOptions";
 
 interface Props {
   formData: Partial<Profile>;
   updateField: (field: keyof Profile, value: any) => void;
+  editable?: boolean;
 }
 
-const EducationCareerSection: React.FC<Props> = ({ formData, updateField }) => (
+const EducationCareerSection: React.FC<Props> = ({
+  formData,
+  updateField,
+  editable = true,
+}) => (
   <FormSection title="Education & Career" icon={GraduationCap}>
-    <InputField
-      label="Education"
-      value={formData.education || ""}
-      onChangeText={(t) => updateField("education", t)}
-      placeholder="Enter your highest education"
+    <PickerField
+      label="Highest Education"
+      value={formData.highestQualification || ""}
+      options={highestQualification || []}
+      onSelect={(v) => updateField("highestQualification", v)}
+      editable={editable}
       icon={GraduationCap}
     />
-    <InputField
-      label="Occupation"
-      value={formData.occupation || ""}
-      onChangeText={(t) => updateField("occupation", t)}
-      placeholder="Enter your occupation"
+    <PickerField
+      label="Field of Study"
+      value={formData.fieldOfStudy || ""}
+      options={studyFieldOptions || []}
+      onSelect={(v) => updateField("fieldOfStudy", v)}
+      editable={editable}
+      icon={GraduationCap}
+    />
+    //currentOccupation
+    <PickerField
+      label="Current Occupation"
+      value={formData.currentOccupation || ""}
+      options={occupationOptions || []}
+      onSelect={(v) => updateField("currentOccupation", v)}
+      editable={editable}
       icon={Briefcase}
     />
+    //industry
+    <PickerField
+      label="Industry"
+      value={formData.industry || ""}
+      options={industryOptions || []}
+      onSelect={(v) => updateField("industry", v)}
+      editable={editable}
+      icon={Briefcase}
+    />
+    //jobTitle
     <InputField
-      label="Company"
-      value={formData.company || ""}
-      onChangeText={(t) => updateField("company", t)}
+      label="Job Title"
+      value={formData.jobTitle || ""}
+      onChangeText={(t) => updateField("jobTitle", t)}
+      placeholder="Enter your job title"
+      icon={Briefcase}
+      editable={editable}
+    />
+    <InputField
+      label="Company Name"
+      value={formData.companyName || ""}
+      onChangeText={(t) => updateField("companyName", t)}
       placeholder="Enter your company name"
       icon={Building2}
+      editable={editable}
+    />
+    //workLocation
+    <InputField
+      label="Work Location"
+      value={formData.workLocation || ""}
+      onChangeText={(t) => updateField("workLocation", t)}
+      placeholder="Enter your work location"
+      icon={Building2}
+      editable={editable}
+    />
+    //annualIncome
+    <PickerField
+      label="Annual Income"
+      value={formData.annualIncome || ""}
+      options={annualIncomeOptions || []}
+      onSelect={(v) => updateField("annualIncome", v)}
+      editable={editable}
+      icon={Briefcase}
     />
   </FormSection>
 );

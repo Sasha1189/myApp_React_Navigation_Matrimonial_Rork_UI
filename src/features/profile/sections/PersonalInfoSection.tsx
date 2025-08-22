@@ -4,6 +4,7 @@ import InputField from "../../../components/form/InputField";
 import PickerField from "../../../components/form/PickerField";
 import {
   User,
+  Calendar,
   UserCheck,
   Timer,
   MapPin,
@@ -30,9 +31,14 @@ import {
 interface Props {
   formData: Partial<Profile>;
   updateField: (field: keyof Profile, value: any) => void;
+  editable?: boolean;
 }
 
-const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
+const PersonalInfoSection: React.FC<Props> = ({
+  formData,
+  updateField,
+  editable = true,
+}) => (
   <FormSection title="Personal & Birth Information" icon={User}>
     <InputField
       label="Full Name"
@@ -40,13 +46,23 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       onChangeText={(t) => updateField("fullName", t)}
       placeholder="Enter your full name"
       icon={UserCheck}
+      editable={editable}
     />
+    {/* <InputField
+      label="Date of Birth"
+      value={formData.dateOfBirth}
+      onChangeText={(t) => updateField("dateOfBirth", t)}
+      placeholder="Enter your date of birth"
+      icon={Calendar}
+      editable={editable}
+    /> */}
     <InputField
       label="Time of Birth"
       value={formData.timeOfBirth || ""}
       onChangeText={(t) => updateField("timeOfBirth", t)}
       placeholder="e.g., 10:30 AM"
       icon={Timer}
+      editable={editable}
     />
     <InputField
       label="Place of Birth"
@@ -54,12 +70,14 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       onChangeText={(t) => updateField("placeOfBirth", t)}
       placeholder="Enter place of birth"
       icon={MapPin}
+      editable={editable}
     />
     <PickerField
       label="Gender"
       value={formData.gender || ""}
       options={genderOptions}
       onSelect={(v) => updateField("gender", v)}
+      editable={editable}
       icon={User}
     />
     <PickerField
@@ -67,6 +85,7 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       value={formData.maritalStatus || ""}
       options={maritalStatusOptions}
       onSelect={(v) => updateField("maritalStatus", v)}
+      editable={editable}
       icon={HeartHandshake}
     />
     <InputField
@@ -75,6 +94,7 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       onChangeText={(t) => updateField("height", t)}
       placeholder="e.g., 5'6''"
       icon={Ruler}
+      editable={editable}
     />
     <InputField
       label="Weight"
@@ -82,12 +102,14 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       onChangeText={(t) => updateField("weight", t)}
       placeholder="e.g., 65 kg"
       icon={Scale}
+      editable={editable}
     />
     <PickerField
       label="Body Type"
       value={formData.bodyType || ""}
       options={bodyTypeOptions}
       onSelect={(v) => updateField("bodyType", v)}
+      editable={editable}
       icon={Activity}
     />
     <PickerField
@@ -95,6 +117,7 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       value={formData.bloodGroup || ""}
       options={bloodGroupOptions}
       onSelect={(v) => updateField("bloodGroup", v)}
+      editable={editable}
       icon={Droplets}
     />
     <PickerField
@@ -102,6 +125,7 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       value={formData.manglikStatus || ""}
       options={manglikOptions}
       onSelect={(v) => updateField("manglikStatus", v)}
+      editable={editable}
       icon={Sparkles}
     />
     <PickerField
@@ -109,6 +133,7 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       value={formData.rashi || ""}
       options={rashiOptions}
       onSelect={(v) => updateField("rashi", v)}
+      editable={editable}
       icon={Star}
     />
     <PickerField
@@ -116,6 +141,7 @@ const PersonalInfoSection: React.FC<Props> = ({ formData, updateField }) => (
       value={formData.horoscopeRequired || ""}
       options={horoscopeOptions}
       onSelect={(v) => updateField("horoscopeRequired", v)}
+      editable={editable}
       icon={Zap}
     />
   </FormSection>

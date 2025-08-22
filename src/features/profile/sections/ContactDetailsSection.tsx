@@ -1,15 +1,26 @@
 import React from "react";
 import FormSection from "../../../components/form/FormSection";
 import InputField from "../../../components/form/InputField";
-import { Phone, Mail, MapPin } from "lucide-react-native";
+import { Phone, MapPin } from "lucide-react-native";
 import { Profile } from "../../../types/profile";
+import PickerField from "src/components/form/PickerField";
+import {
+  districtOptions,
+  preferredContactOptions,
+  profileCreatedByOptions,
+} from "src/constants/profileOptions";
 
 interface Props {
   formData: Partial<Profile>;
   updateField: (field: keyof Profile, value: any) => void;
+  editable?: boolean;
 }
 
-const ContactDetailsSection: React.FC<Props> = ({ formData, updateField }) => (
+const ContactDetailsSection: React.FC<Props> = ({
+  formData,
+  updateField,
+  editable = true,
+}) => (
   <FormSection title="Contact Details" icon={Phone}>
     <InputField
       label="Mobile Number"
@@ -18,22 +29,39 @@ const ContactDetailsSection: React.FC<Props> = ({ formData, updateField }) => (
       placeholder="Enter your mobile number"
       keyboardType="phone-pad"
       icon={Phone}
+      editable={editable}
     />
-    <InputField
-      label="Email Address"
-      value={formData.emailAddress || ""}
-      onChangeText={(t) => updateField("emailAddress", t)}
-      placeholder="Enter your email"
-      keyboardType="email-address"
-      icon={Mail}
-    />
-    <InputField
-      label="Address"
-      value={formData.address || ""}
-      onChangeText={(t) => updateField("address", t)}
-      placeholder="Enter your address"
-      multiline
+    <PickerField
+      label="Current City"
+      value={formData.currentCity || ""}
+      options={districtOptions}
+      onSelect={(v) => updateField("currentCity", v)}
+      editable={editable}
       icon={MapPin}
+    />
+    <PickerField
+      label="HomeTown"
+      value={formData.nativePlace || ""}
+      options={districtOptions}
+      onSelect={(v) => updateField("nativePlace", v)}
+      editable={editable}
+      icon={MapPin}
+    />
+    <PickerField
+      label="Preferred Contact"
+      value={formData.preferredContact || ""}
+      options={preferredContactOptions}
+      onSelect={(v) => updateField("preferredContact", v)}
+      editable={editable}
+      icon={Phone}
+    />
+
+    <PickerField
+      label="Profile Created By"
+      value={formData.profileCreatedBy || ""}
+      options={profileCreatedByOptions}
+      onSelect={(v) => updateField("profileCreatedBy", v)}
+      icon={Phone}
     />
   </FormSection>
 );

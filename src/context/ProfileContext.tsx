@@ -59,6 +59,7 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   const [profile, setProfile] = useState<Partial<Profile>>({
+    //Personal Section
     fullName: "",
     dateOfBirth: new Date(),
     timeOfBirth: "",
@@ -69,32 +70,32 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
     weight: "",
     bodyType: "Average",
     bloodGroup: "O+",
-
     manglikStatus: "Don't Know",
     rashi: "Aries",
     horoscopeRequired: "Optional",
+    //Bio section
     shortBio: "",
-    lifeGoals: "",
+    aspirations: "",
     beliefsValues: "",
     strengths: "",
     likesDislikesText: "",
     socialMedia: "",
+    //Contact Details
     currentCity: "",
-
     nativePlace: "",
     mobileNumber: "",
-    emailAddress: "",
     preferredContact: "Phone",
     profileCreatedBy: "Self",
+    //Education & Career
     highestQualification: "Bachelor's",
     fieldOfStudy: "Engineering",
     currentOccupation: "Working",
     industry: "IT",
     jobTitle: "",
-
     companyName: "",
     workLocation: "",
     annualIncome: "₹5L+",
+    //Family Details
     fatherOccupation: "",
     motherOccupation: "",
     numberOfBrothers: 0,
@@ -102,18 +103,17 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
     siblingsDetails: "",
     familyType: "Nuclear",
     familyValues: "Modern",
-
+    //Lifestyle and Habits
     dietPreferences: "Vegetarian",
     smokingHabit: "No",
     drinkingHabit: "No",
     exerciseRoutine: "Sometimes",
     fitnessLevel: "Average",
     hobbies: [],
-    personalityType: "Ambivert",
     beliefSystem: "Open-minded",
     preferredAgeRange: { min: 25, max: 35 },
     preferredHeightRange: { min: "5'0''", max: "6'0''" },
-
+    // Partner Preferences
     preferredMaritalStatus: "Never Married",
     manglikPreference: "Don't Know",
     preferredEducation: "Graduate",

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ChevronDown } from "lucide-react-native";
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { theme } from "../../constants/theme";
 
 interface PickerFieldProps {
@@ -9,6 +9,7 @@ interface PickerFieldProps {
   options: string[];
   onSelect: (value: string) => void;
   icon?: React.ComponentType<any>;
+  editable?: boolean;
 }
 
 const PickerField: React.FC<PickerFieldProps> = ({
@@ -17,40 +18,30 @@ const PickerField: React.FC<PickerFieldProps> = ({
   options,
   onSelect,
   icon: Icon,
+  editable = true,
 }) => {
-  const [showOptions, setShowOptions] = useState(false);
-
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
         {Icon && <Icon size={16} color={theme.colors.primary} />}
         <Text style={styles.label}>{label}</Text>
       </View>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setShowOptions(!showOptions)}
+
+      <View
+        style={[styles.pickerContainer, !editable && { opacity: 0.6 }]}
+        pointerEvents={editable ? "auto" : "none"}
       >
-        <Text style={[styles.text, !value && styles.placeholder]}>
-          {value || `Select ${label}`}
-        </Text>
-        <ChevronDown size={20} color={theme.colors.textLight} />
-      </TouchableOpacity>
-      {showOptions && (
-        <View style={styles.options}>
+        <Picker
+          selectedValue={value}
+          onValueChange={(itemValue) => onSelect(String(itemValue))}
+          mode="dropdown"
+        >
+          <Picker.Item label={`Select ${label}`} value="" />
           {options.map((option, i) => (
-            <TouchableOpacity
-              key={i}
-              style={styles.optionItem}
-              onPress={() => {
-                onSelect(option);
-                setShowOptions(false);
-              }}
-            >
-              <Text style={styles.optionText}>{option}</Text>
-            </TouchableOpacity>
+            <Picker.Item key={i} label={option} value={option} />
           ))}
-        </View>
-      )}
+        </Picker>
+      </View>
     </View>
   );
 };
@@ -77,6 +68,13 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
     backgroundColor: "white",
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: "white",
+    marginBottom: theme.spacing.sm,
   },
   text: { fontSize: theme.fontSize.md, color: theme.colors.text },
   placeholder: { color: theme.colors.textLight },

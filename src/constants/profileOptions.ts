@@ -20,7 +20,7 @@
   export const horoscopeOptions = ["Yes", "No", "Optional"];
   export const contactOptions = ["WhatsApp", "Phone", "Email", "Chat only"];
   export const createdByOptions = ["Self", "Father", "Mother", "Sibling"];
-  export const qualificationOptions = [
+  export const highestQualification = [
     "10th",
     "12th",
     "Diploma",
@@ -63,3 +63,59 @@
   export const fitnessOptions = ["Fit", "Average", "Overweight", "Athletic"];
   export const personalityOptions = ["Introvert", "Extrovert", "Ambivert"];
   export const beliefOptions = ["Spiritual", "Open-minded"];
+  export const districtOptions = [
+    "Ahmednagar",
+    "Akola",
+    "Amravati",
+    "Aurangabad",
+    "Beed",
+    "Bhandara",
+    "Buldhana",
+    "Chandrapur",
+    "Dhule",
+    "Gadchiroli",
+    "Gondia",
+    "Hingoli",
+    "Jalgaon",
+    "Jalna",
+    "Kolhapur",
+    "Latur",
+    "Mumbai City",
+    "Mumbai Suburban",
+    "Nagpur",
+    "Nanded",
+    "Nandurbar",
+    "Nashik",
+    "Osmanabad",
+    "Palghar",
+    "Parbhani",
+    "Pune",
+    "Raigad",
+    "Ratnagiri",
+    "Sangli",
+    "Satara",
+    "Sindhudurg",
+    "Solapur",
+    "Thane",
+    "Wardha",
+    "Washim",
+    "Yavatmal",
+];
+  export const preferredContactOptions = ["WhatsApp", "Phone", "Email", "Chat only"];
+  export const profileCreatedByOptions = ["Self", "Father", "Mother", "Sibling"];
+  export const annualIncomeOptions = ["₹3L+", "₹5L+", "₹10L+", "No preference"];
+  export const hobbyOptions = [
+  "Reading",
+  "Traveling",
+  "Cooking",
+  "Sports",
+  "Music",
+  "Art",
+  "Gaming",
+  "Photography",
+  "Gardening",
+  "Fitness",
+  "Dancing",
+  "Writing",
+];
+  export const livingWithParentsOptions = ["Okay", "Not okay", "Prefer separate"];

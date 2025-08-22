@@ -26,7 +26,7 @@ export interface Profile {
   
   // About Me
   shortBio: string;
-  lifeGoals?: string;
+  aspirations?: string;
   beliefsValues?: string;
   strengths?: string;
   likesDislikesText?: string;
