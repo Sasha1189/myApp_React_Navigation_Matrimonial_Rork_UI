@@ -25,7 +25,10 @@ export const profileService = {
   },
 
   async updateProfile(id: string, data: ProfileUpdateData): Promise<Profile> {
-    return api.put<Profile>(`/profiles/${id}`, data);
+    // Backend expects an object containing `uid` and `gender` in the body
+    // Route on server: app.use("/api/v1/profiles/update-profile", authToken, updateOrCreateProfile);
+    // Send POST to /profiles/update-profile with { uid, ...data }
+    return api.post<Profile>(`/profiles/update-profile`, { uid: id, ...data });
   },
 
   async likeProfile(id: string): Promise<{ isMatch: boolean }> {

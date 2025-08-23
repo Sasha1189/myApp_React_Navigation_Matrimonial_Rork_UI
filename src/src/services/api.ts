@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from "firebase/auth";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.yuvanetwork.com';
+const API_URL = "http://192.168.1.104:8000/api/v1" ;
 
 interface ApiResponse<T> {
   data: T;
@@ -15,13 +16,23 @@ class ApiError extends Error {
   }
 }
 
-async function getAuthToken() {
-  return await AsyncStorage.getItem('auth_token');
+// async function getAuthToken() {
+//   console.log("Fetching auth token...");
+//   return await AsyncStorage.getItem('auth_token');
+// }
+ async function getAuthToken() {
+   const user = getAuth().currentUser;
+   
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+    return user.getIdToken();
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json();
-  
+  console.log("Response data:", data);
+
   if (!response.ok) {
     throw new ApiError(response.status, data.message || 'An error occurred');
   }
@@ -30,8 +41,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const api = {
+ 
   async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-    const token = await getAuthToken();
+    const token = await  getAuthToken();
     const url = new URL(`${API_URL}${endpoint}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {

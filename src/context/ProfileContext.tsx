@@ -58,8 +58,10 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
   const uid = user?.uid;
   const [loading, setLoading] = useState(true);
 
+  // Initialize profile with empty id; we'll sync UID once auth is available
   const [profile, setProfile] = useState<Partial<Profile>>({
     //Personal Section
+    id: "",
     fullName: "",
     dateOfBirth: new Date(),
     timeOfBirth: "",
@@ -139,6 +141,23 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
   //   };
 
   const profileLoadedOnce = useRef(false);
+
+  // Sync profile.id with authenticated user's uid once it becomes available.
+  useEffect(() => {
+    // If user is logged in and profile id is missing or different, set it.
+    setProfile((prev) => {
+      const prevId = (prev as any).id;
+      if (uid && prevId !== uid) {
+        return { ...prev, id: uid };
+      }
+
+      // If user logged out, clear id
+      if (!uid && prevId) {
+        return { ...prev, id: "" };
+      }
+      return prev;
+    });
+  }, [uid]);
 
   // Example: trigger loadProfile once when user logs in
   //   useEffect(() => {

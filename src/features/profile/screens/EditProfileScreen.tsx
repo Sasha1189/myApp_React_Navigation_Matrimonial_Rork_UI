@@ -49,7 +49,7 @@ import {
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../../../constants/theme";
-import { Profile } from "../../../types/profile";
+import type { Profile } from "../../../types/profile";
 import CustomHeader from "../../../components/CustomeHeader";
 import { useTabNavigation } from "../../../navigation/hooks";
 import { useProfileContext } from "../../../context/ProfileContext";
@@ -75,7 +75,6 @@ export default function EditProfileScreen() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-
   // Initialize with profile
   const [formData, setFormData] = useState<Partial<Profile>>(profile || {});
 
@@ -129,7 +128,6 @@ export default function EditProfileScreen() {
         !formData[key] ||
         (typeof formData[key] === "string" && formData[key].trim() === "")
     );
-
     if (emptyRequiredFields.length) {
       Alert.alert(
         "Incomplete Form",
@@ -143,6 +141,7 @@ export default function EditProfileScreen() {
   };
 
   const handleSave = async () => {
+    console.log(formData.fullName);
     if (!isEditing) {
       setIsEditing(true);
       return;
@@ -153,12 +152,11 @@ export default function EditProfileScreen() {
       return;
     }
     try {
-      // Gather only changed fields. Include explicit falsy values ("" or 0) when they differ from original.
       const changedFields: any = {};
       (Object.keys(formData) as (keyof Profile)[]).forEach((key) => {
         const newVal = formData[key];
         const oldVal = (profile as any)[key];
-        const changed = !(Object.is(newVal, oldVal));
+        const changed = !Object.is(newVal, oldVal);
         if (changed) {
           changedFields[key] = newVal;
         }
@@ -174,19 +172,28 @@ export default function EditProfileScreen() {
         Alert.alert("Error", "Profile ID is missing.");
         return;
       }
-
       console.log("API about to hit");
+      // Ensure gender is always included because server requires it
+      if (changedFields.gender === undefined && (profile as any).gender !== undefined) {
+        changedFields.gender = (profile as any).gender;
+      }
 
-  // use mutateAsync so we can await completion and catch server errors
-  await updateProfileMutation.mutateAsync({ id: profile.id, data: changedFields });
+      // use mutateAsync so we can await completion and catch server errors
+      await updateProfileMutation.mutateAsync({
+        id: profile.id,
+        data: changedFields,
+      });
       Alert.alert(
         "Profile Updated",
         "Your profile has been successfully updated."
       );
     } catch (error: any) {
-  console.error("Submit error:", error);
-  // If React Query's ApiError or other error, show message
-  Alert.alert("Error", error?.message || (error?.response?.message ?? "Something went wrong."));
+      console.error("Submit error:", error);
+      // If React Query's ApiError or other error, show message
+      Alert.alert(
+        "Error",
+        error?.message || (error?.response?.message ?? "Something went wrong.")
+      );
     } finally {
       setLoading(false);
       setIsEditing(false);
