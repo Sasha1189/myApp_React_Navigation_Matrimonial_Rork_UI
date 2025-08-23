@@ -17,18 +17,27 @@ interface ProfileUpdateData {
 export const profileService = {
   async getProfiles(page?: string): Promise<ProfileResponse> {
     const params = page ? { page } : undefined;
-    return api.get<ProfileResponse>('/profiles', params);
+  const res = await api.get<any>('/profiles', params);
+  // server may return { status, profiles, ... }
+  return res?.profiles ? res : { profiles: res };
   },
 
-  async getProfile(id: string): Promise<Profile> {
-    return api.get<Profile>(`/profiles/${id}`);
+  async getProfile(id: string, gender?: string): Promise<Profile> {
+    const params: Record<string, string> = { uid: id };
+    if (gender) params.gender = gender;
+    // Server route: GET /api/v1/profiles/get-profile?uid=...&gender=...
+    const res = await api.get<any>(`/profiles/get-profile`, params);
+    // server responds { status, profile }
+    return res?.profile ? res.profile : res;
   },
 
   async updateProfile(id: string, data: ProfileUpdateData): Promise<Profile> {
     // Backend expects an object containing `uid` and `gender` in the body
     // Route on server: app.use("/api/v1/profiles/update-profile", authToken, updateOrCreateProfile);
     // Send POST to /profiles/update-profile with { uid, ...data }
-    return api.post<Profile>(`/profiles/update-profile`, { uid: id, ...data });
+    const res = await api.post<any>(`/profiles/update-profile`, { uid: id, ...data });
+    // server responds { status, profile }
+    return res?.profile ? res.profile : res;
   },
 
   async likeProfile(id: string): Promise<{ isMatch: boolean }> {

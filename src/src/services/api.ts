@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from "firebase/auth";
 
-const API_URL = "http://192.168.1.104:8000/api/v1" ;
+const API_URL = "http://192.168.128.147:8000/api/v1" ;
 
 interface ApiResponse<T> {
   data: T;
@@ -31,7 +31,6 @@ class ApiError extends Error {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   const data = await response.json();
-  console.log("Response data:", data);
 
   if (!response.ok) {
     throw new ApiError(response.status, data.message || 'An error occurred');

@@ -61,6 +61,7 @@ const ContactDetailsSection: React.FC<Props> = ({
       value={formData.profileCreatedBy || ""}
       options={profileCreatedByOptions}
       onSelect={(v) => updateField("profileCreatedBy", v)}
+      editable={editable}
       icon={Phone}
     />
   </FormSection>

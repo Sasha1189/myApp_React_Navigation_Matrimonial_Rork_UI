@@ -8,6 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { profileService } from "../src/services/profile.service";
 // import api from "../utils/apiClient";
 import { useAuth } from "./AuthContext";
 import { Profile } from "../types/profile";
@@ -34,6 +35,8 @@ import { Profile } from "../types/profile";
 interface ProfileContextType {
   profile: Partial<Profile>;
   loading: boolean;
+  reloadProfile?: () => Promise<void>;
+  updateProfile?: (fields: Partial<Profile>) => void;
   // reloadProfile: () => Promise<void>;
   // updateProfile?: (fieldsToUpdate: Partial<Profile>) => Promise<any>;
   // updateProfileImages?: (uploadedUrls: string[]) => Promise<any>;
@@ -159,18 +162,62 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
     });
   }, [uid]);
 
+  // Load profile from server (or AsyncStorage) when uid becomes available
+  const loadProfile = async () => {
+    if (!uid) return;
+    setLoading(true);
+    try {
+  // Determine gender to pass to server (use current profile.gender or default to 'male')
+  const genderToUse = (profile as any).gender ? (profile as any).gender : 'male';
+  // First try server
+  const serverProfile = await profileService.getProfile(uid, genderToUse);
+      if (serverProfile) {
+        setProfile((prev) => ({ ...prev, ...serverProfile }));
+        await AsyncStorage.setItem("profile", JSON.stringify(serverProfile));
+        return;
+      }
+    } catch (err) {
+      // fallback to AsyncStorage if server fails
+      try {
+        const stored = await AsyncStorage.getItem("profile");
+        if (stored) {
+          setProfile((prev) => ({
+            ...prev,
+            ...(JSON.parse(stored) as Partial<Profile>),
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to read stored profile", e);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Example: trigger loadProfile once when user logs in
-  //   useEffect(() => {
-  //     if (uid && !profileLoadedOnce.current) {
-  //       profileLoadedOnce.current = true;
-  //       loadProfile();
-  //     }
-  //   }, [uid]);
+  useEffect(() => {
+    if (uid && !profileLoadedOnce.current) {
+      profileLoadedOnce.current = true;
+      loadProfile();
+    }
+  }, [uid]);
 
   const value: ProfileContextType = useMemo(
     () => ({
       profile,
       loading,
+      reloadProfile: loadProfile,
+      updateProfile: (fields: Partial<Profile>) => {
+        setProfile((prev) => {
+          const updated = { ...prev, ...fields };
+          try {
+            AsyncStorage.setItem("profile", JSON.stringify(updated));
+          } catch (e) {
+            console.error("Failed to persist profile", e);
+          }
+          return updated;
+        });
+      },
       //   reloadProfile: loadProfile,
       // updateProfile,
       // updateProfileImages,

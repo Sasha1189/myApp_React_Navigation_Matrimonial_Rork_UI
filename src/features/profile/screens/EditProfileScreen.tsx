@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ToastAndroid,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -69,7 +71,7 @@ const requiredFields: (keyof Profile)[] = ["fullName"];
 
 export default function EditProfileScreen() {
   const navigation = useTabNavigation();
-  const { profile } = useProfileContext();
+  const { profile, updateProfile: ctxUpdate } = useProfileContext();
 
   const updateProfileMutation = useUpdateProfile();
 
@@ -77,6 +79,8 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(false);
   // Initialize with profile
   const [formData, setFormData] = useState<Partial<Profile>>(profile || {});
+
+  const scrollRef = useRef<ScrollView | null>(null);
 
   // typed field updater
   const updateField = (field: keyof Profile, value: any) => {
@@ -174,19 +178,42 @@ export default function EditProfileScreen() {
       }
       console.log("API about to hit");
       // Ensure gender is always included because server requires it
-      if (changedFields.gender === undefined && (profile as any).gender !== undefined) {
+      if (
+        changedFields.gender === undefined &&
+        (profile as any).gender !== undefined
+      ) {
         changedFields.gender = (profile as any).gender;
       }
 
       // use mutateAsync so we can await completion and catch server errors
-      await updateProfileMutation.mutateAsync({
+      // mutateAsync returns the updated profile from the server (profileService.post)
+      const updated = await updateProfileMutation.mutateAsync({
         id: profile.id,
         data: changedFields,
       });
-      Alert.alert(
-        "Profile Updated",
-        "Your profile has been successfully updated."
-      );
+
+      // Update context with returned server profile if available
+      if (ctxUpdate && updated) {
+        ctxUpdate(updated as Partial<Profile>);
+      }
+
+      // Update local form and lock editing
+      if (updated) {
+        setFormData((prev) => ({ ...prev, ...(updated as Partial<Profile>) }));
+
+        // Scroll to top and show toast
+        try {
+          scrollRef.current?.scrollTo({ x: 0, y: 0, animated: true });
+        } catch (e) {
+          /* ignore */
+        }
+
+        if (Platform.OS === "android") {
+          ToastAndroid.show("Profile updated", ToastAndroid.SHORT);
+        } else {
+          Alert.alert("Profile Updated", "Your profile has been successfully updated.");
+        }
+      }
     } catch (error: any) {
       console.error("Submit error:", error);
       // If React Query's ApiError or other error, show message
@@ -223,6 +250,7 @@ export default function EditProfileScreen() {
         }
       />
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollcontainer}
         showsVerticalScrollIndicator={false}
       >

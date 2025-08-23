@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { useProfileContext } from "../../../context/ProfileContext";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Settings,
@@ -19,11 +20,39 @@ import {
   Shield,
   HelpCircle,
   LogOut,
+  Eye,
 } from "lucide-react-native";
 import { theme } from "../../../constants/theme";
 
 export default function ProfileScreen() {
   const navigation = useAppNavigation();
+  const { profile } = useProfileContext();
+
+  const getAge = (dob: any) => {
+    if (!dob) return "-";
+    const d =
+      typeof dob === "string"
+        ? new Date(dob)
+        : dob instanceof Date
+        ? dob
+        : new Date(dob);
+    if (isNaN(d.getTime())) return "-";
+    const diff = Date.now() - d.getTime();
+    const ageDt = new Date(diff);
+    return Math.abs(ageDt.getUTCFullYear() - 1970);
+  };
+
+  const displayName =
+    (profile && (profile.fullName || (profile as any).full_name)) || "John Doe";
+  const displayAge = profile
+    ? getAge((profile as any).dateOfBirth || (profile as any).dob)
+    : "-";
+  const imageUri =
+    (profile &&
+      ((profile as any).profileImages?.[0] ||
+        (profile as any).avatar ||
+        (profile as any).photoUrl)) ||
+    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400";
 
   const logout = async () => {
     try {
@@ -44,11 +73,28 @@ export default function ProfileScreen() {
       console.error("Logout error:", error);
     }
   };
+  const openPreview = () => {
+    const uid = (profile as any)?.id || (profile as any)?.uid;
+    if (!uid) {
+      Alert.alert("Profile not ready", "Your profile is still loading.");
+      return;
+    }
+    (navigation as any).navigate("UserDetails", {
+      userId: uid,
+      cachedProfile: profile,
+    });
+  };
+
   const menuItems = [
     {
       icon: Edit3,
       label: "Edit Profile",
       onPress: () => navigation.navigate("EditProfile"),
+    },
+    {
+      icon: Eye,
+      label: "Preview Profile",
+      onPress: openPreview,
     },
     {
       icon: Camera,
@@ -70,12 +116,6 @@ export default function ProfileScreen() {
       label: "Help & Support",
       onPress: () => navigation.navigate("HelpSupport"),
     },
-    {
-      icon: LogOut,
-      label: "Log Out",
-      onPress: () => logout(),
-      danger: true,
-    },
   ];
   return (
     <LinearGradient
@@ -83,53 +123,63 @@ export default function ProfileScreen() {
       style={styles.container}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.profileSection}>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400",
-            }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.profileName}>John Doe</Text>
-          <Text style={styles.profileAge}>28 years old</Text>
+        <View style={styles.compactHeader}>
+          <View style={styles.compactProfileRow}>
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.compactProfileImage}
+            />
+            <View style={styles.compactProfileInfo}>
+              <Text style={styles.compactName}>{displayName}</Text>
+              <Text style={styles.compactAge}>{displayAge} yrs</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.headerLogout}
+              onPress={() => logout()}
+            >
+              <LogOut size={18} color="white" />
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.statsContainer}>
+          <View style={styles.statsContainerCompact}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>42</Text>
-              <Text style={styles.statLabel}>Matches</Text>
+              <Text style={styles.statValueCompact}>42</Text>
+              <Text style={styles.statLabelCompact}>Matches</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>156</Text>
-              <Text style={styles.statLabel}>Likes Sent</Text>
+              <Text style={styles.statValueCompact}>156</Text>
+              <Text style={styles.statLabelCompact}>Likes Sent</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>89</Text>
-              <Text style={styles.statLabel}>Likes Received</Text>
+              <Text style={styles.statValueCompact}>89</Text>
+              <Text style={styles.statLabelCompact}>Likes Received</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.menuSection}>
           {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.menuItem}
-              onPress={item.onPress}
-            >
-              <item.icon
-                size={22}
-                color={item.danger ? theme.colors.danger : theme.colors.text}
-              />
-              <Text
-                style={[
-                  styles.menuItemText,
-                  item.danger && styles.menuItemTextDanger,
-                ]}
-              >
-                {item.label}
-              </Text>
+            <TouchableOpacity key={index} onPress={item.onPress}>
+              <View style={styles.menuCard}>
+                <item.icon
+                  size={20}
+                  color={
+                    (item as any).danger
+                      ? theme.colors.danger
+                      : theme.colors.primary
+                  }
+                />
+                <Text
+                  style={[
+                    styles.menuItemText,
+                    (item as any).danger && styles.menuItemTextDanger,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -209,12 +259,87 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.3)",
     marginHorizontal: theme.spacing.md,
   },
+  compactHeader: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
+  },
+  compactProfileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.sm,
+  },
+  compactProfileImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 3,
+    borderColor: "white",
+  },
+  compactProfileInfo: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.md,
+  },
+  compactName: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: "white",
+  },
+  compactAge: {
+    fontSize: theme.fontSize.xs,
+    color: "rgba(255,255,255,0.85)",
+  },
+  statsContainerCompact: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  statValueCompact: {
+    fontSize: theme.fontSize.md,
+    fontWeight: "700",
+    color: "white",
+  },
+  statLabelCompact: {
+    fontSize: theme.fontSize.xs,
+    color: "rgba(255,255,255,0.85)",
+  },
   menuSection: {
-    backgroundColor: "white",
+    backgroundColor: theme.colors.cardBackground,
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
-    paddingTop: theme.spacing.lg,
-    minHeight: 300,
+    paddingTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    minHeight: 0,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
+  },
+  headerLogout: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+  },
+  menuCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: theme.colors.cardBackground,
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: theme.spacing.sm,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
   menuItem: {
     flexDirection: "row",
@@ -225,9 +350,9 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   menuItemText: {
-    fontSize: theme.fontSize.md,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.text,
-    marginLeft: theme.spacing.md,
+    marginLeft: theme.spacing.sm,
     flex: 1,
   },
   menuItemTextDanger: {
@@ -237,7 +362,7 @@ const styles = StyleSheet.create({
     margin: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     overflow: "hidden",
-    backgroundColor: "white",
+    backgroundColor: theme.colors.cardBackground,
     padding: theme.spacing.lg,
     alignItems: "center",
   },

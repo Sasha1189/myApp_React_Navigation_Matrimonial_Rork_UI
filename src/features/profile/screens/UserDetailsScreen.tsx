@@ -96,8 +96,9 @@ export default function UserDetailsScreen() {
   const route = useRoute<UserDetailsScreenRouteProp>();
   const { userId } = route.params;
   const { profiles } = useApp();
-  
-  const profile = profiles.find((p: Profile) => p.id === userId);
+  // If a cachedProfile was passed in navigation params, prefer it to avoid refetching
+  const cachedProfile = (route.params as any)?.cachedProfile as Profile | undefined;
+  const profile = cachedProfile || profiles.find((p: Profile) => p.id === userId);
   
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -113,7 +114,7 @@ export default function UserDetailsScreen() {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, profile]);
+  }, [navigation, profile, cachedProfile]);
 
   if (!profile) {
     return (
@@ -167,12 +168,12 @@ export default function UserDetailsScreen() {
         </DetailSection>
 
         <DetailSection title="About Me" icon={Heart}>
-          <DetailRow label="Bio" value={profile.shortBio} icon={MessageCircle} />
-          <DetailRow label="Life Goals" value={profile.lifeGoals} icon={Target} />
-          <DetailRow label="Beliefs & Values" value={profile.beliefsValues} icon={Church} />
-          <DetailRow label="Strengths" value={profile.strengths} icon={Zap} />
-          <DetailRow label="Likes & Dislikes" value={profile.likesDislikesText} icon={Heart} />
-          <DetailRow label="Social Media" value={profile.socialMedia} icon={Link} />
+          <DetailRow label="Bio" value={(profile as any)?.shortBio} icon={MessageCircle} />
+          <DetailRow label="Life Goals" value={(profile as any)?.lifeGoals} icon={Target} />
+          <DetailRow label="Beliefs & Values" value={(profile as any)?.beliefsValues} icon={Church} />
+          <DetailRow label="Strengths" value={(profile as any)?.strengths} icon={Zap} />
+          <DetailRow label="Likes & Dislikes" value={(profile as any)?.likesDislikesText} icon={Heart} />
+          <DetailRow label="Social Media" value={(profile as any)?.socialMedia} icon={Link} />
         </DetailSection>
 
         <DetailSection title="Contact Details" icon={Phone}>
@@ -214,11 +215,11 @@ export default function UserDetailsScreen() {
           <DetailRow label="Personality" value={profile.personalityType} icon={Brain} />
           <DetailRow label="Belief System" value={profile.beliefSystem} icon={Church} />
           
-          {profile.hobbies.length > 0 && (
+          {(profile as any)?.hobbies?.length > 0 && (
             <View style={styles.hobbiesContainer}>
               <Text style={styles.detailLabel}>Hobbies:</Text>
               <View style={styles.hobbiesList}>
-                {profile.hobbies.map((hobby, index) => (
+                {(profile as any)?.hobbies.map((hobby: string, index: number) => (
                   <View key={index} style={styles.hobbyTag}>
                     <Text style={styles.hobbyText}>{hobby}</Text>
                   </View>
