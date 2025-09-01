@@ -1,30 +1,23 @@
 export interface Profile {
-  id: string;
-  name: string;
-  age: number;
-  bio: string;
-  images: string[];
-  distance: number;
-  interests: string[];
-  occupation?: string;
-  education?: string;
-  
-  // Personal & Birth Information
+  // Basic Information
+  uid: string;
+  photos: Photo[];
+  // Personal & Birth Information-13
   fullName: string;
-  dateOfBirth: Date;
-  timeOfBirth?: string;
+  dateOfBirth: Date | null;
+  timeOfBirth?: string | null;
   placeOfBirth: string;
-  gender: 'Male' | 'Female';
-  maritalStatus: 'Never Married' | 'Divorced' | 'Widowed';
+  gender: '' | 'Male' | 'Female';
+  maritalStatus: '' | 'Never Married' | 'Divorced' | 'Widowed';
   height: string;
   weight: string;
-  bodyType: 'Slim' | 'Athletic' | 'Average' | 'Heavy';
-  bloodGroup: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
-  manglikStatus: 'Yes' | 'No' | 'Partial' | "Don't Know";
-  rashi: 'Aries' | 'Taurus' | 'Gemini' | 'Cancer' | 'Leo' | 'Virgo' | 'Libra' | 'Scorpio' | 'Sagittarius' | 'Capricorn' | 'Aquarius' | 'Pisces';
-  horoscopeRequired: 'Yes' | 'No' | 'Optional';
+  bodyType: '' | 'Slim' | 'Athletic' | 'Average' | 'Heavy';
+  bloodGroup: '' | 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
+  manglikStatus: '' | 'Yes' | 'No' | 'Partial' | "Don't Know";
+  rashi: '' | 'Aries' | 'Taurus' | 'Gemini' | 'Cancer' | 'Leo' | 'Virgo' | 'Libra' | 'Scorpio' | 'Sagittarius' | 'Capricorn' | 'Aquarius' | 'Pisces';
+  horoscopeRequired: '' | 'Yes' | 'No' | 'Optional';
   
-  // About Me
+  // About Me-6
   shortBio: string;
   aspirations?: string;
   beliefsValues?: string;
@@ -32,53 +25,53 @@ export interface Profile {
   likesDislikesText?: string;
   socialMedia?: string;
   
-  // Contact Details
+  // Contact Details-6
   currentCity: string;
   nativePlace: string;
   mobileNumber: string;
   emailAddress?: string;
-  preferredContact: 'WhatsApp' | 'Phone' | 'Email' | 'Chat only';
+  preferredContact: '' | 'WhatsApp' | 'Phone' | 'Email' | 'Chat only';
   profileCreatedBy: 'Self' | 'Father' | 'Mother' | 'Sibling';
   
-  // Education & Career
-  highestQualification: '10th' | '12th' | 'Diploma' | "Bachelor's" | "Master's" | 'PhD' | 'Other';
-  fieldOfStudy: 'Engineering' | 'Arts' | 'Science' | 'Commerce' | 'Medicine' | 'Law' | 'Other';
-  currentOccupation: 'Working' | 'Business' | 'Self-employed' | 'Freelancer' | 'Not working' | 'Student';
-  industry: 'IT' | 'Finance' | 'Govt' | 'Education' | 'Healthcare' | 'Other';
+  // Education & Career-8
+  highestQualification: '' | '10th' | '12th' | 'Diploma' | "Bachelor's" | "Master's" | 'PhD' | 'Other';
+  fieldOfStudy: '' | 'Engineering' | 'Arts' | 'Science' | 'Commerce' | 'Medicine' | 'Law' | 'Other';
+  occupation: '' | 'Working' | 'Business' | 'Self-employed' | 'Freelancer' | 'Not working' | 'Student';
+  industry: '' | 'IT' | 'Finance' | 'Govt' | 'Education' | 'Healthcare' | 'Other';
   jobTitle?: string;
   companyName?: string;
   workLocation?: string;
-  annualIncome: '₹UPTO 5L' | '₹5L+' | '₹10L+' | '₹20L+';
+  annualIncome: '' | '₹UPTO 5L' | '₹5L+' | '₹10L+' | '₹20L+';
   
-  // Family Details
+  // Family Details-7
   fatherOccupation?: string;
   motherOccupation?: string;
   numberOfBrothers: number;
   numberOfSisters: number;
   siblingsDetails?: string;
-  familyType: 'Joint' | 'Nuclear';
-  familyValues: 'Traditional' | 'Modern';
+  familyType: '' | 'Joint' | 'Nuclear';
+  familyValues: '' | 'Traditional' | 'Modern';
   
-  // Lifestyle & Habits
-  dietPreferences: 'Vegetarian' | 'Eggetarian' | 'Non-Veg';
-  smokingHabit: 'No' | 'Occasionally' | 'Yes';
-  drinkingHabit: 'No' | 'Occasionally' | 'Yes';
-  exerciseRoutine: 'Regular' | 'Sometimes' | 'Rarely' | 'Never';
-  fitnessLevel: 'Fit' | 'Average' | 'Overweight' | 'Athletic';
+  // Lifestyle & Habits-8
+  dietPreferences: '' | 'Vegetarian' | 'Eggetarian' | 'Non-Veg';
+  smokingHabit: '' | 'No' | 'Occasionally' | 'Yes';
+  drinkingHabit: '' | 'No' | 'Occasionally' | 'Yes';
+  exerciseRoutine: '' | 'Regular' | 'Sometimes' | 'Rarely' | 'Never';
+  fitnessLevel: '' | 'Fit' | 'Average' | 'Overweight' | 'Athletic';
   hobbies: string[];
-  personalityType: 'Introvert' | 'Extrovert' | 'Ambivert';
-  beliefSystem: 'Spiritual' | 'Open-minded';
+  personalityType: '' | 'Introvert' | 'Extrovert' | 'Ambivert';
+  beliefSystem: '' | 'Spiritual' | 'Open-minded';
   
-  // Partner Preferences
-  preferredAgeRange: { min: number; max: number };
-  preferredHeightRange: { min: string; max: string };
-  preferredMaritalStatus: 'Never Married' | 'Divorced' | 'Widowed';
-  manglikPreference: 'Required' | 'Not Required' | "Don't Know";
-  preferredEducation: '12th' | 'Graduate' | 'Postgraduate' | 'No preference';
-  preferredProfession: 'Working Professional' | 'Govt Job' | 'Business' | 'No preference';
-  preferredIncomeRange: '₹3L+' | '₹5L+' | '₹10L+' | 'No preference';
-  locationPreference?: string;
-  livingWithParents: 'Okay' | 'Not okay' | 'Prefer separate';
+  // Partner Preferences-9
+  preferredAgeRange: { min: number; max: number } | null;
+  preferredHeightRange: { min: string; max: string } | null;
+  preferredMaritalStatus: '' | 'Never Married' | 'Divorced' | 'Widowed';
+  manglikPreference: '' | 'Required' | 'Not Required' | "Don't Know";
+  preferredEducation: '' | '12th' | 'Graduate' | 'Postgraduate' | 'No preference';
+  preferredProfession: '' | 'Working Professional' | 'Govt Job' | 'Business' | 'No preference';
+  preferredIncomeRange: '' | '₹3L+' | '₹5L+' | '₹10L+' | 'No preference';
+  locationPreference?: string | null;
+  livingWithParents: '' | 'Okay' | 'Not okay' | 'Prefer separate';
 }
 
 export interface Match {
@@ -96,4 +89,11 @@ export interface Message {
   text: string;
   timestamp: Date;
   read: boolean;
+}
+
+export interface Photo {
+  id: string;
+  localUrl?: string;
+  downloadURL?: string;
+  isPrimary: boolean;
 }

@@ -11,6 +11,8 @@ interface InputFieldProps {
   keyboardType?: "default" | "numeric" | "email-address" | "phone-pad";
   icon?: React.ComponentType<any>;
   editable?: boolean;
+  required?: boolean;
+  locked?: boolean;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -22,22 +24,51 @@ const InputField: React.FC<InputFieldProps> = ({
   keyboardType = "default",
   icon: Icon,
   editable = true,
+  required = false,
+  locked = false,
 }) => (
   <View style={styles.container}>
     <View style={styles.labelRow}>
       {Icon && <Icon size={16} color={theme.colors.primary} />}
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>
+        {label}
+        {required && <Text style={{ color: "red" }}> *</Text>}
+      </Text>
     </View>
-    <TextInput
-      style={[styles.input, multiline && styles.multiline]}
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      placeholderTextColor={theme.colors.textLight}
-      multiline={multiline}
-      keyboardType={keyboardType}
-      editable={editable}
-    />
+
+    {locked ? (
+      <>
+        <View
+          style={[
+            styles.input,
+            multiline && styles.multiline,
+            { backgroundColor: "#fafafa" },
+          ]}
+        >
+          <Text
+            style={{
+              color: value ? theme.colors.text : theme.colors.textLight,
+            }}
+          >
+            {value || placeholder || "-"}
+          </Text>
+        </View>
+        <Text style={styles.lockNote}>This cannot be changed later</Text>
+      </>
+    ) : (
+      <>
+        <TextInput
+          style={[styles.input, multiline && styles.multiline]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={theme.colors.textLight}
+          multiline={multiline}
+          keyboardType={keyboardType}
+          editable={editable}
+        />
+      </>
+    )}
   </View>
 );
 
@@ -63,6 +94,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   multiline: { height: 80, textAlignVertical: "top" },
+  lockNote: {
+    color: theme.colors.textLight,
+    marginTop: theme.spacing.xs,
+    fontSize: theme.fontSize.sm,
+  },
 });
 
 export default InputField;

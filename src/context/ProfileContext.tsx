@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useMemo, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import {
   useProfileData,
@@ -9,6 +9,7 @@ import { Profile } from "../types/profile";
 interface ProfileContextType {
   profile?: Profile;
   loading: boolean;
+  error: unknown;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   reloadProfile: () => void;
 }
@@ -24,7 +25,24 @@ export const ProfileProvider = ({
   const uid = user?.uid as Profile["uid"];
   const gender = user?.displayName as Profile["gender"];
 
-  const { data: profile, isLoading, refetch } = useProfileData(uid, gender);
+  // const renderCount = useRef(0);
+  // renderCount.current += 1;
+
+  // if (__DEV__) {
+  //   console.log(`ProfileContext render count: ${renderCount.current}`);
+  // }
+
+  const {
+    data: profile,
+    isLoading,
+    error,
+    refetch,
+  } = useProfileData(uid, gender);
+
+  // console.log("ProfileProvider: uid =", uid, "gender =", gender);
+  // console.log("ProfileProvider: profile =", profile);
+  // console.log("ProfileProvider: isLoading =", isLoading, "error =", error);
+
   const { mutateAsync: updateProfileMutation } = useUpdateProfileData(
     uid,
     gender
@@ -33,7 +51,6 @@ export const ProfileProvider = ({
   const updateProfile = async (data: Partial<Profile>) => {
     try {
       await updateProfileMutation(data);
-      // maybe show toast or navigation
     } catch (err) {
       console.error("Update failed:", err);
     }
@@ -42,6 +59,7 @@ export const ProfileProvider = ({
   const value: ProfileContextType = useMemo(
     () => ({
       profile,
+      error,
       loading: isLoading,
       updateProfile,
       reloadProfile: refetch,

@@ -11,6 +11,10 @@ interface ProfileUpdateData {
   name?: string;
   bio?: string;
   interests?: string[];
+  // Client canonical field is `images` but backend historically expects `photos`.
+  // Accept either and map to backend `photos` before sending.
+  images?: string[];
+  profileImages?: string[];
   photos?: string[];
 }
 
@@ -24,9 +28,19 @@ export const profileService = {
     return api.get<Profile>(`/profiles/${id}`);
   },
 
-  async updateProfile(id: string, data: ProfileUpdateData): Promise<Profile> {
-    return api.put<Profile>(`/profiles/${id}`, data);
-  },
+  // async updateProfile(data: ProfileUpdateData): Promise<Profile> {
+  //   // Normalize image fields: prefer `images`, then `profileImages`, then `photos`.
+  //   const payload: any = { ...data };
+  //   const imgs = data.images || data.profileImages || data.photos;
+  //   if (imgs) {
+  //     // Backend expects `photos` in many endpoints — send that.
+  //     payload.photos = imgs;
+  //     // remove alternate keys to keep payload clean
+  //     delete payload.images;
+  //     delete payload.profileImages;
+  //   }
+  //   return api.put<Profile>(`/profiles/`, payload);
+  // },
 
   async likeProfile(id: string): Promise<{ isMatch: boolean }> {
     return api.post<{ isMatch: boolean }>(`/profiles/${id}/like`);

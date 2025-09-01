@@ -45,3 +45,13 @@ export const getRelativeTime = (date: Date): string => {
     return 'Just now';
   }
 };
+
+export const toISODate = (date: Date): string | null => {
+  if (!date) return null;
+  const d = date instanceof Date ? date : new Date(date as any);
+  if (isNaN(d.getTime())) return null;
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};

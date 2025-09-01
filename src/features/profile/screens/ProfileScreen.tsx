@@ -1,7 +1,4 @@
 import React from "react";
-import { useAppNavigation } from "../../../navigation/hooks";
-import { signOut } from "firebase/auth";
-import { auth } from "../../../config/firebase";
 import {
   View,
   Text,
@@ -9,10 +6,9 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
   Alert,
 } from "react-native";
-import { useProfileContext } from "../../../context/ProfileContext";
-import { LinearGradient } from "expo-linear-gradient";
 import {
   Settings,
   Edit3,
@@ -22,39 +18,32 @@ import {
   LogOut,
   Eye,
 } from "lucide-react-native";
+import { useAppNavigation } from "../../../navigation/hooks";
+import { signOut } from "firebase/auth";
+import { auth } from "../../../config/firebase";
+import { useProfileContext } from "../../../context/ProfileContext";
+import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../../../constants/theme";
+import { useAuth } from "src/context/AuthContext";
+import { storage } from "../../../utils/storage";
+import { formatDOB } from "src/utils/dateUtils";
+import { Profile } from "src/types/profile";
 
-export default function ProfileScreen() {
-  const navigation = useAppNavigation();
+type Navigation = ReturnType<typeof useAppNavigation>;
+
+interface MenuItem {
+  icon: React.ComponentType<any>;
+  label: string;
+  onPress: () => void;
+  danger?: boolean;
+}
+
+export default function ProfileScreen(): React.ReactElement {
+  const { setUser } = useAuth();
   const { profile } = useProfileContext();
+  const navigation = useAppNavigation();
 
-  const getAge = (dob: any) => {
-    if (!dob) return "-";
-    const d =
-      typeof dob === "string"
-        ? new Date(dob)
-        : dob instanceof Date
-        ? dob
-        : new Date(dob);
-    if (isNaN(d.getTime())) return "-";
-    const diff = Date.now() - d.getTime();
-    const ageDt = new Date(diff);
-    return Math.abs(ageDt.getUTCFullYear() - 1970);
-  };
-
-  const displayName =
-    (profile && (profile.fullName || (profile as any).full_name)) || "John Doe";
-  const displayAge = profile
-    ? getAge((profile as any).dateOfBirth || (profile as any).dob)
-    : "-";
-  const imageUri =
-    (profile &&
-      ((profile as any).profileImages?.[0] ||
-        (profile as any).avatar ||
-        (profile as any).photoUrl)) ||
-    "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400";
-
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       Alert.alert("Logout", "Are you sure you want to log out?", [
         {
@@ -64,8 +53,25 @@ export default function ProfileScreen() {
         {
           text: "Log Out",
           onPress: async () => {
-            await signOut(auth);
-            console.log("User signed out");
+            try {
+              await signOut(auth);
+              console.log("User signed out");
+            } catch (signOutError) {
+              console.error("Sign out failed:", signOutError);
+            } finally {
+              try {
+                // clear any cached user data
+                await storage.clear();
+                console.log("AsyncStorage cleared");
+              } catch (storageError) {
+                console.error("Failed to clear storage:", storageError);
+              }
+              // reset auth context
+              if (typeof setUser === "function") {
+                // cast to any to avoid coupling to concrete user type
+                setUser(null as any);
+              }
+            }
           },
         },
       ]);
@@ -73,7 +79,7 @@ export default function ProfileScreen() {
       console.error("Logout error:", error);
     }
   };
-  const openPreview = () => {
+  const openPreview = (): void => {
     const uid = (profile as any)?.id || (profile as any)?.uid;
     if (!uid) {
       Alert.alert("Profile not ready", "Your profile is still loading.");
@@ -85,7 +91,7 @@ export default function ProfileScreen() {
     });
   };
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
       icon: Edit3,
       label: "Edit Profile",
@@ -125,13 +131,27 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.compactHeader}>
           <View style={styles.compactProfileRow}>
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.compactProfileImage}
-            />
+            {profile?.photos?.length > 0 && profile?.photos[0]?.downloadURL ? (
+              <Image
+                source={{ uri: profile?.photos[0]?.downloadURL }}
+                style={styles.compactProfileImage}
+              />
+            ) : (
+              <Image
+                source={require("../../../../assets/images/profile.png")}
+                style={styles.compactProfileImage}
+                resizeMode="contain"
+              />
+            )}
             <View style={styles.compactProfileInfo}>
-              <Text style={styles.compactName}>{displayName}</Text>
-              <Text style={styles.compactAge}>{displayAge} yrs</Text>
+              <Text style={styles.compactName}>
+                {profile?.fullName || "New user"}
+              </Text>
+              <Text style={styles.compactAge}>
+                {profile?.dateOfBirth
+                  ? formatDOB(profile.dateOfBirth, "age")
+                  : "-- age"}
+              </Text>
             </View>
             <TouchableOpacity
               style={styles.headerLogout}
@@ -140,7 +160,6 @@ export default function ProfileScreen() {
               <LogOut size={18} color="white" />
             </TouchableOpacity>
           </View>
-
           <View style={styles.statsContainerCompact}>
             <View style={styles.statItem}>
               <Text style={styles.statValueCompact}>42</Text>
@@ -208,6 +227,12 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.xl,
   },
   profileSection: {
     alignItems: "center",

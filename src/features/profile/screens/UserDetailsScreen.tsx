@@ -1,6 +1,4 @@
-import { useApp } from "../../../hooks/useAppStore";
 import { theme } from "../../../theme/index";
-import { Profile } from "../../../types/profile";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
@@ -50,6 +48,8 @@ import {
   View,
 } from "react-native";
 import { AppStackParamList } from "../../../navigation/types";
+import { useProfileContext } from "../../../context/ProfileContext";
+import { formatDOB } from "src/utils/dateUtils";
 
 const { width } = Dimensions.get("window");
 
@@ -75,24 +75,29 @@ const DetailSection: React.FC<DetailSectionProps> = ({
 
 interface DetailRowProps {
   label: string;
-  value: string | number | undefined;
+  value?:
+    | string
+    | number
+    | boolean
+    | Date
+    | { min: number; max: number }
+    | null;
   icon?: React.ComponentType<any>;
 }
 
 const DetailRow: React.FC<DetailRowProps> = ({ label, value, icon: Icon }) => {
-  if (!value) return null;
+  if (value === undefined || value === null || value === "") return null;
   return (
     <View style={styles.detailRow}>
       <View style={styles.detailLabelContainer}>
         {Icon && <Icon size={16} color={theme.colors.primary} />}
         <Text style={styles.detailLabel}>{label}:</Text>
       </View>
-      <Text style={styles.detailValue}>{value}</Text>
+      <Text style={styles.detailValue}>{String(value)}</Text>
     </View>
   );
 };
 
-type UserDetailsScreenRouteProp = RouteProp<AppStackParamList, "UserDetails">;
 type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
   AppStackParamList,
   "UserDetails"
@@ -100,22 +105,12 @@ type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
 
 export default function UserDetailsScreen() {
   const navigation = useNavigation<UserDetailsScreenNavigationProp>();
-  const route = useRoute<UserDetailsScreenRouteProp>();
-  const { profiles } = useApp();
-
-  // Guard against route.params being undefined (causes "Cannot convert undefined value to object")
-  const params = route?.params ?? ({} as Partial<UserDetailsScreenRouteProp>);
-  const userId = (params as any)?.userId as string | undefined;
-  // If a cachedProfile was passed in navigation params, prefer it to avoid refetching
-  const cachedProfile = (params as any)?.cachedProfile as Profile | undefined;
-  const profile =
-    cachedProfile ||
-    (userId ? profiles.find((p: Profile) => p.id === userId) : undefined);
+  const { profile } = useProfileContext();
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      title: profile?.name || "Profile",
+      title: profile?.fullName || "Profile",
       headerStyle: {
         backgroundColor: theme.colors.primary,
       },
@@ -126,7 +121,7 @@ export default function UserDetailsScreen() {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, profile, cachedProfile]);
+  }, [navigation, profile]);
 
   if (!profile) {
     return (
@@ -136,47 +131,41 @@ export default function UserDetailsScreen() {
     );
   }
 
-  const formatDate = (date?: Date | string) => {
-    if (!date) return "-";
-    const d = date instanceof Date ? date : new Date(date);
-    if (isNaN(d.getTime())) return "-";
-    return d.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.imageContainer}>
-        {profile.images && profile.images.length > 0 ? (
-          <>
-            <Image
-              source={{ uri: profile.images[0] }}
-              style={styles.profileImage}
+      <View style={styles.content}>
+        <View style={styles.imageContainer}>
+          {profile?.photos && profile?.photos.length > 0 ? (
+            <>
+              <Image
+                source={{ uri: profile?.photos[0].downloadURL }}
+                resizeMode="cover"
+                style={styles.profileImage}
+              />
+              <LinearGradient
+                colors={["transparent", "rgba(0,0,0,0.7)"]}
+                style={styles.imageGradient}
+              />
+            </>
+          ) : (
+            <View
+              style={[
+                styles.profileImage,
+                { backgroundColor: theme.colors.border },
+              ]}
             />
-            <LinearGradient
-              colors={["transparent", "rgba(0,0,0,0.7)"]}
-              style={styles.imageGradient}
-            />
-          </>
-        ) : (
-          <View
-            style={[
-              styles.profileImage,
-              { backgroundColor: theme.colors.border },
-            ]}
-          />
-        )}
+          )}
 
-        <View style={styles.imageOverlay}>
-          <Text style={styles.profileName}>{profile.fullName}</Text>
-          <Text style={styles.profileAge}>{profile.age} years old</Text>
-          <View style={styles.locationRow}>
-            <MapPin size={16} color="white" />
-            <Text style={styles.locationText}>{profile.currentCity}</Text>
-          </View>
+          {/* <View style={styles.imageOverlay}>
+            <Text style={styles.profileName}>{profile.fullName}</Text>
+            <Text style={styles.profileAge}>
+              {formatDOB(profile.dateOfBirth, "age")}
+            </Text>
+            <View style={styles.locationRow}>
+              <MapPin size={16} color="white" />
+              <Text style={styles.locationText}>{profile.currentCity}</Text>
+            </View>
+          </View> */}
         </View>
       </View>
 
@@ -189,7 +178,7 @@ export default function UserDetailsScreen() {
           />
           <DetailRow
             label="Date of Birth"
-            value={formatDate(profile.dateOfBirth)}
+            value={profile.dateOfBirth}
             icon={Calendar}
           />
           <DetailRow
@@ -236,32 +225,28 @@ export default function UserDetailsScreen() {
         <DetailSection title="About Me" icon={Heart}>
           <DetailRow
             label="Bio"
-            value={(profile as any)?.shortBio}
+            value={profile.shortBio}
             icon={MessageCircle}
           />
           <DetailRow
             label="Life Goals"
-            value={(profile as any)?.lifeGoals}
+            value={profile?.aspirations}
             icon={Target}
           />
           <DetailRow
             label="Beliefs & Values"
-            value={(profile as any)?.beliefsValues}
+            value={profile?.beliefsValues}
             icon={Church}
           />
-          <DetailRow
-            label="Strengths"
-            value={(profile as any)?.strengths}
-            icon={Zap}
-          />
+          <DetailRow label="Strengths" value={profile?.strengths} icon={Zap} />
           <DetailRow
             label="Likes & Dislikes"
-            value={(profile as any)?.likesDislikesText}
+            value={profile?.likesDislikesText}
             icon={Heart}
           />
           <DetailRow
             label="Social Media"
-            value={(profile as any)?.socialMedia}
+            value={profile?.socialMedia}
             icon={Link}
           />
         </DetailSection>
@@ -308,7 +293,7 @@ export default function UserDetailsScreen() {
           />
           <DetailRow
             label="Current Occupation"
-            value={profile.currentOccupation}
+            value={profile?.occupation}
             icon={Briefcase}
           />
           <DetailRow
@@ -413,24 +398,22 @@ export default function UserDetailsScreen() {
             icon={Church}
           />
 
-          {(profile as any)?.hobbies?.length > 0 && (
+          {profile?.hobbies?.length > 0 && (
             <View style={styles.hobbiesContainer}>
               <Text style={styles.detailLabel}>Hobbies:</Text>
               <View style={styles.hobbiesList}>
-                {(profile as any)?.hobbies.map(
-                  (hobby: string, index: number) => (
-                    <View key={index} style={styles.hobbyTag}>
-                      <Text style={styles.hobbyText}>{hobby}</Text>
-                    </View>
-                  )
-                )}
+                {profile?.hobbies.map((hobby: string, index: number) => (
+                  <View key={index} style={styles.hobbyTag}>
+                    <Text style={styles.hobbyText}>{hobby}</Text>
+                  </View>
+                ))}
               </View>
             </View>
           )}
         </DetailSection>
 
         <DetailSection title="Partner Preferences" icon={Star}>
-          <DetailRow
+          {/* <DetailRow
             label="Age Range"
             value={`${profile.preferredAgeRange.min} - ${profile.preferredAgeRange.max} years`}
             icon={Calendar}
@@ -439,7 +422,7 @@ export default function UserDetailsScreen() {
             label="Height Range"
             value={`${profile.preferredHeightRange.min} - ${profile.preferredHeightRange.max}`}
             icon={Ruler}
-          />
+          /> */}
           <DetailRow
             label="Marital Status"
             value={profile.preferredMaritalStatus}
@@ -497,9 +480,18 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: "relative",
-    height: 300,
+    overflow: "hidden",
+    height: 475,
+    backgroundColor: "white",
+    borderRadius: theme.borderRadius.lg,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   profileImage: {
+    resizeMode: "cover",
     width: "100%",
     height: "100%",
   },

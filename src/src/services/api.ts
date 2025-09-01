@@ -1,7 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from "firebase/auth";
 
-const API_URL = "http://192.168.128.147:8000/api/v1" ;
+const API_URL = "http://192.168.1.104:8000/api/v1";
 
 interface ApiResponse<T> {
   data: T;
@@ -16,33 +15,65 @@ class ApiError extends Error {
   }
 }
 
-// async function getAuthToken() {
-//   console.log("Fetching auth token...");
-//   return await AsyncStorage.getItem('auth_token');
-// }
- async function getAuthToken() {
-   const user = getAuth().currentUser;
-   
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-    return user.getIdToken();
+async function getAuthToken(): Promise<string | null> {
+  const user = getAuth().currentUser;
+
+  if (!user) {
+    return null;
+  }
+
+  return user.getIdToken();
+}
+
+function buildHeaders(token?: string | null) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return headers;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
-  const data = await response.json();
+  // Handle 204 No Content
+  if (response.status === 204) {
+    return null as unknown as T;
+  }
+
+  // Try to parse JSON; fall back to text if parsing fails
+  let text: string | null = null;
+  try {
+    text = await response.text();
+  } catch (e) {
+    // ignore
+  }
+
+  let parsed: any = null;
+  if (text) {
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      // not JSON, keep raw text
+      parsed = text;
+    }
+  }
 
   if (!response.ok) {
-    throw new ApiError(response.status, data.message || 'An error occurred');
+    const message = parsed && typeof parsed === 'object' ? parsed.message ?? parsed.error : String(parsed ?? 'An error occurred');
+    throw new ApiError(response.status, message);
   }
-  
-  return data;
+
+  // Return parsed JSON when possible, otherwise return raw text or null
+  return (parsed ?? null) as T;
 }
 
 export const api = {
  
-  async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-    const token = await  getAuthToken();
+  async get<T>(endpoint: string, params?: Record<string, string>, timeout = 15000): Promise<T> {
+    const token = await getAuthToken();
     const url = new URL(`${API_URL}${endpoint}`);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -50,54 +81,74 @@ export const api = {
       });
     }
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-    return handleResponse<T>(response);
+    try {
+      const response = await fetch(url.toString(), {
+        headers: buildHeaders(token),
+        signal: controller.signal,
+      });
+
+      return await handleResponse<T>(response);
+    } finally {
+      clearTimeout(id);
+    }
   },
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: any, timeout = 15000): Promise<T> {
     const token = await getAuthToken();
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-      body: data ? JSON.stringify(data) : undefined,
-    });
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-    return handleResponse<T>(response);
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: buildHeaders(token),
+        body: data ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
+      });
+
+      return await handleResponse<T>(response);
+    } finally {
+      clearTimeout(id);
+    }
   },
 
-  async put<T>(endpoint: string, data: any): Promise<T> {
+  async put<T>(endpoint: string, data: any, timeout = 15000): Promise<T> {
     const token = await getAuthToken();
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-    return handleResponse<T>(response);
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: buildHeaders(token),
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      });
+
+      return await handleResponse<T>(response);
+    } finally {
+      clearTimeout(id);
+    }
   },
 
-  async delete<T>(endpoint: string): Promise<T> {
+  async delete<T>(endpoint: string, timeout = 15000): Promise<T> {
     const token = await getAuthToken();
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-    return handleResponse<T>(response);
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: buildHeaders(token),
+        signal: controller.signal,
+      });
+
+      return await handleResponse<T>(response);
+    } finally {
+      clearTimeout(id);
+    }
   },
 };

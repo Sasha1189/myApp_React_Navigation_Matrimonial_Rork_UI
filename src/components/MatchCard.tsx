@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 import { useAppNavigation } from "../navigation/hooks";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { MessageCircle } from 'lucide-react-native';
-import { Match } from '../types/profile';
-import { theme } from '../constants/theme';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { MessageCircle } from "lucide-react-native";
+import { Match } from "../types/profile";
+import { theme } from "../constants/theme";
 
 interface MatchCardProps {
   match: Match;
@@ -16,7 +16,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   //   const diff = now.getTime() - date.getTime();
   //   const hours = Math.floor(diff / (1000 * 60 * 60));
   //   const days = Math.floor(hours / 24);
-    
+
   //   if (days > 0) return `${days}d ago`;
   //   if (hours > 0) return `${hours}h ago`;
   //   return 'Just now';
@@ -25,10 +25,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => navigation.navigate("Chat", { matchId : match.id })}
-        // router.push(`/chat/${match.id}`)}
+      onPress={() => navigation.navigate("Chat", { matchId: match.id })}
+      // router.push(`/chat/${match.id}`)}
     >
-      <Image source={{ uri: match.profile.images[0] }} style={styles.image} />
+      <Image
+  source={{ uri: (match.profile as any).photos?.[0]?.downloadURL || (match.profile as any).photos?.[0]?.localUrl }}
+        style={styles.image}
+      />
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.name}>{match.profile.name}</Text>
@@ -55,10 +58,10 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: theme.spacing.md,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -72,13 +75,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: theme.spacing.xs,
   },
   name: {
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
   },
   time: {
@@ -92,7 +95,7 @@ const styles = StyleSheet.create({
   noMessage: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textLight,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   unreadBadge: {
     backgroundColor: theme.colors.accent,
@@ -100,11 +103,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     minWidth: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   unreadCount: {
-    color: 'white',
+    color: "white",
     fontSize: theme.fontSize.xs,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

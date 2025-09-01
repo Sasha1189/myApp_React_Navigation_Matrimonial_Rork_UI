@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from 'firebase/auth';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.yuvanetwork.com';
 
@@ -16,7 +17,22 @@ class ApiError extends Error {
 }
 
 async function getAuthToken() {
-  return await AsyncStorage.getItem('auth_token');
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      // getIdToken fetches a fresh token when needed
+      return await user.getIdToken();
+    }
+  } catch (e) {
+    console.warn('Failed to get firebase id token', e);
+  }
+  // fallback to legacy stored token if present
+  try {
+    return await AsyncStorage.getItem('auth_token');
+  } catch (e) {
+    return null;
+  }
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {

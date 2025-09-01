@@ -33,6 +33,7 @@ export const useAuth = (): AuthContextType => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  // console.log("user:", user);
 
   const renderCount = useRef(0);
   renderCount.current += 1;

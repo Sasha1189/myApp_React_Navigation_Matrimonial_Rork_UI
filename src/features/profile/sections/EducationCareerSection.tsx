@@ -45,12 +45,12 @@ const EducationCareerSection: React.FC<Props> = ({
       editable={editable}
       icon={GraduationCap}
     />
-    {/* currentOccupation */}
+    {/* Occupation */}
     <PickerField
       label="Current Occupation"
-      value={formData.currentOccupation || ""}
+      value={formData.occupation || ""}
       options={occupationOptions || []}
-      onSelect={(v) => updateField("currentOccupation", v)}
+      onSelect={(v) => updateField("occupation", v)}
       editable={editable}
       icon={Briefcase}
     />

@@ -14,9 +14,9 @@ const queryClient = new QueryClient();
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <ProfileProvider>
-          <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ProfileProvider>
             <ThemeProvider>
               <AppProvider>
                 <GestureHandlerRootView style={{ flex: 1 }}>
@@ -24,9 +24,9 @@ export default function App() {
                 </GestureHandlerRootView>
               </AppProvider>
             </ThemeProvider>
-          </QueryClientProvider>
-        </ProfileProvider>
-      </AuthProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </SafeAreaProvider>
   );
 }
