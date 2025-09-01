@@ -1,231 +1,62 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useMemo,
-  useRef,
-  ReactNode,
-} from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { profileService } from "../src/services/profile.service";
-// import api from "../utils/apiClient";
+import React, { createContext, useContext, useMemo } from "react";
 import { useAuth } from "./AuthContext";
+import {
+  useProfileData,
+  useUpdateProfileData,
+} from "../src/hooks/queries/useProfile";
 import { Profile } from "../types/profile";
 
-// export interface Profile {
-//   uid?: string;
-//   gender: string;
-//   fullname: string;
-//   aboutme: string;
-//   education: string;
-//   work: string;
-//   height: string;
-//   dob: string;
-//   hobbies: string;
-//   income: string;
-//   livesin: string;
-//   hometown: string;
-//   maritalStatus: string;
-//   familyDetails: string;
-//   partnerExpectations: string;
-//   profileImages: string[];
-// }
-
 interface ProfileContextType {
-  profile: Partial<Profile>;
+  profile?: Profile;
   loading: boolean;
-  reloadProfile?: () => Promise<void>;
-  updateProfile?: (fields: Partial<Profile>) => void;
-  // reloadProfile: () => Promise<void>;
-  // updateProfile?: (fieldsToUpdate: Partial<Profile>) => Promise<any>;
-  // updateProfileImages?: (uploadedUrls: string[]) => Promise<any>;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  reloadProfile: () => void;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export const useProfileContext = (): ProfileContextType => {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error("useProfile must be used within a ProfileProvider");
-  }
-  return context;
-};
-
-interface ProfileProviderProps {
-  children: ReactNode;
-}
-
-export const ProfileProvider = ({ children }: ProfileProviderProps) => {
+export const ProfileProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const { user } = useAuth();
-  const uid = user?.uid;
-  const [loading, setLoading] = useState(true);
+  const uid = user?.uid as Profile["uid"];
+  const gender = user?.displayName as Profile["gender"];
 
-  // Initialize profile with empty id; we'll sync UID once auth is available
-  const [profile, setProfile] = useState<Partial<Profile>>({
-    //Personal Section
-    id: "",
-    fullName: "",
-    dateOfBirth: new Date(),
-    timeOfBirth: "",
-    placeOfBirth: "",
-    gender: "Male",
-    maritalStatus: "Never Married",
-    height: "",
-    weight: "",
-    bodyType: "Average",
-    bloodGroup: "O+",
-    manglikStatus: "Don't Know",
-    rashi: "Aries",
-    horoscopeRequired: "Optional",
-    //Bio section
-    shortBio: "",
-    aspirations: "",
-    beliefsValues: "",
-    strengths: "",
-    likesDislikesText: "",
-    socialMedia: "",
-    //Contact Details
-    currentCity: "",
-    nativePlace: "",
-    mobileNumber: "",
-    preferredContact: "Phone",
-    profileCreatedBy: "Self",
-    //Education & Career
-    highestQualification: "Bachelor's",
-    fieldOfStudy: "Engineering",
-    currentOccupation: "Working",
-    industry: "IT",
-    jobTitle: "",
-    companyName: "",
-    workLocation: "",
-    annualIncome: "₹5L+",
-    //Family Details
-    fatherOccupation: "",
-    motherOccupation: "",
-    numberOfBrothers: 0,
-    numberOfSisters: 0,
-    siblingsDetails: "",
-    familyType: "Nuclear",
-    familyValues: "Modern",
-    //Lifestyle and Habits
-    dietPreferences: "Vegetarian",
-    smokingHabit: "No",
-    drinkingHabit: "No",
-    exerciseRoutine: "Sometimes",
-    fitnessLevel: "Average",
-    hobbies: [],
-    beliefSystem: "Open-minded",
-    preferredAgeRange: { min: 25, max: 35 },
-    preferredHeightRange: { min: "5'0''", max: "6'0''" },
-    // Partner Preferences
-    preferredMaritalStatus: "Never Married",
-    manglikPreference: "Don't Know",
-    preferredEducation: "Graduate",
-    preferredProfession: "Working Professional",
-    preferredIncomeRange: "₹5L+",
-    locationPreference: "",
-    livingWithParents: "Okay",
-  });
+  const { data: profile, isLoading, refetch } = useProfileData(uid, gender);
+  const { mutateAsync: updateProfileMutation } = useUpdateProfileData(
+    uid,
+    gender
+  );
 
-  //   const loadProfile = async () => {
-  //     if (!uid) {
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     setLoading(true);
-  //     try {
-  //       // TODO: restore AsyncStorage + API fetch logic
-  //     } catch (error) {
-  //       console.error("Failed to load profile:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  const profileLoadedOnce = useRef(false);
-
-  // Sync profile.id with authenticated user's uid once it becomes available.
-  useEffect(() => {
-    // If user is logged in and profile id is missing or different, set it.
-    setProfile((prev) => {
-      const prevId = (prev as any).id;
-      if (uid && prevId !== uid) {
-        return { ...prev, id: uid };
-      }
-
-      // If user logged out, clear id
-      if (!uid && prevId) {
-        return { ...prev, id: "" };
-      }
-      return prev;
-    });
-  }, [uid]);
-
-  // Load profile from server (or AsyncStorage) when uid becomes available
-  const loadProfile = async () => {
-    if (!uid) return;
-    setLoading(true);
+  const updateProfile = async (data: Partial<Profile>) => {
     try {
-  // Determine gender to pass to server (use current profile.gender or default to 'male')
-  const genderToUse = (profile as any).gender ? (profile as any).gender : 'male';
-  // First try server
-  const serverProfile = await profileService.getProfile(uid, genderToUse);
-      if (serverProfile) {
-        setProfile((prev) => ({ ...prev, ...serverProfile }));
-        await AsyncStorage.setItem("profile", JSON.stringify(serverProfile));
-        return;
-      }
+      await updateProfileMutation(data);
+      // maybe show toast or navigation
     } catch (err) {
-      // fallback to AsyncStorage if server fails
-      try {
-        const stored = await AsyncStorage.getItem("profile");
-        if (stored) {
-          setProfile((prev) => ({
-            ...prev,
-            ...(JSON.parse(stored) as Partial<Profile>),
-          }));
-        }
-      } catch (e) {
-        console.error("Failed to read stored profile", e);
-      }
-    } finally {
-      setLoading(false);
+      console.error("Update failed:", err);
     }
   };
-
-  // Example: trigger loadProfile once when user logs in
-  useEffect(() => {
-    if (uid && !profileLoadedOnce.current) {
-      profileLoadedOnce.current = true;
-      loadProfile();
-    }
-  }, [uid]);
 
   const value: ProfileContextType = useMemo(
     () => ({
       profile,
-      loading,
-      reloadProfile: loadProfile,
-      updateProfile: (fields: Partial<Profile>) => {
-        setProfile((prev) => {
-          const updated = { ...prev, ...fields };
-          try {
-            AsyncStorage.setItem("profile", JSON.stringify(updated));
-          } catch (e) {
-            console.error("Failed to persist profile", e);
-          }
-          return updated;
-        });
-      },
-      //   reloadProfile: loadProfile,
-      // updateProfile,
-      // updateProfileImages,
+      loading: isLoading,
+      updateProfile,
+      reloadProfile: refetch,
     }),
-    [profile, loading]
+    [profile, isLoading, updateProfile, refetch]
   );
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
   );
+};
+
+export const useProfileContext = () => {
+  const ctx = useContext(ProfileContext);
+  if (!ctx)
+    throw new Error("useProfileContext must be used inside ProfileProvider");
+  return ctx;
 };

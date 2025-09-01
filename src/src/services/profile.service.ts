@@ -7,36 +7,35 @@ interface ProfileResponse {
   nextPage?: string;
 }
 
-interface ProfileUpdateData {
-  name?: string;
-  bio?: string;
-  interests?: string[];
-  photos?: string[];
-}
-
 export const profileService = {
   async getProfiles(page?: string): Promise<ProfileResponse> {
     const params = page ? { page } : undefined;
-  const res = await api.get<any>('/profiles', params);
-  // server may return { status, profiles, ... }
-  return res?.profiles ? res : { profiles: res };
+    const res = await api.get<any>("/profiles", params);
+    // server may return { status, profiles, hasMore, ... }
+    if (res?.profiles) return res;
+    // If server returns an array directly, wrap it.
+    if (Array.isArray(res)) return { profiles: res, hasMore: false } as ProfileResponse;
+    // Last-resort: attempt to coerce into the shape
+    return { profiles: res?.profiles || [], hasMore: !!res?.hasMore } as ProfileResponse;
   },
 
-  async getProfile(id: string, gender?: string): Promise<Profile> {
-    const params: Record<string, string> = { uid: id };
-    if (gender) params.gender = gender;
-    // Server route: GET /api/v1/profiles/get-profile?uid=...&gender=...
-    const res = await api.get<any>(`/profiles/get-profile`, params);
-    // server responds { status, profile }
-    return res?.profile ? res.profile : res;
+  async getProfile(uid: string, gender: string): Promise<Profile | undefined> {
+  const params: Record<string, string> = { uid, gender };
+  const res = await api.get<any>(`/profiles/get-profile`, params);
+    return res.profile as Profile | undefined;
   },
 
-  async updateProfile(id: string, data: ProfileUpdateData): Promise<Profile> {
-    // Backend expects an object containing `uid` and `gender` in the body
-    // Route on server: app.use("/api/v1/profiles/update-profile", authToken, updateOrCreateProfile);
-    // Send POST to /profiles/update-profile with { uid, ...data }
-    const res = await api.post<any>(`/profiles/update-profile`, { uid: id, ...data });
-    // server responds { status, profile }
+  async updateProfile({
+  uid,
+  gender,
+  data,
+}: {
+  uid: string;
+  gender: string;
+  data: Partial<Profile>;
+    }): Promise<Profile> {
+    const payload = { uid, gender, ...data };
+    const res = await api.post<any>(`/profiles/update-profile`, payload);
     return res?.profile ? res.profile : res;
   },
 
