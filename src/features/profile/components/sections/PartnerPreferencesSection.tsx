@@ -1,16 +1,16 @@
 import React from "react";
-import FormSection from "../../../components/form/FormSection";
-import InputField from "../../../components/form/InputField";
-import PickerField from "../../../components/form/PickerField";
+import FormSection from "../form/FormSection";
+import InputField from "../form/InputField";
+import PickerField from "../form/PickerField";
 import { HeartHandshake, Ruler, MapPin, Home } from "lucide-react-native";
-import { Profile } from "../../../types/profile";
+import { Profile } from "../../../../types/profile";
 import {
   maritalStatusOptions,
   highestQualification,
   occupationOptions,
   incomeOptions,
   livingWithParentsOptions,
-} from "../../../constants/profileOptions";
+} from "../../../../constants/profileOptions";
 
 interface Props {
   formData: Partial<Profile>;

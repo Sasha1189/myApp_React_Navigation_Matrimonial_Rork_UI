@@ -1,7 +1,3 @@
-import { theme } from "../constants/theme";
-import { Profile } from "../types/profile";
-import { LinearGradient } from "expo-linear-gradient";
-import { Briefcase, GraduationCap } from "lucide-react-native";
 import React, { useRef, useState } from "react";
 import {
   Animated,
@@ -13,6 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Briefcase, GraduationCap } from "lucide-react-native";
+import { theme } from "../../../constants/theme";
+import { Profile } from "../../../types/profile";
+import { formatDOB } from "../../../utils/dateUtils";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const SWIPE_THRESHOLD = screenWidth * 0.25;
@@ -139,10 +140,18 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         activeOpacity={1}
         style={styles.imageContainer}
       >
-        <Image
-          source={{ uri: (profile as any).images?.[currentImageIndex] }}
-          style={styles.image}
-        />
+        {profile?.photos?.length > 0 && profile?.photos[0]?.downloadURL ? (
+          <Image
+            source={{ uri: profile?.photos[0]?.downloadURL }}
+            style={styles.image}
+          />
+        ) : (
+          <Image
+            source={require("../../../../assets/images/profile.png")}
+            style={styles.image}
+            resizeMode="contain"
+          />
+        )}
       </TouchableOpacity>
 
       <LinearGradient
@@ -152,32 +161,36 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 
       <View style={styles.cardContent}>
         <View style={styles.nameAge}>
-          <Text style={styles.name}>{profile.name}</Text>
-          <Text style={styles.age}>{profile.age}</Text>
+          <Text style={styles.name}>{profile?.fullName}</Text>
+          <Text style={styles.age}>
+            {profile?.dateOfBirth
+              ? formatDOB(profile.dateOfBirth, "age")
+              : "-- age"}
+          </Text>
         </View>
 
-        {profile.occupation && (
+        {profile?.occupation && (
           <View style={styles.infoRow}>
             <Briefcase size={16} color="white" />
-            <Text style={styles.infoText}>{profile.occupation}</Text>
+            <Text style={styles.infoText}>{profile?.occupation}</Text>
           </View>
         )}
 
-        {profile.education && (
+        {profile?.fieldOfStudy && (
           <View style={styles.infoRow}>
             <GraduationCap size={16} color="white" />
-            <Text style={styles.infoText}>{profile.education}</Text>
+            <Text style={styles.infoText}>{profile?.fieldOfStudy}</Text>
           </View>
         )}
 
         <Text style={styles.bio} numberOfLines={1}>
-          {profile.bio}
+          {profile?.shortBio}
         </Text>
 
         <View style={styles.interests}>
-          {profile.interests.slice(0, 4).map((interest, index) => (
+          {profile?.hobbies.slice(0, 4).map((hobby, index) => (
             <View key={index} style={styles.interestTag}>
-              <Text style={styles.interestText}>{interest}</Text>
+              <Text style={styles.interestText}>{hobby}</Text>
             </View>
           ))}
         </View>

@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { theme } from "../../constants/theme";
+import { theme } from "../../../../constants/theme";
 
 interface DatePickerProps {
   label: string;

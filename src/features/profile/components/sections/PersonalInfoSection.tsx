@@ -6,10 +6,10 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import FormSection from "../../../components/form/FormSection";
-import InputField from "../../../components/form/InputField";
-import PickerField from "../../../components/form/PickerField";
-import RadioField from "../../../components/form/RadioField";
+import FormSection from "../form/FormSection";
+import InputField from "../form/InputField";
+import PickerField from "../form/PickerField";
+import RadioField from "../form/RadioField";
 import {
   User,
   Calendar,
@@ -25,8 +25,8 @@ import {
   Star,
   Zap,
 } from "lucide-react-native";
-import { Profile } from "../../../types/profile";
-import { theme } from "../../../constants/theme";
+import { Profile } from "../../../../types/profile";
+import { theme } from "../../../../constants/theme";
 import {
   genderOptions,
   maritalStatusOptions,
@@ -35,11 +35,9 @@ import {
   manglikOptions,
   rashiOptions,
   horoscopeOptions,
-} from "../../../constants/profileOptions";
+} from "../../../../constants/profileOptions";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import DatePickerField, {
-  TimePickerField,
-} from "../../../components/form/DateTimePickers";
+import DatePickerField, { TimePickerField } from "../form/DateTimePickers";
 
 interface Props {
   formData: Partial<Profile>;

@@ -1,8 +1,8 @@
 import React from "react";
-import FormSection from "../../../components/form/FormSection";
-import InputField from "../../../components/form/InputField";
+import FormSection from "../form/FormSection";
+import InputField from "../form/InputField";
 import { FileText } from "lucide-react-native";
-import { Profile } from "../../../types/profile";
+import { Profile } from "../../../../types/profile";
 
 interface Props {
   formData: Partial<Profile>;

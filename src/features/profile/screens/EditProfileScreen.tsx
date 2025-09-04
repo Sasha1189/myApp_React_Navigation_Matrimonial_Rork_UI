@@ -63,7 +63,7 @@ import {
   FamilyDetailsSection,
   LifestyleSection,
   PartnerPreferencesSection,
-} from "../sections";
+} from "../components/sections";
 
 const requiredFields: (keyof Profile)[] = [
   "fullName",

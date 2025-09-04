@@ -3,7 +3,7 @@ import { useAuth } from "./AuthContext";
 import {
   useProfileData,
   useUpdateProfileData,
-} from "../src/hooks/queries/useProfile";
+} from "../features/profile/hooks/useProfile";
 import { Profile } from "../types/profile";
 
 interface ProfileContextType {

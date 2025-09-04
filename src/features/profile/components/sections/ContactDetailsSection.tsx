@@ -1,9 +1,9 @@
 import React from "react";
-import FormSection from "../../../components/form/FormSection";
-import InputField from "../../../components/form/InputField";
+import FormSection from "../form/FormSection";
+import InputField from "../form/InputField";
 import { Phone, MapPin } from "lucide-react-native";
-import { Profile } from "../../../types/profile";
-import PickerField from "src/components/form/PickerField";
+import { Profile } from "../../../../types/profile";
+import PickerField from "src/features/profile/components/form/PickerField";
 import {
   districtOptions,
   preferredContactOptions,

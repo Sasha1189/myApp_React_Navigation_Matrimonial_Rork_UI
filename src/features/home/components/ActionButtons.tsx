@@ -1,7 +1,7 @@
-import { theme } from '../constants/theme';
-import { Heart, Star, X } from 'lucide-react-native';
-import React from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { theme } from "../../../constants/theme";
+import { Heart, Star, X } from "lucide-react-native";
+import React from "react";
+import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface ActionButtonsProps {
   onPass: () => void;
@@ -36,7 +36,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
   return (
     <View style={styles.container}>
-        <TouchableOpacity
+      <TouchableOpacity
         style={[styles.button, styles.likeButton]}
         onPress={() => animatePress(onLike)}
         disabled={disabled}
@@ -44,7 +44,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       >
         <Heart size={30} color={theme.colors.success} />
       </TouchableOpacity>
-       <TouchableOpacity
+      <TouchableOpacity
         style={[styles.button, styles.superLikeButton]}
         onPress={() => animatePress(onSuperLike)}
         disabled={disabled}
@@ -66,9 +66,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: theme.spacing.lg,
     gap: theme.spacing.lg,
   },
@@ -78,8 +78,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     // backgroundColor: 'white',
     //  backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     // shadowColor: theme.colors.shadow,
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.15,

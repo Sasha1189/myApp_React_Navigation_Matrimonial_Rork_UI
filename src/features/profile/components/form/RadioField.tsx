@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { theme } from "../../constants/theme";
+import { theme } from "../../../../constants/theme";
 
 interface RadioFieldProps {
   label: string;

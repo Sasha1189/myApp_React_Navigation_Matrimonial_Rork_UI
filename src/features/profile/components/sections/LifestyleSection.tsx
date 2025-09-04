@@ -1,9 +1,9 @@
 import React from "react";
-import FormSection from "../../../components/form/FormSection";
-import PickerField from "../../../components/form/PickerField";
-import MultiSelectField from "../../../components/form/MultiSelectField";
+import FormSection from "../form/FormSection";
+import PickerField from "../form/PickerField";
+import MultiSelectField from "../form/MultiSelectField";
 import { Coffee, Droplets, Wine } from "lucide-react-native";
-import { Profile } from "../../../types/profile";
+import { Profile } from "../../../../types/profile";
 import {
   dietOptions,
   habitOptions,
@@ -11,7 +11,7 @@ import {
   fitnessOptions,
   beliefOptions,
   hobbyOptions,
-} from "../../../constants/profileOptions";
+} from "../../../../constants/profileOptions";
 
 interface Props {
   formData: Partial<Profile>;

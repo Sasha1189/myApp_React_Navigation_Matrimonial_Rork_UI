@@ -8,7 +8,7 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import { theme } from "../../constants/theme";
+import { theme } from "../../../../constants/theme";
 
 interface Props {
   label: string;
@@ -49,7 +49,9 @@ const MultiSelectField: React.FC<Props> = ({
         activeOpacity={0.8}
         onPress={() => editable && setOpen(true)}
       >
-        <Text style={values && values.length ? styles.text : styles.placeholder}>
+        <Text
+          style={values && values.length ? styles.text : styles.placeholder}
+        >
           {values && values.length ? values.join(", ") : `Select ${label}`}
         </Text>
       </TouchableOpacity>
@@ -80,7 +82,10 @@ const MultiSelectField: React.FC<Props> = ({
             <View style={styles.modalActions}>
               <TouchableOpacity
                 onPress={() => setOpen(false)}
-                style={[styles.actionBtn, { backgroundColor: theme.colors.border }]}
+                style={[
+                  styles.actionBtn,
+                  { backgroundColor: theme.colors.border },
+                ]}
               >
                 <Text>Done</Text>
               </TouchableOpacity>
@@ -127,7 +132,11 @@ const styles = StyleSheet.create({
     maxHeight: "80%",
     padding: theme.spacing.md,
   },
-  modalTitle: { fontSize: theme.fontSize.lg, fontWeight: "600", marginBottom: theme.spacing.md },
+  modalTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    marginBottom: theme.spacing.md,
+  },
   optionRow: {
     flexDirection: "row",
     justifyContent: "space-between",

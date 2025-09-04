@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { theme } from "../../constants/theme";
+import { theme } from "../../../../constants/theme";
 import { ChevronDown, ChevronUp } from "lucide-react-native";
 
 interface FormSectionProps {

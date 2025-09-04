@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { theme } from "../../constants/theme";
+import { theme } from "../../../../constants/theme";
 
 interface PickerFieldProps {
   label: string;

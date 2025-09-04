@@ -1,5 +1,5 @@
-import { api } from './api';
-import { Profile } from "../../types/profile";
+import { api } from '../../../services/api';
+import { Profile } from "../../../types/profile";
 
 interface ProfileResponse {
   profiles: Profile[];

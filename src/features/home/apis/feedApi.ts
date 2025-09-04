@@ -1,29 +1,27 @@
 import { Profile } from "../../../types/profile";
-import { api } from "../../../src/services/api";
+import { api } from "../../../services/api";
 
 interface FeedResponse {
   profiles: Profile[];
+  lastCursor?: {lastCreatedAt: string, lastId: string};
   done?: boolean;
 }
 
-interface FetchFeedResult {
-  items: Profile[];
-  done?: boolean;
-}
+export async function fetchFeed(page: number, limit: number, uid: string, gender: string,
+  filters?: Record<string, any>, reset = false) {
 
-export async function fetchFeed(_pageParam: any, limit = 10, uid: string, gender?: string): Promise<FetchFeedResult> {
-  if (!gender) return { items: [], done: false };
+  if (!uid && !gender) return { profiles: [], done: false };
 
-  const res = await api.get<FeedResponse>("/feed/browse-all", {
-    gender,
-    limit: limit.toString(),
+  const params: Record<string, string> = {
+    page: String(page),
+    limit: String(limit),
     uid,
-  });
-
-  return {
-  items: res.profiles,
-  done: !!res.done,
+    gender,
+    ...Object.fromEntries(Object.entries(filters ?? {}).map(([k, v]) => [k, String(v)])),
+    ...(reset ? { reset: "true" } : {}),
   };
+
+  return await api.get<FeedResponse>("/feed/browse-all", params);
 }
 
 export async function likeProfile(uid: string) {

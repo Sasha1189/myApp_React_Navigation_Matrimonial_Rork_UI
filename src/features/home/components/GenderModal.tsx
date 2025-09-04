@@ -1,5 +1,5 @@
 import { getAuth, updateProfile } from "firebase/auth";
-import { auth } from "../config/firebase";
+import { auth } from "../../../config/firebase";
 import {
   View,
   Text,
@@ -10,10 +10,10 @@ import {
   Alert,
 } from "react-native";
 import React, { useState } from "react";
-import { Profile } from "../types/profile";
-import { api } from "../src/services/api";
-import { useAuth } from "../context/AuthContext";
-import LoadingScreen from "./LoadingScreen";
+import { Profile } from "../../../types/profile";
+import { api } from "../../../services/api";
+import { useAuth } from "../../../context/AuthContext";
+import LoadingScreen from "../../../components/LoadingScreen";
 
 interface GenderModalProps {
   visible: boolean;
