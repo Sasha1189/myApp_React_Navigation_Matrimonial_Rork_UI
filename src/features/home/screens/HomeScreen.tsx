@@ -5,12 +5,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useState, useEffect, useMemo } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useAuth } from "../../../context/AuthContext";
-import {
-  useLikeProfile,
-  usePassProfile,
-  useSuperLikeProfile,
-} from "../hooks/useSwipeMutations";
-import { useTabNavigation } from "../../../navigation/hooks";
+import { useToggleLike } from "../hooks/useSwipeMutations";
+import { useAppNavigation } from "../../../navigation/hooks";
 import GenderModal from "../components/GenderModal";
 import { useFlattenedFeed } from "../hooks/useFlattenedFeed";
 import { FeedLoading, FeedError, FeedEmpty } from "../components/FeedStates";
@@ -25,7 +21,7 @@ export default function HomeScreen() {
       ? user.displayName
       : undefined;
   const [showModal, setShowModal] = useState<boolean>(false);
-  const navigation = useTabNavigation();
+  const navigation = useAppNavigation();
 
   useEffect(() => {
     if (
@@ -60,12 +56,8 @@ export default function HomeScreen() {
     resetFeed,
   } = useFlattenedFeed(uid, gender);
 
-  console.log(profiles?.[0]?.fullName);
-
   // mutations
-  const likeMutation = useLikeProfile();
-  const passMutation = usePassProfile();
-  const superLikeMutation = useSuperLikeProfile();
+  const toggleLikeMutation = useToggleLike();
 
   // UI states
   if (isLoading) return <FeedLoading />;
@@ -87,19 +79,23 @@ export default function HomeScreen() {
 
   // handle swipe actions
   const handleSwipe = (id: string, action: "like" | "pass" | "superlike") => {
-    if (action === "like") likeMutation.mutate(id);
-    if (action === "pass") passMutation.mutate(id);
-    if (action === "superlike") superLikeMutation.mutate(id);
-
-    // prefetch when few left
-    if (
-      profiles.length < 5 &&
-      hasNextPage &&
-      !isFetchingNextPage &&
-      !feedDone
-    ) {
-      fetchNextPage();
+    if (action === "like") {
+      toggleLikeMutation.mutate({ profileId: id, uid });
     }
+    if (action === "pass")
+      navigation.navigate("UserDetails", { profile: currentProfile });
+    if (action === "superlike")
+      navigation.navigate("Chat", { otherUserId: id });
+
+    // prefetch when few left...use later
+    // if (
+    //   profiles.length < 5 &&
+    //   hasNextPage &&
+    //   !isFetchingNextPage &&
+    //   !feedDone
+    // ) {
+    //   fetchNextPage();
+    // }
   };
 
   const currentProfile = profiles[0];
@@ -140,11 +136,11 @@ export default function HomeScreen() {
               currentProfile && handleSwipe(currentProfile.uid, "superlike")
             }
             disabled={
-              !currentProfile ||
-              likeMutation.status === "pending" ||
-              passMutation.status === "pending" ||
-              superLikeMutation.status === "pending"
+              !currentProfile || toggleLikeMutation.status === "pending"
+              // passMutation.status === "pending" ||
+              // superLikeMutation.status === "pending"
             }
+            liked={currentProfile?.liked}
           />
         </View>
       </View>
@@ -202,6 +198,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       right: theme.spacing.lg,
       bottom: theme.spacing.lg,
       alignItems: "flex-end",
+      elevation: 10,
     },
     rightActions: {
       alignItems: "center",

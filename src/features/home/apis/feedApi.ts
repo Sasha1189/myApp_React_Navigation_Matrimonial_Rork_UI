@@ -24,14 +24,5 @@ export async function fetchFeed(page: number, limit: number, uid: string, gender
   return await api.get<FeedResponse>("/feed/browse-all", params);
 }
 
-export async function likeProfile(uid: string) {
-  return api.post(`/profiles/${uid}/like`);
-}
 
-export async function passProfile(uid: string) {
-  return api.post(`/profiles/${uid}/pass`);
-}
-
-export async function superLikeProfile(uid: string) {
-  return api.post(`/profiles/${uid}/superlike`);
-}
+/////////////////

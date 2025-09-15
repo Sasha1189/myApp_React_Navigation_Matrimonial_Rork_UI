@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,58 +7,38 @@ import {
   TouchableOpacity,
   FlatList,
   KeyboardAvoidingView,
+  ActivityIndicator,
   Platform,
 } from "react-native";
 import { Send } from "lucide-react-native";
 import { useRoute } from "@react-navigation/native";
-import { theme } from "../../../constants/theme";
-import { useMatches } from "../../../hooks/useAppStore";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-interface ChatMessage {
-  id: string;
-  text: string;
-  isSent: boolean;
-  timestamp: Date;
-}
+import { useAuth } from "../../../context/AuthContext";
+import { theme } from "../../../constants/theme";
+import { useChatRoom, type ChatMessage } from "../hooks/useChatRoom";
 
 export default function ChatScreen() {
   const route = useRoute();
-  const { matchId } = route.params as { matchId: string };
-  // const { matchId } = useLocalSearchParams();
-  const matches = useMatches();
-  const match = matches.find((m) => m.id === matchId);
+  const { otherUserId, otherUserName } = route.params as {
+    otherUserId: string;
+    otherUserName: string;
+  };
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      text: "Hey! How are you?",
-      isSent: false,
-      timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    },
-    {
-      id: "2",
-      text: "I'm great! How about you?",
-      isSent: true,
-      timestamp: new Date(Date.now() - 1000 * 60 * 3),
-    },
-  ]);
+  const { user } = useAuth();
+  const currentUserId = user?.uid;
+
+  const { messages, hasMore, loadingMore, loadMoreMessages, sendMessage } =
+    useChatRoom(currentUserId, otherUserId);
 
   const [inputText, setInputText] = useState("");
+  const flatListRef = useRef<FlatList>(null);
 
-  const sendMessage = () => {
-    if (!inputText.trim()) return;
-
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: inputText,
-      isSent: true,
-      timestamp: new Date(),
-    };
-
-    setMessages([newMessage, ...messages]);
-    setInputText("");
-  };
+  // Auto scroll
+  useEffect(() => {
+    if (messages.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   const renderMessage = ({ item }: { item: ChatMessage }) => (
     <View
@@ -78,14 +58,6 @@ export default function ChatScreen() {
     </View>
   );
 
-  if (!match) {
-    return (
-      <View style={styles.container}>
-        <Text>Match not found</Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -93,11 +65,16 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <FlatList
+          ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
-          inverted
           contentContainerStyle={styles.messagesContainer}
+          // onEndReached={loadMoreMessages}
+          // onEndReachedThreshold={0.2}
+          ListFooterComponent={
+            loadingMore ? <ActivityIndicator size="small" /> : null
+          }
         />
 
         <View style={styles.inputContainer}>
@@ -112,7 +89,10 @@ export default function ChatScreen() {
           />
           <TouchableOpacity
             style={styles.sendButton}
-            onPress={sendMessage}
+            onPress={() => {
+              sendMessage(inputText);
+              setInputText("");
+            }}
             disabled={!inputText.trim()}
           >
             <Send

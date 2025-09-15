@@ -27,9 +27,6 @@ import { theme } from "../../../constants/theme";
 import { useAuth } from "src/context/AuthContext";
 import { storage } from "../../../utils/storage";
 import { formatDOB } from "src/utils/dateUtils";
-import { Profile } from "src/types/profile";
-
-type Navigation = ReturnType<typeof useAppNavigation>;
 
 interface MenuItem {
   icon: React.ComponentType<any>;
@@ -79,16 +76,14 @@ export default function ProfileScreen(): React.ReactElement {
       console.error("Logout error:", error);
     }
   };
+
   const openPreview = (): void => {
-    const uid = (profile as any)?.id || (profile as any)?.uid;
-    if (!uid) {
+    if (!profile) {
       Alert.alert("Profile not ready", "Your profile is still loading.");
       return;
     }
-    (navigation as any).navigate("UserDetails", {
-      userId: uid,
-      cachedProfile: profile,
-    });
+    // ✅ Navigate with the correct union type
+    navigation.navigate("UserDetails", { profile });
   };
 
   const menuItems: MenuItem[] = [
@@ -131,18 +126,14 @@ export default function ProfileScreen(): React.ReactElement {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.compactHeader}>
           <View style={styles.compactProfileRow}>
-            {profile?.photos?.length > 0 && profile?.photos[0]?.downloadURL ? (
-              <Image
-                source={{ uri: profile?.photos[0]?.downloadURL }}
-                style={styles.compactProfileImage}
-              />
-            ) : (
-              <Image
-                source={require("../../../../assets/images/profile.png")}
-                style={styles.compactProfileImage}
-                resizeMode="contain"
-              />
-            )}
+            <Image
+              source={
+                profile?.photos[0]?.downloadURL
+                  ? { uri: profile?.photos[0]?.downloadURL }
+                  : require("../../../../assets/images/profile.png")
+              }
+              style={styles.compactProfileImage}
+            />
             <View style={styles.compactProfileInfo}>
               <Text style={styles.compactName}>
                 {profile?.fullName || "New user"}

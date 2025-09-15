@@ -1,49 +1,46 @@
 import React from "react";
-import { useAppNavigation } from "../navigation/hooks";
+import { useAppNavigation } from "../../../navigation/hooks";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { MessageCircle } from "lucide-react-native";
-import { Profile, Match } from "../types/profile";
-import { theme } from "../constants/theme";
-interface MatchCardProps {
-  match: Match;
+import { theme } from "../../../constants/theme";
+import { UserBannerItem } from "../type/messages";
+
+interface UserBannerProps {
+  item: UserBannerItem;
   type: "chats" | "sent" | "received";
 }
-export const MatchCard: React.FC<MatchCardProps> = ({ match, type }) => {
-  console.log("Rendering MatchCard for:", match);
+
+export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const navigation = useAppNavigation();
 
   const handlePress = () => {
     if (type === "chats") {
-      navigation.navigate("Chat", { chatId: match.id });
+      // 🔹 Navigate to chat room using otherUserId
+      navigation.navigate("Chat", { otherUserId: item.id });
     } else {
-      navigation.navigate("UserDetails", { profile: match.profile });
+      // 🔹 Navigate to user profile
+      navigation.navigate("UserDetails", { userId: item.id });
     }
   };
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      {match?.otherUser?.photos[0]?.downloadURL ? (
-        <Image
-          source={{ uri: match.otherUser.photos[0].downloadURL }}
-          style={styles.image}
-        />
-      ) : (
-        <Image
-          source={require("../../assets/images/profile.png")}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      )}
+      <Image
+        source={
+          item.photo
+            ? { uri: item.photo }
+            : require("../../../../assets/images/profile.png")
+        }
+        style={styles.image}
+      />
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.name}>
-            {match?.otherUser?.fullName || "Unknown"}
-          </Text>
+          <Text style={styles.name}>{item?.name || "Unknown"}</Text>
         </View>
         {type === "chats" ? (
-          match.lastMessage ? (
+          item.lastMessage ? (
             <Text style={styles.message} numberOfLines={1}>
-              {match.lastMessage}
+              {item.lastMessage}
             </Text>
           ) : (
             <Text style={styles.noMessage}>Say hello! 👋</Text>
@@ -56,9 +53,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, type }) => {
           </Text>
         )}
       </View>
-      {match?.unreadCounts ? (
+      {type === "chats" && item.unreadCount ? (
         <View style={styles.unreadBadge}>
-          <Text style={styles.unreadCount}>{match?.unreadCounts || 0}</Text>
+          <Text style={styles.unreadCount}>{item?.unreadCount || 0}</Text>
         </View>
       ) : (
         <MessageCircle size={20} color={theme.colors.textLight} />

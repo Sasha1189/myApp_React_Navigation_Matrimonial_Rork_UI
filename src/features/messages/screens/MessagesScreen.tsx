@@ -1,69 +1,36 @@
-import { useMatches } from "../../../hooks/useAppStore";
-import { theme } from "../../../theme/index";
-import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
-import {
-  CompositeNavigationProp,
-  useNavigation,
-} from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useState, useEffect } from "react";
+import { View, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
-import React, { useState } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { MatchCard } from "../../../components/MatchCard";
-import { AppStackParamList, TabParamList } from "../../../navigation/types";
-
-type MessagesScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<TabParamList, "Messages">,
-  NativeStackNavigationProp<AppStackParamList>
->;
+import { useAuth } from "src/context/AuthContext";
+import { theme } from "../../../theme/index";
+import { TabButton } from "../components/TabButton";
+import { EmptyState } from "../components/EmptyState";
+import { UserBanner } from "../components/UserBanner";
+import { type MessagesScreenNavigationProp } from "../type/messages";
+import { useMessagesData } from "../hooks/useMessagesData";
+import { useRecentChatPartners } from "../hooks/useRecentChatPartners";
 
 export default function MessagesScreen() {
-  const matches = useMatches();
+  const { user } = useAuth();
+  const uid = user?.uid;
+  const navigation = useNavigation<MessagesScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats"
   );
-  const navigation = useNavigation<MessagesScreenNavigationProp>();
 
-  React.useLayoutEffect(() => {
+  useRecentChatPartners(uid);
+  const { data, loading } = useMessagesData(activeTab, uid);
+
+  // 🔹 Layout header
+  useEffect(() => {
     navigation.setOptions({
       title: "Messages",
-      headerStyle: {
-        backgroundColor: theme.colors.primary,
-      },
+      headerStyle: { backgroundColor: theme.colors.primary },
       headerTintColor: "white",
     });
   }, [navigation]);
-
-  const renderTabButton = (
-    tab: "chats" | "sent" | "received",
-    label: string,
-    icon: React.ComponentType<any>
-  ) => {
-    const Icon = icon;
-    return (
-      <TouchableOpacity
-        style={[styles.tabButton, activeTab === tab && styles.activeTabButton]}
-        onPress={() => setActiveTab(tab)}
-      >
-        <Icon
-          size={16}
-          color={activeTab === tab ? "white" : theme.colors.primary}
-        />
-        <Text
-          style={[styles.tabText, activeTab === tab && styles.activeTabText]}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
 
   return (
     <LinearGradient
@@ -71,41 +38,55 @@ export default function MessagesScreen() {
       style={styles.container}
     >
       <View style={styles.tabsContainer}>
-        {renderTabButton("chats", "Chats", MessageCircle)}
-        {renderTabButton("sent", "Likes Sent", Send)}
-        {renderTabButton("received", "Likes Received", Heart)}
+        <TabButton
+          tab="chats"
+          label="Chats"
+          icon={MessageCircle}
+          isActive={activeTab === "chats"}
+          onPress={() => setActiveTab("chats")}
+        />
+        <TabButton
+          tab="sent"
+          label="Likes Sent"
+          icon={Send}
+          isActive={activeTab === "sent"}
+          onPress={() => setActiveTab("sent")}
+        />
+        <TabButton
+          tab="received"
+          label="Likes Received"
+          icon={Heart}
+          isActive={activeTab === "received"}
+          onPress={() => setActiveTab("received")}
+        />
       </View>
 
-      {matches.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>
-            {activeTab === "chats"
-              ? "No messages yet"
-              : activeTab === "sent"
-              ? "No likes sent yet"
-              : "No likes received yet"}
-          </Text>
-          <Text style={styles.emptySubtext}>
-            {activeTab === "chats"
-              ? "When you match with someone, you can message them here!"
-              : activeTab === "sent"
-              ? "Start liking profiles to see them here!"
-              : "When someone likes you, they will appear here!"}
-          </Text>
-        </View>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color={theme.colors.primary}
+          style={{ marginTop: 20 }}
+        />
+      ) : data?.length === 0 ? (
+        <EmptyState type={activeTab} />
       ) : (
         <FlatList
-          data={matches}
+          data={data}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <MatchCard match={item} />}
+          renderItem={({ item }) => <UserBanner item={item} type={activeTab} />}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+          removeClippedSubviews
+          maxToRenderPerBatch={15}
+          windowSize={5}
         />
       )}
     </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },

@@ -1,4 +1,6 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
+import { Profile } from "src/types/profile";
+// import {Profile} from "../types/profile";
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
@@ -17,8 +19,11 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
-  Chat: { matchId: string };
-  UserDetails: { userId: string };
+  Chat: { otherUserId: string };
+  UserDetails:
+    | { profile: Profile }  // full profile preloaded
+    | { userId: string }               // only id, fetch if missing
+    | { self: true };                  // special case: show current user;
   EditProfile: undefined;
   ManagePhotos: undefined;
   Filter: undefined;

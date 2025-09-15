@@ -103,9 +103,16 @@ type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
   "UserDetails"
 >;
 
-export default function UserDetailsScreen() {
+export default function UserDetailsScreen({
+  route,
+}: {
+  route: RouteProp<AppStackParamList, "UserDetails">;
+}) {
   const navigation = useNavigation<UserDetailsScreenNavigationProp>();
-  const { profile } = useProfileContext();
+
+  const profile = route?.params?.profile ?? useProfileContext();
+
+  // const { profile } = route?.params ?? useProfileContext();
 
   React.useLayoutEffect(() => {
     navigation.setOptions({

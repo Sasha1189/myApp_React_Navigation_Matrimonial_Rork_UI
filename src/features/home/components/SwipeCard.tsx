@@ -188,7 +188,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         </Text>
 
         <View style={styles.interests}>
-          {profile?.hobbies.slice(0, 4).map((hobby, index) => (
+          {profile?.hobbies.slice(0, 3).map((hobby, index) => (
             <View key={index} style={styles.interestTag}>
               <Text style={styles.interestText}>{hobby}</Text>
             </View>

@@ -2,6 +2,17 @@ export interface Profile {
   // Basic Information
   uid: string;
   photos: Photo[];
+  likeCount: number;
+  liked?: boolean; // whether current user liked this profile
+  likedMe?: boolean; // whether this profile liked current user
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Profile Status
+  isActive: boolean;
+  isVerified: boolean;
+  isPremium: boolean;
+  // lastActiveAt: Date;
   // Personal & Birth Information-13
   fullName: string;
   dateOfBirth: Date | null;
@@ -79,7 +90,8 @@ export interface Match {
   profile: Profile;
   matchedAt: Date;
   lastMessage?: string;
-  unreadCount?: number;
+  unreadCounts?: number;
+  otherUser?: Partial<Profile>; // The profile of the other user in the match
 }
 
 export interface Message {

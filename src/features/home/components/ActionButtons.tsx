@@ -1,5 +1,13 @@
 import { theme } from "../../../constants/theme";
-import { Heart, Star, X } from "lucide-react-native";
+import {
+  Heart,
+  Star,
+  X,
+  ThumbsUp,
+  MessageCircleMore,
+  MessageSquareMore,
+  ArrowDownAZ,
+} from "lucide-react-native";
 import React from "react";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -8,6 +16,7 @@ interface ActionButtonsProps {
   onLike: () => void;
   onSuperLike: () => void;
   disabled?: boolean;
+  liked?: boolean;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -15,6 +24,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onLike,
   onSuperLike,
   disabled = false,
+  liked = false,
 }) => {
   const scaleValue = new Animated.Value(1);
 
@@ -42,7 +52,16 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="like-button"
       >
-        <Heart size={30} color={theme.colors.success} />
+        {/* <ThumbsUp size={30} color={theme.colors.success} /> */}
+        {liked ? (
+          <ThumbsUp
+            fill={theme.colors.success}
+            color={theme.colors.success}
+            size={30}
+          /> // ✅ filled
+        ) : (
+          <ThumbsUp color={theme.colors.success} size={20} /> // ⭕ outline
+        )}
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.button, styles.superLikeButton]}
@@ -50,7 +69,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="superlike-button"
       >
-        <Star size={24} color={theme.colors.primary} />
+        <MessageCircleMore size={30} color={theme.colors.primary} />
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.button, styles.passButton]}
@@ -58,7 +77,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="pass-button"
       >
-        <X size={30} color={theme.colors.danger} />
+        <ArrowDownAZ size={30} color={theme.colors.danger} />
       </TouchableOpacity>
     </View>
   );
