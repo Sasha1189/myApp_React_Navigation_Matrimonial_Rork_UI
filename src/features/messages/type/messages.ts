@@ -2,14 +2,14 @@ import { AppStackParamList, TabParamList } from "../../../navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { CompositeNavigationProp } from "@react-navigation/native";
-
+import { Profile } from "../../../types/profile";
 
 // 🔹 Profile info used inside chat partner preview
 export interface ChatPartnerProfile {
-  id: string;      // otherUserId
-  fullName: string;
-  photo?: string;  // first photo (optional)
-  age?: number;
+  id: string;             // otherUserId (or uid from profile)
+  name: string;           // fullName from profile
+  photo: string | null;   // first photo downloadURL, null if none
+  dateOfBirth?: string;   // pass raw, frontend computes age
 }
 
 // 🔹 One row in "recentChatPartners" list
@@ -19,6 +19,19 @@ export interface RecentChatPartner {
   lastMessageAt: string;    // ISO string timestamp
   otherUser: ChatPartnerProfile | null; // may be null if profile not found
   unreadCount: number;      // unread for current user
+}
+
+// 🔹 Normalized item for FlatList / UserBanner
+export interface UserBannerItem {
+  id: string;
+  name: string;
+  photo?: string | null;
+  // dateOfBirth?: string;
+  age?: string;
+  lastMessage?: string;
+  lastMessageAt?: Date | string;
+  unreadCount?: number;
+  profile?: Profile;
 }
 
 // 🔹 For chat messages inside a room
@@ -37,14 +50,3 @@ export interface MessagesScreenNavigationProp extends CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList, "Messages">,
   NativeStackNavigationProp<AppStackParamList>
   > { }
-
-  // types/messages.ts
-export interface UserBannerItem {
-  id: string;
-  name: string;
-  photo?: string;
-  age?: number;
-  lastMessage?: string;
-  lastMessageAt?: Date | string;
-  unreadCount?: number;
-}

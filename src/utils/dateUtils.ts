@@ -28,7 +28,8 @@ export const formatDOB = (
 
   switch (mode) {
     case "age":
-      return age >= 0 ? `${age} years` : "Not available";
+      return age >= 0 ? `${age}` : "Not available";
+          // return age >= 0 ? `${age} years` : "Not available";
     case "dob":
       return formattedDOB;
     case "both":

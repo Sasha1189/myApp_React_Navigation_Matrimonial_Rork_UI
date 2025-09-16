@@ -165,7 +165,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           <Text style={styles.age}>
             {profile?.dateOfBirth
               ? formatDOB(profile.dateOfBirth, "age")
-              : "-- age"}
+              : "18+"}
           </Text>
         </View>
 

@@ -14,16 +14,15 @@ export function useRecentChatPartners(uid: string | undefined) {
     });
     socketRef.current = socket;
 
+      // ✅ Initial fetch
+    socket.emit("fetchRecentChatPartners"); // 👈 keep name aligned with backend
+    console.log("🔌 fetchRecentPartners emitted for uid:", uid);
+
     // ✅ Listen for server updates
     socket.on("recentChatPartners", (partners) => {
       console.log("📨 recentChatPartners from server:", partners);
       queryClient.setQueryData(["recentChatPartners"], partners || []);
     });
-
-    // ✅ Initial fetch
-    socket.emit("fetchRecentChatPartners"); // 👈 keep name aligned with backend
-    console.log("🔌 fetchRecentPartners emitted for uid:", uid);
-
     return () => {
       socket.disconnect();
     };

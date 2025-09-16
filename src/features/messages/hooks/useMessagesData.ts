@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type RecentChatPartner } from "../type/messages";
 import { Profile } from "../../../types/profile";
 import { UserBannerItem } from "../type/messages";
+import { formatDOB } from "../../../utils/dateUtils";
 
 export function useMessagesData(
   activeTab: "chats" | "sent" | "received",
@@ -27,28 +28,41 @@ export function useMessagesData(
   // 🔹 Normalize for UI
   const normalized: UserBannerItem[] = useMemo(() => {
     if (activeTab === "chats") {
-      return chats.map((c) => ({
-        id: c.otherUser?.id ?? c.roomId, // fallback if profile missing
-        name: c.otherUser?.fullName ?? "Unknown User",
-        photo: c.otherUser?.photo,
-        // age: c.otherUser?.age,
-        lastMessage: c.lastMessage,
-        lastMessageAt: c.lastMessageAt,
-        unreadCount: c.unreadCount,
-      }));
-    }
+      return chats.map((c) => {
+    // const lastMessageAt =
+    //   typeof c.lastMessageAt === "string"
+    //     ? new Date(c.lastMessageAt)
+    //     : c.lastMessageAt.toDate?.() ?? new Date();
 
-    const list: Profile[] = activeTab === "sent" ? sent : received;
-    return list.map((p) => ({
-      id: p.uid,
-      name: p.fullName, // depending on profile type
-      photo: p.photos?.[0].downloadURL, // first photo
-    //   age: p.age,
-      // no chat data for likes
-      lastMessage: undefined,
-      lastMessageAt: undefined,
-      unreadCount: undefined,
-    }));
+    return {
+      id: c.otherUser?.id ?? c.roomId,
+      name: c.otherUser?.name ?? "Unknown User",
+      photo: c.otherUser?.photo ?? undefined, // already string | null
+      age: c.otherUser?.dateOfBirth
+        ? formatDOB(c.otherUser.dateOfBirth, "age")
+        : undefined,
+      lastMessage: c.lastMessage,
+      lastMessageAt: c.lastMessageAt, // lastMessageAt
+      unreadCount: c.unreadCount,
+    };
+  });
+  }
+    ////....//////
+    const list = activeTab === "sent" ? sent : received;
+
+  return list.map((item) => {
+  const profile = (item as any).profile ?? item; // fallback if direct profile
+  return {
+    id: profile.uid,
+    name: profile.fullName,
+    photo: profile.photos?.[0]?.downloadURL,
+    age: profile.dateOfBirth ? formatDOB(profile.dateOfBirth, "age") : "18+",
+    lastMessage: undefined,
+    lastMessageAt: undefined,
+    unreadCount: undefined,
+    profile, // pass full profile for details screen
+  };
+});
   }, [activeTab, chats, sent, received]);
 
   // 🔹 Select loading state

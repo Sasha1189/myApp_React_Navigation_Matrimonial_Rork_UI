@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  Text,
+  View,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
@@ -61,6 +67,8 @@ export default function MessagesScreen() {
         />
       </View>
 
+      <Text style={styles.sectionTitle}>Recent Activity</Text>
+
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -74,7 +82,7 @@ export default function MessagesScreen() {
           data={data}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => <UserBanner item={item} type={activeTab} />}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={styles.activityContainer}
           showsVerticalScrollIndicator={false}
           initialNumToRender={10}
           removeClippedSubviews
@@ -141,5 +149,16 @@ export const styles = StyleSheet.create({
   },
   activeTabText: {
     color: "white",
+  },
+  activityContainer: {
+    paddingHorizontal: theme.spacing.md,
+  },
+  sectionTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "bold",
+    color: theme.colors.text,
+    marginHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
 });

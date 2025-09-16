@@ -49,9 +49,8 @@ import {
 } from "react-native";
 import { AppStackParamList } from "../../../navigation/types";
 import { useProfileContext } from "../../../context/ProfileContext";
-import { formatDOB } from "src/utils/dateUtils";
-
-const { width } = Dimensions.get("window");
+import LoadingScreen from "../../../components/LoadingScreen";
+import { Profile } from "../../../types/profile";
 
 interface DetailSectionProps {
   title: string;
@@ -109,10 +108,22 @@ export default function UserDetailsScreen({
   route: RouteProp<AppStackParamList, "UserDetails">;
 }) {
   const navigation = useNavigation<UserDetailsScreenNavigationProp>();
+  let profile: Profile | null = null;
 
-  const profile = route?.params?.profile ?? useProfileContext();
+  if ("profile" in route.params) {
+    // Case 1: full profile passed in
+    profile = route.params.profile ?? null;
+  } else if ("userId" in route.params) {
+    // Case 2: only userId, fetch profile from backend here
+    // profile = await fetchProfile(route.params.userId);
+  } else if ("self" in route.params && route.params.self) {
+    // Case 3: self profile, use context
+    profile = useProfileContext().profile ?? null;
+  }
 
-  // const { profile } = route?.params ?? useProfileContext();
+  if (!profile) {
+    return <LoadingScreen />;
+  }
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -129,14 +140,6 @@ export default function UserDetailsScreen({
       ),
     });
   }, [navigation, profile]);
-
-  if (!profile) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Profile not found</Text>
-      </View>
-    );
-  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
