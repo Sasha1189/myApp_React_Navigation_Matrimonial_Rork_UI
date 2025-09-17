@@ -1,7 +1,6 @@
 import { theme } from "../../../theme/index";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { LinearGradient } from "expo-linear-gradient";
 import {
   Activity,
   ArrowLeft,
@@ -50,6 +49,7 @@ import {
 import { AppStackParamList } from "../../../navigation/types";
 import { useProfileContext } from "../../../context/ProfileContext";
 import LoadingScreen from "../../../components/LoadingScreen";
+import { ProfileCarousel } from "../components/ProfileCarousel";
 import { Profile } from "../../../types/profile";
 
 interface DetailSectionProps {
@@ -102,6 +102,8 @@ type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
   "UserDetails"
 >;
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
 export default function UserDetailsScreen({
   route,
 }: {
@@ -125,61 +127,29 @@ export default function UserDetailsScreen({
     return <LoadingScreen />;
   }
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      title: profile?.fullName || "Profile",
-      headerStyle: {
-        backgroundColor: theme.colors.primary,
-      },
-      headerTintColor: "white",
-      headerLeft: () => (
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color="white" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, profile]);
+  // React.useLayoutEffect(() => {
+  //   navigation.setOptions({
+  //     headerShown: true,
+  //     title: profile?.fullName || "Profile",
+  //     headerStyle: {
+  //       backgroundColor: theme.colors.primary,
+  //     },
+  //     headerTintColor: "white",
+  //     headerLeft: () => (
+  //       <TouchableOpacity onPress={() => navigation.goBack()}>
+  //         <ArrowLeft size={24} color="white" />
+  //       </TouchableOpacity>
+  //     ),
+  //   });
+  // }, [navigation, profile]);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
-        <View style={styles.imageContainer}>
-          {profile?.photos && profile?.photos.length > 0 ? (
-            <>
-              <Image
-                source={{ uri: profile?.photos[0].downloadURL }}
-                resizeMode="cover"
-                style={styles.profileImage}
-              />
-              <LinearGradient
-                colors={["transparent", "rgba(0,0,0,0.7)"]}
-                style={styles.imageGradient}
-              />
-            </>
-          ) : (
-            <View
-              style={[
-                styles.profileImage,
-                { backgroundColor: theme.colors.border },
-              ]}
-            />
-          )}
-
-          {/* <View style={styles.imageOverlay}>
-            <Text style={styles.profileName}>{profile.fullName}</Text>
-            <Text style={styles.profileAge}>
-              {formatDOB(profile.dateOfBirth, "age")}
-            </Text>
-            <View style={styles.locationRow}>
-              <MapPin size={16} color="white" />
-              <Text style={styles.locationText}>{profile.currentCity}</Text>
-            </View>
-          </View> */}
+        <View style={styles.card}>
+          <ProfileCarousel profile={profile} />
         </View>
-      </View>
 
-      <View style={styles.content}>
         <DetailSection title="Personal Information" icon={Users}>
           <DetailRow
             label="Full Name"
@@ -479,65 +449,82 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
+  cardContainer: {
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
   },
-  errorText: {
-    fontSize: theme.fontSize.lg,
-    color: theme.colors.textLight,
-  },
-  imageContainer: {
-    position: "relative",
-    overflow: "hidden",
-    height: 475,
-    backgroundColor: "white",
+  card: {
+    width: screenWidth - theme.spacing.lg * 2,
+    height: screenHeight * 0.7,
     borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.cardBackground,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: theme.spacing.lg,
   },
-  profileImage: {
-    resizeMode: "cover",
-    width: "100%",
-    height: "100%",
-  },
-  imageGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "60%",
-  },
-  imageOverlay: {
-    position: "absolute",
-    bottom: theme.spacing.lg,
-    left: theme.spacing.lg,
-    right: theme.spacing.lg,
-  },
-  profileName: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: theme.spacing.xs,
-  },
-  profileAge: {
-    fontSize: theme.fontSize.lg,
-    color: "white",
-    marginBottom: theme.spacing.sm,
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  locationText: {
-    color: "white",
-    fontSize: theme.fontSize.md,
-    marginLeft: theme.spacing.xs,
-  },
+  // centerContainer: {
+  //   flex: 1,
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  // },
+  // errorText: {
+  //   fontSize: theme.fontSize.lg,
+  //   color: theme.colors.textLight,
+  // },
+  // imageContainer: {
+  //   position: "relative",
+  //   overflow: "hidden",
+  //   height: 475,
+  //   backgroundColor: "white",
+  //   borderRadius: theme.borderRadius.lg,
+  //   shadowColor: theme.colors.shadow,
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 4,
+  //   elevation: 3,
+  // },
+  // profileImage: {
+  //   resizeMode: "cover",
+  //   width: "100%",
+  //   height: "100%",
+  // },
+  // imageGradient: {
+  //   position: "absolute",
+  //   bottom: 0,
+  //   left: 0,
+  //   right: 0,
+  //   height: "60%",
+  // },
+  // imageOverlay: {
+  //   position: "absolute",
+  //   bottom: theme.spacing.lg,
+  //   left: theme.spacing.lg,
+  //   right: theme.spacing.lg,
+  // },
+  // profileName: {
+  //   fontSize: theme.fontSize.xxl,
+  //   fontWeight: "bold",
+  //   color: "white",
+  //   marginBottom: theme.spacing.xs,
+  // },
+  // profileAge: {
+  //   fontSize: theme.fontSize.lg,
+  //   color: "white",
+  //   marginBottom: theme.spacing.sm,
+  // },
+  // locationRow: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  // },
+  // locationText: {
+  //   color: "white",
+  //   fontSize: theme.fontSize.md,
+  //   marginLeft: theme.spacing.xs,
+  // },
   content: {
     padding: theme.spacing.lg,
   },

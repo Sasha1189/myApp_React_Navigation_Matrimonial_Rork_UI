@@ -57,10 +57,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           <ThumbsUp
             fill={theme.colors.success}
             color={theme.colors.success}
-            size={30}
+            size={40}
           /> // ✅ filled
         ) : (
-          <ThumbsUp color={theme.colors.success} size={20} /> // ⭕ outline
+          <ThumbsUp color={theme.colors.success} size={40} /> // ⭕ outline
         )}
       </TouchableOpacity>
       <TouchableOpacity
@@ -69,7 +69,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="superlike-button"
       >
-        <MessageCircleMore size={30} color={theme.colors.primary} />
+        <MessageCircleMore size={40} color={theme.colors.primary} />
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.button, styles.passButton]}
@@ -77,7 +77,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="pass-button"
       >
-        <ArrowDownAZ size={30} color={theme.colors.danger} />
+        <ArrowDownAZ size={40} color={theme.colors.danger} />
       </TouchableOpacity>
     </View>
   );
@@ -92,11 +92,13 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
   },
   button: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    // width: 50,
+    // height: 50,
+    // borderRadius: 25,
+    // borderColor: theme.colors.border,
+    // borderWidth: 1,
     // backgroundColor: 'white',
-    //  backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    //  backgroundColor: 'rgba(15, 8, 8, 0.4)',
     justifyContent: "center",
     alignItems: "center",
     // shadowColor: theme.colors.shadow,
@@ -106,15 +108,15 @@ const styles = StyleSheet.create({
     // elevation: 3,
   },
   passButton: {
-    borderWidth: 2,
+    // borderWidth: 1,
     // borderColor: theme.colors.danger,
   },
   likeButton: {
-    borderWidth: 2,
+    // borderWidth: 1,
     // borderColor: theme.colors.success,
   },
   superLikeButton: {
-    borderWidth: 2,
+    // borderWidth: 1,
     // borderColor: theme.colors.primary,
   },
 });

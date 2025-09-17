@@ -1,6 +1,13 @@
 import React from "react";
 import { View, TouchableOpacity } from "react-native";
-import { Home, Heart, MessageCircle, User,Filter,Search } from "lucide-react-native";
+import {
+  Home,
+  Heart,
+  MessageCircle,
+  User,
+  Filter,
+  Search,
+} from "lucide-react-native";
 import { theme } from "../constants/theme";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { TabParamList } from "./types";

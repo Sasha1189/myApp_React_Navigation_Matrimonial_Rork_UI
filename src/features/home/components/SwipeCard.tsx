@@ -39,15 +39,16 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   const handleImageTap = (event: any) => {
     const { locationX } = event.nativeEvent;
     const cardWidth = screenWidth - 20;
-    const tapZone = cardWidth / ((profile as any).photos?.length || 1);
+    const photosCount = profile?.photos?.length || 1;
+    const tapZone = cardWidth / photosCount;
     const tappedIndex = Math.floor(locationX / tapZone);
-    if (
-      tappedIndex >= 0 &&
-      tappedIndex < ((profile as any).photos?.length || 0)
-    ) {
-      setCurrentImageIndex(tappedIndex);
-    }
+    const clamped = Math.max(0, Math.min(tappedIndex, photosCount - 1));
+    setCurrentImageIndex(clamped);
+    // if (tappedIndex >= 0 && tappedIndex < (profile.photos?.length || 0)) {
+    //   setCurrentImageIndex(tappedIndex);
+    // }
   };
+
   const position = useRef(new Animated.ValueXY()).current;
   const rotateCard = position.x.interpolate({
     inputRange: [-screenWidth / 2, 0, screenWidth / 2],
@@ -73,13 +74,26 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     extrapolate: "clamp",
   });
 
+  // -------------------- panResponder (replace current create) --------------------
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => isTopCard,
-      onMoveShouldSetPanResponder: () => isTopCard,
+      // don't take the touch on start — let taps go to children
+      onStartShouldSetPanResponder: () => false,
+
+      // take the responder *only* when there is meaningful movement (user is swiping)
+      onMoveShouldSetPanResponder: (_, gesture) => {
+        if (!isTopCard) return false;
+        const { dx, dy } = gesture;
+        const MOVEMENT_THRESHOLD = 6; // small number to ignore taps
+        return (
+          Math.abs(dx) > MOVEMENT_THRESHOLD || Math.abs(dy) > MOVEMENT_THRESHOLD
+        );
+      },
+
       onPanResponderMove: (_, gesture) => {
         position.setValue({ x: gesture.dx, y: gesture.dy });
       },
+
       onPanResponderRelease: (_, gesture) => {
         if (gesture.dx > SWIPE_THRESHOLD) {
           forceSwipe("right");
@@ -91,8 +105,33 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           resetPosition();
         }
       },
+
+      onPanResponderTerminate: () => {
+        resetPosition();
+      },
     })
   ).current;
+
+  // const panResponder = useRef(
+  //   PanResponder.create({
+  //     onStartShouldSetPanResponder: () => isTopCard,
+  //     onMoveShouldSetPanResponder: () => isTopCard,
+  //     onPanResponderMove: (_, gesture) => {
+  //       position.setValue({ x: gesture.dx, y: gesture.dy });
+  //     },
+  //     onPanResponderRelease: (_, gesture) => {
+  //       if (gesture.dx > SWIPE_THRESHOLD) {
+  //         forceSwipe("right");
+  //       } else if (gesture.dx < -SWIPE_THRESHOLD) {
+  //         forceSwipe("left");
+  //       } else if (gesture.dy < -SWIPE_THRESHOLD) {
+  //         forceSwipe("up");
+  //       } else {
+  //         resetPosition();
+  //       }
+  //     },
+  //   })
+  // ).current;
 
   const forceSwipe = (direction: "left" | "right" | "up") => {
     const x =
@@ -139,10 +178,11 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         onPress={handleImageTap}
         activeOpacity={1}
         style={styles.imageContainer}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        {profile?.photos?.length > 0 && profile?.photos[0]?.downloadURL ? (
+        {profile?.photos?.length > 0 ? (
           <Image
-            source={{ uri: profile?.photos[0]?.downloadURL }}
+            source={{ uri: profile?.photos[currentImageIndex]?.downloadURL }}
             style={styles.image}
           />
         ) : (
@@ -155,6 +195,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       </TouchableOpacity>
 
       <LinearGradient
+        pointerEvents="none"
         colors={["transparent", "rgba(0,0,0,0.8)"]}
         style={styles.gradient}
       />
@@ -196,22 +237,29 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         </View>
       </View>
 
-      <Animated.View style={[styles.likeLabel, { opacity: likeOpacity }]}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.likeLabel, { opacity: likeOpacity }]}
+      >
         <Text style={styles.likeLabelText}>LIKE</Text>
       </Animated.View>
 
-      <Animated.View style={[styles.nopeLabel, { opacity: nopeOpacity }]}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.nopeLabel, { opacity: nopeOpacity }]}
+      >
         <Text style={styles.nopeLabelText}>NOPE</Text>
       </Animated.View>
 
       <Animated.View
+        pointerEvents="none"
         style={[styles.superLikeLabel, { opacity: superLikeOpacity }]}
       >
         <Text style={styles.superLikeLabelText}>SUPER LIKE</Text>
       </Animated.View>
 
-      <View style={styles.imageIndicators}>
-        {(profile as any).images?.map((_: any, index: number) => (
+      <Animated.View pointerEvents="none" style={styles.imageIndicators}>
+        {profile?.photos?.map((_, index) => (
           <View
             key={index}
             style={[
@@ -220,7 +268,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             ]}
           />
         ))}
-      </View>
+      </Animated.View>
 
       <View style={styles.premiumBanner}>
         <Text style={styles.premiumText}>Premium</Text>
@@ -386,6 +434,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.sm,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
   premiumText: {
     color: "white",
