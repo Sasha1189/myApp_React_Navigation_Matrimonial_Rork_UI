@@ -37,15 +37,7 @@ import {
   Zap,
 } from "lucide-react-native";
 import React from "react";
-import {
-  Dimensions,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppStackParamList } from "../../../navigation/types";
 import { useProfileContext } from "../../../context/ProfileContext";
 import LoadingScreen from "../../../components/LoadingScreen";
@@ -126,7 +118,7 @@ export default function UserDetailsScreen({
   if (!profile) {
     return <LoadingScreen />;
   }
-
+  //Header is managed in the navigator
   // React.useLayoutEffect(() => {
   //   navigation.setOptions({
   //     headerShown: true,

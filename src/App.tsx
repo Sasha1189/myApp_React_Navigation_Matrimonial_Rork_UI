@@ -12,6 +12,13 @@ import RootNavigator from "./navigation/RootNavigator";
 const queryClient = new QueryClient();
 
 export default function App() {
+  // // setup persistence once
+  // React.useEffect(() => {
+  //   initPersistence();
+  // }, []);
+
+  // // run pruning once per day
+  // useAppCacheManager();
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

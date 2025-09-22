@@ -4,11 +4,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
 } from "react-native";
+import { Image } from "expo-image";
 import {
   Settings,
   Edit3,
@@ -128,11 +127,15 @@ export default function ProfileScreen(): React.ReactElement {
           <View style={styles.compactProfileRow}>
             <Image
               source={
-                profile?.photos[0]?.downloadURL
-                  ? { uri: profile?.photos[0]?.downloadURL }
+                profile?.photos?.[0]?.downloadURL
+                  ? { uri: profile.photos[0].downloadURL }
                   : require("../../../../assets/images/profile.png")
               }
               style={styles.compactProfileImage}
+              contentFit={
+                profile?.photos?.[0]?.downloadURL ? "cover" : "contain"
+              }
+              cachePolicy="disk"
             />
             <View style={styles.compactProfileInfo}>
               <Text style={styles.compactName}>

@@ -1,9 +1,9 @@
 import React from "react";
-import { useAppNavigation } from "../../../navigation/hooks";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { MessageCircle } from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { theme } from "../../../constants/theme";
 import { UserBannerItem } from "../type/messages";
+import { useAppNavigation } from "../../../navigation/hooks";
 
 interface UserBannerProps {
   item: UserBannerItem;
@@ -37,6 +37,8 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
             : require("../../../../assets/images/profile.png")
         }
         style={styles.activityImage}
+        contentFit={item.photo ? "cover" : "contain"}
+        cachePolicy="disk"
       />
       <View style={styles.activityContent}>
         <Text style={styles.activityName}>
@@ -118,9 +120,7 @@ const styles = StyleSheet.create({
   },
 
   //////
-  // container: {
-  //     flex: 1,
-  //   },
+
   sectionTitle: {
     fontSize: theme.fontSize.lg,
     fontWeight: "bold",
@@ -200,44 +200,3 @@ const styles = StyleSheet.create({
     color: theme.colors.textLight,
   },
 });
-
-{
-  /* <TouchableOpacity style={styles.container} onPress={handlePress}>
-        <Image
-          source={
-            item.photo
-              ? { uri: item.photo }
-              : require("../../../../assets/images/profile.png")
-          }
-          style={styles.image}
-        />
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.name}>{item?.name || "Unknown"}</Text>
-            <Text>{item?.age ? item.age : "18+"}</Text>
-          </View>
-          {type === "chats" ? (
-            item.lastMessage ? (
-              <Text style={styles.message} numberOfLines={1}>
-                {item.lastMessage}
-              </Text>
-            ) : (
-              <Text style={styles.noMessage}>Say hello! 👋</Text>
-            )
-          ) : (
-            <Text style={styles.message}>
-              {type === "sent"
-                ? "You liked this profile ❤️"
-                : "They liked you 💌"}
-            </Text>
-          )}
-        </View>
-        {type === "chats" && item.unreadCount ? (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadCount}>{item?.unreadCount || 0}</Text>
-          </View>
-        ) : (
-          <MessageCircle size={20} color={theme.colors.textLight} />
-        )}
-      </TouchableOpacity> */
-}

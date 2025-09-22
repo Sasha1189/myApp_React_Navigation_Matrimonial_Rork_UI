@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Image,
   FlatList,
   Dimensions,
   StyleSheet,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from "react-native";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../../../constants/theme";
 import { Profile } from "../../../types/profile";
@@ -47,8 +47,14 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
                 }}
               >
                 <Image
-                  source={{ uri: item.downloadURL }}
+                  source={
+                    item?.downloadURL
+                      ? { uri: item.downloadURL }
+                      : require("../../../../assets/images/profile.png")
+                  }
                   style={styles.profileImage}
+                  contentFit={item?.downloadURL ? "cover" : "contain"}
+                  cachePolicy="disk"
                 />
                 <LinearGradient
                   colors={["transparent", "rgba(0,0,0,0.7)"]}

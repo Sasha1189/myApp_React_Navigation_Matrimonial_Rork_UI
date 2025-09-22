@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react";
+import { Image } from "expo-image";
 import {
   Animated,
   Dimensions,
-  Image,
   PanResponder,
   StyleSheet,
   Text,
@@ -27,6 +27,8 @@ interface SwipeCardProps {
   isTopCard: boolean;
 }
 
+const placeholder = require("../../../../assets/images/profile.png");
+
 export const SwipeCard: React.FC<SwipeCardProps> = ({
   profile,
   onSwipeLeft,
@@ -44,10 +46,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     const tappedIndex = Math.floor(locationX / tapZone);
     const clamped = Math.max(0, Math.min(tappedIndex, photosCount - 1));
     setCurrentImageIndex(clamped);
-    // if (tappedIndex >= 0 && tappedIndex < (profile.photos?.length || 0)) {
-    //   setCurrentImageIndex(tappedIndex);
-    // }
   };
+
+  // -------------------- animated values --------------------
 
   const position = useRef(new Animated.ValueXY()).current;
   const rotateCard = position.x.interpolate({
@@ -180,18 +181,20 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         style={styles.imageContainer}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        {profile?.photos?.length > 0 ? (
-          <Image
-            source={{ uri: profile?.photos[currentImageIndex]?.downloadURL }}
-            style={styles.image}
-          />
-        ) : (
-          <Image
-            source={require("../../../../assets/images/profile.png")}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        )}
+        <Image
+          source={
+            profile?.photos?.[currentImageIndex]?.downloadURL
+              ? { uri: profile.photos[currentImageIndex].downloadURL }
+              : require("../../../../assets/images/profile.png")
+          }
+          style={styles.image}
+          contentFit={
+            profile?.photos?.[currentImageIndex]?.downloadURL
+              ? "cover"
+              : "contain"
+          }
+          cachePolicy="disk"
+        />
       </TouchableOpacity>
 
       <LinearGradient
@@ -446,11 +449,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-// No required code snippet
-{
-  /* <View style={styles.infoRow}>
-          <MapPin size={16} color="white" />
-          <Text style={styles.infoText}>{profile.distance} miles away</Text>
-        </View> */
-}
