@@ -18,6 +18,7 @@ import {
   Eye,
 } from "lucide-react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
+import { clearCacheOnLogout } from "src/cache/cacheConfig";
 import { signOut } from "firebase/auth";
 import { auth } from "../../../config/firebase";
 import { useProfileContext } from "../../../context/ProfileContext";
@@ -58,6 +59,7 @@ export default function ProfileScreen(): React.ReactElement {
               try {
                 // clear any cached user data
                 await storage.clear();
+                await clearCacheOnLogout();
                 console.log("AsyncStorage cleared");
               } catch (storageError) {
                 console.error("Failed to clear storage:", storageError);

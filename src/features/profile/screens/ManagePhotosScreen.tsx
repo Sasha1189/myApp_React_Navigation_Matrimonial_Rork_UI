@@ -38,6 +38,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
 import { Profile, Photo } from "src/types/profile";
+import { useUpdateProfileData } from "../hooks/useProfile";
 
 const { width } = Dimensions.get("window");
 const photoSize = (width - theme.spacing.lg * 3) / 2;
@@ -50,7 +51,11 @@ type ManagePhotosScreenNavigationProp = NativeStackNavigationProp<
 export default function ManagePhotosScreen() {
   const navigation = useNavigation<ManagePhotosScreenNavigationProp>();
   const { user } = useAuth();
-  const { profile, updateProfile } = useProfileContext();
+  const { profile } = useProfileContext();
+  const { mutateAsync: updateProfile } = useUpdateProfileData(
+    profile?.uid ?? "",
+    profile?.gender
+  );
   const [photos, setPhotos] = useState<Profile["photos"]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

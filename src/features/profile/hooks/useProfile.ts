@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { profileService } from '../apis/profile.service';
+import { getProfile, updateProfile } from '../apis/profileApi';
 import { getDefaultProfile } from "../../../utils/getDefaultProfile"
 import { Profile } from '../../../types/profile';
 
@@ -7,7 +7,7 @@ export const useProfileData = (uid: string, gender: '' | 'Male' | 'Female' = '')
   return useQuery<Profile>({
     queryKey: ["profile", uid],
     queryFn: async (): Promise<Profile> => {
-      const data = await profileService.getProfile(uid, gender);
+      const data = await getProfile(uid, gender);
       return { ...getDefaultProfile(), ...data, uid, gender };
     },
     enabled: !!uid && !!gender, // only run if uid and gender exist
@@ -19,10 +19,18 @@ export const useUpdateProfileData = (uid: string, gender: '' | 'Male' | 'Female'
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<Profile>) =>
-      profileService.updateProfile({ uid, gender, ...data }),
+    mutationFn: (data: Partial<Profile>) => {
+      if (!uid || !gender) throw new Error("Missing uid or gender");
+      return updateProfile({ uid, gender, ...data });
+    },
     onSuccess: (updatedProfile) => {
-      queryClient.setQueryData<Profile>(["profile", uid], updatedProfile);
+       const normalized = {
+        ...getDefaultProfile(),
+        ...updatedProfile,
+        uid,
+        gender,
+      };
+      queryClient.setQueryData<Profile>(["profile", uid], normalized);
     },
   });
 };

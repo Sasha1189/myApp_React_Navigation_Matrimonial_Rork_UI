@@ -27,8 +27,6 @@ interface SwipeCardProps {
   isTopCard: boolean;
 }
 
-const placeholder = require("../../../../assets/images/profile.png");
-
 export const SwipeCard: React.FC<SwipeCardProps> = ({
   profile,
   onSwipeLeft,

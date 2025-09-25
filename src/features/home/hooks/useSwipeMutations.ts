@@ -93,7 +93,8 @@ export function useLikesSentIdsList(uid: string) {
     queryKey: ["likesSentIds", uid],
     queryFn: () => likesSentIdsList(uid),
     enabled: !!uid,
-    staleTime: 1000 * 60 * 5, // cache for 5 min
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
   });
 }
 
@@ -102,7 +103,8 @@ export function useLikesReceivedIdsList(uid: string) {
       queryKey: ["likesReceivedIds", uid],
       queryFn: () => likesReceivedIdsList(uid),
       enabled: !!uid,
-       staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 60 * 24,
+      gcTime: 1000 * 60 * 60 * 24 * 7,
     });
 }
 
@@ -110,17 +112,19 @@ export function useLikesReceivedIdsList(uid: string) {
 export function useLikesSentProfilesList(uid: string) {
   return useQuery({
     queryKey: ["likesSentProfiles", uid],
-    queryFn: likesSentProfilesList,
+    queryFn: () => likesSentProfilesList(),
     enabled: !!uid,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
   });
 }
 
 export function useLikesReceivedProfilesList(uid: string) {
   return useQuery({
     queryKey: ["likesReceivedProfiles", uid],
-    queryFn: likesReceivedProfilesList,
+    queryFn: () => likesReceivedProfilesList(),
     enabled: !!uid,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
   });
 }

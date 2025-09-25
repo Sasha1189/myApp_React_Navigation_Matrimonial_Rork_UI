@@ -1,21 +1,22 @@
-// simple code to prune old cached data in react-query
-// pruneCache.ts 
-import { queryClient } from "./cacheConfig";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { QueryClient } from "@tanstack/react-query";
 
 interface PruneConfig {
   prefix: string[];
   max: number;
 }
-
-const pruneConfigs: PruneConfig[] = [
-  { prefix: ["feed", "latest"], max: 200 },
-  { prefix: ["feed", "recommended"], max: 200 },
-  { prefix: ["likes", "sent"], max: 100 },
-  { prefix: ["likes", "received"], max: 100 },
-  { prefix: ["recentChatPartners"], max: 50 },
-  { prefix: ["chatMessages"], max: 500 },
-  { prefix: ["profile", "self"], max: 1 }, // self profile always kept
+// 🔹 Central prune config
+export const pruneConfigs = [
+  { prefix: ["feed"], max: 500, sort: { field: "createdAt", direction: "desc" } },
+  { prefix: ["latestProfiles"], max: 100, sort: { field: "createdAt", direction: "desc" } },
+  { prefix: ["recommendedProfiles"], max: 100, sort: { field: "score", direction: "desc" } },
+  { prefix: ["recentChatPartners"], max: 50, sort: { field: "lastMessageAt", direction: "desc" } },
+  { prefix: ["messages"], max: 200, sort: { field: "createdAt", direction: "desc" } },
+  { prefix: ["likesSentIds"], max: 100 },
+  { prefix: ["likesReceivedIds"], max: 100 },
+  { prefix: ["likesSentProfiles"], max: 100 },
+  { prefix: ["likesReceivedProfiles"], max: 100 },
+  { prefix: ["selfProfile"], max: 1 }, // always keep latest
 ];
 
 export async function runPruneOnceDaily() {

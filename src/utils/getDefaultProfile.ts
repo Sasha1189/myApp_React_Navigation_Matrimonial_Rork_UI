@@ -1,7 +1,20 @@
 import { Profile } from "../types/profile";
 
-export const getDefaultProfile = (): Omit<Profile, "uid"> => ({
+// 🔹 Default/fallback profile factory
+export const getDefaultProfile = (): Profile => ({
+  // Core
+  uid: "", // will be filled by AuthContext
   photos: [],
+  likeCount: 0,
+  liked: false,
+  likedMe: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+
+  // Profile status
+  isActive: true,
+  isVerified: false,
+  isPremium: false,
 
   // Personal & Birth
   fullName: "",
@@ -32,7 +45,7 @@ export const getDefaultProfile = (): Omit<Profile, "uid"> => ({
   mobileNumber: "",
   emailAddress: "",
   preferredContact: "",
-  profileCreatedBy: "Self", // sensible default
+  profileCreatedBy: "Self",
 
   // Education & Career
   highestQualification: "",
@@ -53,7 +66,7 @@ export const getDefaultProfile = (): Omit<Profile, "uid"> => ({
   familyType: "",
   familyValues: "",
 
-  // Lifestyle & Habits
+  // Lifestyle
   dietPreferences: "",
   smokingHabit: "",
   drinkingHabit: "",

@@ -39,7 +39,8 @@ export function useFeed(
     getNextPageParam: (lastPage, pages) =>
       lastPage.done ? undefined : pages.length + 1,
 
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
 
     initialPageParam: 1,
 
@@ -77,16 +78,3 @@ export function useFeed(
 
   return {...query, resetFeed};
 }
-
-// Hook to manually prefetch next results (if needed)
-// export function usePrefetchNextFeed(gender: string, limit = 10) {
-//   const queryClient = useQueryClient();
-//   return React.useCallback(() => {
-//     const key = ["feed", gender, limit] as const;
-//     queryClient.prefetchInfiniteQuery({
-//       queryKey: key,
-//       queryFn: ({ pageParam = 1 }) => fetchFeed(pageParam, limit, gender),
-//       initialPageParam: 1,
-//     });
-//   }, [queryClient, gender, limit]);
-// }

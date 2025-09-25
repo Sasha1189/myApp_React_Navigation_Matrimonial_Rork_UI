@@ -1,80 +1,58 @@
-import React, { createContext, useContext, useMemo, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useEffect,
+  useState,
+} from "react";
 import { useAuth } from "./AuthContext";
 import {
   useProfileData,
   useUpdateProfileData,
 } from "../features/profile/hooks/useProfile";
 import { Profile } from "../types/profile";
+import {
+  ProfileContextType,
+  ProfileProviderProps,
+} from "./types/profileContext";
+import { getDefaultProfile } from "src/utils/getDefaultProfile";
 
-interface ProfileContextType {
-  profile?: Profile;
-  loading: boolean;
-  error: unknown;
-  updateProfile: (data: Partial<Profile>) => Promise<void>;
-  reloadProfile: () => void;
-}
-
+// 🔹 Create context
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export const ProfileProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export function ProfileProvider({ children }: ProfileProviderProps) {
   const { user } = useAuth();
   const uid = user?.uid as Profile["uid"];
   const gender = user?.displayName as Profile["gender"];
 
-  // const renderCount = useRef(0);
-  // renderCount.current += 1;
+  const { data, isLoading, error, refetch } = useProfileData(uid, gender);
+  const [profile, setProfile] = useState<Profile>(getDefaultProfile());
 
-  // if (__DEV__) {
-  //   console.log(`ProfileContext render count: ${renderCount.current}`);
-  // }
-
-  const {
-    data: profile,
-    isLoading,
-    error,
-    refetch,
-  } = useProfileData(uid, gender);
-
-  // console.log("ProfileProvider: uid =", uid, "gender =", gender);
-  // console.log("ProfileProvider: profile =", profile);
-  // console.log("ProfileProvider: isLoading =", isLoading, "error =", error);
-
-  const { mutateAsync: updateProfileMutation } = useUpdateProfileData(
-    uid,
-    gender
-  );
-
-  const updateProfile = async (data: Partial<Profile>) => {
-    try {
-      await updateProfileMutation(data);
-    } catch (err) {
-      console.error("Update failed:", err);
-    }
-  };
+  // ✅ Sync query data into context once it changes
+  useEffect(() => {
+    if (data) setProfile(data);
+  }, [data]);
 
   const value: ProfileContextType = useMemo(
     () => ({
       profile,
       error,
       loading: isLoading,
-      updateProfile,
       reloadProfile: refetch,
     }),
-    [profile, isLoading, updateProfile, refetch]
+    [profile, isLoading, refetch]
   );
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
   );
-};
+}
 
-export const useProfileContext = () => {
+// 🔹 Hook to use ProfileContext
+export function useProfileContext(): ProfileContextType {
   const ctx = useContext(ProfileContext);
-  if (!ctx)
+  if (!ctx) {
     throw new Error("useProfileContext must be used inside ProfileProvider");
+  }
   return ctx;
-};
+}
