@@ -1,4 +1,5 @@
 import React from "react";
+import { Controller, useFormContext } from "react-hook-form";
 import FormSection from "../form/FormSection";
 import PickerField from "../form/PickerField";
 import MultiSelectField from "../form/MultiSelectField";
@@ -11,78 +12,138 @@ import {
   fitnessOptions,
   beliefOptions,
   hobbyOptions,
-} from "../../../../constants/profileOptions";
+} from "../form/profileOptions";
 
-interface Props {
-  formData: Partial<Profile>;
-  updateField: (field: keyof Profile, value: any) => void;
+interface LifestyleSectionProps {
   editable?: boolean;
 }
 
-const LifestyleSection: React.FC<Props> = ({
-  formData,
-  updateField,
+export const LifestyleSection: React.FC<LifestyleSectionProps> = ({
   editable = true,
-}) => (
-  <FormSection title="Lifestyle" icon={Coffee} editable={editable}>
-    <PickerField
-      label="Diet Preferences"
-      value={formData.dietPreferences || ""}
-      options={dietOptions}
-      onSelect={(v) => updateField("dietPreferences", v)}
-      editable={editable}
-      icon={Coffee}
-    />
-    <PickerField
-      label="Smoking Habit"
-      value={formData.smokingHabit || ""}
-      options={habitOptions}
-      onSelect={(v) => updateField("smokingHabit", v)}
-      editable={editable}
-      icon={Droplets}
-    />
-    <PickerField
-      label="Drinking Habit"
-      value={formData.drinkingHabit || ""}
-      options={habitOptions}
-      onSelect={(v) => updateField("drinkingHabit", v)}
-      editable={editable}
-      icon={Wine}
-    />
-    <PickerField
-      label="Exercise Routine"
-      value={formData.exerciseRoutine || ""}
-      options={exerciseOptions}
-      onSelect={(v) => updateField("exerciseRoutine", v)}
-      editable={editable}
-      icon={Droplets}
-    />
-    <PickerField
-      label="Fitness Level"
-      value={formData.fitnessLevel || ""}
-      options={fitnessOptions}
-      onSelect={(v) => updateField("fitnessLevel", v)}
-      editable={editable}
-      icon={Coffee}
-    />
-    {/* hobbies multiselect */}
-    <MultiSelectField
-      label="Hobbies"
-      value={Array.isArray(formData.hobbies) ? formData.hobbies : []}
-      options={hobbyOptions}
-      onChange={(v) => updateField("hobbies", v)}
-      editable={editable}
-      icon={Coffee}
-    />
-    <PickerField
-      label="Belief System"
-      value={formData.beliefSystem || ""}
-      options={beliefOptions}
-      onSelect={(v) => updateField("beliefSystem", v)}
-      editable={editable}
-      icon={Coffee}
-    />
-  </FormSection>
-);
+}) => {
+  const { control } = useFormContext<Profile>();
+
+  return (
+    <FormSection title="Lifestyle" icon={Coffee} editable={editable}>
+      {/* Diet Preferences */}
+      <Controller
+        control={control}
+        name="dietPreferences"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Diet Preferences"
+            value={value}
+            placeholder="Select Diet Preferences"
+            options={dietOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Coffee}
+          />
+        )}
+      />
+
+      {/* Smoking Habit */}
+      <Controller
+        control={control}
+        name="smokingHabit"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Smoking Habit"
+            value={value}
+            placeholder="Select Smoking Habit"
+            options={habitOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Droplets}
+          />
+        )}
+      />
+
+      {/* Drinking Habit */}
+      <Controller
+        control={control}
+        name="drinkingHabit"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Drinking Habit"
+            value={value}
+            placeholder="Select Drinking Habit"
+            options={habitOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Wine}
+          />
+        )}
+      />
+
+      {/* Exercise Routine */}
+      <Controller
+        control={control}
+        name="exerciseRoutine"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Exercise Routine"
+            value={value}
+            placeholder="Select Exercise Routine"
+            options={exerciseOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Droplets}
+          />
+        )}
+      />
+
+      {/* Fitness Level */}
+      <Controller
+        control={control}
+        name="fitnessLevel"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Fitness Level"
+            value={value}
+            placeholder="Select Fitness Level"
+            options={fitnessOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Coffee}
+          />
+        )}
+      />
+
+      {/* Hobbies (MultiSelect) */}
+      <Controller
+        control={control}
+        name="hobbies"
+        render={({ field: { onChange, value } }) => (
+          <MultiSelectField
+            label="Hobbies"
+            value={Array.isArray(value) ? value : []}
+            options={hobbyOptions}
+            onChange={onChange}
+            editable={editable}
+            icon={Coffee}
+          />
+        )}
+      />
+
+      {/* Belief System */}
+      <Controller
+        control={control}
+        name="beliefSystem"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Belief System"
+            value={value}
+            placeholder="Select Belief System"
+            options={beliefOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Coffee}
+          />
+        )}
+      />
+    </FormSection>
+  );
+};
 
 export default LifestyleSection;

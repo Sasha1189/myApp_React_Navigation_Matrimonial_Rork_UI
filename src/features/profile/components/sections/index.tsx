@@ -1,7 +1,7 @@
-export { default as PersonalInfoSection } from "./PersonalInfoSection";
-export { default as AboutMeSection } from "./AboutMeSection";
-export { default as ContactDetailsSection } from "./ContactDetailsSection";
-export { default as EducationCareerSection } from "./EducationCareerSection";
-export { default as FamilyDetailsSection } from "./FamilyDetailsSection";
-export { default as LifestyleSection } from "./LifestyleSection";
-export { default as PartnerPreferencesSection } from "./PartnerPreferencesSection";
+export { PersonalInfoSection } from "./PersonalInfoSection";
+export { AboutMeSection } from "./AboutMeSection";
+export { ContactDetailsSection } from "./ContactDetailsSection";
+export { EducationCareerSection } from "./EducationCareerSection";
+export { FamilyDetailsSection } from "./FamilyDetailsSection";
+export { LifestyleSection } from "./LifestyleSection";
+export { PartnerPreferencesSection } from "./PartnerPreferencesSection";

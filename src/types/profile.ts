@@ -30,12 +30,12 @@ export interface Profile {
   
   // About Me-6
   shortBio: string;
-  aspirations?: string;
-  beliefsValues?: string;
-  strengths?: string;
-  likesDislikesText?: string;
-  socialMedia?: string;
-  
+  aspirations: string;
+  beliefsValues: string;
+  strengths: string;
+  likesDislikesText: string;
+  socialMedia: string;
+
   // Contact Details-6
   currentCity: string;
   nativePlace: string;

@@ -1,14 +1,11 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { styles } from "../screens/MessagesScreen";
+import { View, Text, StyleSheet } from "react-native";
 
 interface EmptyStateProps {
   type: "chats" | "sent" | "received";
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
-  //   const styles = styles;
-
   const title =
     type === "chats"
       ? "No messages yet"
@@ -30,3 +27,20 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "gray",
+    textAlign: "center",
+  },
+});

@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { theme } from "../../../constants/theme";
-import { Profile } from "../../../types/profile";
+import { theme } from "../../../../constants/theme";
+import { Profile } from "../../../../types/profile";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -50,7 +50,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
                   source={
                     item?.downloadURL
                       ? { uri: item.downloadURL }
-                      : require("../../../../assets/images/profile.png")
+                      : require("../../../../../assets/images/profile.png")
                   }
                   style={styles.profileImage}
                   contentFit={item?.downloadURL ? "cover" : "contain"}

@@ -1,7 +1,6 @@
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from "../../../theme/index";
-import { styles } from "../screens/MessagesScreen";
 
 interface TabButtonProps {
   tab: "chats" | "sent" | "received";
@@ -18,8 +17,6 @@ export const TabButton: React.FC<TabButtonProps> = ({
   isActive,
   onPress,
 }) => {
-  //   const styles = styles;
-
   return (
     <TouchableOpacity
       style={[styles.tabButton, isActive && styles.activeTabButton]}
@@ -32,3 +29,25 @@ export const TabButton: React.FC<TabButtonProps> = ({
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  tabButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  activeTabButton: {
+    borderBottomColor: theme.colors.primary,
+  },
+  tabText: {
+    marginLeft: theme.spacing.sm,
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.text,
+  },
+  activeTabText: {
+    color: "white",
+  },
+});

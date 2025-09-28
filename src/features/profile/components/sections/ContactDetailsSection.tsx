@@ -1,70 +1,123 @@
 import React from "react";
+import { Controller, useFormContext } from "react-hook-form";
+import { Phone, MapPin, UserPlus } from "lucide-react-native";
+
 import FormSection from "../form/FormSection";
 import InputField from "../form/InputField";
-import { Phone, MapPin } from "lucide-react-native";
+import PickerField from "../form/PickerField";
 import { Profile } from "../../../../types/profile";
-import PickerField from "src/features/profile/components/form/PickerField";
+
 import {
   districtOptions,
   preferredContactOptions,
   profileCreatedByOptions,
-} from "src/constants/profileOptions";
+} from "../form/profileOptions";
 
-interface Props {
-  formData: Partial<Profile>;
-  updateField: (field: keyof Profile, value: any) => void;
+interface ContactDetailsSectionProps {
   editable?: boolean;
+  immutableFields?: (keyof Profile)[];
+  confirmedImmutable?: (keyof Profile)[];
 }
 
-const ContactDetailsSection: React.FC<Props> = ({
-  formData,
-  updateField,
+export const ContactDetailsSection: React.FC<ContactDetailsSectionProps> = ({
   editable = true,
-}) => (
-  <FormSection title="Contact Details" icon={Phone} editable={editable}>
-    <InputField
-      label="Mobile Number"
-      value={formData.mobileNumber || ""}
-      onChangeText={(t) => updateField("mobileNumber", t)}
-      placeholder="Enter your mobile number"
-      keyboardType="phone-pad"
-      icon={Phone}
-      editable={editable}
-    />
-    <PickerField
-      label="Current City"
-      value={formData.currentCity || ""}
-      options={districtOptions}
-      onSelect={(v) => updateField("currentCity", v)}
-      editable={editable}
-      icon={MapPin}
-    />
-    <PickerField
-      label="HomeTown"
-      value={formData.nativePlace || ""}
-      options={districtOptions}
-      onSelect={(v) => updateField("nativePlace", v)}
-      editable={editable}
-      icon={MapPin}
-    />
-    <PickerField
-      label="Preferred Contact"
-      value={formData.preferredContact || ""}
-      options={preferredContactOptions}
-      onSelect={(v) => updateField("preferredContact", v)}
-      editable={editable}
-      icon={Phone}
-    />
+  immutableFields,
+  confirmedImmutable,
+}) => {
+  const { control } = useFormContext<Profile>();
 
-    <PickerField
-      label="Profile Created By"
-      value={formData.profileCreatedBy || ""}
-      options={profileCreatedByOptions}
-      onSelect={(v) => updateField("profileCreatedBy", v)}
-      editable={editable}
-      icon={Phone}
-    />
-  </FormSection>
-);
+  return (
+    <FormSection title="Contact Details" icon={Phone} editable={editable}>
+      {/* Mobile Number */}
+      <Controller
+        control={control}
+        name="mobileNumber"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Mobile Number"
+            value={value}
+            onChangeText={onChange}
+            placeholder="Enter your mobile number"
+            keyboardType="phone-pad"
+            icon={Phone}
+            editable={editable}
+            locked={
+              immutableFields?.includes("mobileNumber") &&
+              confirmedImmutable?.includes("mobileNumber")
+            }
+          />
+        )}
+      />
+
+      {/* Current City */}
+      <Controller
+        control={control}
+        name="currentCity"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Current City"
+            value={value}
+            placeholder="Select your current city"
+            options={districtOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={MapPin}
+          />
+        )}
+      />
+
+      {/* Hometown */}
+      <Controller
+        control={control}
+        name="nativePlace"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Hometown"
+            value={value}
+            placeholder="Select your hometown"
+            options={districtOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={MapPin}
+          />
+        )}
+      />
+
+      {/* Preferred Contact */}
+      <Controller
+        control={control}
+        name="preferredContact"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Preferred Contact"
+            value={value}
+            placeholder="Select preferred contact method"
+            options={preferredContactOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Phone}
+          />
+        )}
+      />
+
+      {/* Profile Created By */}
+      <Controller
+        control={control}
+        name="profileCreatedBy"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Profile Created By"
+            value={value}
+            placeholder="Select who created the profile"
+            options={profileCreatedByOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={UserPlus}
+          />
+        )}
+      />
+    </FormSection>
+  );
+};
 
 export default ContactDetailsSection;

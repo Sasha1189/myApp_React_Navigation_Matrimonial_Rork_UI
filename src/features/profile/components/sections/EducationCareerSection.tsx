@@ -1,104 +1,177 @@
 import React from "react";
+import { Controller, useFormContext } from "react-hook-form";
+import { GraduationCap, Briefcase, Building2 } from "lucide-react-native";
+
 import FormSection from "../form/FormSection";
 import InputField from "../form/InputField";
-import { GraduationCap, Briefcase, Building2 } from "lucide-react-native";
+import PickerField from "../form/PickerField";
 import { Profile } from "../../../../types/profile";
-import { Picker } from "@react-native-picker/picker";
-import PickerField from "src/features/profile/components/form/PickerField";
+
 import {
   annualIncomeOptions,
   highestQualification,
   industryOptions,
   occupationOptions,
   studyFieldOptions,
-} from "src/constants/profileOptions";
+} from "../form/profileOptions";
 
-interface Props {
-  formData: Partial<Profile>;
-  updateField: (field: keyof Profile, value: any) => void;
+interface EducationCareerSectionProps {
   editable?: boolean;
+  immutableFields?: (keyof Profile)[];
+  confirmedImmutable?: (keyof Profile)[];
 }
 
-const EducationCareerSection: React.FC<Props> = ({
-  formData,
-  updateField,
+export const EducationCareerSection: React.FC<EducationCareerSectionProps> = ({
   editable = true,
-}) => (
-  <FormSection
-    title="Education & Career"
-    icon={GraduationCap}
-    editable={editable}
-  >
-    <PickerField
-      label="Highest Education"
-      value={formData.highestQualification || ""}
-      options={highestQualification || []}
-      onSelect={(v) => updateField("highestQualification", v)}
-      editable={editable}
+  immutableFields,
+  confirmedImmutable,
+}) => {
+  const { control } = useFormContext<Profile>();
+
+  return (
+    <FormSection
+      title="Education & Career"
       icon={GraduationCap}
-    />
-    <PickerField
-      label="Field of Study"
-      value={formData.fieldOfStudy || ""}
-      options={studyFieldOptions || []}
-      onSelect={(v) => updateField("fieldOfStudy", v)}
       editable={editable}
-      icon={GraduationCap}
-    />
-    {/* Occupation */}
-    <PickerField
-      label="Current Occupation"
-      value={formData.occupation || ""}
-      options={occupationOptions || []}
-      onSelect={(v) => updateField("occupation", v)}
-      editable={editable}
-      icon={Briefcase}
-    />
-    {/* industry */}
-    <PickerField
-      label="Industry"
-      value={formData.industry || ""}
-      options={industryOptions || []}
-      onSelect={(v) => updateField("industry", v)}
-      editable={editable}
-      icon={Briefcase}
-    />
-    {/* jobTitle */}
-    <InputField
-      label="Job Title"
-      value={formData.jobTitle || ""}
-      onChangeText={(t) => updateField("jobTitle", t)}
-      placeholder="Enter your job title"
-      icon={Briefcase}
-      editable={editable}
-    />
-    <InputField
-      label="Company Name"
-      value={formData.companyName || ""}
-      onChangeText={(t) => updateField("companyName", t)}
-      placeholder="Enter your company name"
-      icon={Building2}
-      editable={editable}
-    />
-    {/* workLocation */}
-    <InputField
-      label="Work Location"
-      value={formData.workLocation || ""}
-      onChangeText={(t) => updateField("workLocation", t)}
-      placeholder="Enter your work location"
-      icon={Building2}
-      editable={editable}
-    />
-    {/* annualIncome */}
-    <PickerField
-      label="Annual Income"
-      value={formData.annualIncome || ""}
-      options={annualIncomeOptions || []}
-      onSelect={(v) => updateField("annualIncome", v)}
-      editable={editable}
-      icon={Briefcase}
-    />
-  </FormSection>
-);
+    >
+      {/* Highest Qualification */}
+      <Controller
+        control={control}
+        name="highestQualification"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Highest Qualification"
+            value={value}
+            placeholder="Select your highest qualification"
+            options={highestQualification}
+            onSelect={onChange}
+            editable={editable}
+            icon={GraduationCap}
+            locked={
+              immutableFields?.includes("highestQualification") &&
+              confirmedImmutable?.includes("highestQualification")
+            }
+          />
+        )}
+      />
+
+      {/* Field of Study */}
+      <Controller
+        control={control}
+        name="fieldOfStudy"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Field of Study"
+            value={value}
+            placeholder="Select your field of study"
+            options={studyFieldOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={GraduationCap}
+          />
+        )}
+      />
+
+      {/* Occupation */}
+      <Controller
+        control={control}
+        name="occupation"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Current Occupation"
+            value={value}
+            placeholder="Select your occupation"
+            options={occupationOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Briefcase}
+          />
+        )}
+      />
+
+      {/* Industry */}
+      <Controller
+        control={control}
+        name="industry"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Industry"
+            value={value}
+            placeholder="Select your industry"
+            options={industryOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Briefcase}
+          />
+        )}
+      />
+
+      {/* Job Title */}
+      <Controller
+        control={control}
+        name="jobTitle"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Job Title"
+            value={value ?? ""}
+            onChangeText={onChange}
+            placeholder="Enter your job title"
+            icon={Briefcase}
+            editable={editable}
+          />
+        )}
+      />
+
+      {/* Company Name */}
+      <Controller
+        control={control}
+        name="companyName"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Company Name"
+            value={value ?? ""}
+            onChangeText={onChange}
+            placeholder="Enter your company name"
+            icon={Building2}
+            editable={editable}
+          />
+        )}
+      />
+
+      {/* Work Location */}
+      <Controller
+        control={control}
+        name="workLocation"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Work Location"
+            value={value ?? ""}
+            onChangeText={onChange}
+            placeholder="Enter your work location"
+            icon={Building2}
+            editable={editable}
+          />
+        )}
+      />
+
+      {/* Annual Income */}
+      <Controller
+        control={control}
+        name="annualIncome"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Annual Income"
+            value={value}
+            placeholder="Select your annual income"
+            options={annualIncomeOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Briefcase}
+          />
+        )}
+      />
+    </FormSection>
+  );
+};
 
 export default EducationCareerSection;

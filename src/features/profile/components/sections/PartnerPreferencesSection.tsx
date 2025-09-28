@@ -1,4 +1,5 @@
 import React from "react";
+import { Controller, useFormContext } from "react-hook-form";
 import FormSection from "../form/FormSection";
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
@@ -10,74 +11,125 @@ import {
   occupationOptions,
   incomeOptions,
   livingWithParentsOptions,
-} from "../../../../constants/profileOptions";
+} from "../form/profileOptions";
 
-interface Props {
-  formData: Partial<Profile>;
-  updateField: (field: keyof Profile, value: any) => void;
+interface PartnerPreferencesSectionProps {
   editable?: boolean;
 }
 
-const PartnerPreferencesSection: React.FC<Props> = ({
-  formData,
-  updateField,
-  editable = true,
-}) => (
-  <FormSection
-    title="Partner Preferences"
-    icon={HeartHandshake}
-    editable={editable}
-  >
-    <PickerField
-      label="Preferred Marital Status"
-      value={formData.preferredMaritalStatus || ""}
-      options={maritalStatusOptions}
-      onSelect={(v) => updateField("preferredMaritalStatus", v)}
-      editable={editable}
-      icon={HeartHandshake}
-    />
-    <PickerField
-      label="Preferred Education"
-      value={formData.preferredEducation || ""}
-      options={highestQualification}
-      onSelect={(v) => updateField("preferredEducation", v)}
-      editable={editable}
-      icon={Ruler}
-    />
-    <PickerField
-      label="Preferred Profession"
-      value={formData.preferredProfession || ""}
-      options={occupationOptions}
-      onSelect={(v) => updateField("preferredProfession", v)}
-      editable={editable}
-      icon={Ruler}
-    />
-    <PickerField
-      label="Preferred Income Range"
-      value={formData.preferredIncomeRange || ""}
-      options={incomeOptions}
-      onSelect={(v) => updateField("preferredIncomeRange", v)}
-      editable={editable}
-      icon={Ruler}
-    />
-    <InputField
-      label="Preferred Location"
-      value={formData.locationPreference || ""}
-      onChangeText={(t) => updateField("locationPreference", t)}
-      placeholder="Enter preferred district"
-      icon={MapPin}
-      editable={editable}
-    />
+export const PartnerPreferencesSection: React.FC<
+  PartnerPreferencesSectionProps
+> = ({ editable = true }) => {
+  const { control } = useFormContext<Profile>();
 
-    <PickerField
-      label="Living with Parents"
-      value={formData.livingWithParents || ""}
-      options={livingWithParentsOptions}
-      onSelect={(v) => updateField("livingWithParents", v)}
+  return (
+    <FormSection
+      title="Partner Preferences"
+      icon={HeartHandshake}
       editable={editable}
-      icon={Home}
-    />
-  </FormSection>
-);
+    >
+      {/* Preferred Marital Status */}
+      <Controller
+        control={control}
+        name="preferredMaritalStatus"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Preferred Marital Status"
+            value={value}
+            placeholder="Select Marital Status"
+            options={maritalStatusOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={HeartHandshake}
+          />
+        )}
+      />
+
+      {/* Preferred Education */}
+      <Controller
+        control={control}
+        name="preferredEducation"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Preferred Education"
+            value={value}
+            placeholder="Select Education Level"
+            options={highestQualification}
+            onSelect={onChange}
+            editable={editable}
+            icon={Ruler}
+          />
+        )}
+      />
+
+      {/* Preferred Profession */}
+      <Controller
+        control={control}
+        name="preferredProfession"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Preferred Profession"
+            value={value}
+            placeholder="Select Profession"
+            options={occupationOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Ruler}
+          />
+        )}
+      />
+
+      {/* Preferred Income Range */}
+      <Controller
+        control={control}
+        name="preferredIncomeRange"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Preferred Income Range"
+            value={value}
+            placeholder="Select Income Range"
+            options={incomeOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Ruler}
+          />
+        )}
+      />
+
+      {/* Preferred Location */}
+      <Controller
+        control={control}
+        name="locationPreference"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Preferred Location"
+            value={value || ""}
+            onChangeText={onChange}
+            placeholder="Enter preferred district"
+            icon={MapPin}
+            editable={editable}
+          />
+        )}
+      />
+
+      {/* Living with Parents */}
+      <Controller
+        control={control}
+        name="livingWithParents"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Living with Parents"
+            value={value}
+            placeholder="Select Option"
+            options={livingWithParentsOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Home}
+          />
+        )}
+      />
+    </FormSection>
+  );
+};
 
 export default PartnerPreferencesSection;

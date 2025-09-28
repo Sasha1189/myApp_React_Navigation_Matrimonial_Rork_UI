@@ -41,7 +41,7 @@ import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppStackParamList } from "../../../navigation/types";
 import { useProfileContext } from "../../../context/ProfileContext";
 import LoadingScreen from "../../../components/LoadingScreen";
-import { ProfileCarousel } from "../components/ProfileCarousel";
+import { ProfileCarousel } from "../components/photocarousel/ProfileCarousel";
 import { Profile } from "../../../types/profile";
 
 interface DetailSectionProps {

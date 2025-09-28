@@ -1,4 +1,4 @@
-import { Profile } from "../types/profile";
+import { Profile } from "../../../../types/profile";
 
 // 🔹 Fields that must be present
 export const requiredFields: (keyof Profile)[] = [
@@ -20,21 +20,29 @@ export function getConfirmedImmutable(profile: Profile): (keyof Profile)[] {
   });
 }
 
-export function validateProfileForm(
-  formData: Partial<Profile>
-): { valid: boolean; errors: Partial<Record<keyof Profile, string>> } {
+export function validateProfileForm(formData: Partial<Profile>): {
+  valid: boolean;
+  errors: Partial<Record<keyof Profile, string>>;
+} {
   const errors: Partial<Record<keyof Profile, string>> = {};
 
   // Required fields
   requiredFields.forEach((key) => {
     const val = formData[key];
-    if (val === null || val === undefined || (typeof val === "string" && val.trim() === "")) {
+    if (
+      val === null ||
+      val === undefined ||
+      (typeof val === "string" && val.trim() === "")
+    ) {
       errors[key] = "This field is required.";
     }
   });
 
   // Special gender check
-  if (!formData.gender || (typeof formData.gender === "string" && formData.gender.trim() === "")) {
+  if (
+    !formData.gender ||
+    (typeof formData.gender === "string" && formData.gender.trim() === "")
+  ) {
     errors.gender = "Please select your gender.";
   }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -10,15 +10,13 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Edit3, Save } from "lucide-react-native";
+import { useForm, FormProvider } from "react-hook-form";
 import { theme } from "../../../constants/theme";
 import CustomHeader from "../../../components/CustomeHeader";
 import { useTabNavigation } from "../../../navigation/hooks";
 import { useProfileContext } from "../../../context/ProfileContext";
-import { useProfileForm } from "../hooks/useProfileForm";
-import {
-  requiredFields,
-  immutableFields,
-} from "../../../utils/profileValidation";
+import { useUpdateProfileData } from "../hooks/useProfile";
+import { Profile } from "../../../types/profile";
 import {
   PersonalInfoSection,
   AboutMeSection,
@@ -28,8 +26,11 @@ import {
   LifestyleSection,
   PartnerPreferencesSection,
 } from "../components/sections";
-import { useUpdateProfileData } from "../hooks/useProfile";
-import { Profile } from "../../../types/profile";
+import {
+  requiredFields,
+  immutableFields,
+} from "../components/form/profileValidation";
+
 import { useIsDirty } from "../hooks/useIsDirty";
 import { useConfirmedImmutable } from "../hooks/useConfirmedImmutable";
 import { useUnsavedChangesPrompt } from "../hooks/useUnsavedChangesPrompt";
@@ -37,58 +38,69 @@ import { useUnsavedChangesPrompt } from "../hooks/useUnsavedChangesPrompt";
 export default function EditProfileScreen() {
   const navigation = useTabNavigation();
   const { profile } = useProfileContext();
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const { formData, fieldErrors, updateField, validateForm, scrollRef } =
-    useProfileForm(profile, isEditing);
-
   const { mutateAsync: updateProfile } = useUpdateProfileData(
     profile?.uid,
     profile?.gender
   );
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // ✅ useForm with FormProvider
+  const methods = useForm<Profile>({
+    defaultValues: profile,
+  });
+
   // ✅ small reusable hooks
+  const formData = methods.watch();
   const isDirty = useIsDirty(formData, profile);
   const confirmedImmutable = useConfirmedImmutable(profile, requiredFields);
   useUnsavedChangesPrompt(navigation, isDirty);
 
-  const handleSave = async () => {
+  const { handleSubmit, reset } = methods;
+
+  // ✅ reset when profile changes
+  useEffect(() => {
+    if (profile) {
+      reset(profile);
+    }
+  }, [profile, reset]);
+
+  const handleSave = handleSubmit(async (data) => {
     if (!isEditing) {
       setIsEditing(true);
       return;
     }
-    setSaving(true);
 
-    if (!validateForm()) {
-      setSaving(false);
-      return;
-    }
+    setLoading(true);
 
     try {
-      // build changedFields
+      // 🔹 Build only changed fields
       const changedFields: Partial<Profile> = {};
-      (Object.keys(formData) as (keyof Profile)[]).forEach((key) => {
-        const newVal = formData[key];
+      (Object.keys(data) as (keyof Profile)[]).forEach((key) => {
+        const newVal = data[key];
         const oldVal = profile?.[key];
         if (!Object.is(newVal, oldVal)) {
-          changedFields[key] = newVal!;
+          changedFields[key] = newVal as Profile[typeof key];
         }
       });
 
-      // filter immutable
+      // 🔹 Filter out immutable fields if they were already confirmed
       immutableFields.forEach((k) => {
-        if (confirmedImmutable.includes(k)) delete changedFields[k];
+        if (confirmedImmutable.includes(k)) {
+          delete changedFields[k];
+        }
       });
 
+      // 🔹 If no changes, abort
       if (Object.keys(changedFields).length === 0) {
         Alert.alert("No Changes", "You have not made any editable changes.");
         setIsEditing(false);
-        setSaving(false);
+        setLoading(false);
         return;
       }
 
+      console.log("Submitting data:", changedFields);
       await updateProfile(changedFields);
 
       if (Platform.OS === "android") {
@@ -99,14 +111,16 @@ export default function EditProfileScreen() {
           "Your profile has been successfully updated."
         );
       }
+
+      // Lock fields again
+      setIsEditing(false);
     } catch (err: any) {
       console.error("Profile update failed:", err);
       Alert.alert("Error", err?.message || "Something went wrong.");
     } finally {
-      setSaving(false);
-      setIsEditing(false);
+      setLoading(false);
     }
-  };
+  });
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -124,67 +138,37 @@ export default function EditProfileScreen() {
             </>
           ) : (
             <>
-              <Text>{saving ? "Updating..." : "Submit"}</Text>
+              <Text>{loading ? "Updating..." : "Submit"}</Text>
               <Save size={24} color="white" />
             </>
           )
         }
       />
-      <ScrollView ref={scrollRef} style={{ flex: 1 }}>
-        <LinearGradient
-          colors={[theme.colors.primary + "20", "transparent"]}
-          style={{
-            height: 100,
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-          }}
-        />
-        <View
-          style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
-        >
-          <PersonalInfoSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-            requiredFields={requiredFields}
-            immutableFields={immutableFields}
-            confirmedImmutable={confirmedImmutable}
-            fieldErrors={fieldErrors}
+      <FormProvider {...methods}>
+        <ScrollView style={{ flex: 1 }}>
+          <LinearGradient
+            colors={[theme.colors.primary + "20", "transparent"]}
+            style={{
+              height: 100,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+            }}
           />
-          <AboutMeSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-          />
-          <ContactDetailsSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-          />
-          <EducationCareerSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-          />
-          <FamilyDetailsSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-          />
-          <LifestyleSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-          />
-          <PartnerPreferencesSection
-            formData={formData}
-            updateField={updateField}
-            editable={isEditing}
-          />
-        </View>
-      </ScrollView>
+          <View
+            style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
+          >
+            <PersonalInfoSection editable={isEditing} />
+            <AboutMeSection editable={isEditing} />
+            <ContactDetailsSection editable={isEditing} />
+            <EducationCareerSection editable={isEditing} />
+            <FamilyDetailsSection editable={isEditing} />
+            <LifestyleSection editable={isEditing} />
+            <PartnerPreferencesSection editable={isEditing} />
+          </View>
+        </ScrollView>
+      </FormProvider>
     </SafeAreaView>
   );
 }

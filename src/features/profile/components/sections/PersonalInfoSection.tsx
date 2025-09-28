@@ -1,32 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { Controller, useFormContext } from "react-hook-form";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from "react-native";
+  UserCheck,
+  Calendar,
+  User,
+  HeartHandshake,
+  Ruler,
+  Scale,
+  Droplets,
+  Activity,
+  Sparkles,
+  Star,
+  Zap,
+  MapPin,
+  Timer,
+} from "lucide-react-native";
+
+import { Profile } from "../../../../types/profile";
+
 import FormSection from "../form/FormSection";
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
 import RadioField from "../form/RadioField";
-import {
-  User,
-  Calendar,
-  UserCheck,
-  Timer,
-  MapPin,
-  HeartHandshake,
-  Ruler,
-  Scale,
-  Activity,
-  Droplets,
-  Sparkles,
-  Star,
-  Zap,
-} from "lucide-react-native";
-import { Profile } from "../../../../types/profile";
-import { theme } from "../../../../constants/theme";
+import DatePickerField, { TimePickerField } from "../form/DateTimePickers";
 import {
   genderOptions,
   maritalStatusOptions,
@@ -35,13 +31,9 @@ import {
   manglikOptions,
   rashiOptions,
   horoscopeOptions,
-} from "../../../../constants/profileOptions";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import DatePickerField, { TimePickerField } from "../form/DateTimePickers";
+} from "../form/profileOptions";
 
-interface Props {
-  formData: Partial<Profile>;
-  updateField: (k: keyof Profile, v: any) => void;
+interface PersonalInfoSectionProps {
   editable?: boolean;
   requiredFields?: (keyof Profile)[];
   immutableFields?: (keyof Profile)[];
@@ -49,187 +41,542 @@ interface Props {
   fieldErrors?: Partial<Record<keyof Profile, string>>;
 }
 
-// Date/time pickers moved to shared component DatePickerField and TimePickerField
-
-const styles = StyleSheet.create({
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "500",
-    color: theme.colors.text,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    backgroundColor: "white",
-    marginTop: 6,
-  },
-});
-
-const PersonalInfoSection: React.FC<Props> = ({
-  formData,
-  updateField,
-  editable = true,
-  requiredFields = [],
-  immutableFields = [],
+export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
+  immutableFields,
   confirmedImmutable,
-  fieldErrors,
+  editable,
 }) => {
-  const isRequired = (k: keyof Profile) => requiredFields.includes(k);
-  const isLocked = (k: keyof Profile) => {
-    if (!immutableFields.includes(k)) return false;
-    // If caller provided confirmedImmutable (even if empty), rely on it solely.
-    if (confirmedImmutable !== undefined) {
-      return confirmedImmutable.includes(k);
-    }
-    // Backwards-compatible fallback when parent does not provide confirmedImmutable:
-    const val = formData[k];
-    return val != null && !(typeof val === "string" && val.trim() === "");
-  };
-  const getError = (k: keyof Profile) => fieldErrors?.[k] ?? null;
-
+  const { control } = useFormContext<Profile>();
   return (
-    <FormSection
-      title="Personal & Birth Information"
-      icon={User}
-      editable={editable}
-    >
-      <InputField
-        label="Full Name"
-        value={formData.fullName || ""}
-        onChangeText={(t) => updateField("fullName", t)}
-        placeholder="Enter your full name"
-        icon={UserCheck}
-        editable={editable}
-        required={isRequired("fullName")}
-        locked={isLocked("fullName")}
+    <FormSection title="Personal Information" icon={User} editable={editable}>
+      {/* Full Name */}
+      <Controller
+        control={control}
+        name="fullName"
+        rules={{ required: "Full Name is required" }}
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Full Name"
+            value={value}
+            onChangeText={onChange}
+            placeholder="Enter full name"
+            icon={UserCheck}
+            required
+            editable={editable}
+            locked={
+              immutableFields?.includes("fullName") &&
+              confirmedImmutable?.includes("fullName")
+            }
+          />
+        )}
       />
 
-      <DatePickerField
-        label="Date of Birth"
-        value={formData.dateOfBirth ?? undefined}
-        onChange={(d) => updateField("dateOfBirth", d)}
-        editable={editable}
-        icon={Calendar}
-        locked={isLocked("dateOfBirth")}
+      {/* Date of Birth */}
+      <Controller
+        control={control}
+        name="dateOfBirth"
+        rules={{ required: "Date of Birth is required" }}
+        render={({ field: { onChange, value } }) => (
+          <DatePickerField
+            label="Date of Birth"
+            value={value ? String(value) : ""}
+            onChange={onChange}
+            placeholder="YYYY-MM-DD"
+            editable={editable}
+            icon={Calendar}
+            required
+            locked={
+              immutableFields?.includes("dateOfBirth") &&
+              confirmedImmutable?.includes("dateOfBirth")
+            }
+          />
+        )}
       />
 
-      <TimePickerField
-        label="Time of Birth"
-        value={formData.timeOfBirth ?? undefined}
-        onChange={(t) => updateField("timeOfBirth", t)}
-        editable={editable}
-        icon={Timer}
+      {/* Time of Birth */}
+      <Controller
+        control={control}
+        name="timeOfBirth"
+        render={({ field: { onChange, value } }) => (
+          <TimePickerField
+            label="Time of Birth"
+            value={value ?? ""}
+            placeholder="e.g., 06:30 AM"
+            onChange={onChange}
+            editable={editable}
+            icon={Timer}
+          />
+        )}
       />
 
-      <InputField
-        label="Place of Birth"
-        value={formData.placeOfBirth || ""}
-        onChangeText={(t) => updateField("placeOfBirth", t)}
-        placeholder="Enter place of birth"
-        icon={MapPin}
-        editable={editable}
+      {/* Place of Birth */}
+      <Controller
+        control={control}
+        name="placeOfBirth"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Place of Birth"
+            value={value}
+            onChangeText={onChange}
+            placeholder="Enter place"
+            icon={MapPin}
+            editable={editable}
+          />
+        )}
       />
 
-      {/* For small fixed option sets (gender) we use radio buttons so user must explicitly select. */}
-      <RadioField
-        label="Gender"
-        value={String(formData.gender || "")}
-        options={genderOptions}
-        onSelect={(v) => updateField("gender", v)}
-        editable={editable}
-        icon={User}
-        required={isRequired("gender")}
-        locked={isLocked("gender")}
-        error={getError("gender")}
+      {/* Gender */}
+      <Controller
+        control={control}
+        name="gender"
+        rules={{ required: "Gender is required" }}
+        render={({ field: { onChange, value } }) => (
+          <RadioField
+            label="Gender"
+            value={value}
+            options={genderOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={User}
+            required
+            locked={
+              immutableFields?.includes("gender") &&
+              confirmedImmutable?.includes("gender")
+            }
+          />
+        )}
       />
 
-      <PickerField
-        label="Marital Status"
-        value={formData.maritalStatus || ""}
-        options={maritalStatusOptions}
-        onSelect={(v) => updateField("maritalStatus", v)}
-        editable={editable}
-        icon={HeartHandshake}
-        required={isRequired("maritalStatus")}
-        locked={isLocked("maritalStatus")}
+      {/* Marital Status */}
+      <Controller
+        control={control}
+        name="maritalStatus"
+        rules={{ required: "Marital Status is required" }}
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Marital Status"
+            value={value}
+            placeholder="Un-married/Wisowed/Divorced"
+            options={maritalStatusOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={HeartHandshake}
+            locked={
+              immutableFields?.includes("maritalStatus") &&
+              confirmedImmutable?.includes("maritalStatus")
+            }
+          />
+        )}
       />
 
-      <InputField
-        label="Height"
-        value={formData.height || ""}
-        onChangeText={(t) => updateField("height", t)}
-        placeholder="e.g., 5'6''"
-        icon={Ruler}
-        editable={editable}
+      {/* Height */}
+      <Controller
+        control={control}
+        name="height"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Height"
+            value={value}
+            onChangeText={onChange}
+            placeholder="e.g., 5'8''"
+            icon={Ruler}
+            editable={editable}
+          />
+        )}
       />
 
-      <InputField
-        label="Weight"
-        value={formData.weight || ""}
-        onChangeText={(t) => updateField("weight", t)}
-        placeholder="e.g., 65 kg"
-        icon={Scale}
-        editable={editable}
+      {/* Weight */}
+      <Controller
+        control={control}
+        name="weight"
+        render={({ field: { onChange, value } }) => (
+          <InputField
+            label="Weight"
+            value={value}
+            onChangeText={onChange}
+            placeholder="e.g., 70kg"
+            icon={Scale}
+            editable={editable}
+          />
+        )}
       />
 
-      <PickerField
-        label="Body Type"
-        value={formData.bodyType || ""}
-        options={bodyTypeOptions}
-        onSelect={(v) => updateField("bodyType", v)}
-        editable={editable}
-        icon={Activity}
+      {/* Body Type */}
+      <Controller
+        control={control}
+        name="bodyType"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Body Type"
+            value={value}
+            placeholder="Slim / Athletic / Average"
+            options={bodyTypeOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Activity}
+          />
+        )}
       />
 
-      <PickerField
-        label="Blood Group"
-        value={formData.bloodGroup || ""}
-        options={bloodGroupOptions}
-        onSelect={(v) => updateField("bloodGroup", v)}
-        editable={editable}
-        icon={Droplets}
-        required={isRequired("bloodGroup")}
-        locked={isLocked("bloodGroup")}
+      {/* Blood Group */}
+      <Controller
+        control={control}
+        name="bloodGroup"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Blood Group"
+            value={value}
+            placeholder="A+ / O-"
+            options={bloodGroupOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Droplets}
+          />
+        )}
       />
 
-      <PickerField
-        label="Manglik Status"
-        value={formData.manglikStatus || ""}
-        options={manglikOptions}
-        onSelect={(v) => updateField("manglikStatus", v)}
-        editable={editable}
-        icon={Sparkles}
+      {/* Manglik Status */}
+      <Controller
+        control={control}
+        name="manglikStatus"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Manglik Status"
+            value={value}
+            placeholder="Yes / No / Partial"
+            options={manglikOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Sparkles}
+          />
+        )}
       />
 
-      <PickerField
-        label="Rashi (Zodiac)"
-        value={formData.rashi || ""}
-        options={rashiOptions}
-        onSelect={(v) => updateField("rashi", v)}
-        editable={editable}
-        icon={Star}
+      {/* Rashi */}
+      <Controller
+        control={control}
+        name="rashi"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Rashi (Zodiac)"
+            value={value}
+            placeholder="Aries / Taurus / ..."
+            options={rashiOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Star}
+          />
+        )}
       />
 
-      <PickerField
-        label="Horoscope Required?"
-        value={formData.horoscopeRequired || ""}
-        options={horoscopeOptions}
-        onSelect={(v) => updateField("horoscopeRequired", v)}
-        editable={editable}
-        icon={Zap}
+      {/* Horoscope Required */}
+      <Controller
+        control={control}
+        name="horoscopeRequired"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Horoscope Required?"
+            value={value}
+            placeholder="Yes / No / Optional"
+            options={horoscopeOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Zap}
+          />
+        )}
       />
     </FormSection>
   );
 };
 
-export default PersonalInfoSection;
+// import React from "react";
+// import { Controller, useFormContext } from "react-hook-form";
+// import {
+//   UserCheck,
+//   Calendar,
+//   User,
+//   HeartHandshake,
+//   Ruler,
+//   Scale,
+//   Droplets,
+//   Activity,
+//   Sparkles,
+//   Star,
+//   Zap,
+//   MapPin,
+//   Timer,
+// } from "lucide-react-native";
+
+// import { Profile } from "../../../../types/profile";
+
+// import FormSection from "../form/FormSection";
+// import InputField from "../form/InputField";
+// import PickerField from "../form/PickerField";
+// import RadioField from "../form/RadioField";
+// import DatePickerField, { TimePickerField } from "../form/DateTimePickers";
+// import {
+//   genderOptions,
+//   maritalStatusOptions,
+//   bodyTypeOptions,
+//   bloodGroupOptions,
+//   manglikOptions,
+//   rashiOptions,
+//   horoscopeOptions,
+// } from "../../../../constants/profileOptions";
+
+// interface PersonalInfoSectionProps {
+//   editable?: boolean;
+//   requiredFields?: (keyof Profile)[];
+//   immutableFields?: (keyof Profile)[];
+//   confirmedImmutable?: (keyof Profile)[];
+//   fieldErrors?: Partial<Record<keyof Profile, string>>;
+// }
+
+// export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
+//   immutableFields,
+//   confirmedImmutable,
+//   editable = true,
+// }) => {
+//   const { control } = useFormContext<Profile>();
+
+//   return (
+//     <FormSection title="Personal Information" icon={User} editable={editable}>
+//       {/* Full Name */}
+//       <Controller
+//         control={control}
+//         name="fullName"
+//         rules={{ required: "Full Name is required" }}
+//         render={({ field: { onChange, value } }) => (
+//           <InputField
+//             label="Full Name"
+//             value={value}
+//             onChangeText={onChange}
+//             placeholder="Enter full name"
+//             icon={UserCheck}
+//             required
+//             editable={editable}
+//             locked={
+//               immutableFields?.includes("fullName") &&
+//               confirmedImmutable?.includes("fullName")
+//             }
+//           />
+//         )}
+//       />
+
+//       {/* Date of Birth */}
+//       <Controller
+//         control={control}
+//         name="dateOfBirth"
+//         rules={{ required: "Date of Birth is required" }}
+//         render={({ field: { onChange, value } }) => (
+//           <DatePickerField
+//             label="Date of Birth"
+//             value={value ?? ""}
+//             onChange={onChange}
+//             placeholder="YYYY-MM-DD"
+//             editable={editable}
+//             icon={Calendar}
+//             required
+//             locked={
+//               immutableFields?.includes("dateOfBirth") &&
+//               confirmedImmutable?.includes("dateOfBirth")
+//             }
+//           />
+//         )}
+//       />
+
+//       {/* Time of Birth */}
+//       <Controller
+//         control={control}
+//         name="timeOfBirth"
+//         render={({ field: { onChange, value } }) => (
+//           <TimePickerField
+//             label="Time of Birth"
+//             value={value ?? ""}
+//             placeholder="e.g., 06:30 AM"
+//             onChange={onChange}
+//             editable={editable}
+//             icon={Timer}
+//           />
+//         )}
+//       />
+
+//       {/* Place of Birth */}
+//       <Controller
+//         control={control}
+//         name="placeOfBirth"
+//         render={({ field: { onChange, value } }) => (
+//           <InputField
+//             label="Place of Birth"
+//             value={value}
+//             onChangeText={onChange}
+//             placeholder="Enter place"
+//             icon={MapPin}
+//             editable={editable}
+//           />
+//         )}
+//       />
+
+//       {/* Gender */}
+//       <Controller
+//         control={control}
+//         name="gender"
+//         rules={{ required: "Gender is required" }}
+//         render={({ field: { onChange, value } }) => (
+//           <RadioField
+//             label="Gender"
+//             value={value}
+//             options={genderOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={User}
+//             required
+//             locked={
+//               immutableFields?.includes("gender") &&
+//               confirmedImmutable?.includes("gender")
+//             }
+//           />
+//         )}
+//       />
+
+//       {/* Marital Status */}
+//       <Controller
+//         control={control}
+//         name="maritalStatus"
+//         rules={{ required: "Marital Status is required" }}
+//         render={({ field: { onChange, value } }) => (
+//           <PickerField
+//             label="Marital Status"
+//             value={value}
+//             placeholder="Never Married / Divorced / Widowed"
+//             options={maritalStatusOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={HeartHandshake}
+//             locked={
+//               immutableFields?.includes("maritalStatus") &&
+//               confirmedImmutable?.includes("maritalStatus")
+//             }
+//           />
+//         )}
+//       />
+
+//       {/* Height */}
+//       <Controller
+//         control={control}
+//         name="height"
+//         render={({ field: { onChange, value } }) => (
+//           <InputField
+//             label="Height"
+//             value={value}
+//             onChangeText={onChange}
+//             placeholder="e.g., 5'8''"
+//             icon={Ruler}
+//             editable={editable}
+//           />
+//         )}
+//       />
+
+//       {/* Weight */}
+//       <Controller
+//         control={control}
+//         name="weight"
+//         render={({ field: { onChange, value } }) => (
+//           <InputField
+//             label="Weight"
+//             value={value}
+//             onChangeText={onChange}
+//             placeholder="e.g., 70kg"
+//             icon={Scale}
+//             editable={editable}
+//           />
+//         )}
+//       />
+
+//       {/* Body Type */}
+//       <Controller
+//         control={control}
+//         name="bodyType"
+//         render={({ field: { onChange, value } }) => (
+//           <PickerField
+//             label="Body Type"
+//             value={value}
+//             placeholder="Slim / Athletic / Average"
+//             options={bodyTypeOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={Activity}
+//           />
+//         )}
+//       />
+
+//       {/* Blood Group */}
+//       <Controller
+//         control={control}
+//         name="bloodGroup"
+//         render={({ field: { onChange, value } }) => (
+//           <PickerField
+//             label="Blood Group"
+//             value={value}
+//             placeholder="A+ / O-"
+//             options={bloodGroupOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={Droplets}
+//           />
+//         )}
+//       />
+
+//       {/* Manglik Status */}
+//       <Controller
+//         control={control}
+//         name="manglikStatus"
+//         render={({ field: { onChange, value } }) => (
+//           <PickerField
+//             label="Manglik Status"
+//             value={value}
+//             placeholder="Yes / No / Partial"
+//             options={manglikOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={Sparkles}
+//           />
+//         )}
+//       />
+
+//       {/* Rashi */}
+//       <Controller
+//         control={control}
+//         name="rashi"
+//         render={({ field: { onChange, value } }) => (
+//           <PickerField
+//             label="Rashi (Zodiac)"
+//             value={value}
+//             placeholder="Aries / Taurus / ..."
+//             options={rashiOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={Star}
+//           />
+//         )}
+//       />
+
+//       {/* Horoscope Required */}
+//       <Controller
+//         control={control}
+//         name="horoscopeRequired"
+//         render={({ field: { onChange, value } }) => (
+//           <PickerField
+//             label="Horoscope Required?"
+//             value={value}
+//             placeholder="Yes / No / Optional"
+//             options={horoscopeOptions}
+//             onSelect={onChange}
+//             editable={editable}
+//             icon={Zap}
+//           />
+//         )}
+//       />
+//     </FormSection>
+//   );
+// };

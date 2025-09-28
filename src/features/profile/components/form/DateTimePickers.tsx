@@ -12,6 +12,7 @@ import { theme } from "../../../../constants/theme";
 interface DatePickerProps {
   label: string;
   value?: Date | string;
+  placeholder?: string;
   onChange: (date?: Date) => void;
   editable?: boolean;
   icon?: React.ComponentType<any>;
@@ -108,6 +109,7 @@ export const DatePickerField: React.FC<DatePickerProps> = ({
 interface TimePickerProps {
   label: string;
   value?: string;
+  placeholder?: string;
   onChange: (time?: string) => void;
   editable?: boolean;
   icon?: React.ComponentType<any>;
@@ -144,6 +146,7 @@ export const TimePickerField: React.FC<TimePickerProps> = ({
   label,
   value,
   onChange,
+  placeholder,
   editable = true,
   icon: Icon,
   required = false,

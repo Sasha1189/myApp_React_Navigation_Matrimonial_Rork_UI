@@ -6,6 +6,7 @@ import { theme } from "../../../../constants/theme";
 interface PickerFieldProps {
   label: string;
   value: string;
+  placeholder: string;
   options: string[];
   onSelect: (value: string) => void;
   icon?: React.ComponentType<any>;
@@ -19,6 +20,7 @@ const PickerField: React.FC<PickerFieldProps> = ({
   value,
   options,
   onSelect,
+  placeholder,
   icon: Icon,
   editable = true,
   required = false,
