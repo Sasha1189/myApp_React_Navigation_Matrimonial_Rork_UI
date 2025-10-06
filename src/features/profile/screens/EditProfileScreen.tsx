@@ -30,6 +30,7 @@ import {
   requiredFields,
   immutableFields,
 } from "../components/form/profileValidation";
+import { isDeepEqual } from "../../../utils/deepEqual";
 
 import { useIsDirty } from "../hooks/useIsDirty";
 import { useConfirmedImmutable } from "../hooks/useConfirmedImmutable";
@@ -66,6 +67,8 @@ export default function EditProfileScreen() {
     }
   }, [profile, reset]);
 
+  const SKIP_FIELDS: (keyof Profile)[] = ["photos", "createdAt", "updatedAt"];
+
   const handleSave = handleSubmit(async (data) => {
     if (!isEditing) {
       setIsEditing(true);
@@ -80,8 +83,11 @@ export default function EditProfileScreen() {
       (Object.keys(data) as (keyof Profile)[]).forEach((key) => {
         const newVal = data[key];
         const oldVal = profile?.[key];
-        if (!Object.is(newVal, oldVal)) {
-          changedFields[key] = newVal as Profile[typeof key];
+
+        if (SKIP_FIELDS.includes(key as keyof Profile)) return false;
+
+        if (!isDeepEqual(newVal, oldVal)) {
+          changedFields[key] = newVal!;
         }
       });
 

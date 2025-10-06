@@ -1,5 +1,5 @@
-import { theme } from '../../../theme/index';
-import { LinearGradient } from 'expo-linear-gradient';
+import { theme } from "../../../theme/index";
+import { LinearGradient } from "expo-linear-gradient";
 // import { Stack, router } from 'expo-router';
 import {
   ArrowLeft,
@@ -12,8 +12,8 @@ import {
   Smartphone,
   Vibrate,
   Volume2,
-} from 'lucide-react-native';
-import React, { useState } from 'react';
+} from "lucide-react-native";
+import React, { useState } from "react";
 import {
   Alert,
   ScrollView,
@@ -22,14 +22,14 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
 interface SettingItem {
   id: string;
   title: string;
   subtitle?: string;
   icon: React.ComponentType<any>;
-  type: 'toggle' | 'navigation' | 'picker';
+  type: "toggle" | "navigation" | "picker";
   value?: boolean | string;
   options?: string[];
   onPress?: () => void;
@@ -48,119 +48,126 @@ export default function SettingsScreen() {
     vibrationEnabled: true,
     showOnlineStatus: true,
     shareLocation: false,
-    language: 'English',
-    distanceUnit: 'Kilometers',
+    language: "English",
+    distanceUnit: "Kilometers",
   });
 
   const updateSetting = (key: string, value: boolean | string) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleLanguageChange = () => {
-    const languages = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Bengali'];
+    const languages = [
+      "English",
+      "Hindi",
+      "Marathi",
+      "Tamil",
+      "Telugu",
+      "Bengali",
+    ];
     Alert.alert(
-      'Select Language',
-      'Choose your preferred language',
-      languages.map(lang => ({
+      "Select Language",
+      "Choose your preferred language",
+      languages.map((lang) => ({
         text: lang,
-        onPress: () => updateSetting('language', lang),
+        onPress: () => updateSetting("language", lang),
       }))
     );
   };
 
   const handleDistanceUnitChange = () => {
-    const units = ['Kilometers', 'Miles'];
+    const units = ["Kilometers", "Miles"];
     Alert.alert(
-      'Distance Unit',
-      'Choose your preferred distance unit',
-      units.map(unit => ({
+      "Distance Unit",
+      "Choose your preferred distance unit",
+      units.map((unit) => ({
         text: unit,
-        onPress: () => updateSetting('distanceUnit', unit),
+        onPress: () => updateSetting("distanceUnit", unit),
       }))
     );
   };
 
   const settingSections: SettingSection[] = [
     {
-      title: 'Notifications',
+      title: "Notifications",
       items: [
         {
-          id: 'notifications',
-          title: 'Push Notifications',
-          subtitle: 'Receive notifications for new matches and messages',
+          id: "notifications",
+          title: "Push Notifications",
+          subtitle: "Receive notifications for new matches and messages",
           icon: Bell,
-          type: 'toggle',
+          type: "toggle",
           value: settings.notifications,
         },
         {
-          id: 'soundEnabled',
-          title: 'Sound',
-          subtitle: 'Play sounds for notifications',
+          id: "soundEnabled",
+          title: "Sound",
+          subtitle: "Play sounds for notifications",
           icon: Volume2,
-          type: 'toggle',
+          type: "toggle",
           value: settings.soundEnabled,
         },
         {
-          id: 'vibrationEnabled',
-          title: 'Vibration',
-          subtitle: 'Vibrate for notifications',
+          id: "vibrationEnabled",
+          title: "Vibration",
+          subtitle: "Vibrate for notifications",
           icon: Vibrate,
-          type: 'toggle',
+          type: "toggle",
           value: settings.vibrationEnabled,
         },
       ],
     },
     {
-      title: 'Appearance',
+      title: "Appearance",
       items: [
         {
-          id: 'darkMode',
-          title: 'Dark Mode',
-          subtitle: 'Use dark theme',
+          id: "darkMode",
+          title: "Dark Mode",
+          subtitle: "Use dark theme",
           icon: Moon,
-          type: 'toggle',
+          type: "toggle",
           value: settings.darkMode,
         },
         {
-          id: 'language',
-          title: 'Language',
+          id: "language",
+          title: "Language",
           subtitle: settings.language,
           icon: Globe,
-          type: 'picker',
+          type: "picker",
           onPress: handleLanguageChange,
         },
       ],
     },
     {
-      title: 'Privacy',
+      title: "Privacy",
       items: [
         {
-          id: 'showOnlineStatus',
-          title: 'Show Online Status',
-          subtitle: 'Let others see when you are online',
+          id: "showOnlineStatus",
+          title: "Show Online Status",
+          subtitle: "Let others see when you are online",
           icon: Eye,
-          type: 'toggle',
+          type: "toggle",
           value: settings.showOnlineStatus,
         },
         {
-          id: 'shareLocation',
-          title: 'Share Location',
-          subtitle: 'Show your location to potential matches',
+          id: "shareLocation",
+          title: "Share Location",
+          subtitle: "Show your location to potential matches",
           icon: MapPin,
-          type: 'toggle',
+          type: "toggle",
           value: settings.shareLocation,
         },
       ],
     },
     {
-      title: 'Discovery',
+      title: "Discovery",
       items: [
         {
-          id: 'distanceUnit',
-          title: 'Distance Unit',
+          id: "distanceUnit",
+          title: "Distance Unit",
           subtitle: settings.distanceUnit,
           icon: Smartphone,
-          type: 'picker',
+          type: "picker",
           onPress: handleDistanceUnitChange,
         },
       ],
@@ -173,7 +180,7 @@ export default function SettingsScreen() {
         key={item.id}
         style={styles.settingItem}
         onPress={item.onPress}
-        disabled={item.type === 'toggle'}
+        disabled={item.type === "toggle"}
       >
         <View style={styles.settingLeft}>
           <View style={styles.iconContainer}>
@@ -187,20 +194,20 @@ export default function SettingsScreen() {
           </View>
         </View>
         <View style={styles.settingRight}>
-          {item.type === 'toggle' && (
+          {item.type === "toggle" && (
             <Switch
               value={item.value as boolean}
               onValueChange={(value) => updateSetting(item.id, value)}
               trackColor={{
                 false: theme.colors.border,
-                true: theme.colors.primary + '40',
+                true: theme.colors.primary + "40",
               }}
               thumbColor={
                 item.value ? theme.colors.primary : theme.colors.textLight
               }
             />
           )}
-          {item.type === 'picker' && (
+          {item.type === "picker" && (
             <ChevronRight size={20} color={theme.colors.textLight} />
           )}
         </View>
@@ -219,7 +226,7 @@ export default function SettingsScreen() {
           },
           headerTintColor: 'white',
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
               <ArrowLeft size={24} color="white" />
             </TouchableOpacity>
           ),
@@ -227,10 +234,10 @@ export default function SettingsScreen() {
       /> */}
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={[theme.colors.primary + '20', 'transparent']}
+          colors={[theme.colors.primary + "20", "transparent"]}
           style={styles.headerGradient}
         />
-        
+
         <View style={styles.content}>
           {settingSections.map((section, sectionIndex) => (
             <View key={sectionIndex} style={styles.section}>
@@ -259,7 +266,7 @@ const styles = StyleSheet.create({
   },
   headerGradient: {
     height: 100,
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -273,13 +280,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSize.lg,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
     marginLeft: theme.spacing.sm,
   },
   sectionContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: theme.borderRadius.lg,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
@@ -288,25 +295,25 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   iconContainer: {
     width: 40,
     height: 40,
     borderRadius: theme.borderRadius.round,
-    backgroundColor: theme.colors.primary + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: theme.colors.primary + "20",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: theme.spacing.md,
   },
   settingContent: {
@@ -314,7 +321,7 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
@@ -327,7 +334,7 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.md,
   },
   infoCard: {
-    backgroundColor: theme.colors.primary + '10',
+    backgroundColor: theme.colors.primary + "10",
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     marginTop: theme.spacing.lg,
@@ -335,7 +342,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
 });
