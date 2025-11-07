@@ -108,16 +108,16 @@ export default function ProfileScreen(): React.ReactElement {
       label: "Settings",
       onPress: () => navigation.navigate("Settings"),
     },
-    {
-      icon: Shield,
-      label: "Safety & Privacy",
-      onPress: () => navigation.navigate("SafetyPrivacy"),
-    },
-    {
-      icon: HelpCircle,
-      label: "Help & Support",
-      onPress: () => navigation.navigate("HelpSupport"),
-    },
+    // {
+    //   icon: Shield,
+    //   label: "Safety & Privacy",
+    //   onPress: () => navigation.navigate("SafetyPrivacy"),
+    // },
+    // {
+    //   icon: HelpCircle,
+    //   label: "Help & Support",
+    //   onPress: () => navigation.navigate("HelpSupport"),
+    // },
   ];
   return (
     <LinearGradient
@@ -329,6 +329,9 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
   },
   menuSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: theme.colors.cardBackground,
     borderTopLeftRadius: theme.borderRadius.xl,
     borderTopRightRadius: theme.borderRadius.xl,
@@ -350,7 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   menuCard: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     backgroundColor: theme.colors.cardBackground,
     padding: theme.spacing.sm,

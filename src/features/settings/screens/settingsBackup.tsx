@@ -6,20 +6,12 @@ import {
   Bell,
   ChevronRight,
   Eye,
-  EyeOff,
   Globe,
   MapPin,
   Moon,
-  Lock,
-  Bug,
   Smartphone,
   Vibrate,
   Volume2,
-  UserX,
-  Flag,
-  Shield,
-  Star,
-  FileText,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -37,11 +29,10 @@ interface SettingItem {
   title: string;
   subtitle?: string;
   icon: React.ComponentType<any>;
-  type: "toggle" | "navigation" | "picker" | "action";
+  type: "toggle" | "navigation" | "picker";
   value?: boolean | string;
   options?: string[];
   onPress?: () => void;
-  isWarning?: boolean;
 }
 
 interface SettingSection {
@@ -56,8 +47,6 @@ export default function SettingsScreen() {
     soundEnabled: true,
     vibrationEnabled: true,
     showOnlineStatus: true,
-    hideProfile: false,
-    blockScreenshots: false,
     shareLocation: false,
     language: "English",
     distanceUnit: "Kilometers",
@@ -110,22 +99,22 @@ export default function SettingsScreen() {
           type: "toggle",
           value: settings.notifications,
         },
-        // {
-        //   id: "soundEnabled",
-        //   title: "Sound",
-        //   subtitle: "Play sounds for notifications",
-        //   icon: Volume2,
-        //   type: "toggle",
-        //   value: settings.soundEnabled,
-        // },
-        // {
-        //   id: "vibrationEnabled",
-        //   title: "Vibration",
-        //   subtitle: "Vibrate for notifications",
-        //   icon: Vibrate,
-        //   type: "toggle",
-        //   value: settings.vibrationEnabled,
-        // },
+        {
+          id: "soundEnabled",
+          title: "Sound",
+          subtitle: "Play sounds for notifications",
+          icon: Volume2,
+          type: "toggle",
+          value: settings.soundEnabled,
+        },
+        {
+          id: "vibrationEnabled",
+          title: "Vibration",
+          subtitle: "Vibrate for notifications",
+          icon: Vibrate,
+          type: "toggle",
+          value: settings.vibrationEnabled,
+        },
       ],
     },
     {
@@ -152,125 +141,34 @@ export default function SettingsScreen() {
     {
       title: "Privacy",
       items: [
-        // {
-        //   id: "showOnlineStatus",
-        //   title: "Show Online Status",
-        //   subtitle: "Let others see when you are online",
-        //   icon: Eye,
-        //   type: "toggle",
-        //   value: settings.showOnlineStatus,
-        // },
         {
-          id: "hideProfile",
-          title: "Hide Profile",
-          subtitle: "Make your profile invisible to others temporarily",
-          icon: EyeOff,
+          id: "showOnlineStatus",
+          title: "Show Online Status",
+          subtitle: "Let others see when you are online",
+          icon: Eye,
           type: "toggle",
-          value: settings.hideProfile,
+          value: settings.showOnlineStatus,
         },
         {
-          id: "blockScreenshots",
-          title: "Block Screenshots",
-          subtitle: "Prevent others from taking screenshots of your profile",
-          icon: Lock,
+          id: "shareLocation",
+          title: "Share Location",
+          subtitle: "Show your location to potential matches",
+          icon: MapPin,
           type: "toggle",
-          value: settings.blockScreenshots,
-        },
-        // {
-        //   id: "shareLocation",
-        //   title: "Share Location",
-        //   subtitle: "Show your location to potential matches",
-        //   icon: MapPin,
-        //   type: "toggle",
-        //   value: settings.shareLocation,
-        // },
-      ],
-    },
-    {
-      title: "Safety Tools",
-      items: [
-        {
-          id: "blockedUsers",
-          title: "Blocked Users",
-          subtitle: "Manage users you have blocked",
-          icon: UserX,
-          type: "navigation",
-          // onPress: handleBlockedUsers,
-        },
-        {
-          id: "reportUser",
-          title: "Report a User",
-          subtitle: "Report inappropriate behavior",
-          icon: Flag,
-          type: "navigation",
-          // onPress: handleReportUser,
-          isWarning: true,
-        },
-        {
-          id: "safetyTips",
-          title: "Safety Tips",
-          subtitle: "Learn how to stay safe while dating",
-          icon: Shield,
-          type: "navigation",
-          // onPress: handleSafetyTips,
+          value: settings.shareLocation,
         },
       ],
     },
     {
-      title: "Feedback",
+      title: "Discovery",
       items: [
         {
-          id: "reportBug",
-          title: "Report a Bug",
-          subtitle: "Let us know about any issues",
-          icon: Bug,
-          type: "navigation",
-          // onPress: handleReportBug,
-        },
-        {
-          id: "featureRequest",
-          title: "Request a Feature",
-          subtitle: "Suggest new features or improvements",
-          icon: Star,
-          type: "navigation",
-          // onPress: handleFeatureRequest,
-        },
-        {
-          id: "rateApp",
-          title: "Rate Our App",
-          subtitle: "Share your experience with others",
-          icon: Star,
-          type: "action",
-          // onPress: handleRateApp,
-        },
-      ],
-    },
-    {
-      title: "Legal & Policies",
-      items: [
-        {
-          id: "terms",
-          title: "Terms & Conditions",
-          subtitle: "Read our terms of service",
-          icon: FileText,
-          type: "navigation",
-          // onPress: handleTerms,
-        },
-        {
-          id: "privacy",
-          title: "Privacy Policy",
-          subtitle: "Learn how we protect your data",
-          icon: FileText,
-          type: "navigation",
-          // onPress: handlePrivacyPolicy,
-        },
-        {
-          id: "guidelines",
-          title: "Community Guidelines",
-          subtitle: "Our community standards",
-          icon: FileText,
-          type: "navigation",
-          // onPress: handleCommunityGuidelines,
+          id: "distanceUnit",
+          title: "Distance Unit",
+          subtitle: settings.distanceUnit,
+          icon: Smartphone,
+          type: "picker",
+          onPress: handleDistanceUnitChange,
         },
       ],
     },
@@ -319,6 +217,21 @@ export default function SettingsScreen() {
 
   return (
     <>
+      {/* <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Settings',
+          headerStyle: {
+            backgroundColor: theme.colors.primary,
+          },
+          headerTintColor: 'white',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <ArrowLeft size={24} color="white" />
+            </TouchableOpacity>
+          ),
+        }}
+      /> */}
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={[theme.colors.primary + "20", "transparent"]}
