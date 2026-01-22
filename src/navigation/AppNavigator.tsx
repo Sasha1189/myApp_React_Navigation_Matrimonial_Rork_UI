@@ -5,8 +5,6 @@ import SearchScreen from "../features/home/screens/SearchScreen";
 import EditProfileScreen from "../features/profile/screens/EditProfileScreen";
 import ManagePhotosScreen from "../features/profile/screens/ManagePhotosScreen";
 import UserDetailsScreen from "../features/profile/screens/UserDetailsScreen";
-import HelpSupportScreen from "../features/settings/screens/HelpSupportScreen";
-import SafetyPrivacyScreen from "../features/settings/screens/SafetyPrivacyScreen";
 import SettingsScreen from "../features/settings/screens/SettingsScreen";
 import SubscriptionScreen from "../features/subscription/screens/SubscriptionScreen";
 import TabNavigator from "./TabNavigator";
@@ -50,8 +48,6 @@ export const AppNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
-      <Stack.Screen name="SafetyPrivacy" component={SafetyPrivacyScreen} />
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
     </Stack.Navigator>
   );

@@ -1,29 +1,18 @@
 import { theme } from "../../../theme/index";
 import { LinearGradient } from "expo-linear-gradient";
-// import { Stack, router } from 'expo-router';
 import {
-  ArrowLeft,
-  Bell,
   ChevronRight,
-  Eye,
-  EyeOff,
-  Globe,
-  MapPin,
   Moon,
-  Lock,
-  Bug,
-  Smartphone,
-  Vibrate,
-  Volume2,
   UserX,
   Flag,
-  Shield,
   Star,
   FileText,
+  Bug,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Switch,
@@ -31,291 +20,91 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-interface SettingItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  icon: React.ComponentType<any>;
-  type: "toggle" | "navigation" | "picker" | "action";
-  value?: boolean | string;
-  options?: string[];
-  onPress?: () => void;
-  isWarning?: boolean;
-}
-
-interface SettingSection {
-  title: string;
-  items: SettingItem[];
-}
+import BlockedUsersModal from "../components/BlockedUsersModal";
+import { useBlockUnblockUser } from "../hooks/useBlockUnblockUser";
+import { useProfileContext } from "../../../context/ProfileContext";
+import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
 
 export default function SettingsScreen() {
+  const { profile } = useProfileContext();
+
   const [settings, setSettings] = useState({
     notifications: true,
     darkMode: false,
-    soundEnabled: true,
-    vibrationEnabled: true,
-    showOnlineStatus: true,
     hideProfile: false,
-    blockScreenshots: false,
-    shareLocation: false,
-    language: "English",
-    distanceUnit: "Kilometers",
   });
-
+  // theme related
   const updateSetting = (key: string, value: boolean | string) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleLanguageChange = () => {
-    const languages = [
-      "English",
-      "Hindi",
-      "Marathi",
-      "Tamil",
-      "Telugu",
-      "Bengali",
-    ];
-    Alert.alert(
-      "Select Language",
-      "Choose your preferred language",
-      languages.map((lang) => ({
-        text: lang,
-        onPress: () => updateSetting("language", lang),
-      }))
-    );
+  // block/unblock related
+  const { unblockUser, isReady } = useBlockUnblockUser(
+    profile?.uid ?? "",
+    profile?.gender ?? ""
+  );
+  // Blocked list comes from cache-only query:
+  // const { data: blockedUsers = [] } = useQuery<BlockedUserDetail[]>({
+  //   queryKey: ["blockedUserDetails", profile?.uid],
+  //   enabled: !!profile?.uid,
+  //   initialData: [],
+  //   // no queryFn because this query is cache-only; it's ok since we never fetch
+  // });
+  const { data: blockedUsers = [] } = useBlockedUserDetails(profile?.uid);
+
+  const handleUnblock = (uid: string) => {
+    if (!isReady) return;
+    unblockUser(uid);
   };
 
-  const handleDistanceUnitChange = () => {
-    const units = ["Kilometers", "Miles"];
-    Alert.alert(
-      "Distance Unit",
-      "Choose your preferred distance unit",
-      units.map((unit) => ({
-        text: unit,
-        onPress: () => updateSetting("distanceUnit", unit),
-      }))
-    );
-  };
+  // modal visibility related
+  const [blockedOpen, setBlockedOpen] = useState(false);
+  const onBlockedUsers = () => setBlockedOpen(true);
 
-  const settingSections: SettingSection[] = [
-    {
-      title: "Notifications",
-      items: [
-        {
-          id: "notifications",
-          title: "Push Notifications",
-          subtitle: "Receive notifications for new matches and messages",
-          icon: Bell,
-          type: "toggle",
-          value: settings.notifications,
-        },
-        // {
-        //   id: "soundEnabled",
-        //   title: "Sound",
-        //   subtitle: "Play sounds for notifications",
-        //   icon: Volume2,
-        //   type: "toggle",
-        //   value: settings.soundEnabled,
-        // },
-        // {
-        //   id: "vibrationEnabled",
-        //   title: "Vibration",
-        //   subtitle: "Vibrate for notifications",
-        //   icon: Vibrate,
-        //   type: "toggle",
-        //   value: settings.vibrationEnabled,
-        // },
-      ],
-    },
-    {
-      title: "Appearance",
-      items: [
-        {
-          id: "darkMode",
-          title: "Dark Mode",
-          subtitle: "Use dark theme",
-          icon: Moon,
-          type: "toggle",
-          value: settings.darkMode,
-        },
-        {
-          id: "language",
-          title: "Language",
-          subtitle: settings.language,
-          icon: Globe,
-          type: "picker",
-          onPress: handleLanguageChange,
-        },
-      ],
-    },
-    {
-      title: "Privacy",
-      items: [
-        // {
-        //   id: "showOnlineStatus",
-        //   title: "Show Online Status",
-        //   subtitle: "Let others see when you are online",
-        //   icon: Eye,
-        //   type: "toggle",
-        //   value: settings.showOnlineStatus,
-        // },
-        {
-          id: "hideProfile",
-          title: "Hide Profile",
-          subtitle: "Make your profile invisible to others temporarily",
-          icon: EyeOff,
-          type: "toggle",
-          value: settings.hideProfile,
-        },
-        {
-          id: "blockScreenshots",
-          title: "Block Screenshots",
-          subtitle: "Prevent others from taking screenshots of your profile",
-          icon: Lock,
-          type: "toggle",
-          value: settings.blockScreenshots,
-        },
-        // {
-        //   id: "shareLocation",
-        //   title: "Share Location",
-        //   subtitle: "Show your location to potential matches",
-        //   icon: MapPin,
-        //   type: "toggle",
-        //   value: settings.shareLocation,
-        // },
-      ],
-    },
-    {
-      title: "Safety Tools",
-      items: [
-        {
-          id: "blockedUsers",
-          title: "Blocked Users",
-          subtitle: "Manage users you have blocked",
-          icon: UserX,
-          type: "navigation",
-          // onPress: handleBlockedUsers,
-        },
-        {
-          id: "reportUser",
-          title: "Report a User",
-          subtitle: "Report inappropriate behavior",
-          icon: Flag,
-          type: "navigation",
-          // onPress: handleReportUser,
-          isWarning: true,
-        },
-        {
-          id: "safetyTips",
-          title: "Safety Tips",
-          subtitle: "Learn how to stay safe while dating",
-          icon: Shield,
-          type: "navigation",
-          // onPress: handleSafetyTips,
-        },
-      ],
-    },
-    {
-      title: "Feedback",
-      items: [
-        {
-          id: "reportBug",
-          title: "Report a Bug",
-          subtitle: "Let us know about any issues",
-          icon: Bug,
-          type: "navigation",
-          // onPress: handleReportBug,
-        },
-        {
-          id: "featureRequest",
-          title: "Request a Feature",
-          subtitle: "Suggest new features or improvements",
-          icon: Star,
-          type: "navigation",
-          // onPress: handleFeatureRequest,
-        },
-        {
-          id: "rateApp",
-          title: "Rate Our App",
-          subtitle: "Share your experience with others",
-          icon: Star,
-          type: "action",
-          // onPress: handleRateApp,
-        },
-      ],
-    },
-    {
-      title: "Legal & Policies",
-      items: [
-        {
-          id: "terms",
-          title: "Terms & Conditions",
-          subtitle: "Read our terms of service",
-          icon: FileText,
-          type: "navigation",
-          // onPress: handleTerms,
-        },
-        {
-          id: "privacy",
-          title: "Privacy Policy",
-          subtitle: "Learn how we protect your data",
-          icon: FileText,
-          type: "navigation",
-          // onPress: handlePrivacyPolicy,
-        },
-        {
-          id: "guidelines",
-          title: "Community Guidelines",
-          subtitle: "Our community standards",
-          icon: FileText,
-          type: "navigation",
-          // onPress: handleCommunityGuidelines,
-        },
-      ],
-    },
-  ];
-
-  const renderSettingItem = (item: SettingItem) => {
-    return (
-      <TouchableOpacity
-        key={item.id}
-        style={styles.settingItem}
-        onPress={item.onPress}
-        disabled={item.type === "toggle"}
-      >
-        <View style={styles.settingLeft}>
-          <View style={styles.iconContainer}>
-            <item.icon size={20} color={theme.colors.primary} />
-          </View>
-          <View style={styles.settingContent}>
-            <Text style={styles.settingTitle}>{item.title}</Text>
-            {item.subtitle && (
-              <Text style={styles.settingSubtitle}>{item.subtitle}</Text>
-            )}
-          </View>
-        </View>
-        <View style={styles.settingRight}>
-          {item.type === "toggle" && (
-            <Switch
-              value={item.value as boolean}
-              onValueChange={(value) => updateSetting(item.id, value)}
-              trackColor={{
-                false: theme.colors.border,
-                true: theme.colors.primary + "40",
-              }}
-              thumbColor={
-                item.value ? theme.colors.primary : theme.colors.textLight
-              }
-            />
-          )}
-          {item.type === "picker" && (
-            <ChevronRight size={20} color={theme.colors.textLight} />
-          )}
-        </View>
-      </TouchableOpacity>
-    );
+  // whatsup related
+  const openLink = async (url: string, label: string) => {
+    try {
+      await Linking.openURL(url); // no canOpenURL check
+    } catch (e) {
+      Alert.alert("Error", `Couldn't open ${label}.`);
+    }
   };
+  const WHATSAPP_NUMBER = "919921794390";
+  const composeWhatsApp = async (type: "bug" | "feature" | "report-user") => {
+    const heading =
+      type === "bug"
+        ? "Bug report — Lonari Youva Connect"
+        : type === "feature"
+        ? "Feature request — Lonari Youva Connect"
+        : "Report user — Lonari Youva Connect";
+
+    const preset =
+      type === "bug"
+        ? "Issue:\nSteps to reproduce:\nExpected vs actual:\nDevice/Version:"
+        : type === "feature"
+        ? "Feature idea:\nWhy it's useful:\nAny examples:"
+        : "Report user details:\nWhich user you want to report?\nReason:\nAny screenshot / evidence:";
+
+    const text = encodeURIComponent(`${heading}\n\n${preset}`);
+    const appUrl = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${text}`;
+    const webUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+
+    try {
+      await Linking.openURL(appUrl);
+    } catch {
+      try {
+        await Linking.openURL(webUrl);
+      } catch {
+        Alert.alert(
+          "WhatsApp not available",
+          "Couldn't open WhatsApp. Please check your installation or try again later."
+        );
+      }
+    }
+  };
+  const onReportUser = () => composeWhatsApp("report-user");
+  const onReportBug = () => composeWhatsApp("bug");
+  const onFeatureRequest = () => composeWhatsApp("feature");
 
   return (
     <>
@@ -324,24 +113,191 @@ export default function SettingsScreen() {
           colors={[theme.colors.primary + "20", "transparent"]}
           style={styles.headerGradient}
         />
-
         <View style={styles.content}>
-          {settingSections.map((section, sectionIndex) => (
-            <View key={sectionIndex} style={styles.section}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <View style={styles.sectionContent}>
-                {section.items.map(renderSettingItem)}
-              </View>
+          {/* Appearance */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Appearance</Text>
+            <View style={styles.sectionContent}>
+              {/* Dark Mode (toggle) */}
+              <TouchableOpacity style={styles.settingItem} activeOpacity={1}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <Moon size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Dark Mode</Text>
+                    <Text style={styles.settingSubtitle}>Use dark theme</Text>
+                  </View>
+                </View>
+                <View style={styles.settingRight}>
+                  <Switch
+                    value={settings.darkMode}
+                    onValueChange={(value) => updateSetting("darkMode", value)}
+                    trackColor={{
+                      false: theme.colors.border,
+                      true: theme.colors.primary + "40",
+                    }}
+                    thumbColor={
+                      settings.darkMode
+                        ? theme.colors.primary
+                        : theme.colors.textLight
+                    }
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
-          ))}
+          </View>
 
-          <View style={styles.infoCard}>
-            <Text style={styles.infoText}>
-              Changes to privacy settings may take a few minutes to take effect.
-            </Text>
+          {/* Safety Tools */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Safety Tools</Text>
+            <View style={styles.sectionContent}>
+              {/* Blocked Users */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={onBlockedUsers}
+                disabled={!isReady}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <UserX size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Blocked Users</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Manage users you have blocked
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+
+              {/* Report a User */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={onReportUser}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <Flag size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Report a User</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Report inappropriate behavior
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Feedback */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Feedback</Text>
+            <View style={styles.sectionContent}>
+              {/* Report a Bug */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={onReportBug}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <Bug size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Report a Bug</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Opens WhatsApp message to report a bug
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+
+              {/* Request a Feature */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={onFeatureRequest}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <Star size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Request a Feature</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Opens WhatsApp message to request a feature
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Legal & Policies */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Legal & Policies</Text>
+            <View style={styles.sectionContent}>
+              {/* Terms & Conditions */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={() =>
+                  openLink(
+                    "https://sasha1189.github.io/youva-Lonari/terms.html",
+                    "Terms & Conditions"
+                  )
+                }
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <FileText size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Terms & Conditions</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Read our terms of service
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+
+              {/* Privacy Policy */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={() =>
+                  openLink(
+                    "https://sasha1189.github.io/youva-Lonari/privacy.html",
+                    "Privacy Policy"
+                  )
+                }
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <FileText size={20} color={theme.colors.primary} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>Privacy Policy</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Learn how we protect your data
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>
+      <BlockedUsersModal
+        visible={blockedOpen}
+        onClose={() => setBlockedOpen(false)}
+        users={blockedUsers}
+        onUnblock={handleUnblock}
+      />
     </>
   );
 }
@@ -419,17 +375,5 @@ const styles = StyleSheet.create({
   },
   settingRight: {
     marginLeft: theme.spacing.md,
-  },
-  infoCard: {
-    backgroundColor: theme.colors.primary + "10",
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginTop: theme.spacing.lg,
-  },
-  infoText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textLight,
-    textAlign: "center",
-    lineHeight: 20,
   },
 });

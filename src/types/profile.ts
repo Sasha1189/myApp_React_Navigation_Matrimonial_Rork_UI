@@ -7,12 +7,12 @@ export interface Profile {
   likedMe?: boolean; // whether this profile liked current user
   createdAt: Date;
   updatedAt: Date;
+  blockedUserUIDs?: string[];
 
   // Profile Status
   isActive: boolean;
   isVerified: boolean;
   isPremium: boolean;
-  // lastActiveAt: Date;
   // Personal & Birth Information-13
   fullName: string;
   dateOfBirth: Date | null;
@@ -109,3 +109,9 @@ export interface Photo {
   downloadURL?: string;
   isPrimary: boolean;
 }
+
+export type BlockedUserDetail = {
+  uid: string;              // blocked user's UID
+  name: string;
+  avatar?: string | null;
+};
