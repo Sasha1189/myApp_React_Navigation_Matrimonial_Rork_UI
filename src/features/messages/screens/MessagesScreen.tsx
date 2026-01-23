@@ -5,6 +5,7 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,26 +18,17 @@ import { UserBanner } from "../components/UserBanner";
 import { type MessagesScreenNavigationProp } from "../type/messages";
 import { useMessagesData } from "../hooks/useMessagesData";
 import { useRecentChatPartners } from "../hooks/useRecentChatPartners";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MessagesScreen() {
   const { user } = useAuth();
   const uid = user?.uid;
-  const navigation = useNavigation<MessagesScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
-    "chats"
+    "chats",
   );
 
   useRecentChatPartners(uid);
   const { data, loading } = useMessagesData(activeTab, uid);
-
-  // 🔹 Layout header
-  useEffect(() => {
-    navigation.setOptions({
-      title: "Messages",
-      headerStyle: { backgroundColor: theme.colors.primary },
-      headerTintColor: "white",
-    });
-  }, [navigation]);
 
   return (
     <LinearGradient
@@ -120,7 +112,7 @@ export const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: "row",
-    backgroundColor: "white",
+    backgroundColor: theme.colors.background,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,

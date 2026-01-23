@@ -16,10 +16,6 @@ export function useFlattenedFeed(
 
   const likesReceived = useLikesReceivedIdsList(uid);
 
-  //  console.log("🔎 feed pages:", query.data?.pages?.length);
-  // console.log("🔎 likesSent data:", likesSent.data);
-  // console.log("🔎 likesReceived data:", likesReceived.data);
-
    // Flatten + merge
   const profiles = React.useMemo(() => {
 
@@ -44,6 +40,5 @@ export function useFlattenedFeed(
       : undefined;
 
   const feedDone = !!lastPage?.done;
-  // console.log("🔎 merged profiles sample:", profiles[0]);
   return { ...query, profiles, lastPage, feedDone };
 }

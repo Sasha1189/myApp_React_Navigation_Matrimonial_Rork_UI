@@ -2,8 +2,8 @@ import { ActionButtons } from "../components/ActionButtons";
 import { SwipeCard } from "../components/SwipeCard";
 import { useTheme } from "../../../theme/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState, useEffect, useMemo } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { ActivityIndicator, StyleSheet, View, StatusBar } from "react-native";
 import { useAuth } from "../../../context/AuthContext";
 import { useToggleLike } from "../hooks/useSwipeMutations";
 import { useAppNavigation } from "../../../navigation/hooks";
@@ -100,54 +100,61 @@ export default function HomeScreen() {
 
   const currentProfile = profiles[0];
   return (
-    <LinearGradient
-      colors={[theme.colors.background, "white"]}
-      style={styles.container}
-    >
-      <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
-      <View style={styles.cardsContainer}>
-        {currentProfile && (
-          <SwipeCard
-            profile={currentProfile}
-            isTopCard={true}
-            onSwipeLeft={() =>
-              currentProfile && handleSwipe(currentProfile.uid, "pass")
-            }
-            onSwipeRight={() =>
-              currentProfile && handleSwipe(currentProfile.uid, "like")
-            }
-            onSwipeUp={() =>
-              currentProfile && handleSwipe(currentProfile.uid, "superlike")
-            }
-          />
-        )}
-      </View>
-      <View style={styles.actionsContainer}>
-        <View style={styles.rightActions}>
-          {/* Disable action buttons when a swipe mutation is in-flight to avoid duplicates */}
-          <ActionButtons
-            onPass={() =>
-              currentProfile && handleSwipe(currentProfile.uid, "pass")
-            }
-            onLike={() =>
-              currentProfile && handleSwipe(currentProfile.uid, "like")
-            }
-            onSuperLike={() =>
-              currentProfile && handleSwipe(currentProfile.uid, "superlike")
-            }
-            disabled={
-              !currentProfile || toggleLikeMutation.status === "pending"
-              // passMutation.status === "pending" ||
-              // superLikeMutation.status === "pending"
-            }
-            liked={currentProfile?.liked}
-          />
+    <View style={{ flex: 1, backgroundColor: theme.colors.primary }}>
+      <StatusBar
+        translucent
+        backgroundColor={theme.colors.primary}
+        barStyle="light-content"
+      />
+      <LinearGradient
+        colors={[theme.colors.background, "white"]}
+        style={styles.container}
+      >
+        <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
+        <View style={styles.cardsContainer}>
+          {currentProfile && (
+            <SwipeCard
+              profile={currentProfile}
+              isTopCard={true}
+              onSwipeLeft={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "pass")
+              }
+              onSwipeRight={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "like")
+              }
+              onSwipeUp={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "superlike")
+              }
+            />
+          )}
         </View>
-      </View>
-      {isFetchingNextPage && (
-        <ActivityIndicator size="small" color={theme.colors.primary} />
-      )}
-    </LinearGradient>
+        <View style={styles.actionsContainer}>
+          <View style={styles.rightActions}>
+            {/* Disable action buttons when a swipe mutation is in-flight to avoid duplicates */}
+            <ActionButtons
+              onPass={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "pass")
+              }
+              onLike={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "like")
+              }
+              onSuperLike={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "superlike")
+              }
+              disabled={
+                !currentProfile || toggleLikeMutation.status === "pending"
+                // passMutation.status === "pending" ||
+                // superLikeMutation.status === "pending"
+              }
+              liked={currentProfile?.liked}
+            />
+          </View>
+        </View>
+        {isFetchingNextPage && (
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        )}
+      </LinearGradient>
+    </View>
   );
 }
 

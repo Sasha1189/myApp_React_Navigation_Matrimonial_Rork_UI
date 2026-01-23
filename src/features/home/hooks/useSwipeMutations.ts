@@ -3,7 +3,6 @@ import { toggleLike, likesSentIdsList, likesReceivedIdsList,likesSentProfilesLis
 import { Profile } from "../../../types/profile";
 
 export function useToggleLike() {
-  // console.log("useToggleLike called");
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -12,8 +11,6 @@ export function useToggleLike() {
 
     // ✅ Optimistic update
     onMutate: async ({ profileId, uid }) => {
-      // console.log("onMutate START", { profileId, uid });
-
       // cancel all ongoing feed queries
       await queryClient.cancelQueries({ queryKey: ["feed"] });
 
@@ -69,7 +66,6 @@ export function useToggleLike() {
 
     // ❌ Rollback if error
     onError: (_err, _vars, context) => {
-      console.log("onError rollback");
       if (context?.previousFeeds) {
         for (const [key, data] of context.previousFeeds) {
           queryClient.setQueryData(key, data);
@@ -79,12 +75,6 @@ export function useToggleLike() {
         queryClient.setQueryData(["likesSent"], context.previousSent);
       }
     },
-
-    // ✅ Optional: re-sync after success
-    // onSettled: (_data, _err, { uid }) => {
-    //   queryClient.invalidateQueries({ queryKey: ["feed"] });
-    //   queryClient.invalidateQueries({ queryKey: ["likesSent", uid] });
-    // },
   });
 }
 // ---- Ids hooks ----

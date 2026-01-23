@@ -24,14 +24,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  // console.log("user:", user);
 
   const renderCount = useRef(0);
   renderCount.current += 1;
-
-  if (__DEV__) {
-    console.log(`AuthContext render count: ${renderCount.current}`);
-  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -43,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo(
     () => ({ user, authLoading, setUser }),
-    [user, authLoading]
+    [user, authLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

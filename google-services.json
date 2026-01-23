@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "295491417988",
+    "project_id": "smooth-pivot-453409-f7",
+    "storage_bucket": "smooth-pivot-453409-f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:295491417988:android:b6e8cdf8282dff79a34fd1",
+        "android_client_info": {
+          "package_name": "com.sasha.lonariyouvaconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBK9rnuRWxoJjGtJPxnHnlVpPVQPf3s-x0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

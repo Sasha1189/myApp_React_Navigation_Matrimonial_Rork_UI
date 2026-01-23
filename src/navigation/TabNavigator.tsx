@@ -13,7 +13,6 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { TabParamList } from "./types";
 import { useAppNavigation } from "./hooks";
 import HomeScreen from "../features/home/screens/HomeScreen";
-import MatchesScreen from "../features/matches/screens/MatchesScreen";
 import MessagesScreen from "../features/messages/screens/MessagesScreen";
 import ProfileScreen from "../features/profile/screens/ProfileScreen";
 
@@ -25,11 +24,20 @@ export default function TabNavigator() {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
-        // headerTransparent: true,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textLight,
+        headerShown: true,
         headerStyle: { backgroundColor: theme.colors.primary },
         headerTintColor: "white",
+
+        headerTitleAlign: "center",
+        headerTitleStyle: {
+          fontSize: 24,
+          fontWeight: "600",
+        },
+
+        tabBarShowLabel: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textLight,
+
         tabBarStyle: {
           backgroundColor: "white",
           borderTopWidth: 1,
@@ -38,11 +46,19 @@ export default function TabNavigator() {
       }}
     >
       <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => <User size={28} color={color} />,
+        }}
+      />
+      <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
           title: "Discover",
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Heart size={30} color={color} />,
           headerRight: () => (
             <View style={{ flexDirection: "row", marginRight: 12 }}>
               <TouchableOpacity
@@ -62,27 +78,11 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Matches"
-        component={MatchesScreen}
-        options={{
-          title: "Matches",
-          tabBarIcon: ({ color }) => <Heart size={24} color={color} />,
-        }}
-      />
-      <Tab.Screen
         name="Messages"
         component={MessagesScreen}
         options={{
           title: "Messages",
-          tabBarIcon: ({ color }) => <MessageCircle size={24} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          tabBarIcon: ({ color }) => <MessageCircle size={28} color={color} />,
         }}
       />
     </Tab.Navigator>

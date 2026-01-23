@@ -9,11 +9,10 @@ export const useProfileData = (uid: string, gender: '' | 'Male' | 'Female' = '')
     
     queryFn: async (): Promise<Profile> => {
       const data = await getProfile(uid, gender);
-      console.log("Profile data fetched successfully");
       return { ...getDefaultProfile(), ...data, uid, gender };
     },
 
-    enabled: !!uid && !!gender, // only run if uid and gender exist
+    enabled: !!uid && !!gender,
     initialData: { ...getDefaultProfile(), uid, gender },
 
   });
@@ -34,7 +33,6 @@ export const useUpdateProfileData = (uid: string, gender: '' | 'Male' | 'Female'
         uid,
         gender,
       };
-      console.log("Updated cache: after profile update");
       queryClient.setQueryData<Profile>(["profile", uid], normalized);
     },
   });

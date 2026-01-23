@@ -50,7 +50,7 @@ export default function PhoneSignInScreen() {
       const provider = new PhoneAuthProvider(auth);
       const verificationId = await provider.verifyPhoneNumber(
         fullPhone,
-        recaptchaVerifier.current as any // expo types mismatch sometimes
+        recaptchaVerifier.current as any, // expo types mismatch sometimes
       );
 
       navigation.navigate("OTPVerify", { phone: fullPhone, verificationId });
@@ -58,7 +58,7 @@ export default function PhoneSignInScreen() {
       const error = err as FirebaseError;
       Alert.alert(
         "Failed to send OTP",
-        error?.message || "Something went wrong, please try again."
+        error?.message || "Something went wrong, please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -77,7 +77,6 @@ export default function PhoneSignInScreen() {
 
   const handlePhoneChange = (text: string) => {
     const formatted = formatPhoneNumber(text);
-    console.log("Formatted phone number:", formatted);
     setPhoneNumber(formatted);
   };
 

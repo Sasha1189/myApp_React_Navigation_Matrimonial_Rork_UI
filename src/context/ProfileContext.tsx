@@ -31,7 +31,6 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
   // ✅ Sync query data into context once it changes
   useEffect(() => {
     if (data) {
-      console.log("Ready data:setProfile");
       setProfile(data);
     }
   }, [data]);
@@ -43,7 +42,7 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
       loading: isLoading,
       reloadProfile: refetch,
     }),
-    [profile, isLoading, refetch]
+    [profile, isLoading, refetch],
   );
 
   return (

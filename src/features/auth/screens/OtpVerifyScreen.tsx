@@ -39,7 +39,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const { verificationId: initialVerificationId, phone } = route.params;
 
   const [verificationId, setVerificationId] = useState<string>(
-    initialVerificationId
+    initialVerificationId,
   );
   const [code, setCode] = useState<string>("");
   const [timer, setTimer] = useState<number>(60);
@@ -52,9 +52,6 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const renderCount = useRef<number>(0);
 
   renderCount.current += 1;
-  if (__DEV__) {
-    console.log(`otp screen render count: ${renderCount.current}`);
-  }
 
   // Auto focus OTP input
   useEffect(() => {
@@ -71,7 +68,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       () => {
         if (timer > 0) return true;
         return false;
-      }
+      },
     );
     return () => backHandler.remove();
   }, [timer]);

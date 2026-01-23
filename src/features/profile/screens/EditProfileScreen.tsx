@@ -41,7 +41,7 @@ export default function EditProfileScreen() {
   const { profile } = useProfileContext();
   const { mutateAsync: updateProfile } = useUpdateProfileData(
     profile?.uid,
-    profile?.gender
+    profile?.gender,
   );
 
   const [isEditing, setIsEditing] = useState(false);
@@ -106,7 +106,6 @@ export default function EditProfileScreen() {
         return;
       }
 
-      console.log("Submitting data:", changedFields);
       await updateProfile(changedFields);
 
       if (Platform.OS === "android") {
@@ -114,7 +113,7 @@ export default function EditProfileScreen() {
       } else {
         Alert.alert(
           "Profile Updated",
-          "Your profile has been successfully updated."
+          "Your profile has been successfully updated.",
         );
       }
 

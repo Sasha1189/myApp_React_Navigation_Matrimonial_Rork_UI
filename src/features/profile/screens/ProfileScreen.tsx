@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  StatusBar,
 } from "react-native";
 import { Image } from "expo-image";
 import {
@@ -27,6 +28,7 @@ import { theme } from "../../../constants/theme";
 import { useAuth } from "src/context/AuthContext";
 import { storage } from "../../../utils/storage";
 import { formatDOB } from "src/utils/dateUtils";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface MenuItem {
   icon: React.ComponentType<any>;
@@ -52,7 +54,6 @@ export default function ProfileScreen(): React.ReactElement {
           onPress: async () => {
             try {
               await signOut(auth);
-              console.log("User signed out");
             } catch (signOutError) {
               console.error("Sign out failed:", signOutError);
             } finally {
@@ -60,7 +61,6 @@ export default function ProfileScreen(): React.ReactElement {
                 // clear any cached user data
                 await storage.clear();
                 await clearCacheOnLogout();
-                console.log("AsyncStorage cleared");
               } catch (storageError) {
                 console.error("Failed to clear storage:", storageError);
               }
@@ -153,7 +153,7 @@ export default function ProfileScreen(): React.ReactElement {
               style={styles.headerLogout}
               onPress={() => logout()}
             >
-              <LogOut size={18} color="white" />
+              <LogOut size={24} color="white" />
             </TouchableOpacity>
           </View>
           <View style={styles.statsContainerCompact}>
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
   },
   menuSection: {
-    flexDirection: "row",
+    flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: theme.colors.cardBackground,
@@ -353,12 +353,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
   },
   menuCard: {
-    flexDirection: "column",
+    flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.sm,
+    padding: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -377,7 +377,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     color: theme.colors.text,
     marginLeft: theme.spacing.sm,
-    flex: 1,
   },
   menuItemTextDanger: {
     color: theme.colors.danger,

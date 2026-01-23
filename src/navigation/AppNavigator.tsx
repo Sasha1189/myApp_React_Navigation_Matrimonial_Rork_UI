@@ -9,17 +9,13 @@ import SettingsScreen from "../features/settings/screens/SettingsScreen";
 import SubscriptionScreen from "../features/subscription/screens/SubscriptionScreen";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
+import { theme } from "../constants/theme";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export const AppNavigator = () => {
   return (
-    <Stack.Navigator
-      initialRouteName="Tabs"
-      screenOptions={{
-        headerShown: true,
-      }}
-    >
+    <Stack.Navigator initialRouteName="Tabs">
       <Stack.Screen
         name="Tabs"
         component={TabNavigator}
@@ -30,13 +26,27 @@ export const AppNavigator = () => {
         component={ChatScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
+      <Stack.Screen
+        name="UserDetails"
+        component={UserDetailsScreen}
+        options={{
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
       <Stack.Screen
         name="EditProfile"
         component={EditProfileScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="ManagePhotos" component={ManagePhotosScreen} />
+      <Stack.Screen
+        name="ManagePhotos"
+        component={ManagePhotosScreen}
+        options={{
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
       <Stack.Screen
         name="Filter"
         component={FilterScreen}
@@ -47,8 +57,22 @@ export const AppNavigator = () => {
         component={SearchScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Subscription" component={SubscriptionScreen} />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="Subscription"
+        component={SubscriptionScreen}
+        options={{
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
     </Stack.Navigator>
   );
 };

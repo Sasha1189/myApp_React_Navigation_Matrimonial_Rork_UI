@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 // import { router } from 'expo-router';
-import { X, MapPin, Calendar, GraduationCap, DollarSign } from 'lucide-react-native';
-import { theme } from '../../../constants/theme';
-import { useNavigation } from '@react-navigation/native';
-
+import {
+  X,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  DollarSign,
+} from "lucide-react-native";
+import { theme } from "../../../constants/theme";
+import { useNavigation } from "@react-navigation/native";
 
 interface FilterState {
   ageRange: [number, number];
@@ -29,23 +34,35 @@ export default function FilterScreen() {
   });
   const navigation = useNavigation();
 
-  const locations = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 'Pune', 'Hyderabad'];
-  const educationLevels = ['Graduate', 'Post Graduate', 'PhD', 'Professional Degree'];
-  const incomeRanges = ['₹3L+', '₹5L+', '₹10L+', '₹15L+', '₹25L+', '₹50L+'];
+  const locations = [
+    "Mumbai",
+    "Delhi",
+    "Bangalore",
+    "Chennai",
+    "Kolkata",
+    "Pune",
+    "Hyderabad",
+  ];
+  const educationLevels = [
+    "Graduate",
+    "Post Graduate",
+    "PhD",
+    "Professional Degree",
+  ];
+  const incomeRanges = ["₹3L+", "₹5L+", "₹10L+", "₹15L+", "₹25L+", "₹50L+"];
 
   const toggleSelection = (category: keyof FilterState, value: string) => {
-    if (category === 'ageRange') return;
-    
-    setFilters(prev => ({
+    if (category === "ageRange") return;
+
+    setFilters((prev) => ({
       ...prev,
       [category]: (prev[category] as string[]).includes(value)
-        ? (prev[category] as string[]).filter(item => item !== value)
-        : [...(prev[category] as string[]), value]
+        ? (prev[category] as string[]).filter((item) => item !== value)
+        : [...(prev[category] as string[]), value],
     }));
   };
 
   const applyFilters = () => {
-    console.log('Applied filters:', filters);
     navigation.goBack();
   };
 
@@ -63,7 +80,7 @@ export default function FilterScreen() {
     icon: React.ReactNode,
     items: string[],
     selectedItems: string[],
-    category: keyof FilterState
+    category: keyof FilterState,
   ) => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -76,14 +93,16 @@ export default function FilterScreen() {
             key={item}
             style={[
               styles.option,
-              selectedItems.includes(item) && styles.selectedOption
+              selectedItems.includes(item) && styles.selectedOption,
             ]}
             onPress={() => toggleSelection(category, item)}
           >
-            <Text style={[
-              styles.optionText,
-              selectedItems.includes(item) && styles.selectedOptionText
-            ]}>
+            <Text
+              style={[
+                styles.optionText,
+                selectedItems.includes(item) && styles.selectedOptionText,
+              ]}
+            >
               {item}
             </Text>
           </TouchableOpacity>
@@ -95,7 +114,10 @@ export default function FilterScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.closeButton}
+        >
           <X size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Filters</Text>
@@ -120,29 +142,29 @@ export default function FilterScreen() {
 
         {/* Location */}
         {renderFilterSection(
-          'Location',
+          "Location",
           <MapPin size={20} color={theme.colors.primary} />,
           locations,
           filters.location,
-          'location'
+          "location",
         )}
 
         {/* Education */}
         {renderFilterSection(
-          'Education',
+          "Education",
           <GraduationCap size={20} color={theme.colors.primary} />,
           educationLevels,
           filters.education,
-          'education'
+          "education",
         )}
 
         {/* Income */}
         {renderFilterSection(
-          'Income',
+          "Income",
           <DollarSign size={20} color={theme.colors.primary} />,
           incomeRanges,
           filters.income,
-          'income'
+          "income",
         )}
       </ScrollView>
 
@@ -161,9 +183,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
@@ -175,13 +197,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: theme.fontSize.lg,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.text,
   },
   clearText: {
     fontSize: theme.fontSize.md,
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     flex: 1,
@@ -191,13 +213,13 @@ const styles = StyleSheet.create({
     marginVertical: theme.spacing.lg,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.md,
   },
   sectionTitle: {
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginLeft: theme.spacing.sm,
   },
@@ -211,11 +233,11 @@ const styles = StyleSheet.create({
   ageRangeText: {
     fontSize: theme.fontSize.md,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
   },
   optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.spacing.sm,
   },
   option: {
@@ -235,7 +257,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   selectedOptionText: {
-    color: 'white',
+    color: "white",
   },
   footer: {
     padding: theme.spacing.lg,
@@ -247,11 +269,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md + 4,
     borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   applyButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { X, Search, MapPin, GraduationCap, User } from 'lucide-react-native';
-import { theme } from '../../../constants/theme';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { X, Search, MapPin, GraduationCap, User } from "lucide-react-native";
+import { theme } from "../../../constants/theme";
 import { useNavigation } from "@react-navigation/native";
 
 interface SearchFilters {
@@ -21,34 +21,33 @@ interface SearchFilters {
 export default function SearchScreen() {
   const navigation = useNavigation();
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
-    name: '',
-    location: '',
-    education: '',
+    name: "",
+    location: "",
+    education: "",
   });
 
   const [recentSearches] = useState([
-    'Priya Mumbai',
-    'Software Engineer',
-    'Delhi Graduate',
-    'Bangalore MBA',
+    "Priya Mumbai",
+    "Software Engineer",
+    "Delhi Graduate",
+    "Bangalore MBA",
   ]);
 
   const handleSearch = () => {
-    console.log('Search filters:', searchFilters);
     navigation.goBack();
   };
 
   const clearSearch = () => {
     setSearchFilters({
-      name: '',
-      location: '',
-      education: '',
+      name: "",
+      location: "",
+      education: "",
     });
   };
 
   const handleRecentSearch = (search: string) => {
     // Parse recent search and populate filters
-    setSearchFilters(prev => ({
+    setSearchFilters((prev) => ({
       ...prev,
       name: search,
     }));
@@ -57,7 +56,10 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.closeButton}
+        >
           <X size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Search</Text>
@@ -76,7 +78,9 @@ export default function SearchScreen() {
               placeholder="Search by name..."
               placeholderTextColor={theme.colors.textLight}
               value={searchFilters.name}
-              onChangeText={(text) => setSearchFilters(prev => ({ ...prev, name: text }))}
+              onChangeText={(text) =>
+                setSearchFilters((prev) => ({ ...prev, name: text }))
+              }
             />
           </View>
 
@@ -87,7 +91,9 @@ export default function SearchScreen() {
               placeholder="Search by location..."
               placeholderTextColor={theme.colors.textLight}
               value={searchFilters.location}
-              onChangeText={(text) => setSearchFilters(prev => ({ ...prev, location: text }))}
+              onChangeText={(text) =>
+                setSearchFilters((prev) => ({ ...prev, location: text }))
+              }
             />
           </View>
 
@@ -98,7 +104,9 @@ export default function SearchScreen() {
               placeholder="Search by education..."
               placeholderTextColor={theme.colors.textLight}
               value={searchFilters.education}
-              onChangeText={(text) => setSearchFilters(prev => ({ ...prev, education: text }))}
+              onChangeText={(text) =>
+                setSearchFilters((prev) => ({ ...prev, education: text }))
+              }
             />
           </View>
         </View>
@@ -122,15 +130,19 @@ export default function SearchScreen() {
         <View style={styles.popularSection}>
           <Text style={styles.sectionTitle}>Popular Searches</Text>
           <View style={styles.tagsContainer}>
-            {['Engineer', 'Doctor', 'Mumbai', 'Delhi', 'MBA', 'CA'].map((tag) => (
-              <TouchableOpacity
-                key={tag}
-                style={styles.tag}
-                onPress={() => setSearchFilters(prev => ({ ...prev, education: tag }))}
-              >
-                <Text style={styles.tagText}>{tag}</Text>
-              </TouchableOpacity>
-            ))}
+            {["Engineer", "Doctor", "Mumbai", "Delhi", "MBA", "CA"].map(
+              (tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={styles.tag}
+                  onPress={() =>
+                    setSearchFilters((prev) => ({ ...prev, education: tag }))
+                  }
+                >
+                  <Text style={styles.tagText}>{tag}</Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
         </View>
       </ScrollView>
@@ -151,9 +163,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
@@ -165,13 +177,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: theme.fontSize.lg,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.text,
   },
   clearText: {
     fontSize: theme.fontSize.md,
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     flex: 1,
@@ -182,8 +194,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
@@ -202,13 +214,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
   },
   recentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -222,8 +234,8 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xl,
   },
   tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.spacing.sm,
   },
   tag: {
@@ -248,14 +260,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.md + 4,
     borderRadius: theme.borderRadius.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: theme.spacing.sm,
   },
   searchButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

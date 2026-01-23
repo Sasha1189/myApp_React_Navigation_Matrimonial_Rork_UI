@@ -75,7 +75,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [state.currentProfileIndex, state.profiles]);
 
   const likeProfile = async (profileId: string) => {
-    console.log('Liking profile:', profileId);
     const newLiked = [...state.likedProfiles, profileId];
     const isMatch = Math.random() > 0.5; // 50% chance of match
     
@@ -102,7 +101,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
   };
 
   const passProfile = async (profileId: string) => {
-    console.log('Passing profile:', profileId);
     const newPassed = [...state.passedProfiles, profileId];
     await saveState({
       passedProfiles: newPassed,
@@ -111,7 +109,6 @@ export const [AppProvider, useApp] = createContextHook(() => {
   };
 
   const superLikeProfile = async (profileId: string) => {
-    console.log('Super liking profile:', profileId);
     const newSuperLiked = [...state.superLikedProfiles, profileId];
     const isMatch = Math.random() > 0.3; // 70% chance of match for super like
     

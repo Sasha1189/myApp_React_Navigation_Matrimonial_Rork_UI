@@ -10,7 +10,6 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { user, authLoading } = useAuth();
-  console.log("ScreenMenu screen user:", user?.uid || null);
 
   if (authLoading) return <SplashScreen />;
 
