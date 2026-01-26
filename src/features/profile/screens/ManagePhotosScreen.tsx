@@ -1,28 +1,14 @@
 import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { ArrowLeft, Edit3, Image as ImageIcon } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
+import { Edit3 } from "lucide-react-native";
 import { theme } from "../../../theme";
-import { AppStackParamList } from "../../../navigation/types";
 import { useProfileContext } from "../../../context/ProfileContext";
 import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 
-type Nav = NativeStackNavigationProp<AppStackParamList, "ManagePhotos">;
-
 export default function ManagePhotosScreen() {
-  const navigation = useNavigation<Nav>();
-
   const { profile } = useProfileContext();
 
   const {
@@ -36,20 +22,6 @@ export default function ManagePhotosScreen() {
     uploadPhotos,
   } = usePhotoManager(profile);
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      title: "Manage Photos",
-      headerStyle: { backgroundColor: theme.colors.primary },
-      headerTintColor: "white",
-      headerLeft: () => (
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft size={24} color="white" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient
@@ -58,18 +30,6 @@ export default function ManagePhotosScreen() {
       />
 
       <View style={styles.content}>
-        {/* Info Card */}
-        <View style={styles.infoCard}>
-          <ImageIcon size={24} color={theme.colors.primary} />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Photo Guidelines</Text>
-            <Text style={styles.infoText}>
-              • Upload up to {maxPhotos} photos{"\n"}• Avoid group photos or
-              sunglasses
-            </Text>
-          </View>
-        </View>
-
         {/* Photos Grid */}
         <ManagePhotosGrid
           photos={photos}

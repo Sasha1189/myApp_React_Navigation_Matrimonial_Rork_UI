@@ -35,12 +35,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
+    paddingHorizontal: theme.spacing.sm,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
   },
   activeTabButton: {
-    borderBottomColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary,
   },
   tabText: {
     marginLeft: theme.spacing.sm,

@@ -13,7 +13,7 @@ import { theme } from "../constants/theme";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
-export const AppNavigator = () => {
+export default function AppNavigator() {
   return (
     <Stack.Navigator initialRouteName="Tabs">
       <Stack.Screen
@@ -24,12 +24,19 @@ export const AppNavigator = () => {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: true,
+          title: "Chat",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
       />
       <Stack.Screen
-        name="UserDetails"
+        name="Details"
         component={UserDetailsScreen}
         options={{
+          headerShown: true,
+          title: "Profile Details",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -37,12 +44,19 @@ export const AppNavigator = () => {
       <Stack.Screen
         name="EditProfile"
         component={EditProfileScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: true,
+          title: "Edit Profile",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
       />
       <Stack.Screen
         name="ManagePhotos"
         component={ManagePhotosScreen}
         options={{
+          headerShown: true,
+          title: "Add Photos",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -61,6 +75,8 @@ export const AppNavigator = () => {
         name="Settings"
         component={SettingsScreen}
         options={{
+          headerShown: true,
+          title: "Settings",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -69,10 +85,12 @@ export const AppNavigator = () => {
         name="Subscription"
         component={SubscriptionScreen}
         options={{
+          headerShown: true,
+          title: "Subscription",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
       />
     </Stack.Navigator>
   );
-};
+}

@@ -20,10 +20,10 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
     } else {
       // 🔹 Navigate to user profile
       if (item.profile) {
-        navigation.navigate("UserDetails", { profile: item.profile });
+        navigation.navigate("Details", { profile: item.profile });
         // navigation.navigate("UserDetails", { profile: item?.profile });
       } else {
-        navigation.navigate("UserDetails", { userId: item.id });
+        navigation.navigate("Details", { userId: item.id });
       }
     }
   };

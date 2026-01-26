@@ -6,29 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  StatusBar,
 } from "react-native";
 import { Image } from "expo-image";
-import {
-  Settings,
-  Edit3,
-  Camera,
-  Shield,
-  HelpCircle,
-  LogOut,
-  Eye,
-} from "lucide-react-native";
+import { Edit3, Camera, Eye } from "lucide-react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { clearCacheOnLogout } from "src/cache/cacheConfig";
-import { signOut } from "firebase/auth";
-import { auth } from "../../../config/firebase";
 import { useProfileContext } from "../../../context/ProfileContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../../../constants/theme";
-import { useAuth } from "src/context/AuthContext";
-import { storage } from "../../../utils/storage";
 import { formatDOB } from "src/utils/dateUtils";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 interface MenuItem {
   icon: React.ComponentType<any>;
@@ -38,45 +23,8 @@ interface MenuItem {
 }
 
 export default function ProfileScreen(): React.ReactElement {
-  const { setUser } = useAuth();
   const { profile } = useProfileContext();
   const navigation = useAppNavigation();
-
-  const logout = async (): Promise<void> => {
-    try {
-      Alert.alert("Logout", "Are you sure you want to log out?", [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Log Out",
-          onPress: async () => {
-            try {
-              await signOut(auth);
-            } catch (signOutError) {
-              console.error("Sign out failed:", signOutError);
-            } finally {
-              try {
-                // clear any cached user data
-                await storage.clear();
-                await clearCacheOnLogout();
-              } catch (storageError) {
-                console.error("Failed to clear storage:", storageError);
-              }
-              // reset auth context
-              if (typeof setUser === "function") {
-                // cast to any to avoid coupling to concrete user type
-                setUser(null as any);
-              }
-            }
-          },
-        },
-      ]);
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
 
   const openPreview = (): void => {
     if (!profile) {
@@ -84,40 +32,25 @@ export default function ProfileScreen(): React.ReactElement {
       return;
     }
     // ✅ Navigate with the correct union type
-    navigation.navigate("UserDetails", { profile });
+    navigation.navigate("Details", { profile });
   };
 
   const menuItems: MenuItem[] = [
     {
       icon: Edit3,
-      label: "Edit Profile",
+      label: "Edit",
       onPress: () => navigation.navigate("EditProfile"),
     },
     {
       icon: Eye,
-      label: "Preview Profile",
+      label: "Preview",
       onPress: openPreview,
     },
     {
       icon: Camera,
-      label: "Manage Photos",
+      label: "Photos",
       onPress: () => navigation.navigate("ManagePhotos"),
     },
-    {
-      icon: Settings,
-      label: "Settings",
-      onPress: () => navigation.navigate("Settings"),
-    },
-    // {
-    //   icon: Shield,
-    //   label: "Safety & Privacy",
-    //   onPress: () => navigation.navigate("SafetyPrivacy"),
-    // },
-    // {
-    //   icon: HelpCircle,
-    //   label: "Help & Support",
-    //   onPress: () => navigation.navigate("HelpSupport"),
-    // },
   ];
   return (
     <LinearGradient
@@ -126,7 +59,7 @@ export default function ProfileScreen(): React.ReactElement {
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.compactHeader}>
-          <View style={styles.compactProfileRow}>
+          <View style={styles.compactProfileColumn}>
             <Image
               source={
                 profile?.photos?.[0]?.downloadURL
@@ -141,20 +74,12 @@ export default function ProfileScreen(): React.ReactElement {
             />
             <View style={styles.compactProfileInfo}>
               <Text style={styles.compactName}>
-                {profile?.fullName || "New user"}
+                {profile?.fullName || "User Name, "}
               </Text>
               <Text style={styles.compactAge}>
-                {profile?.dateOfBirth
-                  ? formatDOB(profile.dateOfBirth, "age")
-                  : "-- age"}
+                {profile?.dateOfBirth ? formatDOB(profile.dateOfBirth) : "21"}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.headerLogout}
-              onPress={() => logout()}
-            >
-              <LogOut size={24} color="white" />
-            </TouchableOpacity>
           </View>
           <View style={styles.statsContainerCompact}>
             <View style={styles.statItem}>
@@ -224,55 +149,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.xl,
-  },
-  profileSection: {
-    alignItems: "center",
-    paddingVertical: theme.spacing.xl,
-  },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
-    borderColor: "white",
-    marginBottom: theme.spacing.md,
-  },
-  profileName: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: theme.spacing.xs,
-  },
-  profileAge: {
-    fontSize: theme.fontSize.md,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginBottom: theme.spacing.lg,
-  },
-  statsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-  },
   statItem: {
     flex: 1,
     alignItems: "center",
-  },
-  statValue: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: theme.spacing.xs,
-  },
-  statLabel: {
-    fontSize: theme.fontSize.xs,
-    color: "rgba(255, 255, 255, 0.8)",
   },
   statDivider: {
     width: 1,
@@ -285,30 +164,30 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
   },
-  compactProfileRow: {
-    flexDirection: "row",
+  compactProfileColumn: {
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.sm,
+    margin: theme.spacing.sm,
   },
   compactProfileImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     borderWidth: 3,
     borderColor: "white",
   },
   compactProfileInfo: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.md,
+    flexDirection: "row",
+    padding: theme.spacing.md,
   },
   compactName: {
     fontSize: theme.fontSize.lg,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "white",
   },
   compactAge: {
-    fontSize: theme.fontSize.xs,
+    fontSize: theme.fontSize.lg,
     color: "rgba(255,255,255,0.85)",
   },
   statsContainerCompact: {
@@ -329,36 +208,20 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.85)",
   },
   menuSection: {
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: theme.colors.cardBackground,
-    borderTopLeftRadius: theme.borderRadius.xl,
-    borderTopRightRadius: theme.borderRadius.xl,
-    paddingTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    minHeight: 0,
-  },
-  headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.sm,
-  },
-  headerLogout: {
-    backgroundColor: "rgba(255,255,255,0.12)",
+    justifyContent: "space-around",
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
     padding: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
   },
   menuCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.md,
+    padding: theme.spacing.sm,
     borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.md,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -376,7 +239,7 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.text,
-    marginLeft: theme.spacing.sm,
+    padding: theme.spacing.sm,
   },
   menuItemTextDanger: {
     color: theme.colors.danger,

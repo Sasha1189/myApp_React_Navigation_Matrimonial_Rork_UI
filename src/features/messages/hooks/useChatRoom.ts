@@ -26,7 +26,7 @@ export function useChatRoom(
   useEffect(() => {
     if (!currentUserId) return;
 
-    const socket = io("http://192.168.1.104:8000", {
+    const socket = io("http://192.168.74.182:8000", {
       auth: { userId: currentUserId },
     });
     socketRef.current = socket;

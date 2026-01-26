@@ -83,7 +83,7 @@ export default function HomeScreen() {
       toggleLikeMutation.mutate({ profileId: id, uid });
     }
     if (action === "pass")
-      navigation.navigate("UserDetails", { profile: currentProfile });
+      navigation.navigate("Details", { profile: currentProfile });
     if (action === "superlike")
       navigation.navigate("Chat", { otherUserId: id });
 
@@ -102,7 +102,7 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.primary }}>
       <StatusBar
-        translucent
+        translucent={false}
         backgroundColor={theme.colors.primary}
         barStyle="light-content"
       />

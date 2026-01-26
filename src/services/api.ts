@@ -1,6 +1,6 @@
 import { getAuth } from "firebase/auth";
 
-const API_URL = "http://192.168.237.176:8000/api/v1";
+const API_URL = "http://192.168.74.182:8000/api/v1";
 
 interface ApiResponse<T> {
   data: T;

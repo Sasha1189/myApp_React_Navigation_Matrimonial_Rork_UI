@@ -20,7 +20,7 @@ export type AuthStackParamList = {
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Chat: { otherUserId: string };
-  UserDetails:
+  Details:
     | { profile: Profile }  // full profile preloaded
     | { userId: string }               // only id, fetch if missing
     | { self: true };                  // special case: show current user;

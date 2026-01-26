@@ -128,52 +128,30 @@ export default function EditProfileScreen() {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <CustomHeader
-        title="Edit Profile"
-        showBack
-        onBack={() => navigation.goBack()}
-        showRightIcon
-        onIconClick={handleSave}
-        rightIcon={
-          !isEditing ? (
-            <>
-              <Text>Edit Profile</Text>
-              <Edit3 size={24} color="white" />
-            </>
-          ) : (
-            <>
-              <Text>{loading ? "Updating..." : "Submit"}</Text>
-              <Save size={24} color="white" />
-            </>
-          )
-        }
-      />
-      <FormProvider {...methods}>
-        <ScrollView style={{ flex: 1 }}>
-          <LinearGradient
-            colors={[theme.colors.primary + "20", "transparent"]}
-            style={{
-              height: 100,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-            }}
-          />
-          <View
-            style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
-          >
-            <PersonalInfoSection editable={isEditing} />
-            <AboutMeSection editable={isEditing} />
-            <ContactDetailsSection editable={isEditing} />
-            <EducationCareerSection editable={isEditing} />
-            <FamilyDetailsSection editable={isEditing} />
-            <LifestyleSection editable={isEditing} />
-            <PartnerPreferencesSection editable={isEditing} />
-          </View>
-        </ScrollView>
-      </FormProvider>
-    </SafeAreaView>
+    <FormProvider {...methods}>
+      <ScrollView style={{ flex: 1 }}>
+        <LinearGradient
+          colors={[theme.colors.primary + "20", "transparent"]}
+          style={{
+            height: 100,
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+          }}
+        />
+        <View
+          style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
+        >
+          <PersonalInfoSection editable={isEditing} />
+          <AboutMeSection editable={isEditing} />
+          <ContactDetailsSection editable={isEditing} />
+          <EducationCareerSection editable={isEditing} />
+          <FamilyDetailsSection editable={isEditing} />
+          <LifestyleSection editable={isEditing} />
+          <PartnerPreferencesSection editable={isEditing} />
+        </View>
+      </ScrollView>
+    </FormProvider>
   );
 }

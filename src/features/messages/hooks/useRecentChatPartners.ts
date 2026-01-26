@@ -9,7 +9,7 @@ export function useRecentChatPartners(uid: string | undefined) {
   useEffect(() => {
     if (!uid) return;
 
-    const socket = io("http://192.168.237.176:8000", {
+    const socket = io("http://192.168.74.182:8000", {
       auth: { userId: uid },
     });
     socketRef.current = socket;

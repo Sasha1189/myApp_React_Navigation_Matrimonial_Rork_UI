@@ -8,6 +8,7 @@ import {
   Star,
   FileText,
   Bug,
+  LogOut,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -24,10 +25,15 @@ import BlockedUsersModal from "../components/BlockedUsersModal";
 import { useBlockUnblockUser } from "../hooks/useBlockUnblockUser";
 import { useProfileContext } from "../../../context/ProfileContext";
 import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
+import { signOut } from "firebase/auth";
+import { auth } from "../../../config/firebase";
+import { useAuth } from "src/context/AuthContext";
+import { storage } from "../../../utils/storage";
+import { clearCacheOnLogout } from "src/cache/cacheConfig";
 
 export default function SettingsScreen() {
+  const { setUser } = useAuth();
   const { profile } = useProfileContext();
-
   const [settings, setSettings] = useState({
     notifications: true,
     darkMode: false,
@@ -41,15 +47,9 @@ export default function SettingsScreen() {
   // block/unblock related
   const { unblockUser, isReady } = useBlockUnblockUser(
     profile?.uid ?? "",
-    profile?.gender ?? ""
+    profile?.gender ?? "",
   );
-  // Blocked list comes from cache-only query:
-  // const { data: blockedUsers = [] } = useQuery<BlockedUserDetail[]>({
-  //   queryKey: ["blockedUserDetails", profile?.uid],
-  //   enabled: !!profile?.uid,
-  //   initialData: [],
-  //   // no queryFn because this query is cache-only; it's ok since we never fetch
-  // });
+
   const { data: blockedUsers = [] } = useBlockedUserDetails(profile?.uid);
 
   const handleUnblock = (uid: string) => {
@@ -75,15 +75,15 @@ export default function SettingsScreen() {
       type === "bug"
         ? "Bug report — Lonari Youva Connect"
         : type === "feature"
-        ? "Feature request — Lonari Youva Connect"
-        : "Report user — Lonari Youva Connect";
+          ? "Feature request — Lonari Youva Connect"
+          : "Report user — Lonari Youva Connect";
 
     const preset =
       type === "bug"
         ? "Issue:\nSteps to reproduce:\nExpected vs actual:\nDevice/Version:"
         : type === "feature"
-        ? "Feature idea:\nWhy it's useful:\nAny examples:"
-        : "Report user details:\nWhich user you want to report?\nReason:\nAny screenshot / evidence:";
+          ? "Feature idea:\nWhy it's useful:\nAny examples:"
+          : "Report user details:\nWhich user you want to report?\nReason:\nAny screenshot / evidence:";
 
     const text = encodeURIComponent(`${heading}\n\n${preset}`);
     const appUrl = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${text}`;
@@ -97,7 +97,7 @@ export default function SettingsScreen() {
       } catch {
         Alert.alert(
           "WhatsApp not available",
-          "Couldn't open WhatsApp. Please check your installation or try again later."
+          "Couldn't open WhatsApp. Please check your installation or try again later.",
         );
       }
     }
@@ -105,6 +105,41 @@ export default function SettingsScreen() {
   const onReportUser = () => composeWhatsApp("report-user");
   const onReportBug = () => composeWhatsApp("bug");
   const onFeatureRequest = () => composeWhatsApp("feature");
+  const logout = async (): Promise<void> => {
+    try {
+      Alert.alert("Logout", "Are you sure you want to log out?", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Log Out",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+            } catch (signOutError) {
+              console.error("Sign out failed:", signOutError);
+            } finally {
+              try {
+                // clear any cached user data
+                await storage.clear();
+                await clearCacheOnLogout();
+              } catch (storageError) {
+                console.error("Failed to clear storage:", storageError);
+              }
+              // reset auth context
+              if (typeof setUser === "function") {
+                // cast to any to avoid coupling to concrete user type
+                setUser(null as any);
+              }
+            }
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   return (
     <>
@@ -247,7 +282,7 @@ export default function SettingsScreen() {
                 onPress={() =>
                   openLink(
                     "https://sasha1189.github.io/youva-Lonari/terms.html",
-                    "Terms & Conditions"
+                    "Terms & Conditions",
                   )
                 }
               >
@@ -271,7 +306,7 @@ export default function SettingsScreen() {
                 onPress={() =>
                   openLink(
                     "https://sasha1189.github.io/youva-Lonari/privacy.html",
-                    "Privacy Policy"
+                    "Privacy Policy",
                   )
                 }
               >
@@ -287,6 +322,33 @@ export default function SettingsScreen() {
                   </View>
                 </View>
                 <ChevronRight size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* LogOut */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>LogOut</Text>
+            <View style={styles.sectionContent}>
+              {/* LogOut */}
+              <TouchableOpacity
+                style={styles.settingItem}
+                onPress={() => logout()}
+              >
+                <View style={styles.settingLeft}>
+                  <View style={styles.iconContainer}>
+                    <LogOut size={20} color={theme.colors.danger} />
+                  </View>
+                  <View style={styles.settingContent}>
+                    <Text style={styles.settingTitle}>LogOut</Text>
+                    <Text style={styles.settingSubtitle}>
+                      LogOut from your account
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.settingRight}>
+                  <ChevronRight size={20} color={theme.colors.danger} />
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -342,8 +404,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   settingLeft: {
     flexDirection: "row",

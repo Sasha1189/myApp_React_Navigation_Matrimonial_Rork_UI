@@ -90,57 +90,14 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  listContent: {
-    paddingTop: theme.spacing.sm,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: theme.spacing.xl,
-  },
-  emptyText: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "600",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textLight,
-    textAlign: "center",
-  },
   tabsContainer: {
     flexDirection: "row",
+    justifyContent: "space-between",
     backgroundColor: theme.colors.background,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-  },
-  tabButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    marginHorizontal: theme.spacing.xs,
-    gap: theme.spacing.xs,
-  },
-  activeTabButton: {
-    backgroundColor: theme.colors.primary,
-  },
-  tabText: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: "500",
-    color: theme.colors.primary,
-  },
-  activeTabText: {
-    color: "white",
   },
   activityContainer: {
     paddingHorizontal: theme.spacing.md,

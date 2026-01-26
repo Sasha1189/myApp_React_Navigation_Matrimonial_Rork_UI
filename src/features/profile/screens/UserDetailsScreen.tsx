@@ -91,7 +91,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value, icon: Icon }) => {
 
 type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
   AppStackParamList,
-  "UserDetails"
+  "Details"
 >;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -99,7 +99,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 export default function UserDetailsScreen({
   route,
 }: {
-  route: RouteProp<AppStackParamList, "UserDetails">;
+  route: RouteProp<AppStackParamList, "Details">;
 }) {
   const navigation = useNavigation<UserDetailsScreenNavigationProp>();
   let profile: Profile | null = null;
@@ -118,23 +118,6 @@ export default function UserDetailsScreen({
   if (!profile) {
     return <LoadingScreen />;
   }
-  //Header is managed in the navigator
-  // React.useLayoutEffect(() => {
-  //   navigation.setOptions({
-  //     headerShown: true,
-  //     title: profile?.fullName || "Profile",
-  //     headerStyle: {
-  //       backgroundColor: theme.colors.primary,
-  //     },
-  //     headerTintColor: "white",
-  //     headerLeft: () => (
-  //       <TouchableOpacity onPress={() => navigation.goBack()}>
-  //         <ArrowLeft size={24} color="white" />
-  //       </TouchableOpacity>
-  //     ),
-  //   });
-  // }, [navigation, profile]);
-
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>

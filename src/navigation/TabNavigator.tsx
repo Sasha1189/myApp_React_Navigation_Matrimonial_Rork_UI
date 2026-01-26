@@ -1,12 +1,12 @@
 import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import {
-  Home,
   Heart,
   MessageCircle,
   User,
   Filter,
   Search,
+  Settings,
 } from "lucide-react-native";
 import { theme } from "../constants/theme";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -38,10 +38,8 @@ export default function TabNavigator() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textLight,
 
-        tabBarStyle: {
-          backgroundColor: "white",
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.border,
+        tabBarItemStyle: {
+          paddingVertical: theme.spacing.sm,
         },
       }}
     >
@@ -50,7 +48,20 @@ export default function TabNavigator() {
         component={ProfileScreen}
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <User size={28} color={color} />,
+          tabBarIcon: ({ color }) => <User size={30} color={color} />,
+          headerRight: () => (
+            <TouchableOpacity
+              style={{
+                backgroundColor: "rgba(255,255,255,0.12)",
+                padding: theme.spacing.sm,
+                borderRadius: theme.borderRadius.md,
+                marginHorizontal: theme.spacing.lg,
+              }}
+              onPress={() => navigation.navigate("Settings")}
+            >
+              <Settings size={24} color="white" />
+            </TouchableOpacity>
+          ),
         }}
       />
       <Tab.Screen
@@ -82,7 +93,7 @@ export default function TabNavigator() {
         component={MessagesScreen}
         options={{
           title: "Messages",
-          tabBarIcon: ({ color }) => <MessageCircle size={28} color={color} />,
+          tabBarIcon: ({ color }) => <MessageCircle size={30} color={color} />,
         }}
       />
     </Tab.Navigator>
