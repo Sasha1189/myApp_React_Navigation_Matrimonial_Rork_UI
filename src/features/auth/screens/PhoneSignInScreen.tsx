@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,10 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthNavigation } from "../../../navigation/hooks";
 import { Phone, ArrowRight, Heart } from "lucide-react-native";
 import { theme } from "../../../constants/theme";
-import { PhoneAuthProvider } from "firebase/auth";
-import { FirebaseError } from "firebase/app";
 import { auth } from "../../../config/firebase";
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+import { PhoneAuthProvider } from "firebase/auth";
 // import * as PhoneNumber from "expo-sms-retriever";
 
 const { width, height } = Dimensions.get("window");
@@ -25,41 +23,29 @@ const { width, height } = Dimensions.get("window");
 export default function PhoneSignInScreen() {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
   const navigation = useAuthNavigation();
 
   const handleContinue = async () => {
-    if (!phoneNumber.trim()) {
-      Alert.alert("Error", "Please enter your phone number");
-      return;
-    }
-
-    // if (phoneNumber.length < 10) {
-    //   Alert.alert("Error", "Please enter a valid phone number");
-    //   return;
-    // }
     if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
       Alert.alert("Error", "Please enter a valid 10-digit phone number");
       return;
     }
 
     setIsLoading(true);
+    const fullPhone = `+91${phoneNumber}`;
 
-    const fullPhone = `+91${phoneNumber}`; // 🔥 CHANGED: Ensure proper format
     try {
       const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(
-        fullPhone,
-        recaptchaVerifier.current as any, // expo types mismatch sometimes
-      );
 
-      navigation.navigate("OTPVerify", { phone: fullPhone, verificationId });
-    } catch (err: unknown) {
-      const error = err as FirebaseError;
-      Alert.alert(
-        "Failed to send OTP",
-        error?.message || "Something went wrong, please try again.",
-      );
+      const verificationId = await provider.verifyPhoneNumber(fullPhone);
+
+      navigation.navigate("OTPVerify", {
+        phone: fullPhone,
+        verificationId,
+      });
+    } catch (error: any) {
+      console.log("Phone auth error:", error);
+      Alert.alert("Failed to send OTP", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -67,11 +53,6 @@ export default function PhoneSignInScreen() {
 
   const formatPhoneNumber = (text: string) => {
     const cleaned = text.replace(/[^0-9]/g, "").slice(0, 10);
-    // const cleaned = text.replace(/\D/g, "");
-    // const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
-    // if (match) {
-    //   return [match[1], match[2], match[3]].filter(Boolean).join("-");
-    // }
     return cleaned;
   };
 
@@ -85,10 +66,6 @@ export default function PhoneSignInScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={auth.app.options}
-      />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.header}>

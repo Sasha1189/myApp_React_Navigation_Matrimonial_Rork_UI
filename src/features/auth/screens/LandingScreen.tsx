@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   ImageBackground,
   Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuthNavigation } from '../../../navigation/hooks';
-import { Heart, Sparkles, Users } from 'lucide-react-native';
-import { theme } from '../../../constants/theme';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuthNavigation } from "../../../navigation/hooks";
+import { Heart, Sparkles, Users } from "lucide-react-native";
+import { theme } from "../../../constants/theme";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 export default function LandingScreen() {
   const navigation = useAuthNavigation();
@@ -24,7 +24,7 @@ export default function LandingScreen() {
     <View style={styles.container}>
       <ImageBackground
         source={{
-          uri: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&h=1200&fit=crop'
+          uri: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&h=1200&fit=crop",
         }}
         style={styles.backgroundImage}
         resizeMode="cover"
@@ -34,8 +34,12 @@ export default function LandingScreen() {
           <View style={styles.content}>
             <View style={styles.header}>
               <View style={styles.logoContainer}>
-                <Heart size={40} color={theme.colors.accent} fill={theme.colors.accent} />
-                <Text style={styles.appName}>LoveConnect</Text>
+                <Heart
+                  size={40}
+                  color={theme.colors.accent}
+                  fill={theme.colors.accent}
+                />
+                <Text style={styles.appName}>LonariConnect</Text>
               </View>
               <Text style={styles.tagline}>Find Your Perfect Match</Text>
             </View>
@@ -56,12 +60,16 @@ export default function LandingScreen() {
             </View>
 
             <View style={styles.bottomSection}>
-              <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
+              <TouchableOpacity
+                style={styles.getStartedButton}
+                onPress={handleGetStarted}
+              >
                 <Text style={styles.getStartedText}>Get Started</Text>
               </TouchableOpacity>
-              
+
               <Text style={styles.termsText}>
-                By continuing, you agree to our Terms of Service and Privacy Policy
+                By continuing, you agree to our Terms of Service and Privacy
+                Policy
               </Text>
             </View>
           </View>
@@ -77,12 +85,12 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
   safeArea: {
     flex: 1,
@@ -90,51 +98,51 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.lg,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: height * 0.1,
   },
   logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.md,
   },
   appName: {
     fontSize: theme.fontSize.xxl + 8,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginLeft: theme.spacing.sm,
   },
   tagline: {
     fontSize: theme.fontSize.lg,
-    color: 'white',
-    textAlign: 'center',
+    color: "white",
+    textAlign: "center",
     opacity: 0.9,
   },
   featuresContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: theme.spacing.lg,
   },
   feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
     minWidth: width * 0.6,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   featureText: {
-    color: 'white',
+    color: "white",
     fontSize: theme.fontSize.md,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: theme.spacing.sm,
   },
   bottomSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingBottom: theme.spacing.xl,
   },
   getStartedButton: {
@@ -144,7 +152,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.round,
     marginBottom: theme.spacing.lg,
     minWidth: width * 0.7,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: theme.colors.shadow,
     shadowOffset: {
       width: 0,
@@ -155,14 +163,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   getStartedText: {
-    color: 'white',
+    color: "white",
     fontSize: theme.fontSize.lg,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   termsText: {
-    color: 'white',
+    color: "white",
     fontSize: theme.fontSize.sm,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.8,
     lineHeight: 20,
     paddingHorizontal: theme.spacing.md,

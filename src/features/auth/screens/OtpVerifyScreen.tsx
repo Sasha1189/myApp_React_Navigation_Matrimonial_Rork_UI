@@ -34,48 +34,50 @@ type OTPVerifyProps = {
 };
 
 const CODE_LENGTH = 6;
+const RESEND_TIME = 60;
 
 const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const { verificationId: initialVerificationId, phone } = route.params;
 
-  const [verificationId, setVerificationId] = useState<string>(
-    initialVerificationId,
-  );
-  const [code, setCode] = useState<string>("");
-  const [timer, setTimer] = useState<number>(60);
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [resendMessage, setResendMessage] = useState<string>("");
-  const [verifying, setVerifying] = useState<boolean>(false);
+  const [verificationId, setVerificationId] = useState(initialVerificationId);
+  const [code, setCode] = useState("");
+  const [timer, setTimer] = useState(RESEND_TIME);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   const inputRef = useRef<TextInput>(null);
-  const renderCount = useRef<number>(0);
-
-  renderCount.current += 1;
 
   // Auto focus OTP input
   useEffect(() => {
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => inputRef.current?.focus(), 150);
+    return () => clearTimeout(t);
   }, []);
+
+  // Countdown timer (FIXED)
+  useEffect(() => {
+    if (timer === 0) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
 
   // Handle Android back button
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      () => {
-        if (timer > 0) return true;
-        return false;
-      },
+      () => timer > 0,
     );
     return () => backHandler.remove();
   }, [timer]);
 
-  // Auto verify when full OTP entered
+  // Auto verify when full OTP entered (SAFE)
   useEffect(() => {
-    if (code.length === CODE_LENGTH) {
+    if (code.length === CODE_LENGTH && !verifying) {
       Keyboard.dismiss();
       verifyCode();
     }
@@ -84,17 +86,16 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   // ---------------- Functions ----------------
 
   const verifyCode = async () => {
-    try {
-      setError("");
-      setLoading(true);
+    if (verifying) return;
 
-      if (verifying) return;
+    try {
       setVerifying(true);
+      setLoading(true);
+      setError("");
 
       const credential = PhoneAuthProvider.credential(verificationId, code);
       await signInWithCredential(auth, credential);
     } catch (err: any) {
-      console.log("OTP verification error:", err.message);
       handleError(err);
     } finally {
       setLoading(false);
@@ -105,41 +106,39 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const handleResend = async () => {
     try {
       setCode("");
-      setTimer(60);
+      setTimer(RESEND_TIME);
       setError("");
       setLoading(true);
 
       const confirmationResult = await signInWithPhoneNumber(auth, phone);
 
-      if (confirmationResult.verificationId) {
-        setVerificationId(confirmationResult.verificationId);
-        setResendMessage("Code sent again!");
-        setTimeout(() => setResendMessage(""), 5000);
-      }
-    } catch (err) {
-      console.log("Resend OTP error:", err);
-      Alert.alert("Error", "Failed to resend OTP. Try again.");
+      setVerificationId(confirmationResult.verificationId);
+      setResendMessage("Code sent again!");
+      setTimeout(() => setResendMessage(""), 4000);
+    } catch (err: any) {
+      handleError(err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleError = (error: any) => {
-    if (error.code === "auth/code-expired") {
-      setError("OTP expired. Please resend the code.");
-    } else if (error.code === "auth/invalid-verification-code") {
-      setError("Invalid OTP. Please try again.");
-    } else {
-      const errorMessage =
-        error.response?.data?.message ||
-        "Something went wrong. Please try again.";
-      setError(errorMessage);
+    let message = "Something went wrong. Please try again.";
 
-      if (Platform.OS === "android") {
-        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
-      } else {
-        Alert.alert("Error", errorMessage);
-      }
+    if (error?.code === "auth/code-expired") {
+      message = "OTP expired. Please resend the code.";
+    } else if (error?.code === "auth/invalid-verification-code") {
+      message = "Invalid OTP. Please try again.";
+    } else if (error?.message) {
+      message = error.message;
+    }
+
+    setError(message);
+
+    if (Platform.OS === "android") {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert("Error", message);
     }
   };
 
@@ -152,8 +151,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   };
 
   const handleCodeChange = (text: string) => {
-    const numericText = text.replace(/[^0-9]/g, "");
-    setCode(numericText);
+    setCode(text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH));
   };
 
   // ---------------- JSX ----------------
@@ -166,7 +164,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text>BackButton</Text>
+          <Text>Back</Text>
         </TouchableOpacity>
       )}
 
@@ -185,15 +183,13 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
         keyboardType="number-pad"
         textContentType="oneTimeCode"
         maxLength={CODE_LENGTH}
-        autoFocus
-        selectionColor="#ffa500"
         placeholder="------"
       />
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <TouchableOpacity
-        disabled={timer > 0}
+        disabled={timer > 0 || loading}
         onPress={handleResend}
         style={[styles.resendBtn, { opacity: timer > 0 ? 0.4 : 1 }]}
       >
@@ -203,13 +199,12 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       <TouchableOpacity
         style={[
           styles.doneBtn,
-          { opacity: code.length === CODE_LENGTH && !error ? 1 : 0.5 },
+          { opacity: code.length === CODE_LENGTH && !loading ? 1 : 0.5 },
         ]}
-        disabled={code.length !== CODE_LENGTH || !!error}
-        onPress={verifyCode}
+        disabled={code.length !== CODE_LENGTH || loading}
       >
         {!loading ? (
-          <Text style={styles.doneText}>Done</Text>
+          <Text style={styles.doneText}>Verifying…</Text>
         ) : (
           <ActivityIndicator size="large" color="#fff" />
         )}
