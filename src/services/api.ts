@@ -1,6 +1,14 @@
-import auth from '@react-native-firebase/auth';
+import { getAuth, getIdToken  } from '@react-native-firebase/auth';
 
-const API_URL = "http://192.168.45.36:8000/api/v1";
+// Add a fallback and force the /api/v1 suffix if it's missing
+const RAW_URL = process.env.EXPO_PUBLIC_API_URL || "https://homopolar-chantell-unscoring.ngrok-free.dev";
+const API_URL = RAW_URL.endsWith('/api/v1') ? RAW_URL : `${RAW_URL}/api/v1`;
+
+console.log("DEBUG: Final API URL is:", API_URL);
+
+if (!API_URL) {
+  console.warn("API_URL is not defined! Check your .env file.");
+}
 
 interface ApiResponse<T> {
   data: T;
@@ -16,7 +24,8 @@ class ApiError extends Error {
 }
 
 async function getAuthToken(): Promise<string | null> {
-  const user = auth().currentUser;
+  const auth = getAuth();
+  const user = auth.currentUser;
 
   if (!user) {
     return null;
@@ -25,7 +34,7 @@ async function getAuthToken(): Promise<string | null> {
   try {
     // 3. CHANGE: Native getIdToken is highly reliable for backend auth
     // Force refresh (true) is optional but useful if you just updated a profile
-    return await user.getIdToken(false); 
+    return await getIdToken(user, false); 
   } catch (error) {
     console.error("Failed to get ID token:", error);
     return null;
@@ -35,6 +44,8 @@ async function getAuthToken(): Promise<string | null> {
 function buildHeaders(token?: string | null) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    // This bypasses the ngrok splash screen so your fetch() works
+    "ngrok-skip-browser-warning": "true", 
   };
 
   if (token) {

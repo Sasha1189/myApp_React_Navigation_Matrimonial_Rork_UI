@@ -5,7 +5,10 @@
         "buildType": "apk"
       },
       "channel": "preview",
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://homopolar-chantell-unscoring.ngrok-free.dev/api/v1"
+      }
     }
   }
 }

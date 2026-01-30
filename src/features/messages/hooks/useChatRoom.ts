@@ -26,7 +26,11 @@ export function useChatRoom(
   useEffect(() => {
     if (!currentUserId) return;
 
-    const socket = io("http://192.168.74.182:8000", {
+     // 1. STRIP /api/v1: Get the base domain only
+    const API_URL = process.env.EXPO_PUBLIC_API_URL || "";
+    const SOCKET_URL = API_URL.replace("/api/v1", "");
+
+    const socket = io(SOCKET_URL, {
       auth: { userId: currentUserId },
     });
     socketRef.current = socket;
