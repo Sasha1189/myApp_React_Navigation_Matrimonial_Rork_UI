@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
+import storage from '@react-native-firebase/storage';
 import { Alert } from "react-native";
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
@@ -77,14 +71,8 @@ export function usePhotoManager(profile: Profile | null) {
 
     try {
       if (toDelete.downloadURL) {
-        const decoded = decodeURIComponent(toDelete.downloadURL);
-        const path = decoded.substring(
-          decoded.indexOf("/o/") + 3,
-          decoded.indexOf("?")
-        );
-        const storagePath = path.replace(/%2F/g, "/");
-        const imageRef = ref(getStorage(), storagePath);
-        await deleteObject(imageRef);
+       const imageRef = storage().refFromURL(toDelete.downloadURL);
+        await imageRef.delete();
       }
 
       const updated = photos.filter((p) => p.id !== photoId);
@@ -122,37 +110,25 @@ export function usePhotoManager(profile: Profile | null) {
     setLoading(true);
 
     try {
-      const storage = getStorage();
+      // const storage = getStorage();
       const updatedPhotos = [...photos];
 
       for (let p of pending) {
-        const uniqueFilename = `IMG_${Date.now()}_${Math.floor(
-          Math.random() * 10000
-        )}.jpg`;
-        const storageRef = ref(
-          storage,
-          `users/${user?.uid}/profileImages/${uniqueFilename}`
-        );
-
-        const blob = await uriToBlob(p.localUrl!);
-
-        await new Promise<void>((resolve, reject) => {
-          const task = uploadBytesResumable(storageRef, blob as any);
-
-          task.on(
-            "state_changed",
-            undefined,
-            (err) => reject(err),
-            async () => {
-              const downloadURL = await getDownloadURL(task.snapshot.ref);
-              const idx = updatedPhotos.findIndex((x) => x.id === p.id);
-              if (idx !== -1) {
-                updatedPhotos[idx].downloadURL = downloadURL;
-              }
-              resolve();
-            }
-          );
-        });
+       const uniqueFilename = `IMG_${Date.now()}.jpg`;
+        const path = `users/${user?.uid}/profileImages/${uniqueFilename}`;
+        
+        // 3. CHANGE: Use putFile() with the local URI directly
+        // No need for uriToBlob or manual Tasks
+        const reference = storage().ref(path);
+        await reference.putFile(p.localUrl!); 
+        
+        // 4. Get the URL
+        const downloadURL = await reference.getDownloadURL();
+        
+        const idx = updatedPhotos.findIndex((x) => x.id === p.id);
+        if (idx !== -1) {
+          updatedPhotos[idx].downloadURL = downloadURL;
+        }
       }
 
       setPhotos(updatedPhotos);
@@ -199,9 +175,4 @@ const processImage = async (uri: string) => {
     return processed.uri;
   }
   return uri;
-};
-
-const uriToBlob = async (uri: string) => {
-  const res = await fetch(uri);
-  return await res.blob();
 };

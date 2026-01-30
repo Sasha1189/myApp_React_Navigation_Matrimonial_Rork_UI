@@ -1,6 +1,6 @@
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { NavigatorScreenParams } from "@react-navigation/native";
 import { Profile } from "src/types/profile";
-// import {Profile} from "../types/profile";
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
@@ -13,7 +13,7 @@ export type AuthStackParamList = {
   Splash: undefined;
   OTPVerify: {
     phone: string;
-    verificationId: string;
+    confirmation: FirebaseAuthTypes.ConfirmationResult;
   };
 };
 

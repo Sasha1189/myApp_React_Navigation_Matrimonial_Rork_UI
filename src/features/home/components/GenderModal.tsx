@@ -1,4 +1,3 @@
-import { getAuth, updateProfile } from "firebase/auth";
 import { auth } from "../../../config/firebase";
 import {
   View,
@@ -30,13 +29,12 @@ interface FirebaseUserLike {
 
 const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
   const { setUser } = useAuth();
-  // Profile.gender is '' | 'Male' | 'Female' — use '' for not-selected
   const [gender, setGender] = useState<Gender>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [retry, setRetry] = useState<boolean>(false);
 
   const createUser = async (
-    firebaseUser: FirebaseUserLike | null
+    firebaseUser: FirebaseUserLike | null,
   ): Promise<void> => {
     try {
       if (!firebaseUser) return;
@@ -63,27 +61,27 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
     setRetry(false);
 
     try {
-      if (!currentUser?.displayName) {
-        await updateProfile(currentUser as any, {
+      if (currentUser) {
+        await currentUser.updateProfile({
           displayName: gender,
         });
-        // reload is not typed on currentUser here, call if available
-        if ((currentUser as any)?.reload) {
-          await (currentUser as any).reload();
-        }
+        await currentUser.reload();
+
+        const updatedUser = auth.currentUser;
+
+        setUser(updatedUser);
+        await createUser(updatedUser);
+
+        Alert.alert(
+          "Done!",
+          "Gender updated successfully. Next Add your profile.",
+        );
+        onClose();
       }
-
-      setUser(auth.currentUser as any);
-      await createUser(auth.currentUser as any);
-
-      Alert.alert(
-        "Done!",
-        "Gender updated successfully. Next Add your profile."
-      );
-      onClose();
     } catch (error) {
       console.error("Update failed:", error);
       setRetry(true);
+      Alert.alert("Error", "Could not update profile. Please try again.");
     } finally {
       setLoading(false);
     }

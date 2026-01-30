@@ -34,6 +34,16 @@
       }
     },
     "owner": "sgherade",
-    "plugins": ["expo-asset"]
+    "plugins": [
+      "expo-asset",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/152c286b-d86c-4710-9530-c9f34706d649"
+    }
   }
 }

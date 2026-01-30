@@ -13,18 +13,15 @@ import {
   ToastAndroid,
   BackHandler,
 } from "react-native";
-import {
-  PhoneAuthProvider,
-  signInWithCredential,
-  signInWithPhoneNumber,
-} from "firebase/auth";
-import { auth } from "../../../config/firebase";
+
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 // ---------------- Types ----------------
 type OTPVerifyProps = {
   route: {
     params: {
-      verificationId: string;
+      // 2. CHANGE: Expect the confirmation object instead of verificationId string
+      confirmation: FirebaseAuthTypes.ConfirmationResult;
       phone: string;
     };
   };
@@ -37,9 +34,9 @@ const CODE_LENGTH = 6;
 const RESEND_TIME = 60;
 
 const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
-  const { verificationId: initialVerificationId, phone } = route.params;
+  const { confirmation: initialConfirmation, phone } = route.params;
 
-  const [verificationId, setVerificationId] = useState(initialVerificationId);
+  const [confirmation, setConfirmation] = useState(initialConfirmation);
   const [code, setCode] = useState("");
   const [timer, setTimer] = useState(RESEND_TIME);
   const [error, setError] = useState("");
@@ -93,8 +90,11 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       setLoading(true);
       setError("");
 
-      const credential = PhoneAuthProvider.credential(verificationId, code);
-      await signInWithCredential(auth, credential);
+      // 4. CHANGE: Simply call .confirm(code) on the confirmation object
+      // This internally handles the credential and signs the user in
+      await confirmation.confirm(code);
+
+      // Success! Firebase triggers the onAuthStateChanged listener automatically
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -110,9 +110,10 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       setError("");
       setLoading(true);
 
-      const confirmationResult = await signInWithPhoneNumber(auth, phone);
+      // 5. CHANGE: Use native signInWithPhoneNumber
+      const newConfirmation = await auth().signInWithPhoneNumber(phone);
 
-      setVerificationId(confirmationResult.verificationId);
+      setConfirmation(newConfirmation);
       setResendMessage("Code sent again!");
       setTimeout(() => setResendMessage(""), 4000);
     } catch (err: any) {
@@ -123,13 +124,25 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   };
 
   const handleError = (error: any) => {
+    // let message = "Something went wrong. Please try again.";
+
+    // if (error?.code === "auth/code-expired") {
+    //   message = "OTP expired. Please resend the code.";
+    // } else if (error?.code === "auth/invalid-verification-code") {
+    //   message = "Invalid OTP. Please try again.";
+    // } else if (error?.message) {
+    //   message = error.message;
+    // }
+
+    // setError(message);
     let message = "Something went wrong. Please try again.";
 
-    if (error?.code === "auth/code-expired") {
-      message = "OTP expired. Please resend the code.";
-    } else if (error?.code === "auth/invalid-verification-code") {
+    // Native SDK error codes are slightly different but similar
+    if (error?.code === "auth/invalid-verification-code") {
       message = "Invalid OTP. Please try again.";
-    } else if (error?.message) {
+    } else if (error?.code === "auth/session-expired") {
+      message = "OTP expired. Please resend the code.";
+    } else {
       message = error.message;
     }
 

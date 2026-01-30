@@ -25,8 +25,8 @@ import BlockedUsersModal from "../components/BlockedUsersModal";
 import { useBlockUnblockUser } from "../hooks/useBlockUnblockUser";
 import { useProfileContext } from "../../../context/ProfileContext";
 import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
-import { signOut } from "firebase/auth";
-import { auth } from "../../../config/firebase";
+
+import { getAuth, signOut } from "@react-native-firebase/auth";
 import { useAuth } from "src/context/AuthContext";
 import { storage } from "../../../utils/storage";
 import { clearCacheOnLogout } from "src/cache/cacheConfig";
@@ -116,22 +116,20 @@ export default function SettingsScreen() {
           text: "Log Out",
           onPress: async () => {
             try {
+              // 3. CHANGE: Use native signOut() method
+              // In the native SDK, signOut is a method on the auth instance
+              const auth = getAuth();
               await signOut(auth);
-            } catch (signOutError) {
-              console.error("Sign out failed:", signOutError);
-            } finally {
-              try {
-                // clear any cached user data
-                await storage.clear();
-                await clearCacheOnLogout();
-              } catch (storageError) {
-                console.error("Failed to clear storage:", storageError);
-              }
-              // reset auth context
-              if (typeof setUser === "function") {
-                // cast to any to avoid coupling to concrete user type
-                setUser(null as any);
-              }
+
+              // 4. Clear local cache
+              await storage.clear();
+              await clearCacheOnLogout();
+
+              // 5. Update context
+              setUser(null);
+            } catch (error: any) {
+              console.error("Logout error:", error);
+              Alert.alert("Error", "Could not log out. Please try again.");
             }
           },
         },

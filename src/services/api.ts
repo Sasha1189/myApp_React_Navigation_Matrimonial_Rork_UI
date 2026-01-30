@@ -1,4 +1,4 @@
-import { getAuth } from "firebase/auth";
+import auth from '@react-native-firebase/auth';
 
 const API_URL = "http://192.168.45.36:8000/api/v1";
 
@@ -16,13 +16,20 @@ class ApiError extends Error {
 }
 
 async function getAuthToken(): Promise<string | null> {
-  const user = getAuth().currentUser;
+  const user = auth().currentUser;
 
   if (!user) {
     return null;
   }
-
-  return user.getIdToken();
+  
+  try {
+    // 3. CHANGE: Native getIdToken is highly reliable for backend auth
+    // Force refresh (true) is optional but useful if you just updated a profile
+    return await user.getIdToken(false); 
+  } catch (error) {
+    console.error("Failed to get ID token:", error);
+    return null;
+  }
 }
 
 function buildHeaders(token?: string | null) {
@@ -159,81 +166,3 @@ export const api = {
     }
   },
 };
-
-//     if (params) {
-//       Object.entries(params).forEach(([key, value]) => {
-//         url.searchParams.append(key, value);
-//       });
-//     }
-
-//     const controller = new AbortController();
-//     const id = setTimeout(() => controller.abort(), timeout);
-
-//     try {
-//       const response = await fetch(url.toString(), {
-//         headers: buildHeaders(token),
-//         signal: controller.signal,
-//       });
-
-//       return await handleResponse<T>(response);
-//     } finally {
-//       clearTimeout(id);
-//     }
-//   },
-
-//   async post<T>(endpoint: string, data?: any, timeout = 15000): Promise<T> {
-//     const token = await getAuthToken();
-//     const controller = new AbortController();
-//     const id = setTimeout(() => controller.abort(), timeout);
-
-//     try {
-//       const response = await fetch(`${API_URL}${endpoint}`, {
-//         method: 'POST',
-//         headers: buildHeaders(token),
-//         body: data ? JSON.stringify(data) : undefined,
-//         signal: controller.signal,
-//       });
-
-//       return await handleResponse<T>(response);
-//     } finally {
-//       clearTimeout(id);
-//     }
-//   },
-
-//   async put<T>(endpoint: string, data: any, timeout = 15000): Promise<T> {
-//     const token = await getAuthToken();
-//     const controller = new AbortController();
-//     const id = setTimeout(() => controller.abort(), timeout);
-
-//     try {
-//       const response = await fetch(`${API_URL}${endpoint}`, {
-//         method: 'PUT',
-//         headers: buildHeaders(token),
-//         body: JSON.stringify(data),
-//         signal: controller.signal,
-//       });
-
-//       return await handleResponse<T>(response);
-//     } finally {
-//       clearTimeout(id);
-//     }
-//   },
-
-//   async delete<T>(endpoint: string, timeout = 15000): Promise<T> {
-//     const token = await getAuthToken();
-//     const controller = new AbortController();
-//     const id = setTimeout(() => controller.abort(), timeout);
-
-//     try {
-//       const response = await fetch(`${API_URL}${endpoint}`, {
-//         method: 'DELETE',
-//         headers: buildHeaders(token),
-//         signal: controller.signal,
-//       });
-
-//       return await handleResponse<T>(response);
-//     } finally {
-//       clearTimeout(id);
-//     }
-//   },
-// };

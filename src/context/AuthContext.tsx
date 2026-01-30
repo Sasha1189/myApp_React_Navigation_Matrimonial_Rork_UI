@@ -7,14 +7,14 @@ import {
   useMemo,
   ReactNode,
 } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../config/firebase";
-
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
 // 1. Define the type of our context value
+
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseAuthTypes.User | null;
   authLoading: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: FirebaseAuthTypes.User | null) => void;
 }
 
 // 2. Create the context with correct type (or undefined initially)
@@ -22,17 +22,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // 4. Provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   const renderCount = useRef(0);
   renderCount.current += 1;
 
   useEffect(() => {
+    const auth = getAuth();
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser ?? null);
+      setUser(firebaseUser);
       setAuthLoading(false);
     });
+
     return unsubscribe;
   }, []);
 
