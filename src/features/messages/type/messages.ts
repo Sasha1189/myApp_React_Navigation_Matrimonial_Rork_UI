@@ -8,7 +8,7 @@ import { Profile } from "../../../types/profile";
 export interface ChatPartnerProfile {
   id: string;             // otherUserId (or uid from profile)
   name: string;           // fullName from profile
-  photo: string | null;   // first photo downloadURL, null if none
+  thumbnail: string | null;   // first photo downloadURL, null if none
   dateOfBirth?: string;   // pass raw, frontend computes age
 }
 

@@ -4,8 +4,7 @@ import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
-
-import { Profile, Photo, DBPhoto } from "../../../types/profile";
+import { Profile, Photo } from "../../../types/profile";
 import { useAuth } from "../../../context/AuthContext";
 import { useUpdateProfileData } from "../hooks/useProfile";
 
@@ -64,45 +63,97 @@ export function usePhotoManager(profile: Profile | null) {
   };
 
   // 🔹 Delete photo (storage + db)
-  const deletePhoto = async (photoId: string) => {
-    const toDelete = photos.find((p) => p.id === photoId);
-    if (!toDelete) return;
+ const deletePhoto = async (photoId: string) => {
+  const toDelete = photos.find((p) => p.id === photoId);
+  if (!toDelete) return;
 
-    try {
-      if (toDelete.downloadURL) {
-        const imageRef = storage().refFromURL(toDelete.downloadURL);
-        await imageRef.delete();
-      }
-
-      const updated = photos.filter((p) => p.id !== photoId);
-      if (!updated.some((p) => p.isPrimary) && updated.length) {
-        updated[0].isPrimary = true;
-      }
-      setPhotos(updated);
-
-      await updateProfile({ photos: updated });
-
-      Alert.alert("Deleted", "Photo removed successfully.");
-      setIsEditing(false);
-    } catch (err: any) {
-      // 🔹 UPDATED: Specific log for auth issues
-      console.error("Delete failed:", err);
-      if (err.code === 'storage/unauthorized') {
-        Alert.alert("Permission Denied", "You don't have permission to delete this file. Check Storage Rules.");
-      } else {
-        Alert.alert("Error", "Failed to delete photo. Try again.");
-      }
+  try {
+    // 1. Delete the high-res file from Firebase Storage
+    if (toDelete.downloadURL) {
+      const imageRef = storage().refFromURL(toDelete.downloadURL);
+      await imageRef.delete();
     }
-  };
+
+    // 2. Remove from local list
+    let updated = photos.filter((p) => p.id !== photoId);
+    let newRootThumbnail = profile?.thumbnail || "";
+
+    // 3. 🔹 LOGIC CHANGE: If we deleted the primary, promote a new one
+    if (toDelete.isPrimary && updated.length > 0) {
+      // Pick the first available photo as the new primary
+      updated[0].isPrimary = true;
+      
+      // Generate a new root-level thumbnail for this new primary
+      const source = updated[0].localUrl || updated[0].downloadURL;
+      const thumb = await ImageManipulator.manipulateAsync(
+        source,
+        [{ resize: { width: 80 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
+      newRootThumbnail = `data:image/jpeg;base64,${thumb.base64}`;
+    } else if (updated.length === 0) {
+      // Clear the banner if no photos are left
+      newRootThumbnail = "";
+    }
+
+    // 4. 🔹 STRIP localUrl for Database Sync
+    const cleanPhotosForDb = updated.map(({ localUrl, ...rest }) => rest);
+
+    // 5. Sync both Photos and the Root Thumbnail to Firestore
+    await updateProfile({ 
+      photos: cleanPhotosForDb, 
+      thumbnail: newRootThumbnail 
+    });
+
+    setPhotos(updated);
+    Alert.alert("Deleted", "Photo removed successfully.");
+  } catch (err) {
+    console.error("Delete failed:", err);
+    Alert.alert("Error", "Failed to delete photo.");
+  }
+};
 
   // 🔹 Set primary
-  const setPrimary = (photoId: string) => {
-    setPhotos((prev) =>
-      prev.map((p) => ({ ...p, isPrimary: p.id === photoId }))
-    );
-    setIsEditing(true);
-  };
+  const setPrimary = async (photoId: string) => {
+  setLoading(true);
+  try {
+    const selectedPhoto = photos.find(p => p.id === photoId);
+    if (!selectedPhoto) return;
 
+    // 1. Generate new root-level thumbnail
+    const source = selectedPhoto.localUrl || selectedPhoto.downloadURL;
+    const thumb = await ImageManipulator.manipulateAsync(
+      source,
+      [{ resize: { width: 80 } }],
+      { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+    );
+    const newThumbnail = `data:image/jpeg;base64,${thumb.base64}`;
+
+    // 2. 🔹 REORDER: Move primary to index 0
+    const otherPhotos = photos.filter(p => p.id !== photoId);
+    const updatedPhotos = [
+      { ...selectedPhoto, isPrimary: true }, // Put selected at index 0
+      ...otherPhotos.map(p => ({ ...p, isPrimary: false })) // Reset others
+    ];
+
+    // 3. Update Local State
+    setPhotos(updatedPhotos);
+    
+    // 4. Update Database
+    const cleanPhotosForDb = updatedPhotos.map(({ localUrl, ...rest }) => rest);
+    await updateProfile({ 
+      photos: cleanPhotosForDb, 
+      thumbnail: newThumbnail 
+    });
+
+    setIsEditing(false);
+  } catch (err) {
+    console.error("Set primary failed:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+  
   // 🔹 Upload pending (local only) photos
   const uploadPhotos = async () => {
     const pending = photos.filter((p) => !p.downloadURL);
@@ -116,26 +167,36 @@ export function usePhotoManager(profile: Profile | null) {
     try {
       // const storage = getStorage();
       const updatedPhotos = [...photos];
+      let rootThumbnail = profile?.thumbnail || "";
 
       for (let p of pending) {
-       const uniqueFilename = `IMG_${Date.now()}.jpg`;
+        const processed = await processImage(p.localUrl!);
+        const uniqueFilename = `IMG_${Date.now()}.jpg`;
         const path = `users/${user?.uid}/profileImages/${uniqueFilename}`;
         
-        // 3. CHANGE: Use putFile() with the local URI directly
-        // No need for uriToBlob or manual Tasks
-         const reference = storage().ref(path);
-        await reference.putFile(p.localUrl!); 
-        
-        // 4. Get the URL
+        const reference = storage().ref(path);
+        await reference.putFile(processed);
         const downloadURL = await reference.getDownloadURL();
         
         const idx = updatedPhotos.findIndex((x) => x.id === p.id);
         if (idx !== -1) {
           updatedPhotos[idx].downloadURL = downloadURL;
+
+         if (updatedPhotos[idx].isPrimary) {
+          const thumb = await ImageManipulator.manipulateAsync(
+            p.localUrl!,
+            [{ resize: { width: 80 } }],
+            { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+          );
+          rootThumbnail = `data:image/jpeg;base64,${thumb.base64}`;
+        }
         }
       }
 
-      await updateProfile({ photos: updatedPhotos });
+       // 🔹 STRIP localUrl so it never touches Firestore
+      const cleanPhotosForDb = updatedPhotos.map(({ localUrl, ...rest }) => rest);
+
+      await updateProfile({ photos: cleanPhotosForDb, thumbnail: rootThumbnail });
       setPhotos(updatedPhotos);
 
       Alert.alert("Success", "Photos updated successfully!");

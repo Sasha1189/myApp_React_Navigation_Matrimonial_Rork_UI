@@ -24,11 +24,6 @@ export default function ManagePhotosScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <LinearGradient
-        colors={[theme.colors.primary + "20", "transparent"]}
-        style={styles.headerGradient}
-      />
-
       <View style={styles.content}>
         {/* Photos Grid */}
         <ManagePhotosGrid
@@ -60,14 +55,7 @@ export default function ManagePhotosScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  headerGradient: {
-    height: 100,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-  content: { padding: theme.spacing.lg, paddingTop: theme.spacing.xl },
+  content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
   infoCard: {
     backgroundColor: "white",
     borderRadius: theme.borderRadius.lg,

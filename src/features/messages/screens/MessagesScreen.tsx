@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   StatusBar,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
@@ -15,10 +14,8 @@ import { theme } from "../../../theme/index";
 import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
 import { UserBanner } from "../components/UserBanner";
-import { type MessagesScreenNavigationProp } from "../type/messages";
 import { useMessagesData } from "../hooks/useMessagesData";
 import { useRecentChatPartners } from "../hooks/useRecentChatPartners";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MessagesScreen() {
   const { user } = useAuth();

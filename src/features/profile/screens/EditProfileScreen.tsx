@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
-  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
   ScrollView,
   Alert,
   ToastAndroid,
   Platform,
-  Text,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Edit3, Save } from "lucide-react-native";
+import { Edit3, Save, X } from "lucide-react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { theme } from "../../../constants/theme";
-import CustomHeader from "../../../components/CustomeHeader";
 import { useTabNavigation } from "../../../navigation/hooks";
 import { useProfileContext } from "../../../context/ProfileContext";
 import { useUpdateProfileData } from "../hooks/useProfile";
@@ -31,7 +29,6 @@ import {
   immutableFields,
 } from "../components/form/profileValidation";
 import { isDeepEqual } from "../../../utils/deepEqual";
-
 import { useIsDirty } from "../hooks/useIsDirty";
 import { useConfirmedImmutable } from "../hooks/useConfirmedImmutable";
 import { useUnsavedChangesPrompt } from "../hooks/useUnsavedChangesPrompt";
@@ -70,10 +67,7 @@ export default function EditProfileScreen() {
   const SKIP_FIELDS: (keyof Profile)[] = ["photos", "createdAt", "updatedAt"];
 
   const handleSave = handleSubmit(async (data) => {
-    if (!isEditing) {
-      setIsEditing(true);
-      return;
-    }
+    if (!isEditing) return setIsEditing(true);
 
     setLoading(true);
 
@@ -116,7 +110,6 @@ export default function EditProfileScreen() {
           "Your profile has been successfully updated.",
         );
       }
-
       // Lock fields again
       setIsEditing(false);
     } catch (err: any) {
@@ -127,10 +120,73 @@ export default function EditProfileScreen() {
     }
   });
 
+  const handleDiscard = () => {
+    Alert.alert(
+      "Discard Changes",
+      "Are you sure you want to revert all changes?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: () => {
+            reset(profile); // 🔹 Reverts form to original profile data
+            setIsEditing(false); // 🔹 Locks the fields
+          },
+        },
+      ],
+    );
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      // 🔹 Left Side: Discard Button (Only when editing)
+      headerLeft: () =>
+        isEditing ? (
+          <TouchableOpacity
+            onPress={handleDiscard}
+            style={{
+              backgroundColor: "rgba(255,255,255,0.12)",
+              padding: theme.spacing.sm,
+              borderRadius: theme.borderRadius.md,
+              marginHorizontal: theme.spacing.lg,
+            }}
+          >
+            <X size={24} color={theme.colors.danger} />
+          </TouchableOpacity>
+        ) : null,
+
+      // 🔹 Right Side: Edit/Save Toggle
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={isEditing ? handleSave : () => setIsEditing(true)}
+          style={{
+            backgroundColor: "rgba(255,255,255,0.12)",
+            padding: theme.spacing.sm,
+            borderRadius: theme.borderRadius.md,
+            marginHorizontal: theme.spacing.lg,
+          }}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          ) : isEditing ? (
+            <Save size={24} color={theme.colors.background} />
+          ) : (
+            <Edit3 size={24} color={theme.colors.background} />
+          )}
+        </TouchableOpacity>
+      ),
+      headerTitle: isEditing ? "Editing Profile" : "My Profile",
+      // 🔹 Ensure the back button is hidden if we show the X button
+      headerBackVisible: !isEditing,
+    });
+  }, [navigation, isEditing, loading, profile]);
+
   return (
     <FormProvider {...methods}>
       <ScrollView style={{ flex: 1 }}>
-        <LinearGradient
+        {/* <LinearGradient
           colors={[theme.colors.primary + "20", "transparent"]}
           style={{
             height: 100,
@@ -139,7 +195,7 @@ export default function EditProfileScreen() {
             left: 0,
             right: 0,
           }}
-        />
+        /> */}
         <View
           style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
         >

@@ -62,14 +62,12 @@ export default function ProfileScreen(): React.ReactElement {
           <View style={styles.compactProfileColumn}>
             <Image
               source={
-                profile?.photos?.[0]?.downloadURL
-                  ? { uri: profile.photos[0].downloadURL }
+                profile?.thumbnail
+                  ? { uri: profile.thumbnail }
                   : require("../../../../assets/images/profile.png")
               }
               style={styles.compactProfileImage}
-              contentFit={
-                profile?.photos?.[0]?.downloadURL ? "cover" : "contain"
-              }
+              contentFit={profile?.thumbnail ? "cover" : "contain"}
               cachePolicy="disk"
             />
             <View style={styles.compactProfileInfo}>
@@ -150,6 +148,7 @@ export default function ProfileScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 10,
   },
   statItem: {
     flex: 1,
@@ -162,7 +161,7 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.md,
   },
   compactHeader: {
-    paddingHorizontal: theme.spacing.lg,
+    // paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
   },

@@ -42,7 +42,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             renderItem={({ item }) => (
               <View
                 style={{
-                  width: screenWidth - theme.spacing.lg * 2,
+                  width: screenWidth - 10 * 2,
                   height: "100%",
                 }}
               >

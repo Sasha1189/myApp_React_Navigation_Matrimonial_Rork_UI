@@ -423,7 +423,7 @@ export default function UserDetailsScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.background,
   },
   cardContainer: {
     alignItems: "center",

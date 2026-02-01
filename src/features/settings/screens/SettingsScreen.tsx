@@ -70,6 +70,7 @@ export default function SettingsScreen() {
     }
   };
   const WHATSAPP_NUMBER = "919921794390";
+
   const composeWhatsApp = async (type: "bug" | "feature" | "report-user") => {
     const heading =
       type === "bug"
@@ -144,7 +145,7 @@ export default function SettingsScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={[theme.colors.primary + "20", "transparent"]}
-          style={styles.headerGradient}
+          // style={styles.headerGradient}
         />
         <View style={styles.content}>
           {/* Appearance */}
@@ -365,6 +366,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 10,
     backgroundColor: theme.colors.background,
   },
   headerGradient: {
@@ -375,8 +377,9 @@ const styles = StyleSheet.create({
     right: 0,
   },
   content: {
-    padding: theme.spacing.lg,
+    // padding: theme.spacing.lg,
     paddingTop: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
   },
   section: {
     marginBottom: theme.spacing.lg,

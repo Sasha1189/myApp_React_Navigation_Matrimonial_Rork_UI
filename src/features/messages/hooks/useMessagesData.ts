@@ -4,9 +4,8 @@ import {
 } from "../../home/hooks/useSwipeMutations";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { type RecentChatPartner } from "../type/messages";
+import { type RecentChatPartner, UserBannerItem } from "../type/messages";
 import { Profile } from "../../../types/profile";
-import { UserBannerItem } from "../type/messages";
 import { formatDOB } from "../../../utils/dateUtils";
 
 export function useMessagesData(
@@ -29,15 +28,10 @@ export function useMessagesData(
   const normalized: UserBannerItem[] = useMemo(() => {
     if (activeTab === "chats") {
       return chats.map((c) => {
-    // const lastMessageAt =
-    //   typeof c.lastMessageAt === "string"
-    //     ? new Date(c.lastMessageAt)
-    //     : c.lastMessageAt.toDate?.() ?? new Date();
-
     return {
       id: c.otherUser?.id ?? c.roomId,
       name: c.otherUser?.name ?? "Unknown User",
-      photo: c.otherUser?.photo ?? undefined, // already string | null
+      photo: c.otherUser?.thumbnail, // already string | null
       age: c.otherUser?.dateOfBirth
         ? formatDOB(c.otherUser.dateOfBirth, "age")
         : undefined,
@@ -55,7 +49,7 @@ export function useMessagesData(
   return {
     id: profile.uid,
     name: profile.fullName,
-    photo: profile.photos?.[0]?.downloadURL,
+    photo: profile.thumbnail,
     age: profile.dateOfBirth ? formatDOB(profile.dateOfBirth, "age") : "18+",
     lastMessage: undefined,
     lastMessageAt: undefined,
