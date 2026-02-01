@@ -2,6 +2,7 @@ export interface Profile {
   // Basic Information
   uid: string;
   photos: Photo[];
+  thumbnail?: string;
   likeCount: number;
   liked?: boolean; // whether current user liked this profile
   likedMe?: boolean; // whether this profile liked current user
@@ -115,3 +116,9 @@ export type BlockedUserDetail = {
   name: string;
   avatar?: string | null;
 };
+
+export interface DBPhoto {
+  id: string;
+  downloadURL: string;
+  isPrimary: boolean;
+}

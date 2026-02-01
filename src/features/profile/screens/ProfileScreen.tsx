@@ -74,10 +74,12 @@ export default function ProfileScreen(): React.ReactElement {
             />
             <View style={styles.compactProfileInfo}>
               <Text style={styles.compactName}>
-                {profile?.fullName || "User Name, "}
+                {`${profile?.fullName}, ` || "User, "}
               </Text>
               <Text style={styles.compactAge}>
-                {profile?.dateOfBirth ? formatDOB(profile.dateOfBirth) : "21"}
+                {profile?.dateOfBirth
+                  ? formatDOB(profile.dateOfBirth, "age")
+                  : "21"}
               </Text>
             </View>
           </View>

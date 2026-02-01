@@ -2,11 +2,11 @@ import React from "react";
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { Plus, Star, X } from "lucide-react-native";
 import { theme } from "../../../../theme";
 import { Photo } from "../../../../types/profile";
@@ -31,6 +31,8 @@ export default function ManagePhotosGrid({
 }: Props) {
   const emptySlots = Math.max(0, maxPhotos - photos.length);
 
+  console.log("Photos:", photos);
+
   const renderPhotoSlot = (photo?: Photo, index?: number) => {
     if (!photo) {
       return (
@@ -48,8 +50,11 @@ export default function ManagePhotosGrid({
     return (
       <View key={photo.id} style={styles.photoContainer}>
         <Image
-          source={{ uri: photo.localUrl || photo.downloadURL }}
+          source={photo.downloadURL || photo.localUrl}
           style={styles.photo}
+          contentFit="cover"
+          cachePolicy="disk"
+          transition={200}
         />
 
         {photo.isPrimary && (
@@ -85,7 +90,7 @@ export default function ManagePhotosGrid({
     <View style={styles.photosGrid}>
       {photos.map((photo, i) => renderPhotoSlot(photo, i))}
       {Array.from({ length: emptySlots }, (_, index) =>
-        renderPhotoSlot(undefined, index)
+        renderPhotoSlot(undefined, index),
       )}
     </View>
   );

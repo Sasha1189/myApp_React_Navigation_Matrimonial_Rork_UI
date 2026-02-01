@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import storage from '@react-native-firebase/storage';
+import storage, { firebase } from '@react-native-firebase/storage';
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
 
-import { Profile, Photo } from "../../../types/profile";
+import { Profile, Photo, DBPhoto } from "../../../types/profile";
 import { useAuth } from "../../../context/AuthContext";
 import { useUpdateProfileData } from "../hooks/useProfile";
 
@@ -17,7 +17,6 @@ export function usePhotoManager(profile: Profile | null) {
     profile?.uid ?? "",
     profile?.gender
   );
-
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,7 +70,7 @@ export function usePhotoManager(profile: Profile | null) {
 
     try {
       if (toDelete.downloadURL) {
-       const imageRef = storage().refFromURL(toDelete.downloadURL);
+        const imageRef = storage().refFromURL(toDelete.downloadURL);
         await imageRef.delete();
       }
 
@@ -85,9 +84,14 @@ export function usePhotoManager(profile: Profile | null) {
 
       Alert.alert("Deleted", "Photo removed successfully.");
       setIsEditing(false);
-    } catch (err) {
+    } catch (err: any) {
+      // 🔹 UPDATED: Specific log for auth issues
       console.error("Delete failed:", err);
-      Alert.alert("Error", "Failed to delete photo. Try again.");
+      if (err.code === 'storage/unauthorized') {
+        Alert.alert("Permission Denied", "You don't have permission to delete this file. Check Storage Rules.");
+      } else {
+        Alert.alert("Error", "Failed to delete photo. Try again.");
+      }
     }
   };
 
@@ -119,7 +123,7 @@ export function usePhotoManager(profile: Profile | null) {
         
         // 3. CHANGE: Use putFile() with the local URI directly
         // No need for uriToBlob or manual Tasks
-        const reference = storage().ref(path);
+         const reference = storage().ref(path);
         await reference.putFile(p.localUrl!); 
         
         // 4. Get the URL
@@ -131,8 +135,8 @@ export function usePhotoManager(profile: Profile | null) {
         }
       }
 
-      setPhotos(updatedPhotos);
       await updateProfile({ photos: updatedPhotos });
+      setPhotos(updatedPhotos);
 
       Alert.alert("Success", "Photos updated successfully!");
       setIsEditing(false);
@@ -161,18 +165,35 @@ export function usePhotoManager(profile: Profile | null) {
 /* ------------------ Helpers ------------------ */
 
 const processImage = async (uri: string) => {
+  // 🔹 Industry Standard: 300KB is plenty for mobile high-quality photos
+  const TARGET_SIZE_MB = 0.3; 
+  const TARGET_SIZE_BYTES = TARGET_SIZE_MB * 1024 * 1024; 
+
   const fileInfo = await FileSystem.getInfoAsync(uri);
-  if (
-    !fileInfo.exists ||
-    fileInfo.size > 1024 * 1024 ||
-    (!uri.toLowerCase().endsWith(".jpg") &&
-      !uri.toLowerCase().endsWith(".jpeg"))
-  ) {
-    const processed = await ImageManipulator.manipulateAsync(uri, [], {
-      compress: 0.75,
-      format: ImageManipulator.SaveFormat.JPEG,
-    });
-    return processed.uri;
+  if (!fileInfo.exists) return uri;
+  const currentSize = 'size' in fileInfo ? fileInfo.size : 0;
+
+  // 🔹 Step 1: Always resize to a max width. 
+  // Mobile screens rarely need more than 1080px. 
+  // This drastically reduces file size before we even touch compression.
+  const manipOptions = [{ resize: { width: 1080 } }];
+
+  // 🔹 Step 2: Calculate compression
+  let finalCompress = 0.8; // Default high quality
+  if (currentSize > TARGET_SIZE_BYTES) {
+    // If it's still too big, calculate ratio
+    const ratio = (TARGET_SIZE_BYTES / currentSize) * 1.2; // 1.2 buffer because resizing already helped
+    finalCompress = Math.min(Math.max(ratio, 0.5), 0.8); 
   }
-  return uri;
+
+  const processed = await ImageManipulator.manipulateAsync(
+    uri,
+    manipOptions,
+    {
+      compress: finalCompress,
+      format: ImageManipulator.SaveFormat.JPEG,
+    }
+  );
+
+  return processed.uri;
 };

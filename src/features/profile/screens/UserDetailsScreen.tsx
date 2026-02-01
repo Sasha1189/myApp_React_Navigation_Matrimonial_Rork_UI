@@ -43,6 +43,7 @@ import { useProfileContext } from "../../../context/ProfileContext";
 import LoadingScreen from "../../../components/LoadingScreen";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
 import { Profile } from "../../../types/profile";
+import { formatDOB } from "src/utils/dateUtils";
 
 interface DetailSectionProps {
   title: string;
@@ -133,7 +134,7 @@ export default function UserDetailsScreen({
           />
           <DetailRow
             label="Date of Birth"
-            value={profile.dateOfBirth}
+            value={formatDOB(profile?.dateOfBirth, "dob")}
             icon={Calendar}
           />
           <DetailRow
@@ -422,7 +423,7 @@ export default function UserDetailsScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.primary,
   },
   cardContainer: {
     alignItems: "center",
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   card: {
-    width: screenWidth - theme.spacing.lg * 2,
+    width: screenWidth - 10 * 2,
     height: screenHeight * 0.7,
     borderRadius: theme.borderRadius.lg,
     backgroundColor: theme.colors.cardBackground,
@@ -441,67 +442,9 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: theme.spacing.lg,
   },
-  // centerContainer: {
-  //   flex: 1,
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  // },
-  // errorText: {
-  //   fontSize: theme.fontSize.lg,
-  //   color: theme.colors.textLight,
-  // },
-  // imageContainer: {
-  //   position: "relative",
-  //   overflow: "hidden",
-  //   height: 475,
-  //   backgroundColor: "white",
-  //   borderRadius: theme.borderRadius.lg,
-  //   shadowColor: theme.colors.shadow,
-  //   shadowOffset: { width: 0, height: 2 },
-  //   shadowOpacity: 0.1,
-  //   shadowRadius: 4,
-  //   elevation: 3,
-  // },
-  // profileImage: {
-  //   resizeMode: "cover",
-  //   width: "100%",
-  //   height: "100%",
-  // },
-  // imageGradient: {
-  //   position: "absolute",
-  //   bottom: 0,
-  //   left: 0,
-  //   right: 0,
-  //   height: "60%",
-  // },
-  // imageOverlay: {
-  //   position: "absolute",
-  //   bottom: theme.spacing.lg,
-  //   left: theme.spacing.lg,
-  //   right: theme.spacing.lg,
-  // },
-  // profileName: {
-  //   fontSize: theme.fontSize.xxl,
-  //   fontWeight: "bold",
-  //   color: "white",
-  //   marginBottom: theme.spacing.xs,
-  // },
-  // profileAge: {
-  //   fontSize: theme.fontSize.lg,
-  //   color: "white",
-  //   marginBottom: theme.spacing.sm,
-  // },
-  // locationRow: {
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  // },
-  // locationText: {
-  //   color: "white",
-  //   fontSize: theme.fontSize.md,
-  //   marginLeft: theme.spacing.xs,
-  // },
   content: {
-    padding: theme.spacing.lg,
+    padding: 10,
+    paddingBottom: 30,
   },
   section: {
     backgroundColor: "white",

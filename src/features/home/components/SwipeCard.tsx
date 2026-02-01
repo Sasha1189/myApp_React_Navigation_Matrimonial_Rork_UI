@@ -108,7 +108,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       onPanResponderTerminate: () => {
         resetPosition();
       },
-    })
+    }),
   ).current;
 
   // const panResponder = useRef(
@@ -137,8 +137,8 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       direction === "right"
         ? screenWidth
         : direction === "left"
-        ? -screenWidth
-        : 0;
+          ? -screenWidth
+          : 0;
     const y = direction === "up" ? -screenHeight : 0;
 
     Animated.timing(position, {
@@ -192,6 +192,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
               : "contain"
           }
           cachePolicy="disk"
+          transition={200}
         />
       </TouchableOpacity>
 
