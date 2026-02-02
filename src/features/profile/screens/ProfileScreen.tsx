@@ -62,12 +62,16 @@ export default function ProfileScreen(): React.ReactElement {
           <View style={styles.compactProfileColumn}>
             <Image
               source={
-                profile?.thumbnail
-                  ? { uri: profile.thumbnail }
+                profile?.photos && profile.photos.length > 0
+                  ? { uri: profile.photos[0].downloadURL }
                   : require("../../../../assets/images/profile.png")
               }
               style={styles.compactProfileImage}
-              contentFit={profile?.thumbnail ? "cover" : "contain"}
+              contentFit={
+                profile?.photos && profile.photos.length > 0
+                  ? "cover"
+                  : "contain"
+              }
               cachePolicy="disk"
             />
             <View style={styles.compactProfileInfo}>

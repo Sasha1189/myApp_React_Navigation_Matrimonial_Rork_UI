@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
+import { Lock } from "lucide-react-native";
 import { theme } from "../../../../constants/theme";
 
 interface InputFieldProps {
@@ -23,9 +24,9 @@ const InputField: React.FC<InputFieldProps> = ({
   multiline = false,
   keyboardType = "default",
   icon: Icon,
-  editable = true,
-  required = false,
-  locked = false,
+  editable,
+  required,
+  locked,
 }) => (
   <View style={styles.container}>
     <View style={styles.labelRow}>
@@ -34,6 +35,14 @@ const InputField: React.FC<InputFieldProps> = ({
         {label}
         {required && <Text style={{ color: "red" }}> *</Text>}
       </Text>
+      {locked && (
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Lock size={12} color={theme.colors.warning} />
+          <Text style={[styles.lockNote, { marginTop: 0, marginLeft: 4 }]}>
+            Verified
+          </Text>
+        </View>
+      )}
     </View>
 
     {locked ? (
@@ -68,6 +77,11 @@ const InputField: React.FC<InputFieldProps> = ({
           editable={editable}
         />
       </>
+    )}
+    {locked && editable && (
+      <Text style={[styles.lockNote, { color: theme.colors.warning }]}>
+        This field is locked for security
+      </Text>
     )}
   </View>
 );

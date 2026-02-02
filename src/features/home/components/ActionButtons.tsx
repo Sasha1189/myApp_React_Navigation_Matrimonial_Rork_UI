@@ -7,6 +7,7 @@ import {
   MessageCircleMore,
   MessageSquareMore,
   ArrowDownAZ,
+  ArrowDownIcon
 } from "lucide-react-native";
 import React from "react";
 import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -47,12 +48,11 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={[styles.button, styles.likeButton]}
+        style={styles.button}
         onPress={() => animatePress(onLike)}
         disabled={disabled}
         testID="like-button"
       >
-        {/* <ThumbsUp size={30} color={theme.colors.success} /> */}
         {liked ? (
           <ThumbsUp
             fill={theme.colors.success}
@@ -64,7 +64,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         )}
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.button, styles.superLikeButton]}
+        style={styles.button}
         onPress={() => animatePress(onSuperLike)}
         disabled={disabled}
         testID="superlike-button"
@@ -72,7 +72,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         <MessageCircleMore size={40} color={theme.colors.primary} />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.button, styles.passButton]}
+        style={styles.button}
         onPress={() => animatePress(onPass)}
         disabled={disabled}
         testID="pass-button"
@@ -92,31 +92,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
   },
   button: {
-    // width: 50,
-    // height: 50,
-    // borderRadius: 25,
-    // borderColor: theme.colors.border,
-    // borderWidth: 1,
-    // backgroundColor: 'white',
-    //  backgroundColor: 'rgba(15, 8, 8, 0.4)',
     justifyContent: "center",
     alignItems: "center",
-    // shadowColor: theme.colors.shadow,
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.15,
-    // shadowRadius: 4,
-    // elevation: 3,
-  },
-  passButton: {
-    // borderWidth: 1,
-    // borderColor: theme.colors.danger,
-  },
-  likeButton: {
-    // borderWidth: 1,
-    // borderColor: theme.colors.success,
-  },
-  superLikeButton: {
-    // borderWidth: 1,
-    // borderColor: theme.colors.primary,
   },
 });

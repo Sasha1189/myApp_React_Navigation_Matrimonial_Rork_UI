@@ -24,10 +24,10 @@ export const DatePickerField: React.FC<DatePickerProps> = ({
   label,
   value,
   onChange,
-  editable = true,
+  editable,
   icon: Icon,
   required = true,
-  locked = false,
+  locked,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -35,20 +35,20 @@ export const DatePickerField: React.FC<DatePickerProps> = ({
       ? value instanceof Date
         ? value
         : new Date(value as string)
-      : undefined
+      : undefined,
   );
 
   useEffect(() => {
     if (value) {
       setSelectedDate(
-        value instanceof Date ? value : new Date(value as string)
+        value instanceof Date ? value : new Date(value as string),
       );
     }
   }, [value]);
 
   const display = selectedDate
     ? `${String(selectedDate.getDate()).padStart(2, "0")}/${String(
-        selectedDate.getMonth() + 1
+        selectedDate.getMonth() + 1,
       ).padStart(2, "0")}/${selectedDate.getFullYear()}`
     : "";
 
@@ -154,7 +154,7 @@ export const TimePickerField: React.FC<TimePickerProps> = ({
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState<Date | undefined>(
-    value ? parseTimeString(value) : undefined
+    value ? parseTimeString(value) : undefined,
   );
 
   useEffect(() => {
@@ -241,3 +241,120 @@ const styles = StyleSheet.create({
 });
 
 export default DatePickerField;
+
+// export const DatePickerField: React.FC<DatePickerProps> = ({
+//   label,
+//   value,
+//   onChange,
+//   editable,
+//   icon: Icon,
+//   required = true,
+//   locked,
+// }) => {
+//   const [showPicker, setShowPicker] = useState(false);
+//   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+//     value
+//       ? value instanceof Date
+//         ? value
+//         : new Date(value as string)
+//       : undefined,
+//   );
+
+//   useEffect(() => {
+//     if (value) {
+//       setSelectedDate(
+//         value instanceof Date ? value : new Date(value as string),
+//       );
+//     }
+//   }, [value]);
+
+//   const display = selectedDate
+//     ? `${String(selectedDate.getDate()).padStart(2, "0")}/${String(
+//         selectedDate.getMonth() + 1,
+//       ).padStart(2, "0")}/${selectedDate.getFullYear()}`
+//     : "";
+
+//   const handleChange = (_e: any, date?: Date) => {
+//     if (date) {
+//       setSelectedDate(date);
+//       onChange(date);
+//     }
+//     if (Platform.OS === "android") setShowPicker(false);
+//   };
+
+//   // 🔹 Helper to render the shared Label Row
+//   const renderLabel = () => (
+//     <View style={styles.labelRow}>
+//       <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+//         {Icon && (
+//           <Icon
+//             size={16}
+//             color={theme.colors.primary}
+//             style={{ marginRight: 6 }}
+//           />
+//         )}
+//         <Text style={styles.label}>
+//           {label}
+//           {required && <Text style={{ color: "red" }}> *</Text>}
+//         </Text>
+//       </View>
+//       {/* 🔒 Verified Badge */}
+//       {locked && (
+//         <View style={styles.lockBadge}>
+//           <Lock size={12} color={theme.colors.warning} />
+//           <Text style={styles.lockText}>Verified</Text>
+//         </View>
+//       )}
+//     </View>
+//   );
+
+//   return (
+//     <View style={{ marginBottom: 12 }}>
+//       {locked ? (
+//         // 🔹 Locked State: Static View (No ripple/tap)
+//         <View>
+//           {renderLabel()}
+//           <View style={[styles.input, styles.lockedContainer]}>
+//             <Text style={styles.lockedValueText}>{display || "-"}</Text>
+//           </View>
+//           {/* Only show warning during edit sessions */}
+//           {editable && (
+//             <Text style={[styles.lockNote, { color: theme.colors.warning }]}>
+//               This field is locked for security
+//             </Text>
+//           )}
+//         </View>
+//       ) : (
+//         // 🔹 Editable State: Touchable
+//         <TouchableOpacity
+//           onPress={() => editable && setShowPicker(true)}
+//           disabled={!editable}
+//           activeOpacity={0.7}
+//         >
+//           {renderLabel()}
+//           <View
+//             style={[styles.input, !editable && { backgroundColor: "#fafafa" }]}
+//           >
+//             <Text
+//               style={{
+//                 color: display ? theme.colors.text : theme.colors.textLight,
+//               }}
+//             >
+//               {display || "DD/MM/YYYY"}
+//             </Text>
+//           </View>
+//         </TouchableOpacity>
+//       )}
+
+//       {showPicker && (
+//         <DateTimePicker
+//           value={selectedDate || new Date(1990, 0, 1)}
+//           mode="date"
+//           display={Platform.OS === "ios" ? "spinner" : "calendar"}
+//           maximumDate={new Date()}
+//           onChange={handleChange}
+//         />
+//       )}
+//     </View>
+//   );
+// };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import {
   TouchableOpacity,
   ActivityIndicator,
@@ -27,10 +27,9 @@ import {
 import {
   requiredFields,
   immutableFields,
+  isFieldLocked,
 } from "../components/form/profileValidation";
 import { isDeepEqual } from "../../../utils/deepEqual";
-import { useIsDirty } from "../hooks/useIsDirty";
-import { useConfirmedImmutable } from "../hooks/useConfirmedImmutable";
 import { useUnsavedChangesPrompt } from "../hooks/useUnsavedChangesPrompt";
 
 export default function EditProfileScreen() {
@@ -40,68 +39,49 @@ export default function EditProfileScreen() {
     profile?.uid,
     profile?.gender,
   );
-
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ useForm with FormProvider
   const methods = useForm<Profile>({
     defaultValues: profile,
   });
+  const {
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = methods;
 
-  // ✅ small reusable hooks
-  const formData = methods.watch();
-  const isDirty = useIsDirty(formData, profile);
-  const confirmedImmutable = useConfirmedImmutable(profile, requiredFields);
   useUnsavedChangesPrompt(navigation, isDirty);
-
-  const { handleSubmit, reset } = methods;
-
-  // ✅ reset when profile changes
-  useEffect(() => {
-    if (profile) {
-      reset(profile);
-    }
-  }, [profile, reset]);
-
-  const SKIP_FIELDS: (keyof Profile)[] = ["photos", "createdAt", "updatedAt"];
 
   const handleSave = handleSubmit(async (data) => {
     if (!isEditing) return setIsEditing(true);
-
     setLoading(true);
-
     try {
-      // 🔹 Build only changed fields
       const changedFields: Partial<Profile> = {};
-      (Object.keys(data) as (keyof Profile)[]).forEach((key) => {
-        const newVal = data[key];
-        const oldVal = profile?.[key];
+      const SKIP_FIELDS: (keyof Profile)[] = [
+        "photos",
+        "createdAt",
+        "updatedAt",
+        "thumbnail",
+      ];
 
+      (Object.keys(data) as (keyof Profile)[]).forEach((key) => {
         if (SKIP_FIELDS.includes(key as keyof Profile)) return false;
 
-        if (!isDeepEqual(newVal, oldVal)) {
-          changedFields[key] = newVal!;
+        if (
+          !isDeepEqual(data[key], profile?.[key]) &&
+          !isFieldLocked(profile, key)
+        ) {
+          (changedFields as any)[key] = data[key]!;
         }
       });
 
-      // 🔹 Filter out immutable fields if they were already confirmed
-      immutableFields.forEach((k) => {
-        if (confirmedImmutable.includes(k)) {
-          delete changedFields[k];
-        }
-      });
-
-      // 🔹 If no changes, abort
-      if (Object.keys(changedFields).length === 0) {
-        Alert.alert("No Changes", "You have not made any editable changes.");
-        setIsEditing(false);
-        setLoading(false);
-        return;
+      if (Object.keys(changedFields).length > 0) {
+        await updateProfile(changedFields);
+        reset(data);
       }
 
-      await updateProfile(changedFields);
-
+      setIsEditing(false);
       if (Platform.OS === "android") {
         ToastAndroid.show("Profile updated", ToastAndroid.SHORT);
       } else {
@@ -110,8 +90,6 @@ export default function EditProfileScreen() {
           "Your profile has been successfully updated.",
         );
       }
-      // Lock fields again
-      setIsEditing(false);
     } catch (err: any) {
       console.error("Profile update failed:", err);
       Alert.alert("Error", err?.message || "Something went wrong.");
@@ -159,7 +137,16 @@ export default function EditProfileScreen() {
       // 🔹 Right Side: Edit/Save Toggle
       headerRight: () => (
         <TouchableOpacity
-          onPress={isEditing ? handleSave : () => setIsEditing(true)}
+          onPress={() => {
+            if (!isEditing) {
+              setIsEditing(true);
+            } else if (!isDirty) {
+              // 🔹 BUG FIX: If nothing changed, just lock it back, don't trigger save logic
+              setIsEditing(false);
+            } else {
+              handleSave();
+            }
+          }}
           style={{
             backgroundColor: "rgba(255,255,255,0.12)",
             padding: theme.spacing.sm,
@@ -171,35 +158,26 @@ export default function EditProfileScreen() {
           {loading ? (
             <ActivityIndicator size="small" color={theme.colors.primary} />
           ) : isEditing ? (
-            <Save size={24} color={theme.colors.background} />
+            <Save
+              size={24}
+              color={isDirty ? theme.colors.primary : theme.colors.background}
+            />
           ) : (
             <Edit3 size={24} color={theme.colors.background} />
           )}
         </TouchableOpacity>
       ),
       headerTitle: isEditing ? "Editing Profile" : "My Profile",
-      // 🔹 Ensure the back button is hidden if we show the X button
-      headerBackVisible: !isEditing,
     });
-  }, [navigation, isEditing, loading, profile]);
+  }, [navigation, isEditing, loading, isDirty]);
 
   return (
     <FormProvider {...methods}>
       <ScrollView style={{ flex: 1 }}>
-        {/* <LinearGradient
-          colors={[theme.colors.primary + "20", "transparent"]}
-          style={{
-            height: 100,
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-          }}
-        /> */}
         <View
           style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
         >
-          <PersonalInfoSection editable={isEditing} />
+          <PersonalInfoSection editable={isEditing} profile={profile} />
           <AboutMeSection editable={isEditing} />
           <ContactDetailsSection editable={isEditing} />
           <EducationCareerSection editable={isEditing} />
