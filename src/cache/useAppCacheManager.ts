@@ -1,13 +1,24 @@
 import { useEffect } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import { runPruneOnceDaily } from "./cachePrune";
-
 
 export function useAppCacheManager() {
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // 1. Run on initial mount (with a slight delay to prioritize UI rendering)
+    const initialTimer = setTimeout(() => {
       runPruneOnceDaily();
-    }, 60 * 1000);
+    }, 5000);
 
-    return () => clearTimeout(timer);
+    // 2. Run whenever the app comes back from the background
+    const subscription = AppState.addEventListener("change", (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        runPruneOnceDaily();
+      }
+    });
+
+    return () => {
+      clearTimeout(initialTimer);
+      subscription.remove();
+    };
   }, []);
 }

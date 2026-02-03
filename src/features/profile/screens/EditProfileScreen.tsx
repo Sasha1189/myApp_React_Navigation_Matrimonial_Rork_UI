@@ -13,7 +13,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { theme } from "../../../constants/theme";
 import { useTabNavigation } from "../../../navigation/hooks";
 import { useProfileContext } from "../../../context/ProfileContext";
-import { useUpdateProfileData } from "../hooks/useProfile";
+import { useUpdateProfileData } from "../hooks/useProfileData";
 import { Profile } from "../../../types/profile";
 import {
   PersonalInfoSection,

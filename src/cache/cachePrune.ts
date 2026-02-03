@@ -1,5 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { QueryClient } from "@tanstack/react-query";
+import { storage, queryClient } from "./cacheConfig";
 
 interface PruneConfig {
   prefix: string[];
@@ -22,26 +21,25 @@ export const pruneConfigs = [
 export async function runPruneOnceDaily() {
   try {
     const now = Date.now();
-    const lastPruneStr = await AsyncStorage.getItem("lastPruneAt");
-    const lastPrune = lastPruneStr ? parseInt(lastPruneStr, 10) : 0;
+    const lastPrune = storage.getNumber("lastPruneAt") || 0;
 
-    if (now - lastPrune < 24 * 60 * 60 * 1000) {
-      return;
-    }
+    if (now - lastPrune < 24 * 60 * 60 * 1000) return;
 
     pruneConfigs.forEach(({ prefix, max }) => {
       const queries = queryClient.getQueryCache().findAll({ queryKey: prefix });
 
       queries.forEach((q) => {
         const data = q.state.data as any[];
-        if (Array.isArray(data) && data.length > max) {
-          const pruned = data.slice(-max); // keep newest N
+
+         if (Array.isArray(data) && data.length > max) {
+          const pruned = data.slice(-max); 
           queryClient.setQueryData(q.queryKey, pruned);
         }
       });
     });
 
-    await AsyncStorage.setItem("lastPruneAt", now.toString());
+    storage.set("lastPruneAt", now);
+    console.log("✅ Cache pruned successfully");
     
   } catch (err) {
     console.error("❌ Prune error:", err);

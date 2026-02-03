@@ -6,7 +6,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
 import { Profile, Photo } from "../../../types/profile";
 import { useAuth } from "../../../context/AuthContext";
-import { useUpdateProfileData } from "../hooks/useProfile";
+import { useUpdateProfileData } from "./useProfileData";
 
 const MAX_PHOTOS = 4;
 

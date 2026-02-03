@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useUpdateProfileData } from "../../profile/hooks/useProfile";
+import { useUpdateProfileData } from "../../profile/hooks/useProfileData";
 import { Profile, BlockedUserDetail } from "../../../types/profile";
 
 export const useBlockUnblockUser = (

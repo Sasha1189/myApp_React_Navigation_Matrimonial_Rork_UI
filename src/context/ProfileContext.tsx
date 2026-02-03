@@ -1,15 +1,9 @@
-import React, {
-  createContext,
-  useContext,
-  useMemo,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { useAuth } from "./AuthContext";
 import {
   useProfileData,
   useUpdateProfileData,
-} from "../features/profile/hooks/useProfile";
+} from "../features/profile/hooks/useProfileData";
 import { Profile } from "../types/profile";
 import {
   ProfileContextType,
@@ -17,38 +11,35 @@ import {
 } from "./types/profileContext";
 import { getDefaultProfile } from "src/utils/getDefaultProfile";
 import LoadingScreen from "src/components/LoadingScreen";
-// 🔹 Create context
+
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export function ProfileProvider({ children }: ProfileProviderProps) {
   const { user, authLoading } = useAuth();
   const uid = user?.uid;
-  const gender = (user?.displayName as Profile["gender"]) || "Other";
+  const initialGender = (user?.displayName as Profile["gender"]) || "Other";
 
-  const { data, isLoading, error, refetch } = useProfileData(uid, gender);
-  const [profile, setProfile] = useState<Profile>(getDefaultProfile());
-
-  // ✅ Sync query data into context once it changes
-  useEffect(() => {
-    if (data) {
-      setProfile(data);
-    }
-  }, [data]);
-
-  const value: ProfileContextType = useMemo(
-    () => ({
-      profile,
-      error,
-      loading: isLoading,
-      reloadProfile: refetch,
-    }),
-    [profile, isLoading, refetch],
+  const { data, isLoading, error, refetch } = useProfileData(
+    uid,
+    initialGender,
   );
 
+  const value: ProfileContextType = useMemo(() => {
+    const profile = data || {
+      ...getDefaultProfile(),
+      uid: uid,
+      gender: initialGender,
+    };
+    return {
+      profile,
+      error: error ? (error as Error).message : null,
+      loading: isLoading && !data, // Only "Loading" if we have no cached data at all
+      reloadProfile: refetch,
+    };
+  }, [data, isLoading, error, refetch, uid, initialGender]);
+
   // 4. Handle Loading States
-  if (authLoading || isLoading) {
-    return <LoadingScreen />;
-  }
+  if (authLoading) return <LoadingScreen />;
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
