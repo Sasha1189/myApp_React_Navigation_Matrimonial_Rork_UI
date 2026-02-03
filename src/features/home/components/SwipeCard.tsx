@@ -21,17 +21,15 @@ const SWIPE_OUT_DURATION = 250;
 
 interface SwipeCardProps {
   profile: Profile;
-  onSwipeLeft: () => void;
-  onSwipeRight: () => void;
   onSwipeUp: () => void;
+  onSwipeDown: () => void;
   isTopCard: boolean;
 }
 
 export const SwipeCard: React.FC<SwipeCardProps> = ({
   profile,
-  onSwipeLeft,
-  onSwipeRight,
   onSwipeUp,
+  onSwipeDown,
   isTopCard,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -52,18 +50,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   const rotateCard = position.x.interpolate({
     inputRange: [-screenWidth / 2, 0, screenWidth / 2],
     outputRange: ["-10deg", "0deg", "10deg"],
-    extrapolate: "clamp",
-  });
-
-  const likeOpacity = position.x.interpolate({
-    inputRange: [0, screenWidth / 4],
-    outputRange: [0, 1],
-    extrapolate: "clamp",
-  });
-
-  const nopeOpacity = position.x.interpolate({
-    inputRange: [-screenWidth / 4, 0],
-    outputRange: [1, 0],
     extrapolate: "clamp",
   });
 
@@ -94,12 +80,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       },
 
       onPanResponderRelease: (_, gesture) => {
-        if (gesture.dx > SWIPE_THRESHOLD) {
-          forceSwipe("right");
-        } else if (gesture.dx < -SWIPE_THRESHOLD) {
-          forceSwipe("left");
-        } else if (gesture.dy < -SWIPE_THRESHOLD) {
+        if (gesture.dy < -SWIPE_THRESHOLD) {
           forceSwipe("up");
+        } else if (gesture.dy > SWIPE_THRESHOLD) {
+          forceSwipe("Down");
         } else {
           resetPosition();
         }
@@ -111,44 +95,27 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     }),
   ).current;
 
-  // const panResponder = useRef(
-  //   PanResponder.create({
-  //     onStartShouldSetPanResponder: () => isTopCard,
-  //     onMoveShouldSetPanResponder: () => isTopCard,
-  //     onPanResponderMove: (_, gesture) => {
-  //       position.setValue({ x: gesture.dx, y: gesture.dy });
-  //     },
-  //     onPanResponderRelease: (_, gesture) => {
-  //       if (gesture.dx > SWIPE_THRESHOLD) {
-  //         forceSwipe("right");
-  //       } else if (gesture.dx < -SWIPE_THRESHOLD) {
-  //         forceSwipe("left");
-  //       } else if (gesture.dy < -SWIPE_THRESHOLD) {
-  //         forceSwipe("up");
-  //       } else {
-  //         resetPosition();
-  //       }
-  //     },
-  //   })
-  // ).current;
-
-  const forceSwipe = (direction: "left" | "right" | "up") => {
+  const forceSwipe = (direction: "left" | "right" | "up" | "Down") => {
     const x =
       direction === "right"
         ? screenWidth
         : direction === "left"
           ? -screenWidth
           : 0;
-    const y = direction === "up" ? -screenHeight : 0;
+    const y =
+      direction === "Down"
+        ? screenWidth
+        : direction === "up"
+          ? -screenHeight
+          : 0;
 
     Animated.timing(position, {
       toValue: { x, y },
       duration: SWIPE_OUT_DURATION,
       useNativeDriver: false,
     }).start(() => {
-      if (direction === "left") onSwipeLeft();
-      else if (direction === "right") onSwipeRight();
-      else if (direction === "up") onSwipeUp();
+      if (direction === "up") onSwipeUp();
+      if (direction === "Down") onSwipeDown();
       position.setValue({ x: 0, y: 0 });
     });
   };
@@ -241,23 +208,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 
       <Animated.View
         pointerEvents="none"
-        style={[styles.likeLabel, { opacity: likeOpacity }]}
-      >
-        <Text style={styles.likeLabelText}>LIKE</Text>
-      </Animated.View>
-
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.nopeLabel, { opacity: nopeOpacity }]}
-      >
-        <Text style={styles.nopeLabelText}>NOPE</Text>
-      </Animated.View>
-
-      <Animated.View
-        pointerEvents="none"
         style={[styles.superLikeLabel, { opacity: superLikeOpacity }]}
       >
-        <Text style={styles.superLikeLabelText}>SUPER LIKE</Text>
+        <Text style={styles.superLikeLabelText}>NEXT</Text>
       </Animated.View>
 
       <Animated.View pointerEvents="none" style={styles.imageIndicators}>

@@ -99,6 +99,10 @@ export default function EditProfileScreen() {
   });
 
   const handleDiscard = () => {
+    if (!isDirty) {
+      setIsEditing(false);
+      return;
+    }
     Alert.alert(
       "Discard Changes",
       "Are you sure you want to revert all changes?",
@@ -118,13 +122,12 @@ export default function EditProfileScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      // 🔹 Left Side: Discard Button (Only when editing)
       headerLeft: () =>
         isEditing ? (
           <TouchableOpacity
             onPress={handleDiscard}
             style={{
-              backgroundColor: "rgba(255,255,255,0.12)",
+              backgroundColor: "rgba(151, 4, 4, 0.12)",
               padding: theme.spacing.sm,
               borderRadius: theme.borderRadius.md,
               marginHorizontal: theme.spacing.lg,
@@ -158,10 +161,7 @@ export default function EditProfileScreen() {
           {loading ? (
             <ActivityIndicator size="small" color={theme.colors.primary} />
           ) : isEditing ? (
-            <Save
-              size={24}
-              color={isDirty ? theme.colors.primary : theme.colors.background}
-            />
+            <Save size={24} color={theme.colors.background} />
           ) : (
             <Edit3 size={24} color={theme.colors.background} />
           )}

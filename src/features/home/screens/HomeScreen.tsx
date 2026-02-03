@@ -78,24 +78,25 @@ export default function HomeScreen() {
     );
 
   // handle swipe actions
-  const handleSwipe = (id: string, action: "like" | "pass" | "superlike") => {
+  const handleSwipe = (id: string, action: "swipeUp" | "swipeDown") => {
+    if (action === "swipeUp") {
+      //next profile
+    }
+    if (action === "swipeDown") {
+      //previous profile
+    }
+  };
+
+  const handleTap = (
+    id: string,
+    action: "like" | "message" | "profileDetails",
+  ) => {
     if (action === "like") {
       toggleLikeMutation.mutate({ profileId: id, uid });
     }
-    if (action === "pass")
+    if (action === "message") navigation.navigate("Chat", { otherUserId: id });
+    if (action === "profileDetails")
       navigation.navigate("Details", { profile: currentProfile });
-    if (action === "superlike")
-      navigation.navigate("Chat", { otherUserId: id });
-
-    // prefetch when few left...use later
-    // if (
-    //   profiles.length < 5 &&
-    //   hasNextPage &&
-    //   !isFetchingNextPage &&
-    //   !feedDone
-    // ) {
-    //   fetchNextPage();
-    // }
   };
 
   const currentProfile = profiles[0];
@@ -116,37 +117,28 @@ export default function HomeScreen() {
             <SwipeCard
               profile={currentProfile}
               isTopCard={true}
-              onSwipeLeft={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "pass")
-              }
-              onSwipeRight={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "like")
-              }
               onSwipeUp={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "superlike")
+                currentProfile && handleSwipe(currentProfile.uid, "swipeUp")
+              }
+              onSwipeDown={() =>
+                currentProfile && handleSwipe(currentProfile.uid, "swipeDown")
               }
             />
           )}
         </View>
         <View style={styles.actionsContainer}>
           <View style={styles.rightActions}>
-            {/* Disable action buttons when a swipe mutation is in-flight to avoid duplicates */}
             <ActionButtons
-              onPass={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "pass")
-              }
               onLike={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "like")
+                currentProfile && handleTap(currentProfile.uid, "like")
               }
-              onSuperLike={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "superlike")
+              onMessage={() =>
+                currentProfile && handleTap(currentProfile.uid, "message")
               }
-              disabled={
-                !currentProfile || toggleLikeMutation.status === "pending"
-                // passMutation.status === "pending" ||
-                // superLikeMutation.status === "pending"
+              onProfileDetails={() =>
+                currentProfile &&
+                handleTap(currentProfile.uid, "profileDetails")
               }
-              liked={currentProfile?.liked}
             />
           </View>
         </View>

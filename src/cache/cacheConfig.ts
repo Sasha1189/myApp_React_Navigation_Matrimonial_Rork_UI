@@ -1,9 +1,10 @@
-// import { createMMKV, MMKV } from "react-native-mmkv";
-import { MMKV } from "react-native-mmkv";
+import { createMMKV } from 'react-native-mmkv';
 import { QueryClient } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 
-export const storage = new MMKV();
+export const storage = createMMKV({
+  id: "myAppCache",
+});
 
 const clientStorage = {
   setItem: (key: string, value: string) => {
@@ -15,7 +16,7 @@ const clientStorage = {
     return Promise.resolve(value ?? null);
   },
   removeItem: (key: string) => {
-    storage.delete(key);
+    storage.remove(key);
     return Promise.resolve();
   },
 };
@@ -33,7 +34,6 @@ export const queryClient = new QueryClient({
 
 export const asyncStoragePersister = createAsyncStoragePersister({
   storage: clientStorage,
-  // MMKV handles large strings better, but we still throttle to avoid UI stutters
   throttleTime: 1000, 
 });
 
@@ -45,6 +45,6 @@ export const persistOptions = {
 
 // 🔹 Clear persisted cache on logout
 export async function clearCacheOnLogout() {
-  storage.clearAll(); // Nukes everything including non-query-client data
+  storage.clearAll(); 
   queryClient.clear();
 }

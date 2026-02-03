@@ -28,8 +28,7 @@ import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
 
 import { getAuth, signOut } from "@react-native-firebase/auth";
 import { useAuth } from "src/context/AuthContext";
-import { storage } from "../../../utils/storage";
-import { clearCacheOnLogout } from "src/cache/cacheConfig";
+import { clearCacheOnLogout, storage } from "src/cache/cacheConfig";
 
 export default function SettingsScreen() {
   const { setUser } = useAuth();
@@ -117,16 +116,11 @@ export default function SettingsScreen() {
           text: "Log Out",
           onPress: async () => {
             try {
-              // 3. CHANGE: Use native signOut() method
-              // In the native SDK, signOut is a method on the auth instance
               const auth = getAuth();
               await signOut(auth);
 
-              // 4. Clear local cache
-              await storage.clear();
               await clearCacheOnLogout();
 
-              // 5. Update context
               setUser(null);
             } catch (error: any) {
               console.error("Logout error:", error);

@@ -23,6 +23,3 @@ export async function fetchFeed(page: number, limit: number, uid: string, gender
 
   return await api.get<FeedResponse>("/feed/browse-all", params);
 }
-
-
-/////////////////

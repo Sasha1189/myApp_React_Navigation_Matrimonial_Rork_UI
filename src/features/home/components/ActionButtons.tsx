@@ -7,49 +7,31 @@ import {
   MessageCircleMore,
   MessageSquareMore,
   ArrowDownAZ,
-  ArrowDownIcon
+  ArrowDownIcon,
 } from "lucide-react-native";
 import React from "react";
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface ActionButtonsProps {
-  onPass: () => void;
   onLike: () => void;
-  onSuperLike: () => void;
+  onMessage: () => void;
+  onProfileDetails: () => void;
   disabled?: boolean;
   liked?: boolean;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
-  onPass,
   onLike,
-  onSuperLike,
+  onMessage,
+  onProfileDetails,
   disabled = false,
   liked = false,
 }) => {
-  const scaleValue = new Animated.Value(1);
-
-  const animatePress = (callback: () => void) => {
-    Animated.sequence([
-      Animated.timing(scaleValue, {
-        toValue: 0.9,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleValue, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    callback();
-  };
-
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => animatePress(onLike)}
+        onPress={() => onLike()}
         disabled={disabled}
         testID="like-button"
       >
@@ -60,22 +42,22 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             size={40}
           /> // ✅ filled
         ) : (
-          <ThumbsUp color={theme.colors.success} size={40} /> // ⭕ outline
+          <ThumbsUp color={theme.colors.success} size={40} />
         )}
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => animatePress(onSuperLike)}
+        onPress={() => onMessage()}
         disabled={disabled}
-        testID="superlike-button"
+        testID="message-button"
       >
         <MessageCircleMore size={40} color={theme.colors.primary} />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => animatePress(onPass)}
+        onPress={() => onProfileDetails()}
         disabled={disabled}
-        testID="pass-button"
+        testID="profile-details-button"
       >
         <ArrowDownAZ size={40} color={theme.colors.danger} />
       </TouchableOpacity>
@@ -92,6 +74,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
   },
   button: {
+    opacity: 0.5,
     justifyContent: "center",
     alignItems: "center",
   },
