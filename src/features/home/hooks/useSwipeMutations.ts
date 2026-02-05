@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toggleLike, likesSentIdsList, likesReceivedIdsList,likesSentProfilesList,likesReceivedProfilesList } from "../apis/likeApis";
 import { Profile } from "../../../types/profile";
+import { LikePendingStore } from "../../../cache/likePendingStore";
+import { fetchAllLikedIds, syncLikesBatch  } from "../apis/likeApis";
 
-export function useToggleLike() {
+
+export function useToggleLikee() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -28,7 +31,7 @@ export function useToggleLike() {
 
       // loop over all feed queries
       for (const [key, oldData] of previousFeeds) {
-        queryClient.setQueryData(key, (old: any) => {
+        queryClient.setQueryData(key as any, (old: any) => {
           if (!old) return old;
           return {
             ...old,
@@ -68,7 +71,7 @@ export function useToggleLike() {
     onError: (_err, _vars, context) => {
       if (context?.previousFeeds) {
         for (const [key, data] of context.previousFeeds) {
-          queryClient.setQueryData(key, data);
+          queryClient.setQueryData(key as any, data);
         }
       }
       if (context?.previousSent) {
@@ -118,3 +121,62 @@ export function useLikesReceivedProfilesList(uid: string) {
     gcTime: 1000 * 60 * 60 * 24 * 7,
   });
 }
+///////gemini code
+
+
+export function useLikesSentIds(uid: string) {
+  return useQuery({
+    queryKey: ["likesSentIds", uid],
+    queryFn: () => fetchAllLikedIds(uid),
+    staleTime: Infinity, // Keep in MMKV forever
+    gcTime: 1000 * 60 * 60 * 24 * 30, // 30 days
+  });
+}
+
+export function useToggleLike(uid: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (targetId: string) => {
+      // 1. Update MMKV Pending Queue (for unmount/startup sync)
+      LikePendingStore.toggle(uid, targetId);
+      return targetId;
+    },
+    onMutate: async (targetId) => {
+      await queryClient.cancelQueries({ queryKey: ["likesSentIds", uid] });
+      await queryClient.cancelQueries({ queryKey: ["feed", uid] });
+
+      // 🔹 1. Update the "Heart" List Cache
+      queryClient.setQueryData(["likesSentIds", uid], (old: string[] = []) => {
+        return old.includes(targetId) ? old.filter(id => id !== targetId) : [...old, targetId];
+      });
+
+      // 🔹 2. Update ALL Feeds (Default, Latest, etc)
+      queryClient.setQueriesData({ queryKey: ["feed", uid] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            profiles: page.profiles.map((p: any) => 
+              p.uid === targetId ? { ...p, liked: !p.liked } : p
+            )
+          }))
+        };
+      });
+    }
+  });
+}
+
+export const performSync = async (uid: string) => {
+    const pending = LikePendingStore.get(uid);
+    if (pending.length === 0) return;
+
+    try {
+      await syncLikesBatch(uid, pending);
+      LikePendingStore.clear(uid, pending);
+      console.log("✅ Likes synced with Firestore");
+    } catch (e) {
+      console.warn("Retrying sync next time...");
+    }
+};

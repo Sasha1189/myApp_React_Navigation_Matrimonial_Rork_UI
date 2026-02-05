@@ -14,12 +14,16 @@ import { Briefcase, GraduationCap } from "lucide-react-native";
 import { theme } from "../../../constants/theme";
 import { Profile } from "../../../types/profile";
 import { formatDOB } from "../../../utils/dateUtils";
+import { ActionButtons } from "../components/ActionButtons";
+import { useFeedActions } from "../hooks/useFeedActions";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const SWIPE_THRESHOLD = screenWidth * 0.25;
+const SWIPE_THRESHOLD = screenHeight * 0.25;
+
 const SWIPE_OUT_DURATION = 250;
 
 interface SwipeCardProps {
+  uid: string;
   profile: Profile;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
@@ -27,6 +31,7 @@ interface SwipeCardProps {
 }
 
 export const SwipeCard: React.FC<SwipeCardProps> = ({
+  uid,
   profile,
   onSwipeUp,
   onSwipeDown,
@@ -45,14 +50,12 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   };
 
   // -------------------- animated values --------------------
-
   const position = useRef(new Animated.ValueXY()).current;
   const rotateCard = position.x.interpolate({
     inputRange: [-screenWidth / 2, 0, screenWidth / 2],
     outputRange: ["-10deg", "0deg", "10deg"],
     extrapolate: "clamp",
   });
-
   const superLikeOpacity = position.y.interpolate({
     inputRange: [-screenHeight / 6, 0],
     outputRange: [1, 0],
@@ -94,29 +97,26 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       },
     }),
   ).current;
-
+  const useNativeDriver = true;
   const forceSwipe = (direction: "left" | "right" | "up" | "Down") => {
-    const x =
-      direction === "right"
-        ? screenWidth
-        : direction === "left"
-          ? -screenWidth
-          : 0;
-    const y =
-      direction === "Down"
-        ? screenWidth
-        : direction === "up"
-          ? -screenHeight
-          : 0;
+    // const x =
+    //   direction === "right"
+    //     ? screenWidth
+    //     : direction === "left"
+    //       ? -screenWidth
+    //       : 0;
+    const y = direction === "Down" ? screenHeight : -screenHeight;
 
     Animated.timing(position, {
-      toValue: { x, y },
+      toValue: { x: 0, y },
       duration: SWIPE_OUT_DURATION,
-      useNativeDriver: false,
+      useNativeDriver,
     }).start(() => {
+      // if (direction === "up") onSwipeUp();
+      // if (direction === "Down") onSwipeDown();
+      // position.setValue({ x: 0, y: 0 });
       if (direction === "up") onSwipeUp();
-      if (direction === "Down") onSwipeDown();
-      position.setValue({ x: 0, y: 0 });
+      else onSwipeDown();
     });
   };
 
@@ -134,6 +134,8 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       { rotate: rotateCard },
     ],
   };
+
+  const { handleTap } = useFeedActions(uid, profile);
 
   return (
     <Animated.View
@@ -227,6 +229,15 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 
       <View style={styles.premiumBanner}>
         <Text style={styles.premiumText}>Premium</Text>
+      </View>
+      <View style={styles.actionsContainer}>
+        <View style={styles.rightActions}>
+          <ActionButtons
+            onLike={() => handleTap("like")}
+            onMessage={() => handleTap("message")}
+            onProfileDetails={() => handleTap("profileDetails")}
+          />
+        </View>
       </View>
     </Animated.View>
   );
@@ -399,5 +410,15 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: theme.fontSize.xs,
     fontWeight: "bold",
+  },
+  actionsContainer: {
+    position: "absolute",
+    right: theme.spacing.lg,
+    bottom: theme.spacing.lg,
+    alignItems: "flex-end",
+    elevation: 10,
+  },
+  rightActions: {
+    alignItems: "center",
   },
 });

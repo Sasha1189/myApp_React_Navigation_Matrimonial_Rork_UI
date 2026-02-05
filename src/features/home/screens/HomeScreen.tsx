@@ -1,25 +1,26 @@
-import { ActionButtons } from "../components/ActionButtons";
-import { SwipeCard } from "../components/SwipeCard";
+import React, { useState, useEffect } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  View,
+  StatusBar,
+  Alert,
+} from "react-native";
+import GenderModal from "../components/GenderModal";
 import { useTheme } from "../../../theme/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState, useEffect } from "react";
-import { ActivityIndicator, StyleSheet, View, StatusBar } from "react-native";
 import { useAuth } from "../../../context/AuthContext";
-import { useToggleLike } from "../hooks/useSwipeMutations";
 import { useAppNavigation } from "../../../navigation/hooks";
-import GenderModal from "../components/GenderModal";
-import { useFlattenedFeed } from "../hooks/useFlattenedFeed";
-import { FeedLoading, FeedError, FeedEmpty } from "../components/FeedStates";
+import { performSync } from "../hooks/useSwipeMutations";
+import { useActiveFeed } from "../hooks/useActiveFeed";
+import { SwipeCard } from "../components/SwipeCard";
+import { FeedStatusContent } from "../components/FeedStatusContent";
 
 export default function HomeScreen() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const { user } = useAuth();
   const uid = user?.uid as string;
-  const gender =
-    user?.displayName === "Male" || user?.displayName === "Female"
-      ? user.displayName
-      : undefined;
   const [showModal, setShowModal] = useState<boolean>(false);
   const navigation = useAppNavigation();
 
@@ -42,64 +43,36 @@ export default function HomeScreen() {
     return unsubscribe;
   }, [navigation, showModal]);
 
-  // fetch feed
-  const {
-    profiles,
-    feedDone,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    resetFeed,
-  } = useFlattenedFeed(uid, gender);
+  useEffect(() => {
+    const syncLikes = async () => {
+      try {
+        await performSync(uid);
+      } catch (error) {
+        console.warn("Error syncing likes on HomeScreen mount:", error);
+      }
+    };
+    syncLikes();
+  }, [uid]);
 
-  // mutations
-  const toggleLikeMutation = useToggleLike();
+  const feed = useActiveFeed(user?.uid!, user?.displayName!);
 
-  // UI states
-  if (isLoading) return <FeedLoading />;
-  if (isError) return <FeedError error={error} onRetry={refetch} />;
-  if (profiles?.length === 0 && feedDone)
-    return (
-      <FeedEmpty
-        feedDone={feedDone}
-        onReload={() => {
-          if (feedDone) {
-            resetFeed();
-            // navigation.navigate("Profile");
-          } else if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
-      />
-    );
+  console.log("Current Index:", feed.currentIndex);
 
-  // handle swipe actions
-  const handleSwipe = (id: string, action: "swipeUp" | "swipeDown") => {
-    if (action === "swipeUp") {
-      //next profile
-    }
-    if (action === "swipeDown") {
-      //previous profile
+  console.log("Profiles length :", feed.profiles.length);
+
+  const currentProfile = feed.profiles[feed.currentIndex];
+
+  const handleSwipe = (direction: "up" | "down") => {
+    if (direction === "up") {
+      if (feed.currentIndex < feed.profiles.length - 1) {
+        feed.updateIndex(feed.currentIndex + 1);
+      }
+    } else {
+      if (feed.currentIndex > 0) {
+        feed.updateIndex(feed.currentIndex - 1);
+      }
     }
   };
-
-  const handleTap = (
-    id: string,
-    action: "like" | "message" | "profileDetails",
-  ) => {
-    if (action === "like") {
-      toggleLikeMutation.mutate({ profileId: id, uid });
-    }
-    if (action === "message") navigation.navigate("Chat", { otherUserId: id });
-    if (action === "profileDetails")
-      navigation.navigate("Details", { profile: currentProfile });
-  };
-
-  const currentProfile = profiles[0];
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.primary }}>
       <StatusBar
@@ -113,38 +86,19 @@ export default function HomeScreen() {
       >
         <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
         <View style={styles.cardsContainer}>
-          {currentProfile && (
+          {currentProfile ? (
             <SwipeCard
+              uid={uid}
+              key={currentProfile.uid}
               profile={currentProfile}
+              onSwipeUp={() => handleSwipe("up")}
+              onSwipeDown={() => handleSwipe("down")}
               isTopCard={true}
-              onSwipeUp={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "swipeUp")
-              }
-              onSwipeDown={() =>
-                currentProfile && handleSwipe(currentProfile.uid, "swipeDown")
-              }
             />
+          ) : (
+            <FeedStatusContent feed={feed} />
           )}
         </View>
-        <View style={styles.actionsContainer}>
-          <View style={styles.rightActions}>
-            <ActionButtons
-              onLike={() =>
-                currentProfile && handleTap(currentProfile.uid, "like")
-              }
-              onMessage={() =>
-                currentProfile && handleTap(currentProfile.uid, "message")
-              }
-              onProfileDetails={() =>
-                currentProfile &&
-                handleTap(currentProfile.uid, "profileDetails")
-              }
-            />
-          </View>
-        </View>
-        {isFetchingNextPage && (
-          <ActivityIndicator size="small" color={theme.colors.primary} />
-        )}
       </LinearGradient>
     </View>
   );

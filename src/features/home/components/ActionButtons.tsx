@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
   },
   button: {
-    opacity: 0.5,
+    // opacity: 0.5,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -35,3 +35,15 @@ export async function likesSentProfilesList() {
 export async function likesReceivedProfilesList() {
   return api.get<Profile[]>(`/profiles/likes-receivedProfiles`);
 }
+
+//gemini code
+export async function syncLikesBatch(uid: string, likedIds: string[]) {
+  if (likedIds.length === 0) return;
+  // This endpoint should use db.batch() on the backend
+  return await api.post('/likes/batch-sync', { uid, likedIds });
+}
+
+export async function fetchAllLikedIds(uid: string): Promise<string[]> {
+  const res = await api.get<{likedIds: string[]}>(`/likes/sent-ids`, { uid });
+  return res.likedIds || [];
+}
