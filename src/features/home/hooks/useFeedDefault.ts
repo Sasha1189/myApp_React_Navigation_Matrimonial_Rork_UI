@@ -31,7 +31,7 @@ export function useFeedDefault(uid: string, gender: string): FeedHookResult {
   const [currentIndex, _setIndex] = useState(() => storage.getNumber(indexKey) || 0);
 
   const updateIndex = useCallback((val: number) => {
-    const next = Math.max(0, val);
+     const next = Math.max(0, Math.min(val, profiles.length)); 
     _setIndex(next);
     storage.set(indexKey, next);
     // Auto-fetch logic: Fetch next page when 5 cards from the end

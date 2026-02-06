@@ -18,6 +18,7 @@ import {
   ArrowDownAZ,
 } from "lucide-react-native";
 import { theme } from "../../../constants/theme";
+import type { FeedHookResult } from "../type/type";
 
 interface FeedStatusCardProps {
   type: "loading" | "error" | "empty";
@@ -107,6 +108,25 @@ export function FeedStatusCard({
         </View>
       </View>
     </Animated.View>
+  );
+}
+
+export function FeedPreviousProfiles({
+  currentIndex,
+  updateIndex,
+}: {
+  currentIndex: number;
+  updateIndex: (index: number) => void;
+}) {
+  return (
+    <TouchableOpacity
+      onPress={() => updateIndex(currentIndex - 1)}
+      style={styles.actionsContainer}
+    >
+      <Text style={{ color: theme.colors.primary }}>
+        View Previous Profiles
+      </Text>
+    </TouchableOpacity>
   );
 }
 

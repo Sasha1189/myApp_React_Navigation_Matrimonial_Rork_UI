@@ -56,23 +56,27 @@ export default function HomeScreen() {
 
   const feed = useActiveFeed(user?.uid!, user?.displayName!);
 
-  console.log("Current Index:", feed.currentIndex);
+  console.log("Current Indexx:", feed.currentIndex);
 
-  console.log("Profiles length :", feed.profiles.length);
+  console.log("Profiles lengthx :", feed.profiles.length);
 
-  const currentProfile = feed.profiles[feed.currentIndex];
+  const { profiles, currentIndex, updateIndex } = feed;
+  const currentProfile = profiles[currentIndex];
 
   const handleSwipe = (direction: "up" | "down") => {
     if (direction === "up") {
-      if (feed.currentIndex < feed.profiles.length - 1) {
-        feed.updateIndex(feed.currentIndex + 1);
+      // Allow index to reach profiles.length (this triggers the 'Empty/Start Over' card)
+      if (currentIndex < profiles.length) {
+        updateIndex(currentIndex + 1);
       }
     } else {
-      if (feed.currentIndex > 0) {
-        feed.updateIndex(feed.currentIndex - 1);
+      // Standard back logic
+      if (currentIndex > 0) {
+        updateIndex(currentIndex - 1);
       }
     }
   };
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.primary }}>
       <StatusBar
@@ -86,7 +90,7 @@ export default function HomeScreen() {
       >
         <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
         <View style={styles.cardsContainer}>
-          {currentProfile ? (
+          {currentProfile && currentIndex < profiles.length ? (
             <SwipeCard
               uid={uid}
               key={currentProfile.uid}
