@@ -18,6 +18,7 @@ interface ActionButtonsProps {
   onProfileDetails: () => void;
   disabled?: boolean;
   liked?: boolean;
+  color?: boolean;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -26,6 +27,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onProfileDetails,
   disabled = false,
   liked = false,
+  color = true,
 }) => {
   return (
     <View style={styles.container}>
@@ -42,7 +44,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             size={40}
           /> // ✅ filled
         ) : (
-          <ThumbsUp color={theme.colors.success} size={40} />
+          <ThumbsUp
+            color={color ? theme.colors.success : theme.colors.textLight}
+            size={40}
+          />
         )}
       </TouchableOpacity>
       <TouchableOpacity
@@ -51,7 +56,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="message-button"
       >
-        <MessageCircleMore size={40} color={theme.colors.primary} />
+        <MessageCircleMore
+          size={40}
+          color={color ? theme.colors.primary : theme.colors.textLight}
+        />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
@@ -59,7 +67,10 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         disabled={disabled}
         testID="profile-details-button"
       >
-        <ArrowDownAZ size={40} color={theme.colors.danger} />
+        <ArrowDownAZ
+          size={40}
+          color={color ? theme.colors.danger : theme.colors.textLight}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -74,7 +85,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
   },
   button: {
-    // opacity: 0.5,
     justifyContent: "center",
     alignItems: "center",
   },

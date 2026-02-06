@@ -63,18 +63,6 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
     );
   }
 
-  // if (!currentProfile) {
-  //   return (
-  //     <FeedStatusCard
-  //       type="empty"
-  //       title={"No profiles found"}
-  //       message={"Try adjusting your filters to see more people."}
-  //       onAction={resetFeed}
-  //       actionText={"Reload Feed"}
-  //     />
-  //   );
-  // }
-
   // 4. Default Fallback (should not be reached if boundaries are tight)
   return (
     <FeedStatusCard

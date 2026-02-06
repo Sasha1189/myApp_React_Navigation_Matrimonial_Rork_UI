@@ -6,7 +6,7 @@ export function useFeedActions(uid: string, profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const toggleLikeMutation = useToggleLike(uid);
 
-  const handleTap = (action: "like" | "message" | "profileDetails") => {
+  const handleActionBtnTap = (action: "like" | "message" | "profileDetails") => {
     if (!profile) return;
     const profileId = profile.uid;
 
@@ -21,5 +21,5 @@ export function useFeedActions(uid: string, profile: Profile | undefined) {
     }
   };
 
-  return { handleTap };
+  return { handleActionBtnTap };
 }

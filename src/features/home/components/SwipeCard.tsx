@@ -25,6 +25,7 @@ const SWIPE_OUT_DURATION = 250;
 interface SwipeCardProps {
   uid: string;
   profile: Profile;
+  currentIndex: number;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
   isTopCard: boolean;
@@ -33,6 +34,7 @@ interface SwipeCardProps {
 export const SwipeCard: React.FC<SwipeCardProps> = ({
   uid,
   profile,
+  currentIndex,
   onSwipeUp,
   onSwipeDown,
   isTopCard,
@@ -85,8 +87,8 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       onPanResponderRelease: (_, gesture) => {
         if (gesture.dy < -SWIPE_THRESHOLD) {
           forceSwipe("up");
-        } else if (gesture.dy > SWIPE_THRESHOLD) {
-          forceSwipe("Down");
+        } else if (gesture.dy > SWIPE_THRESHOLD && currentIndex > 0) {
+          forceSwipe("down");
         } else {
           resetPosition();
         }
@@ -97,24 +99,17 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       },
     }),
   ).current;
+
   const useNativeDriver = true;
-  const forceSwipe = (direction: "left" | "right" | "up" | "Down") => {
-    // const x =
-    //   direction === "right"
-    //     ? screenWidth
-    //     : direction === "left"
-    //       ? -screenWidth
-    //       : 0;
-    const y = direction === "Down" ? screenHeight : -screenHeight;
+
+  const forceSwipe = (direction: "left" | "right" | "up" | "down") => {
+    const y = direction === "down" ? screenHeight : -screenHeight;
 
     Animated.timing(position, {
       toValue: { x: 0, y },
       duration: SWIPE_OUT_DURATION,
       useNativeDriver,
     }).start(() => {
-      // if (direction === "up") onSwipeUp();
-      // if (direction === "Down") onSwipeDown();
-      // position.setValue({ x: 0, y: 0 });
       if (direction === "up") onSwipeUp();
       else onSwipeDown();
     });
@@ -135,7 +130,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     ],
   };
 
-  const { handleTap } = useFeedActions(uid, profile);
+  const { handleActionBtnTap } = useFeedActions(uid, profile);
 
   return (
     <Animated.View
@@ -233,9 +228,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       <View style={styles.actionsContainer}>
         <View style={styles.rightActions}>
           <ActionButtons
-            onLike={() => handleTap("like")}
-            onMessage={() => handleTap("message")}
-            onProfileDetails={() => handleTap("profileDetails")}
+            onLike={() => handleActionBtnTap("like")}
+            onMessage={() => handleActionBtnTap("message")}
+            onProfileDetails={() => handleActionBtnTap("profileDetails")}
           />
         </View>
       </View>

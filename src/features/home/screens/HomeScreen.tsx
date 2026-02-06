@@ -65,14 +65,17 @@ export default function HomeScreen() {
 
   const handleSwipe = (direction: "up" | "down") => {
     if (direction === "up") {
-      // Allow index to reach profiles.length (this triggers the 'Empty/Start Over' card)
+      // Allows index to reach profiles.length to show the "Start Over" card
       if (currentIndex < profiles.length) {
-        updateIndex(currentIndex + 1);
+        feed.updateIndex(currentIndex + 1);
       }
-    } else {
-      // Standard back logic
+    } else if (direction === "down") {
+      // 🔹 Case 1 Fix: Block index -1. Only decrement if we're past the first card.
       if (currentIndex > 0) {
-        updateIndex(currentIndex - 1);
+        feed.updateIndex(currentIndex - 1);
+      } else {
+        // 🔹 Re-trigger the card's local reset animation to prevent a blank state
+        console.log("Already at first card, resetting position.");
       }
     }
   };
@@ -95,6 +98,7 @@ export default function HomeScreen() {
               uid={uid}
               key={currentProfile.uid}
               profile={currentProfile}
+              currentIndex={currentIndex}
               onSwipeUp={() => handleSwipe("up")}
               onSwipeDown={() => handleSwipe("down")}
               isTopCard={true}
