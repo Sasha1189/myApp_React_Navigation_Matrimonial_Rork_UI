@@ -26,7 +26,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onMessage,
   onProfileDetails,
   disabled = false,
-  liked = false,
+  liked,
   color = true,
 }) => {
   return (

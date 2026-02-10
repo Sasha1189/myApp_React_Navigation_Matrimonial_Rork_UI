@@ -11,7 +11,7 @@ import { useTheme } from "../../../theme/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../../../context/AuthContext";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { performSync } from "../hooks/useSwipeMutations";
+import { useLikeSync } from "../hooks/useLikeSync";
 import { useActiveFeed } from "../hooks/useActiveFeed";
 import { SwipeCard } from "../components/SwipeCard";
 import { FeedStatusContent } from "../components/FeedStatusContent";
@@ -43,16 +43,7 @@ export default function HomeScreen() {
     return unsubscribe;
   }, [navigation, showModal]);
 
-  useEffect(() => {
-    const syncLikes = async () => {
-      try {
-        await performSync(uid);
-      } catch (error) {
-        console.warn("Error syncing likes on HomeScreen mount:", error);
-      }
-    };
-    syncLikes();
-  }, [uid]);
+  const { forceSync } = useLikeSync(uid);
 
   const feed = useActiveFeed(user?.uid!, user?.displayName!);
 
@@ -67,12 +58,12 @@ export default function HomeScreen() {
     if (direction === "up") {
       // Allows index to reach profiles.length to show the "Start Over" card
       if (currentIndex < profiles.length) {
-        feed.updateIndex(currentIndex + 1);
+        updateIndex(currentIndex + 1);
       }
     } else if (direction === "down") {
       // 🔹 Case 1 Fix: Block index -1. Only decrement if we're past the first card.
       if (currentIndex > 0) {
-        feed.updateIndex(currentIndex - 1);
+        updateIndex(currentIndex - 1);
       } else {
         // 🔹 Re-trigger the card's local reset animation to prevent a blank state
         console.log("Already at first card, resetting position.");

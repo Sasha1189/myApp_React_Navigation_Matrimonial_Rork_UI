@@ -3,47 +3,32 @@ import { api } from "../../../services/api";
 
 interface FeedResponse {
   profiles: Profile[];
-  lastCursor?: {lastCreatedAt: string, lastId: string};
+  lastCursor?: { lastCreatedAt: string; lastId: string };
   done?: boolean;
 }
 
-// ✅ Send profileId + uid in body
-
-export async function toggleLike(profileId: string, uid: string) {
-  const api_res =api.post(`/profiles/toggle-like`, { profileId, uid });
-  return api_res;
-}
-
-//Fetch like sent Ids
-export async function likesSentIdsList(uid: string) {
-  return api.get<{ likedIds: string[] }>(`/profiles/likes-sentIds`);
-}
-
-//Fetch like received Ids
-export async function likesReceivedIdsList(uid: string) {
-  return api.get<{ receivedIds: string[] }>(`/profiles/likes-receivedIds`);
-}
-
-//// Fetch full profiles for message screen
-
-//Fetch like sent profiles
-export async function likesSentProfilesList() {
-  return api.get<Profile[]>(`/profiles/likes-sentProfiles`);
-}
-
-//Fetch like received profiles
-export async function likesReceivedProfilesList() {
-  return api.get<Profile[]>(`/profiles/likes-receivedProfiles`);
-}
-
-//gemini code
+//gemini code.....................
 export async function syncLikesBatch(uid: string, likedIds: string[]) {
+  console.log("📤 Sending Batch Sync to:", "/likes/batch-sync", "Body:", {
+    uid,
+    likedIds,
+  });
+
   if (likedIds.length === 0) return;
   // This endpoint should use db.batch() on the backend
-  return await api.post('/likes/batch-sync', { uid, likedIds });
+  // return await api.post("/likes/batch-sync", { uid, likedIds });
+  try {
+    const res: any = await api.post("/likes/batch-sync", { uid, likedIds });
+    console.log("✅ API Response:", res.data); // See if backend returns 200
+    return res;
+  } catch (error: any) {
+    // 🔹 This will tell you if it's a 404, 500, or Network Error
+    console.error("❌ API Sync Error:", error.response?.data || error.message);
+    throw error;
+  }
 }
 
 export async function fetchAllLikedIds(uid: string): Promise<string[]> {
-  const res = await api.get<{likedIds: string[]}>(`/likes/sent-ids`, { uid });
+  const res = await api.get<{ likedIds: string[] }>(`/likes/sent-ids`, { uid });
   return res.likedIds || [];
 }

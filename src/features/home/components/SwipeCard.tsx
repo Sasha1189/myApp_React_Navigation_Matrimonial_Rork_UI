@@ -231,6 +231,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             onLike={() => handleActionBtnTap("like")}
             onMessage={() => handleActionBtnTap("message")}
             onProfileDetails={() => handleActionBtnTap("profileDetails")}
+            liked={profile?.liked}
           />
         </View>
       </View>
