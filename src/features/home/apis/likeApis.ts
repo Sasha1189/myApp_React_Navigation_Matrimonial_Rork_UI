@@ -32,3 +32,24 @@ export async function fetchAllLikedIds(uid: string): Promise<string[]> {
   const res = await api.get<{ likedIds: string[] }>(`/likes/sent-ids`, { uid });
   return res.likedIds || [];
 }
+
+export async function fetchLikedProfilesList(uid: string): Promise<Profile[]> {
+  const res = await api.get<{ profiles: Profile[] }>("/likes/sent-profiles", {
+    uid,
+  });
+  return res.profiles || [];
+}
+
+export async function fetchReceivedLikesSince(
+  uid: string,
+  since: string,
+): Promise<Profile[]> {
+  const res = await api.get<{ profiles: Profile[] }>(
+    `/likes/received-profiles`,
+    {
+      uid,
+      since, // 🔹 Pass the timestamp to the backend
+    },
+  );
+  return res.profiles || [];
+}

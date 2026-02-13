@@ -26,6 +26,7 @@ export default function MessagesScreen() {
 
   useRecentChatPartners(uid);
   const { data, loading } = useMessagesData(activeTab, uid);
+  console.log("Messages Data:", data); // Debug log for messages data
 
   return (
     <LinearGradient
