@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { theme } from "../../../constants/theme";
 import { UserBannerItem } from "../type/messages";
 import { useAppNavigation } from "../../../navigation/hooks";
+import { useAuth } from "src/context/AuthContext";
 
 interface UserBannerProps {
   item: UserBannerItem;
@@ -12,11 +13,21 @@ interface UserBannerProps {
 
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const navigation = useAppNavigation();
+  const { user } = useAuth(); // 🔹 Ensure you have the current user's UID
+  const currentUserId = user?.uid;
 
   const handlePress = () => {
     if (type === "chats") {
       // 🔹 Navigate to chat room using otherUserId
-      navigation.navigate("Chat", { otherUserId: item.id });
+      navigation.navigate("Chat", {
+        roomId: item.id,
+        uid: currentUserId || "", // Pass current user's UID for chat room logic
+        otherUser: {
+          uid: item.otherUserId || "", // ✅ Found!
+          fullName: item.name,
+          thumbnail: item.photo || undefined,
+        },
+      });
     } else {
       // 🔹 Navigate to user profile
       if (item.profile) {

@@ -1,172 +1,106 @@
-import React, { useState, useEffect, useRef } from "react";
+//gemini code...
+
+import React, { useRef, useCallback } from "react";
 import {
   View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
   FlatList,
   KeyboardAvoidingView,
-  ActivityIndicator,
   Platform,
+  ActivityIndicator,
+  StyleSheet,
 } from "react-native";
-import { Send } from "lucide-react-native";
-import { useRoute } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../../../context/AuthContext";
-import { theme } from "../../../constants/theme";
-import { useChatRoom, type ChatMessage } from "../hooks/useChatRoom";
+import { useTheme } from "../../../theme/useTheme";
+import { useChatRoom } from "../hooks/useChatRoom";
+import { useSendMessage } from "../hooks/useSendMessage";
+import { useTypingStatus } from "../hooks/useTypingStatus";
+import { useReadReceipts } from "../hooks/useReadReceipts";
+import { MessageBubble } from "../components/MessageBubble";
+import { ChatInput } from "../components/ChatInput";
+import { TypingIndicator } from "../components/TypingIndicator";
 
-export default function ChatScreen() {
-  const route = useRoute();
-  const { otherUserId, otherUserName } = route.params as {
-    otherUserId: string;
-    otherUserName: string;
-  };
-
-  const { user } = useAuth();
-  const currentUserId = user?.uid;
-
-  const { messages, hasMore, loadingMore, loadMoreMessages, sendMessage } =
-    useChatRoom(currentUserId, otherUserId);
-
-  const [inputText, setInputText] = useState("");
+export default function ChatScreen({ route }: { route: any }) {
+  const theme = useTheme();
+  const { roomId, otherUser = {}, uid } = route.params || {};
   const flatListRef = useRef<FlatList>(null);
 
-  // Auto scroll
-  useEffect(() => {
-    if (messages.length > 0) {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }
-  }, [messages]);
+  // 🔹 1. DATA HOOKS (Aggressive & Offline-First)
+  const { messages, isLoading } = useChatRoom(roomId);
+  const { mutate: sendMessage } = useSendMessage(roomId, uid);
+  const { isOtherTyping, setTyping } = useTypingStatus(
+    roomId,
+    uid,
+    otherUser.uid,
+  );
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.isSent ? styles.sentMessage : styles.receivedMessage,
-      ]}
-    >
-      <Text
-        style={[
-          styles.messageText,
-          item.isSent ? styles.sentMessageText : styles.receivedMessageText,
-        ]}
-      >
-        {item.text}
-      </Text>
-    </View>
+  // 🔹 2. AUTOMATIC SYNC (Double Ticks)
+  useReadReceipts(roomId, uid);
+
+  // 🔹 3. ACTIONS
+  const handleSend = useCallback(
+    (text: string) => {
+      if (text.trim().length === 0) return;
+      sendMessage(text);
+      setTyping(false);
+
+      // Inverted list: index 0 is the bottom (newest)
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    },
+    [sendMessage, setTyping],
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <KeyboardAvoidingView
-        style={styles.kebcontainer}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        style={{ flex: 1 }}
       >
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
-          contentContainerStyle={styles.messagesContainer}
-          // onEndReached={loadMoreMessages}
-          // onEndReachedThreshold={0.2}
-          ListFooterComponent={
-            loadingMore ? <ActivityIndicator size="small" /> : null
-          }
-        />
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Type a message..."
-            placeholderTextColor={theme.colors.textLight}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={() => {
-              sendMessage(inputText);
-              setInputText("");
-            }}
-            disabled={!inputText.trim()}
-          >
-            <Send
-              size={20}
-              color={
-                inputText.trim() ? theme.colors.primary : theme.colors.textLight
+        <View style={styles.inner}>
+          {isLoading && messages.length === 0 ? (
+            <View style={styles.center}>
+              <ActivityIndicator color={theme.colors.primary} />
+            </View>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              // 🔹 Inverted logic: Reverse the array for bottom-to-top rendering
+              data={[...messages].reverse()}
+              inverted
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <MessageBubble message={item} isMe={item.s === uid} />
+              )}
+              contentContainerStyle={styles.listContent}
+              // Important: This allows the list to shrink when keyboard opens
+              maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+              // 🔹 Performance optimizations for long chats
+              initialNumToRender={15}
+              maxToRenderPerBatch={10}
+              windowSize={10}
+              removeClippedSubviews={true}
+              ListHeaderComponent={
+                isOtherTyping ? (
+                  <TypingIndicator name={otherUser.fullName} />
+                ) : null
               }
             />
-          </TouchableOpacity>
+          )}
+
+          <ChatInput
+            onSend={handleSend}
+            onType={(isTyping) => setTyping(isTyping)}
+          />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  kebcontainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  messagesContainer: {
-    padding: theme.spacing.md,
-  },
-  messageContainer: {
-    maxWidth: "75%",
-    marginVertical: theme.spacing.xs,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-  },
-  sentMessage: {
-    alignSelf: "flex-end",
-    backgroundColor: theme.colors.primary,
-  },
-  receivedMessage: {
-    alignSelf: "flex-start",
-    backgroundColor: "white",
-  },
-  messageText: {
-    fontSize: theme.fontSize.md,
-  },
-  sentMessageText: {
-    color: "white",
-  },
-  receivedMessageText: {
-    color: theme.colors.text,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    padding: theme.spacing.md,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.lg,
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    marginRight: theme.spacing.sm,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  container: { flex: 1 },
+  inner: { flex: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  listContent: { paddingHorizontal: 10, paddingVertical: 20 },
 });

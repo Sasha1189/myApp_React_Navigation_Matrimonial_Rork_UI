@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -15,7 +15,6 @@ import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
 import { UserBanner } from "../components/UserBanner";
 import { useMessagesData } from "../hooks/useMessagesData";
-import { useRecentChatPartners } from "../hooks/useRecentChatPartners";
 
 export default function MessagesScreen() {
   const { user } = useAuth();
@@ -24,9 +23,7 @@ export default function MessagesScreen() {
     "chats",
   );
 
-  useRecentChatPartners(uid);
   const { data, loading } = useMessagesData(activeTab, uid);
-  console.log("Messages Data:", data); // Debug log for messages data
 
   return (
     <LinearGradient

@@ -1,123 +1,63 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { io, Socket } from "socket.io-client";
+// gemini code...
 
-export interface ChatMessage {
-  id: string;
-  text: string;
-  senderId: string;
-  isSent: boolean;
-  timestamp: Date;
-}
+import { useEffect, useState } from "react";
+import {
+  rtdb,
+  ref,
+  query,
+  limitToLast,
+  onChildAdded,
+} from "../../../config/firebase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Message } from "../type/messages";
 
-export function useChatRoom(
-  currentUserId: string | undefined,
-  otherUserId: string
-) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+export function useChatRoom(roomId: string) {
+  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const queryKey = ["chat", roomId];
 
-  const socketRef = useRef<Socket | null>(null);
-
-  const sortMessages = (msgs: ChatMessage[]) =>
-    msgs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  // 1. 🔹 Instant Load from MMKV (via TanStack Persistence)
+  const { data: messages = [] } = useQuery<Message[]>({
+    queryKey,
+    queryFn: () => [], // Logic is handled by the listener
+    staleTime: Infinity,
+    initialData: [],
+  });
 
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!roomId) return;
 
-     // 1. STRIP /api/v1: Get the base domain only
-    const API_URL = process.env.EXPO_PUBLIC_API_URL || "";
-    const SOCKET_URL = API_URL.replace("/api/v1", "");
+    const chatRef = query(ref(rtdb, `messages/${roomId}`), limitToLast(50));
 
-    const socket = io(SOCKET_URL, {
-      auth: { userId: currentUserId },
-    });
-    socketRef.current = socket;
+    const unsubscribe = onChildAdded(chatRef, (snapshot) => {
+      const newMessage = { id: snapshot.key!, ...snapshot.val() };
+      setIsLoading(false);
+      const queryKey = ["chat", roomId];
 
-    // ✅ backend expects `otherUserId`, not roomId
-    socket.emit("joinRoom", { otherUserId });
+      queryClient.setQueryData(queryKey, (old: Message[] = []) => {
+        if (old.some((m) => m.id === newMessage.id)) return old;
 
-    // Initial history
-    socket.on("chatHistory", (msgs) => {
-      const formatted = msgs.map((m: any) => ({
-        id: m._id,
-        text: m.text,
-        senderId: m.senderId,
-        isSent: m.senderId === currentUserId,
-        timestamp: new Date(m.createdAt),
-      }));
-      setMessages(sortMessages(formatted));
-      setCursor(formatted.length > 0 ? formatted[0].id : null);
-      setHasMore(formatted.length >= 20);
-    });
+        const pendingMsg = old.find(
+          (m) =>
+            m.pending === true &&
+            m.s === newMessage.s &&
+            m.t === newMessage.t &&
+            Math.abs(m.ts - newMessage.ts) < 10000,
+        );
 
-    // New messages
-    socket.on("chatMessage", (m) => {
-      setMessages((prev) =>
-        sortMessages([
-          ...prev,
-          {
-            id: m._id,
-            text: m.text,
-            senderId: m.senderId,
-            isSent: m.senderId === currentUserId,
-            timestamp: new Date(m.createdAt),
-          },
-        ])
-      );
+        let updated;
+        if (pendingMsg) {
+          updated = old.map((m) => (m.id === pendingMsg.id ? newMessage : m));
+        } else {
+          updated = [...old, newMessage];
+        }
+
+        return updated.sort((a, b) => a.ts - b.ts).slice(-100);
+      });
     });
 
-    // Pagination
-    socket.on("oldMessages", ({ messages: msgs, nextCursor }) => {
-      const formatted = msgs.map((m: any) => ({
-        id: m._id,
-        text: m.text,
-        senderId: m.senderId,
-        isSent: m.senderId === currentUserId,
-        timestamp: new Date(m.createdAt),
-      }));
-      setMessages((prev) => sortMessages([...prev, ...formatted]));
-      setCursor(nextCursor);
-      setHasMore(!!nextCursor);
-      setLoadingMore(false);
-    });
+    return () => unsubscribe();
+  }, [roomId, queryClient]);
 
-    return () => {
-      socket.off("chatHistory");
-      socket.off("chatMessage");
-      socket.off("oldMessages");
-      socket.disconnect();
-    };
-  }, [currentUserId, otherUserId]);
-
-  const loadMoreMessages = useCallback(() => {
-    if (!socketRef.current || loadingMore || !hasMore) return;
-    setLoadingMore(true);
-
-    // ✅ backend expects `otherUserId`
-    socketRef.current.emit("fetchOldMessages", {
-      otherUserId,
-      cursor,
-      limit: 20,
-    });
-  }, [otherUserId, cursor, loadingMore, hasMore]);
-
-  const sendMessage = (text: string) => {
-    if (!text.trim() || !socketRef.current) return;
-
-    // ✅ backend expects `sendMessage`
-    socketRef.current.emit("sendMessage", {
-      otherUserId,
-      text,
-    });
-  };
-
-  return {
-    messages,
-    hasMore,
-    loadingMore,
-    loadMoreMessages,
-    sendMessage,
-  };
+  return { messages, isLoading };
 }

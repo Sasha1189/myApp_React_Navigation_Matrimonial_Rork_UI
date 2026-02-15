@@ -19,11 +19,19 @@ export type AuthStackParamList = {
 
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
-  Chat: { otherUserId: string };
+  Chat: {
+    roomId: string;
+    otherUser: {
+      uid: string;
+      fullName: string;
+      thumbnail: string | undefined;
+    };
+    uid: string;
+  };
   Details:
-    | { profile: Profile }  // full profile preloaded
-    | { userId: string }               // only id, fetch if missing
-    | { self: true };                  // special case: show current user;
+    | { profile: Profile } // full profile preloaded
+    | { userId: string } // only id, fetch if missing
+    | { self: true }; // special case: show current user;
   EditProfile: undefined;
   ManagePhotos: undefined;
   Filter: undefined;

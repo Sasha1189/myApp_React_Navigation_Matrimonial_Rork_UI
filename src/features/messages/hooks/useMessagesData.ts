@@ -2,23 +2,19 @@ import {
   useLikesReceivedProfilesList,
   useLikesSentProfilesList,
 } from "./useLikesProfileData";
+import { useRecentChatPartners } from "./useRecentChatPartners";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { type RecentChatPartner, UserBannerItem } from "../type/messages";
+import { useQueryClient } from "@tanstack/react-query";
+import { UserBannerItem } from "../type/messages";
 import { formatDOB } from "../../../utils/dateUtils";
 
 export function useMessagesData(
   activeTab: "chats" | "sent" | "received",
   uid: string | undefined,
 ) {
-  const { data: chats = [], isLoading: chatsLoading } = useQuery<
-    RecentChatPartner[]
-  >({
-    queryKey: ["recentChatPartners"],
-    queryFn: () => [],
-    initialData: [],
-    enabled: false,
-  });
+  const queryClient = useQueryClient();
+  // 🔹 Chats
+  const { rooms: chats, isLoading: chatsLoading } = useRecentChatPartners(uid!);
 
   // 🔹 Likes
   const { data: sent = [], isLoading: sentLoading } = useLikesSentProfilesList(
@@ -30,20 +26,37 @@ export function useMessagesData(
 
   // 🔹 Normalize for UI
   const normalized: UserBannerItem[] = useMemo(() => {
+    // if (activeTab === "chats") {
+    //   return chats.map((c) => {
+    //     return {
+    //       id: c.otherUser?.id ?? c.roomId,
+    //       name: c.otherUser?.name ?? "Unknown User",
+    //       photo: c.otherUser?.thumbnail, // already string | null
+    //       age: c.otherUser?.dateOfBirth
+    //         ? formatDOB(c.otherUser.dateOfBirth, "age")
+    //         : undefined,
+    //       lastMessage: c.lastMessage,
+    //       lastMessageAt: c.lastMessageAt, // lastMessageAt
+    //       unreadCount: c.unreadCount,
+    //     };
+    //   });
+    // }
+
     if (activeTab === "chats") {
-      return chats.map((c) => {
-        return {
-          id: c.otherUser?.id ?? c.roomId,
-          name: c.otherUser?.name ?? "Unknown User",
-          photo: c.otherUser?.thumbnail, // already string | null
-          age: c.otherUser?.dateOfBirth
-            ? formatDOB(c.otherUser.dateOfBirth, "age")
-            : undefined,
-          lastMessage: c.lastMessage,
-          lastMessageAt: c.lastMessageAt, // lastMessageAt
-          unreadCount: c.unreadCount,
-        };
-      });
+      // 'chats' here are the rooms returned by useRecentChatPartners
+      return chats.map((room) => ({
+        id: room.roomId,
+        name: room.otherUser?.name || "User",
+        photo: room.otherUser?.photo || null,
+        age: undefined,
+        // These are already hydrated by your useRecentChatPartners logic
+        lastMessage: room.lastMessage,
+        lastMessageAt: room.lastMessageAt,
+        unreadCount: room.unreadCount,
+        roomId: room.roomId,
+        otherUser: room.otherUser,
+        otherUserId: room.otherUser?.uid,
+      }));
     }
     ////....//////
     const list = activeTab === "sent" ? sent : received;
