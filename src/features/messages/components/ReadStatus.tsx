@@ -1,7 +1,5 @@
 import React from "react";
-import { View } from "react-native";
 import { Check, CheckCheck, Clock } from "lucide-react-native";
-import { useTheme } from "../../../theme/useTheme";
 
 interface ReadStatusProps {
   isRead?: boolean; // From RTDB 'r' field
@@ -10,8 +8,6 @@ interface ReadStatusProps {
 
 export const ReadStatus = React.memo(
   ({ isRead, isPending }: ReadStatusProps) => {
-    const theme = useTheme();
-
     // 🔹 STATE 1: Message is still being sent (Offline or slow network)
     if (isPending) {
       return <Clock size={12} color="gray" />;
@@ -19,11 +15,8 @@ export const ReadStatus = React.memo(
 
     // 🔹 STATE 2: Message has been READ by the other user (Double Blue)
     if (isRead) {
-      return (
-        <View style={{ flexDirection: "row" }}>
-          <CheckCheck size={14} color={theme.colors.primary} />
-        </View>
-      );
+      // 🔹 Double Tick (Blue) - Use a specific WhatsApp Blue #34B7F1
+      return <CheckCheck size={14} color="#34B7F1" />;
     }
 
     // 🔹 STATE 3: Message is SENT but not yet read (Single/Double Gray)

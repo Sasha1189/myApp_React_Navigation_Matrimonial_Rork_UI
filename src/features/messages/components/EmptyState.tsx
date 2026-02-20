@@ -10,15 +10,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
     type === "chats"
       ? "No messages yet"
       : type === "sent"
-      ? "No likes sent yet"
-      : "No likes received yet";
+        ? "No likes sent yet"
+        : "No likes received yet";
 
   const subtitle =
     type === "chats"
-      ? "When you match with someone, you can message them here!"
+      ? "Start messaging them!"
       : type === "sent"
-      ? "Start liking profiles to see them here!"
-      : "When someone likes you, they will appear here!";
+        ? "Start liking profiles to see them here!"
+        : "When someone likes you, they will appear here!";
 
   return (
     <View style={styles.emptyState}>

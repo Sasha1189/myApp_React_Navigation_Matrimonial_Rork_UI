@@ -21,12 +21,12 @@ export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Chat: {
     roomId: string;
+    uid: string;
     otherUser: {
       uid: string;
-      fullName: string;
-      thumbnail: string | undefined;
+      name: string;
+      photo: string;
     };
-    uid: string;
   };
   Details:
     | { profile: Profile } // full profile preloaded

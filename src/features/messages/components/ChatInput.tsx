@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { SendHorizonal } from "lucide-react-native";
+import { debounce } from "lodash";
 import { useTheme } from "../../../theme/useTheme";
 
 interface ChatInputProps {
@@ -12,12 +13,20 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
   const [text, setText] = useState("");
   const theme = useTheme();
 
+  const stopTypingDebounced = useCallback(
+    // 🔹 This will be called after the debounce delay
+    debounce(() => onType(false), 2000), // 🔹 Wait 2 seconds before saying "Stopped"
+    [],
+  );
+
   const handleTextChange = (val: string) => {
     setText(val);
+
     if (val.length > 0) {
-      onType(true); // Triggers 'setTyping(true)' and 'stopTypingDebounced()'
+      onType(true); // 🔹 Signal "I am typing" immediately
+      stopTypingDebounced(); // 🔹 This will "overwrite" the previous stop timer
     } else {
-      onType(false);
+      onType(false); // 🔹 If they delete everything, stop immediately
     }
   };
 
@@ -25,6 +34,7 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
     if (text.trim()) {
       onSend(text.trim());
       setText("");
+      onType(false); // 🔹 Ensure status clears immediately on send
     }
   };
 
@@ -39,7 +49,7 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
         multiline
       />
       <TouchableOpacity onPress={handleSend} style={styles.sendBtn}>
-        <SendHorizonal size={24} color={theme.colors.text} />
+        <SendHorizonal size={24} color={theme.colors.textLight} />
       </TouchableOpacity>
     </View>
   );

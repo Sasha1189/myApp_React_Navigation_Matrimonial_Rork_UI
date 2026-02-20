@@ -1,20 +1,18 @@
 import React, { useState } from "react";
-import {
-  Text,
-  View,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  StatusBar,
-} from "react-native";
+import { Text, View, FlatList, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
 import { theme } from "../../../theme/index";
+import { useMessageInbox } from "../hooks/useMessageInbox";
+import {
+  useLikesReceivedProfilesList,
+  useLikesSentProfilesList,
+} from "../hooks/useLikesProfileData";
 import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
 import { UserBanner } from "../components/UserBanner";
-import { useMessagesData } from "../hooks/useMessagesData";
+import { ChatBanner } from "../components/ChatBanner";
 
 export default function MessagesScreen() {
   const { user } = useAuth();
@@ -23,7 +21,49 @@ export default function MessagesScreen() {
     "chats",
   );
 
-  const { data, loading } = useMessagesData(activeTab, uid);
+  const { banners: chatBanners, isLoading: chatsLoading } = useMessageInbox(
+    uid!,
+  );
+  console.log("Chat Bannersss:", chatBanners.length);
+  // Simple Data Selection
+  const currentData = activeTab === "chats" ? chatBanners : []; // Add likesSent/received logic back here later
+  const isLoading = activeTab === "chats" ? chatsLoading : false;
+
+  // const { data: sent = [], isLoading: sentLoading } = useLikesSentProfilesList(
+  //   uid!,
+  // );
+  // console.log("Sent Likes:", sent.length);
+
+  // const { data: received = [], isLoading: receivedLoading } =
+  //   useLikesReceivedProfilesList(uid!, gender as any);
+  // console.log("Received Likes:", received.length);
+
+  // 🔹 FIX 3: Memoize the data selection to prevent FlatList from flickering
+  // const { currentData, isLoading } = useMemo(() => {
+  //   let data: any[] = [];
+  //   let loading = false;
+
+  //   if (activeTab === "chats") {
+  //     data = chatBanners;
+  //     loading = chatsLoading;
+  //   }
+  //   // } else if (activeTab === "sent") {
+  //   //   data = sent;
+  //   //   loading = sentLoading;
+  //   // } else {
+  //   //   data = received;
+  //   //   loading = receivedLoading;
+  //   // }
+  //   return { currentData: data, isLoading: loading };
+  // }, [
+  //   activeTab,
+  //   chatBanners,
+  //   chatsLoading,
+  //   // sent,
+  //   // sentLoading,
+  //   // received,
+  //   // receivedLoading,
+  // ]);
 
   return (
     <LinearGradient
@@ -56,24 +96,29 @@ export default function MessagesScreen() {
 
       <Text style={styles.sectionTitle}>Recent Activity</Text>
 
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color={theme.colors.primary}
-          style={{ marginTop: 20 }}
-        />
-      ) : data?.length === 0 ? (
+      {isLoading && currentData.length === 0 ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <Text>Loading...</Text>
+        </View>
+      ) : currentData.length === 0 ? (
         <EmptyState type={activeTab} />
       ) : (
         <FlatList
-          data={data}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <UserBanner item={item} type={activeTab} />}
+          data={currentData as any[]}
+          keyExtractor={(item) =>
+            (item as any).roomId || (item as any).uid || (item as any).id
+          }
+          renderItem={({ item }) => {
+            if (activeTab === "chats") {
+              return uid ? <ChatBanner item={item} uid={uid} /> : null;
+            }
+            return <UserBanner item={item} type={activeTab} />;
+          }}
           contentContainerStyle={styles.activityContainer}
           showsVerticalScrollIndicator={false}
           initialNumToRender={10}
-          removeClippedSubviews
-          maxToRenderPerBatch={15}
+          removeClippedSubviews={true}
+          // maxToRenderPerBatch={10}
           windowSize={5}
         />
       )}

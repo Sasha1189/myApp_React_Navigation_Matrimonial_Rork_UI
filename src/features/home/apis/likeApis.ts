@@ -33,23 +33,30 @@ export async function fetchAllLikedIds(uid: string): Promise<string[]> {
   return res.likedIds || [];
 }
 
-export async function fetchLikedProfilesList(uid: string): Promise<Profile[]> {
-  const res = await api.get<{ profiles: Profile[] }>("/likes/sent-profiles", {
-    uid,
-  });
-  return res.profiles || [];
-}
+// export async function fetchLikedProfilesList(uid: string): Promise<Profile[]> {
+//   const res = await api.get<{ profiles: Profile[] }>("/likes/sent-profiles", {
+//     uid,
+//   });
+//   return res.profiles || [];
+// }
 
 export async function fetchReceivedLikesSince(
   uid: string,
-  since: string,
+  since: number,
+  gender: string,
 ): Promise<Profile[]> {
+  // 1. 🔹 Use 'params' key so the wrapper appends them as ?uid=...&since=...
   const res = await api.get<{ profiles: Profile[] }>(
     `/likes/received-profiles`,
     {
-      uid,
-      since, // 🔹 Pass the timestamp to the backend
+      params: {
+        uid,
+        since,
+        gender,
+      },
     },
   );
-  return res.profiles || [];
+
+  // 2. 🔹 Robust Fallback
+  return res.profiles ?? [];
 }

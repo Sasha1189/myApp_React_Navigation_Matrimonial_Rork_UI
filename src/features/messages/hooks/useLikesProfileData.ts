@@ -1,148 +1,140 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchLikedProfilesList,
-  fetchReceivedLikesSince,
-} from "../../home/apis/likeApis";
+import { fetchReceivedLikesSince } from "../../home/apis/likeApis";
 import { Profile } from "../../../types/profile";
+import { formatDOB } from "src/utils/dateUtils";
 
-// export function useLikesSentProfilesList(uid: string) {
-//   const queryClient = useQueryClient();
-
-//   return useQuery<Profile[]>({
-//     queryKey: ["likesSentProfiles", uid],
-//     queryFn: async () => {
-//       // 1. Get the list of IDs the user has liked (Master List)
-//       const likedIds =
-//         queryClient.getQueryData<string[]>(["likesSentIds", uid]) || [];
-//       if (likedIds.length === 0) return [];
-
-//       // 2. 🔹 BROWSE ALL FEED CACHES 🔹
-//       // Look into every query that starts with "feed" (default, latest, search, etc.)
-//       const allCachedFeeds = queryClient
-//         .getQueryCache()
-//         .findAll({ queryKey: ["feed", uid] });
-
-//       const foundInCache: Map<string, Profile> = new Map();
-
-//       allCachedFeeds.forEach((query) => {
-//         const data = query.state.data as any;
-//         if (data?.pages) {
-//           data.pages.forEach((page: any) => {
-//             page.profiles.forEach((p: Profile) => {
-//               if (likedIds.includes(p.uid)) {
-//                 foundInCache.set(p.uid, p);
-//               }
-//             });
-//           });
-//         }
-//       });
-
-//       // 3. Identify which IDs are MISSING from the local cache
-//       const missingIds = likedIds.filter((id) => !foundInCache.has(id));
-
-//       // 4. If everything is in cache, return it immediately (Zero Network!)
-//       if (missingIds.length === 0) {
-//         console.log("✅ All liked profiles found in local feed cache!");
-//         return likedIds.map((id) => foundInCache.get(id)!);
-//       }
-
-//       // 5. 🔹 FALLBACK: Fetch missing profiles from server
-//       console.log(
-//         `📡 Fetching ${missingIds.length} missing profiles from server...`,
-//       );
-//       const remoteProfiles = await fetchLikedProfilesList(uid);
-
-//       // Combine cached + remote, ensuring we return the latest-to-old order
-//       return remoteProfiles;
-//     },
-//     enabled: !!uid,
-//     staleTime: Infinity, // Trust the local logic
-//     gcTime: 1000 * 60 * 60 * 24 * 7,
-//   });
-// }
-
-// src/features/feed/hooks/useLikesSentProfilesList.ts
-
+// 1. The Strategy
+// Source: We take the likedSentIds (the array of UIDs you've liked).
+// Search: We scan all feed query pages currently on the disk/in memory.
+// Limit: We only pick the latest 20 matched profiles.
+// Skip: If a profile isn't in the disk cache, we simply don't show it. This keeps the UI 100% "free."
 export function useLikesSentProfilesList(uid: string) {
   const queryClient = useQueryClient();
-  console.log("useLikesSentProfilesList called with uid:", uid); // Debug log
-  // 1. Observe the "Official" Liked IDs (this makes the hook reactive)
-  const { data: likedIds = [] } = useQuery<string[]>({
-    queryKey: ["likesSentIds", uid],
-    enabled: !!uid,
-    staleTime: Infinity,
-  });
 
-  // 2. Observe the Feed Cache (optional, but ensures UI updates if Feed refreshes)
-  // We use useMemo to do the heavy lifting of cross-referencing caches
-  const matchedProfiles = useMemo(() => {
-    if (!likedIds.length) return [];
+  // 1. 🔹 Pull the "Official" Liked IDs (Already reactive)
+  const likedIds =
+    queryClient.getQueryData<string[]>(["likesSentIds", uid]) || [];
 
-    // Map all profiles in the feed cache into a Map for O(1) lookup
+  const matchedData = useMemo(() => {
+    if (likedIds.length === 0) return [];
+
+    // 2. 🔹 Map ALL profiles from ALL feed shards (Latest, Default, etc.)
     const profilesMap = new Map<string, Profile>();
-    const feedCache = queryClient
-      .getQueryCache()
-      .findAll({ queryKey: ["feed", uid] });
 
-    console.log("feedCache:", feedCache.length); // Debug log for feed cache
+    // Scan the cache for any query starting with "feed"
+    const feedQueries = queryClient.getQueryCache().findAll({
+      queryKey: ["feed"], // 🔹 Match any shard like ["feed", "Male"] or ["feed", "Latest"]
+      exact: false,
+    });
 
-    feedCache.forEach((q) => {
-      const pages = (q.state.data as any)?.pages || [];
-      pages.forEach((page: any) => {
+    feedQueries.forEach((query) => {
+      const data = query.state.data as any;
+      data?.pages?.forEach((page: any) => {
         page.profiles?.forEach((p: Profile) => {
           profilesMap.set(p.uid, p);
         });
       });
     });
 
-    // Match IDs to Profiles, Skip (filter) missing ones, and Reverse for Latest -> Oldest
+    const profilesInCache = Array.from(profilesMap.keys());
+    console.log("IDs currently in Feed Cache:", profilesInCache);
+
+    // 3. 🔹 Cross-reference IDs with Disk Cache
+    // We reverse likedIds to get the most recent likes first
+    const matched: Profile[] = [];
+    const reversedIds = [...likedIds].reverse();
+
+    for (const id of reversedIds) {
+      if (matched.length >= 20) break; // ⚡ STOP at 20 (Requirement)
+
+      const cachedProfile = profilesMap.get(id);
+      if (cachedProfile) {
+        matched.push(cachedProfile);
+      }
+    }
+
     return [...likedIds]
       .reverse()
-      .map((id) => profilesMap.get(id))
-      .filter((p): p is Profile => !!p);
-  }, [likedIds, uid, queryClient]); // Re-runs only if IDs change or UID changes
-  console.log("Matched Profiles from Cache:", matchedProfiles.length); // Debug log for matched profiles
-  // 3. Return in a format compatible with your existing useMessagesData
+      .slice(0, 20) // Keep only latest 20 as requested
+      .map((id) => {
+        const p = profilesMap.get(id);
+        if (!p) return null;
+
+        return {
+          id: p.uid,
+          name: p.fullName || "User", // Ensure correct key from Profile
+          photo: p.thumbnail || null, // Ensure correct key from Profile
+          age: p.dateOfBirth ? formatDOB(p.dateOfBirth) : "18+",
+          profile: p, // Pass full profile for Details navigation
+        };
+      })
+      .filter((item): item is any => !!item);
+  }, [likedIds, uid, queryClient]);
+
   return {
-    data: matchedProfiles,
+    data: matchedData,
     isLoading: false,
   };
 }
 
-export function useLikesReceivedProfilesList(uid: string) {
+// 1. The Strategy: "The Persistent Delta"
+// Sync Logic: We store the lastSyncTimestamp in the TanStack Cache metadata.
+// We only fetch likes created after our last successful check.
+// Storage Logic: We merge new results with the cache and prune to 50.
+// Persistence: We set staleTime: Infinity so it only triggers a "Check for new"
+// when we manually tell it to, or upon a fresh app session.
+
+export function useLikesReceivedProfilesList(uid: string, gender: string) {
   const queryClient = useQueryClient();
+  const queryKey = ["likesReceivedProfiles", uid, gender];
+  const syncKey = ["likesLastSync", uid];
 
   return useQuery<Profile[]>({
-    queryKey: ["likesReceivedProfiles", uid],
+    queryKey,
     queryFn: async () => {
-      // 1. Get existing cached profiles
-      const existing =
-        queryClient.getQueryData<Profile[]>(["likesReceivedProfiles", uid]) ||
-        [];
+      // 1. Get current cached profiles and last sync time from MMKV
+      const existing = queryClient.getQueryData<Profile[]>(queryKey) || [];
+      const lastSync = queryClient.getQueryData<number>(syncKey) || 0;
 
-      // 2. Calculate 24h ago timestamp
-      const twentyFourHoursAgo = new Date(
-        Date.now() - 24 * 60 * 60 * 1000,
-      ).toISOString();
-
-      // 3. Fetch only NEW likes received in the last 24h
-      const newProfiles = await fetchReceivedLikesSince(
-        uid,
-        twentyFourHoursAgo,
+      console.log(
+        `📡 Checking for new likes since: ${new Date(lastSync).toISOString()}`,
       );
 
-      // 4. Merge: New ones at the top, then existing (filter duplicates)
+      // 2. Fetch only LIKES created after our last sync
+      // If lastSync is 0, it will fetch the latest batch (initial load)
+      const newProfiles = await fetchReceivedLikesSince(uid, lastSync, gender);
+      // 3. Merge: Newest at the top
       const existingIds = new Set(newProfiles.map((p) => p.uid));
       const merged = [
         ...newProfiles,
         ...existing.filter((p) => !existingIds.has(p.uid)),
       ];
 
-      return merged;
+      // 4. 🔹 THE PRUNE: Keep latest 50 forever
+      const pruned = merged.slice(0, 50);
+
+      // 5. 🔹 UPDATE SYNC TIME: Use the 'ts' of the newest profile or current time
+      const nextSync =
+        newProfiles.length > 0
+          ? Math.max(
+              ...newProfiles.map((p) => {
+                // Handle both Firestore Timestamp objects and numeric ms
+                const ts = (p as any).createdAt;
+                return typeof ts === "number"
+                  ? ts
+                  : ts?.toMillis?.() || Date.now();
+              }),
+            )
+          : lastSync === 0
+            ? Date.now()
+            : lastSync;
+      queryClient.setQueryData(syncKey, nextSync);
+
+      return pruned;
     },
     enabled: !!uid,
-    staleTime: 1000 * 60 * 60 * 24, // 🔹 Check for new likes only once every 24h
-    gcTime: 1000 * 60 * 60 * 24 * 30, // Keep in MMKV for 30 days
+    staleTime: 1000 * 60 * 60, // Check for new likes at most once per hour
+    gcTime: Infinity, // 🔹 Keep in MMKV disk cache forever
   });
 }

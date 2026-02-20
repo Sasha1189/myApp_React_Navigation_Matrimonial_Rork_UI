@@ -1,0 +1,68 @@
+//.............Chat List inbox listner only on visiting screen.............
+1. The Strategy: Navigation Focus
+In React Native, screens often stay "mounted" in the navigation stack 
+even when they aren't visible. To ensure a listener only runs when the
+screen is in the foreground, you should:
+Start the listener when the screen gains focus.
+Stop (unsubscribe) the listener when the screen loses focus (blurs) or unmounts.
+
+2. Refactored Hook: useRecentChatPartners
+Use the useFocusEffect hook from @react-navigation/native to automatically handle this lifecycle.
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native'; // 🔹 Essential for screen-specific logic
+import database from '@react-native-firebase/database';
+
+export const useRecentChatPartners = (uid: string) => {
+  const [banners, setBanners] = useState<IInboxItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+
+      // 1. Create reference
+      const inboxRef = database().ref(`inbox/${uid}`).orderByChild('updatedAt');
+
+      // 2. Start Listener only when screen is VISITED
+      const onValueChange = inboxRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const list: IInboxItem[] = Object.values(data);
+          setBanners(list.sort((a, b) => b.updatedAt - a.updatedAt));
+        } else {
+          setBanners([]);
+        }
+        setIsLoading(false);
+      }, (error) => {
+        console.error("RTDB Listener Error:", error);
+        setIsLoading(false);
+      });
+
+      // 3. STOP Listener immediately when user leaves the screen
+      return () => {
+        inboxRef.off('value', onValueChange); // 🔹 Disconnects the background trigger
+      };
+    }, [uid])
+  );
+
+  return { banners, isLoading };
+};
+
+//.............keeping RTDB offline when app in background or off..........
+4. Pro-Tip: Global "Offline" Logic
+If you want to be even more aggressive and stop all Firebase background activity 
+when the app is minimized (put into the background by the OS), you can use the native goOffline() method:
+
+import database from '@react-native-firebase/database';
+import { AppState } from 'react-native';
+
+// In your root App.js
+AppState.addEventListener('change', (nextAppState) => {
+  if (nextAppState === 'background') {
+    database().goOffline(); // 🔹 Shut down all sockets
+  } else if (nextAppState === 'active') {
+    database().goOnline();  // 🔹 Reconnect when user returns
+  }
+});
+
+

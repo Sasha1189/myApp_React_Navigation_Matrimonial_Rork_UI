@@ -1,11 +1,13 @@
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
 import { useToggleLike } from "./useSwipeMutations";
-import { createChatRoom } from "../../messages/apis/chatApi";
+import { useProfileContext } from "src/context/ProfileContext";
 
 export function useFeedActions(uid: string, profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const toggleLikeMutation = useToggleLike(uid);
+
+  const { profile: myProfile } = useProfileContext();
 
   const handleActionBtnTap = async (
     action: "like" | "message" | "profileDetails",
@@ -15,18 +17,16 @@ export function useFeedActions(uid: string, profile: Profile | undefined) {
 
     if (action === "message") {
       try {
-        // 1. Create/Get the Room ID in Firestore
-        const roomId = await createChatRoom(uid, profile);
-
+        const roomId = [myProfile.uid, profile.uid].sort().join("_");
         // 2. Navigate to Chat with all necessary RTDB context
         navigation.navigate("Chat", {
           roomId,
+          uid: myProfile.uid,
           otherUser: {
             uid: profile.uid,
-            fullName: profile.fullName,
-            thumbnail: profile.thumbnail,
+            name: profile.fullName,
+            photo: profile.thumbnail || "",
           },
-          uid, // Current user ID for 'isMe' checks
         });
       } catch (err) {
         console.error("Failed to start chat:", err);

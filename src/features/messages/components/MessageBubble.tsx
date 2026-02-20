@@ -1,10 +1,10 @@
 import React from "react";
-import { Message } from "../type/messages";
+import { IMessage } from "../type/chattype";
 import { View, Text } from "react-native";
 import { ReadStatus } from "./ReadStatus";
 
 export const MessageBubble = React.memo(
-  ({ message, isMe }: { message: Message; isMe: boolean }) => {
+  ({ message, isMe }: { message: IMessage; isMe: boolean }) => {
     return (
       <View
         style={{
