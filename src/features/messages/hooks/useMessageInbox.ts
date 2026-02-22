@@ -1,149 +1,172 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+// import Toast from "react-native-root-toast";
 import { rtdb } from "src/config/firebase";
 import { IInboxItem } from "../type/chattype";
 
+const PAGE_SIZE = 20;
+const MAX_LIMIT = 200;
+
 export const useMessageInbox = (uid: string) => {
   const [banners, setBanners] = useState<IInboxItem[]>([]);
+  const [isLive, setIsLive] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [hasNewAtTop, setHasNewAtTop] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const oldestTsRef = useRef<number | null>(null);
+  const latestSeenTsRef = useRef<number>(0);
+  const listenerRef = useRef<any>(null);
+  const notifyRef = useRef<any>(null);
+
+  const stopListeners = useCallback(() => {
+    if (listenerRef.current)
+      rtdb.ref(`inbox/${uid}`).off("value", listenerRef.current);
+    if (notifyRef.current)
+      rtdb.ref(`inbox/${uid}`).off("value", notifyRef.current);
+    listenerRef.current = null;
+    notifyRef.current = null;
+  }, [uid]);
+
+  const startLive = useCallback(() => {
+    if (!uid) return;
+
+    if (listenerRef.current) rtdb.ref(`inbox/${uid}`).off();
+
+    setIsLive(true);
+    setHasNewAtTop(false);
+
+    const query = rtdb
+      .ref(`inbox/${uid}`)
+      .orderByChild("updatedAt")
+      .limitToLast(PAGE_SIZE);
+
+    listenerRef.current = query.on("value", (snap) => {
+      const data = snap.val();
+      if (data) {
+        const sorted = (Object.values(data) as IInboxItem[]).sort(
+          (a, b) => b.updatedAt - a.updatedAt,
+        );
+        setBanners(sorted);
+        oldestTsRef.current = sorted[sorted.length - 1].updatedAt;
+        latestSeenTsRef.current = sorted[0].updatedAt;
+        setHasMore(sorted.length === PAGE_SIZE);
+      } else {
+        setBanners([]);
+        setHasMore(false);
+      }
+      setIsLoading(false);
+    });
+  }, [uid]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!uid) return;
-
-      setIsLoading(true);
-
-      // 1. Setup Query: Latest 20 items ordered by timestamp
-      const inboxQuery = rtdb
-        .ref(`inbox/${uid}`)
-        .orderByChild("updatedAt")
-        .limitToLast(20);
-
-      // 2. Start Real-Time Listener
-      const onValueChange = inboxQuery.on(
-        "value",
-        (snapshot) => {
-          const data = snapshot.val();
-          if (data) {
-            // Convert object to array
-            const list: IInboxItem[] = Object.values(data);
-            // Sort Descending (Newest at top)
-            setBanners(list.sort((a, b) => b.updatedAt - a.updatedAt));
-          } else {
-            setBanners([]);
-          }
-          setIsLoading(false);
-        },
-        (error) => {
-          console.error("RTDB Listener Error:", error);
-          setIsLoading(false);
-        },
-      );
-
-      // 3. CRITICAL: Stop listening when user leaves the screen
-      // This saves battery and bandwidth ($$$)
-      return () => inboxQuery.off("value", onValueChange);
-    }, [uid]),
+      startLive();
+      return () => stopListeners();
+    }, [startLive, stopListeners]),
   );
 
-  return { banners, isLoading };
+  const loadMore = useCallback(async () => {
+    // 1. If we already know there's no more data, show Toast and exit
+    if (!hasMore && !isLoading && banners.length > 0) {
+      // Replace with your preferred Toast library (e.g., react-native-root-toast or Alert)
+      // Toast.show("No more chats to load", { duration: Toast.durations.SHORT });
+      return;
+    }
+
+    if (isFetchingMore || !oldestTsRef.current) return;
+
+    if (isLive) {
+      console.log("Switching to Static Mode - Killing Listener");
+      setIsLive(false);
+      stopListeners();
+
+      if (listenerRef.current)
+        rtdb.ref(`inbox/${uid}`).off("value", listenerRef.current);
+
+      // Start the background 'New Message' notifier
+      // startNotifyListener();
+
+      notifyRef.current = rtdb
+        .ref(`inbox/${uid}`)
+        .orderByChild("updatedAt")
+        .limitToLast(1)
+        .on("value", (snap) => {
+          const val = Object.values(snap.val() || {})[0] as IInboxItem;
+          if (val?.updatedAt > latestSeenTsRef.current) setHasNewAtTop(true);
+        });
+    }
+
+    setIsFetchingMore(true);
+
+    try {
+      const snap = await rtdb
+        .ref(`inbox/${uid}`)
+        .orderByChild("updatedAt")
+        .endAt(oldestTsRef.current - 1)
+        .limitToLast(PAGE_SIZE)
+        .once("value");
+
+      const data = snap.val();
+      if (data) {
+        const batch = (Object.values(data) as IInboxItem[]).sort(
+          (a, b) => b.updatedAt - a.updatedAt,
+        );
+
+        setBanners((prev) => {
+          const combined = [...prev, ...batch];
+          // Deduplicate
+          const unique = Array.from(
+            new Map(combined.map((item) => [item.roomId, item])).values(),
+          );
+
+          // 🔹 SLIDING WINDOW: If user fetches beyond 200, drop the oldest ones from the TOP
+          // To keep latest 200: use .slice(-MAX_LIMIT) if appending to end
+          // To keep 20-220 range: combined.slice(20) removes the 20 newest to make room
+          return unique.length > MAX_LIMIT ? unique.slice(20) : unique;
+        });
+
+        oldestTsRef.current = batch[batch.length - 1].updatedAt;
+        setHasMore(batch.length === PAGE_SIZE); // 🔹 If we got less than PAGE_SIZE, no more data
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      console.error("Pagination failed", e);
+    } finally {
+      setIsFetchingMore(false);
+    }
+  }, [uid, isLive, hasMore, isFetchingMore]);
+
+  return {
+    banners,
+    isLive,
+    hasNewAtTop,
+    isLoading,
+    isFetchingMore,
+    loadMore,
+    hasMore,
+    reset: startLive,
+  };
 };
-//......pagination and pull to refresh logic can be added later if needed
-// import { useState, useCallback, useRef } from "react";
-// import { useFocusEffect } from "@react-navigation/native";
-// import { rtdb } from "src/config/firebase";
-// import { IInboxItem } from "../type/chattype";
-
-// const PAGE_SIZE = 20;
-
-// export const useMessageInbox = (uid: string) => {
-//   const [banners, setBanners] = useState<IInboxItem[]>([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [isFetchingMore, setIsFetchingMore] = useState(false);
-//   const [hasMore, setHasMore] = useState(true);
-
-//   // Keep track of the oldest timestamp we have for pagination
-//   const oldestTimestampRef = useRef<number | null>(null);
-
-//   useFocusEffect(
-//     useCallback(() => {
-//       if (!uid) return;
-//       setIsLoading(true);
-
-//       // 1. REAL-TIME LISTENER (Top 20)
-//       const topQuery = rtdb
-//         .ref(`inbox/${uid}`)
-//         .orderByChild("updatedAt")
-//         .limitToLast(PAGE_SIZE);
-
-//       const onValue = topQuery.on("value", (snapshot) => {
-//         const data = snapshot.val();
-//         if (data) {
-//           const list: IInboxItem[] = Object.values(data);
-//           const sorted = list.sort((a, b) => b.updatedAt - a.updatedAt);
-
-//           setBanners((prev) => {
-//             // Merge real-time top 20 with existing paginated data
-//             const existingExtra = prev.slice(PAGE_SIZE);
-//             return [...sorted, ...existingExtra];
-//           });
-
-//           // Update the "anchor" for pagination (the 20th item)
-//           oldestTimestampRef.current = sorted[sorted.length - 1].updatedAt;
-//         } else {
-//           setBanners([]);
-//         }
-//         setIsLoading(false);
-//       });
-
-//       // Cleanup listener on unfocus
-//       return () => topQuery.off("value", onValue);
-//     }, [uid]),
-//   );
-
-//   // 2. LOAD MORE (One-time fetch for older items)
-//   const loadMore = useCallback(async () => {
-//     if (isFetchingMore || !hasMore || !oldestTimestampRef.current) return;
-
-//     setIsFetchingMore(true);
-//     try {
-//       const nextQuery = rtdb
-//         .ref(`inbox/${uid}`)
-//         .orderByChild("updatedAt")
-//         .endAt(oldestTimestampRef.current - 1)
-//         .limitToLast(PAGE_SIZE);
-
-//       const snapshot = await nextQuery.get();
-//       const data = snapshot.val();
-
-//       if (data) {
-//         const nextBatch: IInboxItem[] = Object.values(data);
-//         const sortedBatch = nextBatch.sort((a, b) => b.updatedAt - a.updatedAt);
-
-//         setBanners((prev) => [...prev, ...sortedBatch]);
-//         oldestTimestampRef.current =
-//           sortedBatch[sortedBatch.length - 1].updatedAt;
-//         setHasMore(nextBatch.length === PAGE_SIZE);
-//       } else {
-//         setHasMore(false);
-//       }
-//     } catch (e) {
-//       console.error("Pagination error", e);
-//     } finally {
-//       setIsFetchingMore(false);
-//     }
-//   }, [uid, isFetchingMore, hasMore]);
-
-//   return { banners, isLoading, isFetchingMore, loadMore };
-// };
-// setBanners((prev) => {
-//   const incoming = Object.values(data).sort(
-//     (a, b) => b.updatedAt - a.updatedAt,
-//   );
-
-//   // Combine incoming with existing, but filter out any IDs that are now in the Top 20
-//   const topIds = new Set(incoming.map((i) => i.roomId));
-//   const remaining = prev.filter((item) => !topIds.has(item.roomId));
-
-//   return [...incoming, ...remaining.slice(0, 80)]; // Keep total list manageable
-// });
+//logic
+// Here are the one-liner descriptions of the conditions your code currently meets:
+// Atomic Reciprocity: Writes both sender and receiver inbox metadata in
+//    a single database request. Firebase Update Documentation
+// Initial-Only Metadata: Only uploads heavy Base64 name/photo data if the roomId does not already exist.
+// Sliding Window Memory: Limits local state to 200 items, dropping the
+//    oldest 20 to prevent Base64 memory crashes. MDN Array Slice
+// Deep-Scroll Freeze: Kills the Live Listener during pagination to
+//    prevent new messages from "jumping" the user's scroll position.
+// Duplicate Elimination: Uses a Map by roomId to ensure zero duplicate banners appear in the list.
+// Delta-Sync Pagination: Uses endAt(ts - 1) to fetch the next batch
+//    without re-downloading previous items. Firebase RTDB Queries
+// Background Change-Detection: Uses a lightweight limitToLast(1) listener
+//    to notify users of new messages while they are deep-scrolling.
+// Debounced Typing: Hits the database only twice (start/stop) per
+//    typing session instead of every keystroke.
+// Automatic Presence Cleanup: Uses onDisconnect() and useFocusEffect
+//    cleanup to instantly remove "Typing..." when the user leaves. Firebase Offline Capabilities
+// Index-Optimized Fetching: Leverages server-side .indexOn: ["updatedAt"]
+//    for high-speed, low-bandwidth sorting. Firebase Indexing

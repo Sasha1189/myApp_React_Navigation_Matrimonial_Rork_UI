@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { Text, View, FlatList, StyleSheet } from "react-native";
+import React, { useState, useRef, useMemo } from "react";
+import {
+  Text,
+  View,
+  FlatList,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
@@ -13,6 +20,7 @@ import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
 import { UserBanner } from "../components/UserBanner";
 import { ChatBanner } from "../components/ChatBanner";
+import { ChatListHelper } from "../components/ChatListHelper";
 
 export default function MessagesScreen() {
   const { user } = useAuth();
@@ -20,50 +28,45 @@ export default function MessagesScreen() {
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats",
   );
+  const flatListRef = useRef<FlatList>(null);
 
-  const { banners: chatBanners, isLoading: chatsLoading } = useMessageInbox(
-    uid!,
-  );
-  console.log("Chat Bannersss:", chatBanners.length);
-  // Simple Data Selection
-  const currentData = activeTab === "chats" ? chatBanners : []; // Add likesSent/received logic back here later
-  const isLoading = activeTab === "chats" ? chatsLoading : false;
+  const {
+    banners: chatBanners,
+    isLive,
+    hasNewAtTop,
+    loadMore,
+    isFetchingMore,
+    hasMore,
+    reset,
+    isLoading: chatsLoading,
+  } = useMessageInbox(uid!);
 
-  // const { data: sent = [], isLoading: sentLoading } = useLikesSentProfilesList(
-  //   uid!,
-  // );
-  // console.log("Sent Likes:", sent.length);
+  const helper = ChatListHelper({
+    isLive,
+    hasMore,
+    theme,
+    mode: "inbox",
+    isLoadingMore: isFetchingMore,
+    hasNewContent: hasNewAtTop,
+    onLoadMore: loadMore,
+    onReset: () => {
+      reset();
+      flatListRef.current?.scrollToOffset({ offset: 0 });
+    },
+  });
 
-  // const { data: received = [], isLoading: receivedLoading } =
-  //   useLikesReceivedProfilesList(uid!, gender as any);
-  // console.log("Received Likes:", received.length);
+  const { currentData, isLoadingState } = useMemo(() => {
+    let data: any[] = [];
+    let loading = false;
 
-  // 🔹 FIX 3: Memoize the data selection to prevent FlatList from flickering
-  // const { currentData, isLoading } = useMemo(() => {
-  //   let data: any[] = [];
-  //   let loading = false;
+    if (activeTab === "chats") {
+      data = chatBanners;
+      loading = chatsLoading;
+    }
+    // Logic for other tabs goes here...
 
-  //   if (activeTab === "chats") {
-  //     data = chatBanners;
-  //     loading = chatsLoading;
-  //   }
-  //   // } else if (activeTab === "sent") {
-  //   //   data = sent;
-  //   //   loading = sentLoading;
-  //   // } else {
-  //   //   data = received;
-  //   //   loading = receivedLoading;
-  //   // }
-  //   return { currentData: data, isLoading: loading };
-  // }, [
-  //   activeTab,
-  //   chatBanners,
-  //   chatsLoading,
-  //   // sent,
-  //   // sentLoading,
-  //   // received,
-  //   // receivedLoading,
-  // ]);
+    return { currentData: data, isLoadingState: loading };
+  }, [activeTab, chatBanners, chatsLoading]);
 
   return (
     <LinearGradient
@@ -80,14 +83,14 @@ export default function MessagesScreen() {
         />
         <TabButton
           tab="sent"
-          label="Likes Sent"
+          label="Sent"
           icon={Send}
           isActive={activeTab === "sent"}
           onPress={() => setActiveTab("sent")}
         />
         <TabButton
           tab="received"
-          label="Likes Received"
+          label="Received"
           icon={Heart}
           isActive={activeTab === "received"}
           onPress={() => setActiveTab("received")}
@@ -96,31 +99,37 @@ export default function MessagesScreen() {
 
       <Text style={styles.sectionTitle}>Recent Activity</Text>
 
-      {isLoading && currentData.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text>Loading...</Text>
+      {isLoadingState && currentData.length === 0 ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} />
         </View>
       ) : currentData.length === 0 ? (
         <EmptyState type={activeTab} />
       ) : (
-        <FlatList
-          data={currentData as any[]}
-          keyExtractor={(item) =>
-            (item as any).roomId || (item as any).uid || (item as any).id
-          }
-          renderItem={({ item }) => {
-            if (activeTab === "chats") {
-              return uid ? <ChatBanner item={item} uid={uid} /> : null;
+        <View style={{ flex: 1 }}>
+          {/* {helper.renderOfflineBar()} */}
+          <FlatList
+            ref={flatListRef}
+            data={currentData}
+            keyExtractor={(item) => item.roomId || item.uid || item.id}
+            renderItem={({ item }) =>
+              activeTab === "chats" ? (
+                <ChatBanner item={item} uid={uid!} />
+              ) : (
+                <UserBanner item={item} type={activeTab} />
+              )
             }
-            return <UserBanner item={item} type={activeTab} />;
-          }}
-          contentContainerStyle={styles.activityContainer}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
-          removeClippedSubviews={true}
-          // maxToRenderPerBatch={10}
-          windowSize={5}
-        />
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            ListFooterComponent={
+              activeTab === "chats" ? helper.renderFooter : null
+            }
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+          {activeTab === "chats" && helper.renderFloating()}
+        </View>
       )}
     </LinearGradient>
   );
@@ -129,6 +138,11 @@ export default function MessagesScreen() {
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   tabsContainer: {
     flexDirection: "row",
@@ -149,5 +163,21 @@ export const styles = StyleSheet.create({
     marginHorizontal: theme.spacing.md,
     marginTop: theme.spacing.lg,
     marginBottom: theme.spacing.md,
+  },
+  footerContainer: {
+    paddingVertical: theme.spacing.md,
+    alignItems: "center",
+  },
+  noMoreText: {
+    color: theme.colors.textLight,
+    fontSize: theme.fontSize.sm,
+  },
+  loadMoreBtn: {
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
   },
 });
