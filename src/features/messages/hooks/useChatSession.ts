@@ -10,8 +10,8 @@ export function useChatSession(
   otherUser: any,
 ) {
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const [isLive, setIsLive] = useState(true); // 🔹 Tracks Live vs Static mode
-  const [hasNewAtBottom, setHasNewAtBottom] = useState(false); // 🔹 For "New Message" popup
+  const [isLive, setIsLive] = useState(true);
+  const [hasNewAtBottom, setHasNewAtBottom] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [otherStatus, setOtherStatus] = useState<any>(null);
@@ -39,11 +39,11 @@ export function useChatSession(
     msgListenerRef.current = query.on("value", (snap) => {
       const data = snap.val() || {};
       const list = (Object.values(data) as IMessage[]).sort(
-        (a, b) => a.ts - b.ts,
+        (a, b) => b.ts - a.ts,
       );
 
       setMessages(list);
-      if (list.length > 0) oldestLoadedTs.current = list[0].ts;
+      if (list.length > 0) oldestLoadedTs.current = list[list.length - 1].ts;
       setHasMore(list.length === 50);
       setIsLoading(false);
 
@@ -112,14 +112,14 @@ export function useChatSession(
       const data = snap.val();
       if (data) {
         const older = (Object.values(data) as IMessage[]).sort(
-          (a, b) => a.ts - b.ts,
+          (a, b) => b.ts - a.ts,
         );
         setMessages((prev) => {
-          const combined = [...older, ...prev];
+          const combined = [...prev, ...older];
           // 3. Sliding Window: Keep only the 200 most relevant for memory safety
-          return combined.length > 200 ? combined.slice(-200) : combined;
+          return combined.length > 200 ? combined.slice(0, 200) : combined;
         });
-        oldestLoadedTs.current = older[0].ts;
+        oldestLoadedTs.current = older[older.length - 1].ts;
         setHasMore(older.length === 50);
       } else {
         setHasMore(false);

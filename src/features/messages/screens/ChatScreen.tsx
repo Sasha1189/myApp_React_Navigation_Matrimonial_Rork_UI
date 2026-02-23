@@ -120,7 +120,7 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
             <FlatList
               ref={flatListRef}
               data={messages}
-              // inverted
+              inverted
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <MessageBubble message={item} isMe={item.s === uid} />
@@ -132,10 +132,10 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
               removeClippedSubviews={Platform.OS === "android"}
               keyboardShouldPersistTaps="handled"
               onScrollBeginDrag={Keyboard.dismiss}
-              // maintainVisibleContentPosition={{
-              //   minIndexForVisible: 0,
-              //   autoscrollToTopThreshold: 10,
-              // }}
+              maintainVisibleContentPosition={{
+                minIndexForVisible: 0,
+                autoscrollToTopThreshold: 10,
+              }}
               ListFooterComponent={helper.renderFooter}
             />
           )}
