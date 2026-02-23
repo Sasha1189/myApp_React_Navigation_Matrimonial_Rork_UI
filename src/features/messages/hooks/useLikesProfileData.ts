@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchReceivedLikesSince } from "../../home/apis/likeApis";
 import { Profile } from "../../../types/profile";
-import { formatDOB } from "src/utils/dateUtils";
+import { formatDOB } from "../../../utils/dateUtils";
 
 // 1. The Strategy
 // Source: We take the likedSentIds (the array of UIDs you've liked).

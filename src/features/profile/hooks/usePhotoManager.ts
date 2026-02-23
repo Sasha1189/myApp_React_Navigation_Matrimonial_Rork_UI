@@ -3,7 +3,7 @@ import storage from "@react-native-firebase/storage";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import * as FileSystem from "expo-file-system";
+import { File, Paths } from "expo-file-system";
 import { Profile, Photo } from "../../../types/profile";
 import { useAuth } from "../../../context/AuthContext";
 import { useUpdateProfileData } from "./useProfileData";
@@ -127,21 +127,20 @@ export function usePhotoManager(profile: Profile | null) {
       const selectedPhoto = photos.find((p) => p.id === photoId);
       if (!selectedPhoto) return;
 
-      let source = selectedPhoto.localUrl;
+      let selectedPhotoUrl = selectedPhoto.localUrl;
 
       // 🔹 FIX: If localUrl is missing, download the remote image first
-      if (!source && selectedPhoto.downloadURL) {
-        const downloadPath = `${FileSystem.cacheDirectory}temp_thumb.jpg`;
-        const downloadedFile = await FileSystem.downloadAsync(
+      if (!selectedPhotoUrl && selectedPhoto.downloadURL) {
+        const downloadedFile = await File.downloadFileAsync(
           selectedPhoto.downloadURL,
-          downloadPath,
+          Paths.cache,
         );
-        source = downloadedFile.uri;
+        selectedPhotoUrl = downloadedFile.uri;
       }
 
-      if (!source) throw new Error("No source image found");
+      if (!selectedPhotoUrl) throw new Error("No source image found");
 
-      const processed = await processImage(source!, "thumb");
+      const processed = await processImage(selectedPhotoUrl!, "thumb");
       const uniqueFilename = `thumb.jpg`;
       const path = `users/${user?.uid}/thumbnail/${uniqueFilename}`;
 
@@ -254,13 +253,13 @@ export function usePhotoManager(profile: Profile | null) {
 
 const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
   const isThumb = type === "thumb";
-  // 🔹 Industry Standard: 300KB is plenty for mobile high-quality photos
-  const TARGET_SIZE_MB = 0.3;
-  const TARGET_SIZE_BYTES = TARGET_SIZE_MB * 1024 * 1024;
+  const fileInfo = new File(uri);
 
-  const fileInfo = await FileSystem.getInfoAsync(uri);
   if (!fileInfo.exists) return uri;
   const currentSize = "size" in fileInfo ? fileInfo.size : 0;
+
+  const TARGET_SIZE_MB = 0.3;
+  const TARGET_SIZE_BYTES = TARGET_SIZE_MB * 1024 * 1024;
 
   // 🔹 Step 1: Always resize to a max width.
   // Mobile screens rarely need more than 1080px.

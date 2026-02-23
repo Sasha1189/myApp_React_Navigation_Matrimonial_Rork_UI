@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { queryClient, persistOptions } from "./cacheConfig";
 import { useAppCacheManager } from "./useAppCacheManager";
-import { rtdb, auth } from "src/config/firebase";
+import { rtdb, auth } from "../config/firebase";
 
 export function CacheProvider({ children }: { children: ReactNode }) {
   const setupFirebase = () => {

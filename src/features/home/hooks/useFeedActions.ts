@@ -1,7 +1,7 @@
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
 import { useToggleLike } from "./useSwipeMutations";
-import { useProfileContext } from "src/context/ProfileContext";
+import { useProfileContext } from "../../../context/ProfileContext";
 
 export function useFeedActions(uid: string, profile: Profile | undefined) {
   const navigation = useAppNavigation();

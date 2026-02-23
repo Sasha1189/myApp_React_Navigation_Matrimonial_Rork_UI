@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect } from "react";
 import { Alert } from "react-native";
-import { NavigationProp, EventListenerCallback } from "@react-navigation/native";
+import { NavigationProp } from "@react-navigation/native";
 
 /**
  * Warn user before leaving screen if unsaved changes exist
@@ -10,10 +10,10 @@ import { NavigationProp, EventListenerCallback } from "@react-navigation/native"
  */
 export function useUnsavedChangesPrompt(
   navigation: NavigationProp<any>,
-  isDirty: boolean
+  isDirty: boolean,
 ) {
   useEffect(() => {
-    const beforeRemoveListener: EventListenerCallback<"beforeRemove", any> = (e) => {
+    const beforeRemoveListener = (e: any) => {
       if (!isDirty) return;
 
       e.preventDefault();
@@ -28,11 +28,14 @@ export function useUnsavedChangesPrompt(
             style: "destructive",
             onPress: () => navigation.dispatch(e.data.action),
           },
-        ]
+        ],
       );
     };
 
-    const unsubscribe = navigation.addListener("beforeRemove", beforeRemoveListener);
+    const unsubscribe = navigation.addListener(
+      "beforeRemove",
+      beforeRemoveListener,
+    );
 
     return unsubscribe;
   }, [navigation, isDirty]);

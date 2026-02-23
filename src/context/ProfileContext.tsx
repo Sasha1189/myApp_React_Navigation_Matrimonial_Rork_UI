@@ -9,8 +9,8 @@ import {
   ProfileContextType,
   ProfileProviderProps,
 } from "./types/profileContext";
-import { getDefaultProfile } from "src/utils/getDefaultProfile";
-import LoadingScreen from "src/components/LoadingScreen";
+import { getDefaultProfile } from "../utils/getDefaultProfile";
+import LoadingScreen from "../components/LoadingScreen";
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 

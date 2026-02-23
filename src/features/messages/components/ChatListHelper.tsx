@@ -13,7 +13,7 @@ import {
   WifiOff,
   RefreshCw,
 } from "lucide-react-native";
-import { rtdb } from "src/config/firebase";
+import { rtdb } from "../../../config/firebase";
 
 interface ChatHelperProps {
   isLive: boolean;

@@ -1,5 +1,5 @@
 import { theme } from "../../../theme/index";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   Activity,
@@ -43,7 +43,7 @@ import { useProfileContext } from "../../../context/ProfileContext";
 import LoadingScreen from "../../../components/LoadingScreen";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
 import { Profile } from "../../../types/profile";
-import { formatDOB } from "src/utils/dateUtils";
+import { formatDOB } from "../../../utils/dateUtils";
 
 interface DetailSectionProps {
   title: string;

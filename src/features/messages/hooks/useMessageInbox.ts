@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-// import Toast from "react-native-root-toast";
-import { rtdb } from "src/config/firebase";
+import { rtdb } from "../../../config/firebase";
 import { IInboxItem } from "../type/chattype";
 
 const PAGE_SIZE = 20;

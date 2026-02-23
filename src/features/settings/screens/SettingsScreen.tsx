@@ -27,8 +27,8 @@ import { useProfileContext } from "../../../context/ProfileContext";
 import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
 
 import { getAuth, signOut } from "@react-native-firebase/auth";
-import { useAuth } from "src/context/AuthContext";
-import { clearCacheOnLogout, storage } from "src/cache/cacheConfig";
+import { useAuth } from "../../../context/AuthContext";
+import { clearCacheOnLogout, storage } from "../../../cache/cacheConfig";
 
 export default function SettingsScreen() {
   const { setUser } = useAuth();

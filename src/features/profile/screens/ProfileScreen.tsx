@@ -13,7 +13,7 @@ import { useAppNavigation } from "../../../navigation/hooks";
 import { useProfileContext } from "../../../context/ProfileContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../../../constants/theme";
-import { formatDOB } from "src/utils/dateUtils";
+import { formatDOB } from "../../../utils/dateUtils";
 
 interface MenuItem {
   icon: React.ComponentType<any>;
