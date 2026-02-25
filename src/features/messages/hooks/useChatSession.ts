@@ -7,6 +7,7 @@ import {
   onValue,
   onChildAdded,
   onChildChanged,
+  onChildRemoved,
   limitToLast,
   orderByChild,
   endAt,
@@ -146,9 +147,16 @@ export function useChatSession(
       );
     });
 
+    // 5. Listener: Deletions (The "Missing" Piece)
+    // This ensures that if a message is deleted, it's removed from your DISK cache too.
+    const unsubRemoved = onChildRemoved(msgQuery, (snap) => {
+      setMessages((prev) => prev.filter((m) => m.id !== snap.key));
+    });
+
     msgUnsubscribe.current = () => {
       unsubAdded();
       unsubChanged();
+      unsubRemoved();
     };
   }, [roomId, myUid, stopListeners]);
 
