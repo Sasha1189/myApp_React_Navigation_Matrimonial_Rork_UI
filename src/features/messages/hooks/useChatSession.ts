@@ -1,13 +1,31 @@
 import { useState, useRef, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { rtdb, get, ref, serverTimestamp } from "../../../config/firebase";
+import { rtdb } from "../../../config/firebase";
+import {
+  ref,
+  query,
+  onValue,
+  onChildAdded,
+  onChildChanged,
+  limitToLast,
+  orderByChild,
+  endAt,
+  get,
+  push,
+  update,
+  serverTimestamp,
+  remove,
+  set,
+  onDisconnect,
+} from "@react-native-firebase/database";
 import { IMessage } from "../type/chattype";
+import { formatStatusTime } from "../../../utils/dateUtils";
 
 export function useChatSession(
   roomId: string,
   myUid: string,
-  sender: any,
-  otherUser: any,
+  sender: { name?: string; photo?: string },
+  otherUser: { uid: string; name?: string; photo?: string },
 ) {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLive, setIsLive] = useState(true);
@@ -21,102 +39,182 @@ export function useChatSession(
   const oldestLoadedTs = useRef<number | null>(null);
   const lastTypingState = useRef(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const msgListenerRef = useRef<any>(null);
 
-  const stopMsgListener = useCallback(() => {
-    if (msgListenerRef.current) {
-      rtdb.ref(`messages/${roomId}`).off("value", msgListenerRef.current);
-      msgListenerRef.current = null;
+  // Store unsubscription functions to prevent memory leaks
+  const msgUnsubscribe = useRef<(() => void) | null>(null);
+  const newMsgUnsubscribe = useRef<(() => void) | null>(null);
+
+  const stopListeners = useCallback(() => {
+    if (msgUnsubscribe.current) {
+      msgUnsubscribe.current();
+      msgUnsubscribe.current = null;
     }
-  }, [roomId]);
+    if (newMsgUnsubscribe.current) {
+      newMsgUnsubscribe.current();
+      newMsgUnsubscribe.current = null;
+    }
+  }, []);
 
   const startLiveMessages = useCallback(() => {
-    stopMsgListener();
+    stopListeners();
     setIsLive(true);
     setHasNewAtBottom(false);
 
-    const query = rtdb.ref(`messages/${roomId}`).limitToLast(50);
-    msgListenerRef.current = query.on("value", (snap) => {
+    // Modular Query: Passing rtdb instance as the first argument
+    const msgQuery = query(ref(rtdb, `messages/${roomId}`), limitToLast(50));
+
+    // onValue returns the unsubscribe function directly in v22+
+    // msgUnsubscribe.current = onValue(msgQuery, (snap) => {
+    //   const data = snap.val() || {};
+    //   const list = (Object.values(data) as IMessage[]).sort(
+    //     (a, b) => b.ts - a.ts,
+    //   );
+
+    //   setMessages(list);
+
+    //   if (list.length > 0) {
+    //     const oldestInBatch = list[list.length - 1].ts;
+    //     if (!oldestLoadedTs.current || oldestInBatch < oldestLoadedTs.current) {
+    //       oldestLoadedTs.current = oldestInBatch;
+    //     }
+    //   }
+
+    //   setHasMore(list.length >= 50);
+    //   setIsLoading(false);
+
+    //   // Modular Update for Read Receipt
+    //   const unreadMessages = list.filter((m) => m.s !== myUid && !m.r);
+
+    //   if (unreadMessages.length > 0) {
+    //     const updates: Record<string, any> = {};
+    //     unreadMessages.forEach((msg) => {
+    //       updates[`messages/${roomId}/${msg.id}/r`] = true;
+    //     });
+    //     // Atomic multi-path update: fast and cost-efficient
+    //     update(ref(rtdb), updates);
+    //   }
+    // });
+
+    // code with onChildAdded/updated cost effective does not download everything repeat
+    // 1. Initial Load (One-time cost)
+    get(msgQuery).then((snap) => {
       const data = snap.val() || {};
       const list = (Object.values(data) as IMessage[]).sort(
         (a, b) => b.ts - a.ts,
       );
-
       setMessages(list);
-      if (list.length > 0) oldestLoadedTs.current = list[list.length - 1].ts;
-      setHasMore(list.length === 50);
+
+      if (list.length > 0) {
+        const oldestInBatch = list[list.length - 1].ts;
+        if (!oldestLoadedTs.current || oldestInBatch < oldestLoadedTs.current) {
+          oldestLoadedTs.current = oldestInBatch;
+        }
+      }
+      setHasMore(list.length >= 50);
       setIsLoading(false);
 
-      // Auto-mark as read logic
-      const lastMsg = list[list.length - 1];
-      if (lastMsg && lastMsg.s !== myUid && !lastMsg.r) {
-        rtdb.ref(`messages/${roomId}/${lastMsg.id}/r`).set(true);
+      // Initial Read Batch
+      const unread = list.filter((m) => m.s !== myUid && !m.r);
+      if (unread.length > 0) {
+        const updates: any = {};
+        unread.forEach((m) => (updates[`messages/${roomId}/${m.id}/r`] = true));
+        update(ref(rtdb), updates);
       }
     });
-  }, [roomId, myUid, stopMsgListener]);
+
+    // 2. Listen ONLY for New Messages (Smallest possible download)
+    const unsubAdded = onChildAdded(msgQuery, (snap) => {
+      const newMsg = snap.val() as IMessage;
+      setMessages((prev) => {
+        // Prevent duplicates from initial 'get'
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        const newList = [newMsg, ...prev].sort((a, b) => b.ts - a.ts);
+        return newList.slice(0, 50); // Keep local memory lean
+      });
+
+      // Mark single new message as read if it's not mine
+      if (newMsg.s !== myUid && !newMsg.r) {
+        update(ref(rtdb, `messages/${roomId}/${newMsg.id}`), { r: true });
+      }
+    });
+
+    // 3. Listen ONLY for Changes (e.g., Read Ticks from the other user)
+    const unsubChanged = onChildChanged(msgQuery, (snap) => {
+      const updatedMsg = snap.val() as IMessage;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m)),
+      );
+    });
+
+    msgUnsubscribe.current = () => {
+      unsubAdded();
+      unsubChanged();
+    };
+  }, [roomId, myUid, stopListeners]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!roomId || !myUid || !otherUser.uid) return;
+      const otherUid = otherUser?.uid;
+      if (!roomId || !myUid || !otherUid) return;
 
       startLiveMessages();
 
-      // Secondary listeners (Typing/Status) stay live regardless
-      const otherStatusRef = rtdb.ref(`status/${otherUser.uid}`);
-      const otherTypingRef = rtdb.ref(`typing/${roomId}/${otherUser.uid}`);
-      const onStatus = otherStatusRef.on("value", (snap) =>
+      const statusRef = ref(rtdb, `status/${otherUid}`);
+      const typingRef = ref(rtdb, `typing/${roomId}/${otherUid}`);
+
+      const unsubStatus = onValue(statusRef, (snap) =>
         setOtherStatus(snap.val()),
       );
-      const onTyping = otherTypingRef.on("value", (snap) =>
+      const unsubTyping = onValue(typingRef, (snap) =>
         setIsOtherTyping(!!snap.val()),
       );
 
       return () => {
-        stopMsgListener();
-        otherStatusRef.off("value", onStatus);
-        otherTypingRef.off("value", onTyping);
-        rtdb.ref(`typing/${roomId}/${myUid}`).remove();
+        stopListeners();
+        unsubStatus();
+        unsubTyping();
+        remove(ref(rtdb, `typing/${roomId}/${myUid}`));
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       };
-    }, [roomId, myUid, otherUser.uid, startLiveMessages, stopMsgListener]),
+    }, [roomId, myUid, otherUser?.uid, startLiveMessages, stopListeners]),
   );
 
   const loadEarlier = useCallback(async () => {
-    // 1. If we know there's no more, exit (optional: show toast here)
-    if (!hasMore && !isLoadingEarlier) return;
+    if (isLoadingEarlier || !hasMore || !oldestLoadedTs.current) return;
 
-    if (isLoadingEarlier || !oldestLoadedTs.current) return;
-
-    // 2. Freeze the Live Feed when user starts digging into history
     if (isLive) {
       setIsLive(false);
-      stopMsgListener();
-      // Background listener for "New Message" popup
-      rtdb
-        .ref(`messages/${roomId}`)
-        .limitToLast(1)
-        .on("child_added", (snap) => {
-          if (snap.val().s !== myUid) setHasNewAtBottom(true);
-        });
+      stopListeners();
+
+      const lastMsgQuery = query(
+        ref(rtdb, `messages/${roomId}`),
+        limitToLast(1),
+      );
+      newMsgUnsubscribe.current = onChildAdded(lastMsgQuery, (snap) => {
+        if (snap.val()?.s !== myUid) setHasNewAtBottom(true);
+      });
     }
 
     setIsLoadingEarlier(true);
     try {
-      const snap = await rtdb
-        .ref(`messages/${roomId}`)
-        .orderByChild("ts")
-        .endAt(oldestLoadedTs.current - 1)
-        .limitToLast(50)
-        .once("value");
+      // Functional Querying replaces .orderByChild() calls
+      const earlierQuery = query(
+        ref(rtdb, `messages/${roomId}`),
+        orderByChild("ts"),
+        endAt(oldestLoadedTs.current - 1),
+        limitToLast(50),
+      );
 
+      const snap = await get(earlierQuery);
       const data = snap.val();
+
       if (data) {
         const older = (Object.values(data) as IMessage[]).sort(
           (a, b) => b.ts - a.ts,
         );
         setMessages((prev) => {
           const combined = [...prev, ...older];
-          // 3. Sliding Window: Keep only the 200 most relevant for memory safety
+          // Sliding window for React 19 performance
           return combined.length > 200 ? combined.slice(0, 200) : combined;
         });
         oldestLoadedTs.current = older[older.length - 1].ts;
@@ -129,24 +227,63 @@ export function useChatSession(
     } finally {
       setIsLoadingEarlier(false);
     }
-  }, [roomId, isLive, isLoadingEarlier, hasMore, myUid, stopMsgListener]);
+  }, [roomId, isLive, isLoadingEarlier, hasMore, myUid, stopListeners]);
+
+  const sendMessage = useCallback(
+    async (text: string) => {
+      const cleanText = text?.trim();
+      if (!cleanText || !otherUser?.uid || !myUid) return;
+
+      const ts = serverTimestamp();
+      const msgId = push(ref(rtdb, `messages/${roomId}`)).key;
+
+      const updates: Record<string, any> = {};
+      updates[`messages/${roomId}/${msgId}`] = {
+        id: msgId,
+        s: myUid,
+        t: cleanText,
+        ts,
+        r: false,
+      };
+
+      const common = { lastMessage: cleanText, updatedAt: ts, roomId };
+      updates[`inbox/${myUid}/${roomId}`] = {
+        ...common,
+        otherUser: {
+          uid: otherUser.uid,
+          name: otherUser.name || "User",
+          photo: otherUser.photo || "",
+        },
+      };
+      updates[`inbox/${otherUser.uid}/${roomId}`] = {
+        ...common,
+        otherUser: {
+          uid: myUid,
+          name: sender.name || "User",
+          photo: sender.photo || "",
+        },
+      };
+
+      return update(ref(rtdb), updates);
+    },
+    [roomId, myUid, sender, otherUser],
+  );
 
   const setMyTyping = useCallback(
     (isTyping: boolean) => {
-      // 1. Guard: Prevents redundant database writes if state hasn't changed
+      // Guard: Prevents spamming the DB with the same state
       if (isTyping === lastTypingState.current) return;
-
-      const tRef = rtdb.ref(`typing/${roomId}/${myUid}`);
       lastTypingState.current = isTyping;
 
+      const tPath = `typing/${roomId}/${myUid}`;
+      const tRef = ref(rtdb, tPath);
+
       if (isTyping) {
-        // 2. Start Typing
-        tRef.set(true);
-        tRef.onDisconnect().remove(); // Ensures "typing" disappears if app crashes
+        // SET state to true and tell server to REMOVE it if I disconnect
+        set(tRef, true);
+        onDisconnect(tRef).remove();
       } else {
-        // 3. Stop Typing
-        tRef.remove();
-        // Only clear the timeout if it exists to prevent memory leaks
+        remove(tRef);
         if (typingTimeoutRef.current) {
           clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = null;
@@ -156,63 +293,21 @@ export function useChatSession(
     [roomId, myUid],
   );
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      const cleanText = text?.trim();
-      // Guard against missing user data or empty text
-      if (!cleanText || !otherUser?.uid || !myUid) {
-        console.error("SendMessage failed: Missing required context");
-        return;
-      }
+  const getStatusLabel = useCallback(() => {
+    // 1. Priority: Typing
+    if (isOtherTyping) return "typing...";
 
-      const ts = serverTimestamp();
-      const newMsgRef = rtdb.ref(`messages/${roomId}`).push();
-      const msgId = newMsgRef.key;
+    // 2. Priority: Online
+    if (otherStatus?.state === "online") return "online";
 
-      const updates: any = {};
-      // 1. The Message add
-      updates[`messages/${roomId}/${msgId}`] = {
-        id: msgId,
-        s: myUid,
-        t: cleanText,
-        ts: ts,
-        r: false,
-      };
-
-      // 2. The Inbox Update (This is what triggers background listeners!)
-
-      //  Check if the Room already exists in the sender's inbox
-      const inboxSnap = await get(ref(rtdb, `inbox/${myUid}/${roomId}`));
-      const common = { lastMessage: cleanText, updatedAt: ts, roomId };
-
-      if (!inboxSnap.exists()) {
-        updates[`inbox/${myUid}/${roomId}`] = {
-          ...common,
-          otherUser: {
-            uid: otherUser.uid,
-            name: otherUser.name || "User",
-            photo: otherUser.photo || "",
-          },
-        };
-        updates[`inbox/${otherUser.uid}/${roomId}`] = {
-          ...common,
-          otherUser: {
-            uid: myUid,
-            name: sender.name || "User",
-            photo: sender.photo || "",
-          },
-        };
-      } else {
-        updates[`inbox/${myUid}/${roomId}/lastMessage`] = cleanText;
-        updates[`inbox/${myUid}/${roomId}/updatedAt`] = ts;
-        updates[`inbox/${otherUser.uid}/${roomId}/lastMessage`] = cleanText;
-        updates[`inbox/${otherUser.uid}/${roomId}/updatedAt`] = ts;
-      }
-
-      return rtdb.ref().update(updates);
-    },
-    [roomId, myUid, sender, otherUser],
-  );
+    // 3. Priority: Last Seen (formatted)
+    if (otherStatus?.lastChanged) {
+      // Uses the helper to return "just now", "5m ago", etc.
+      return `last seen ${formatStatusTime(otherStatus.lastChanged)}`;
+    }
+    // Fallback for new users with no status node yet
+    return "";
+  }, [isOtherTyping, otherStatus]);
 
   return {
     messages,
@@ -224,8 +319,9 @@ export function useChatSession(
     isLive,
     hasNewAtBottom,
     loadEarlier,
-    setMyTyping,
     sendMessage,
+    setMyTyping,
+    getStatusLabel,
     resetToLive: startLiveMessages,
   };
 }

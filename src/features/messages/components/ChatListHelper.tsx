@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   WifiOff,
   RefreshCw,
 } from "lucide-react-native";
-import { rtdb } from "../../../config/firebase";
+import { theme } from "../../../constants/theme";
 
 interface ChatHelperProps {
   isLive: boolean;
@@ -36,53 +36,6 @@ export const ChatListHelper = ({
   mode,
   theme,
 }: ChatHelperProps) => {
-  const [isOffline, setIsOffline] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-40)).current;
-
-  // 1. Database Connection Listener
-  useEffect(() => {
-    const connectedRef = rtdb.ref(".info/connected");
-    const listener = connectedRef.on("value", (snap) => {
-      const offline = snap.val() === false;
-      setIsOffline(offline);
-
-      // 🟢 One-liner Animation: Slide down to 0 if offline, else back to -40
-      Animated.timing(slideAnim, {
-        toValue: offline ? 0 : -40,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
-    return () => connectedRef.off("value", listener);
-  }, [slideAnim]);
-
-  const handleRetry = () => {
-    // 🟢 Manual Reconnect: Forces RTDB to refresh its socket connection
-    rtdb.goOffline();
-    rtdb.goOnline();
-  };
-
-  const renderOfflineBar = () => (
-    <Animated.View
-      style={[
-        styles.offlineBar,
-        {
-          backgroundColor: theme.colors.error,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <View style={styles.row}>
-        <WifiOff size={14} color="#a80f0f" />
-        <Text style={styles.offlineText}>Waiting for network...</Text>
-      </View>
-      <TouchableOpacity onPress={handleRetry} style={styles.retryBtn}>
-        <RefreshCw size={14} color="#961010" />
-        <Text style={styles.retryText}>Retry</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-
   // 1. Manual "Load More" Button & Loading State (The Footer)
   const renderFooter = () => (
     <View style={styles.footer}>
@@ -132,87 +85,72 @@ export const ChatListHelper = ({
     );
   };
 
-  return { renderFooter, renderFloating, renderOfflineBar };
+  return { renderFooter, renderFloating };
 };
 
 const styles = StyleSheet.create({
-  offlineBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 35,
-    zIndex: 1000,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 15,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-  },
-  row: { flexDirection: "row", alignItems: "center" },
-  offlineText: {
-    color: "#FFF",
-    fontSize: 12,
-    marginLeft: 8,
-    fontWeight: "500",
-  },
-  retryBtn: { flexDirection: "row", alignItems: "center", padding: 4 },
-  retryText: { color: "#FFF", fontSize: 11, marginLeft: 4, fontWeight: "bold" },
-
-  // --- ChatListHelper: Footer (Load More) ---
   footer: {
-    paddingVertical: 20,
+    paddingVertical: theme.spacing.lg,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
   },
   loadBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.borderRadius.round, // Clean pill shape
     borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.cardBackground,
     minWidth: 150,
     alignItems: "center",
+    // Subtle shadow for the button
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 
   // --- ChatListHelper: Floating UI ---
   floatingContainer: {
     position: "absolute",
-    bottom: 100, // Adjust based on your ChatInput height
-    right: 20,
+    bottom: 100, // Anchored above the input bar
+    right: theme.spacing.md,
     alignItems: "flex-end",
     zIndex: 999,
   },
   fab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56, // Standard high-end FAB size (56x56)
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    elevation: 6,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.5,
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    marginBottom: 12,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.colors.accent,
+    marginBottom: theme.spacing.md,
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
   badgeText: {
-    color: "#FFF",
-    fontSize: 13,
+    color: "#FFFFFF",
+    fontSize: theme.fontSize.sm,
     fontWeight: "bold",
-    marginLeft: 6,
+    marginLeft: theme.spacing.xs,
   },
 });

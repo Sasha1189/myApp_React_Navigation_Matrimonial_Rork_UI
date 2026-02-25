@@ -22,7 +22,10 @@ export const TabButton: React.FC<TabButtonProps> = ({
       style={[styles.tabButton, isActive && styles.activeTabButton]}
       onPress={onPress}
     >
-      <Icon size={16} color={isActive ? "white" : theme.colors.primary} />
+      <Icon
+        size={16}
+        color={isActive ? theme.colors.primary : theme.colors.primary}
+      />
       <Text style={[styles.tabText, isActive && styles.activeTabText]}>
         {label}
       </Text>
@@ -42,7 +45,7 @@ const styles = StyleSheet.create({
   },
   activeTabButton: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + "20",
   },
   tabText: {
     marginLeft: theme.spacing.sm,
@@ -50,6 +53,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   activeTabText: {
-    color: "white",
+    color: theme.colors.primary,
   },
 });

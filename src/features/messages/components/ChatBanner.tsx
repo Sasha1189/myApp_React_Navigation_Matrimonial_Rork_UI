@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { theme } from "../../../constants/theme";
 import { Image } from "expo-image";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { formatTime } from "../../../utils/dateUtils"; // Helper for ts
@@ -25,7 +26,7 @@ export const ChatBanner = React.memo(
 
     return (
       <TouchableOpacity
-        style={styles.container}
+        style={styles.activityCard}
         onPress={handlePress}
         activeOpacity={0.7}
       >
@@ -35,10 +36,10 @@ export const ChatBanner = React.memo(
               ? { uri: item.otherUser.photo }
               : require("../../../../assets/images/profile.png")
           }
-          style={styles.avatar}
+          style={styles.activityImage}
           cachePolicy="disk"
         />
-        <View style={styles.content}>
+        <View style={styles.activityContent}>
           <View style={styles.header}>
             <Text style={styles.name} numberOfLines={1}>
               {item.otherUser.name}
@@ -69,65 +70,89 @@ export const ChatBanner = React.memo(
 );
 
 const styles = StyleSheet.create({
-  container: {
+  activityCard: {
     flexDirection: "row",
-    padding: 15,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "white",
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  avatar: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-    backgroundColor: "#f0f0f0",
+  activityImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: theme.spacing.md,
   },
-  content: {
+  activityContent: {
     flex: 1,
-    marginLeft: 15,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#eee",
-    paddingBottom: 10,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: theme.spacing.xs,
   },
-  name: { fontSize: 16, fontWeight: "700", color: "#1a1a1a" },
-  time: { fontSize: 12, color: "#888" },
+  name: {
+    fontSize: theme.fontSize.md,
+    fontWeight: "600",
+    color: theme.colors.text,
+  },
+  time: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textLight,
+  },
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  msg: { fontSize: 14, color: "#666", flex: 1, marginRight: 10 },
-  unreadMsg: { color: "#000", fontWeight: "600" },
+  msg: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.textLight,
+    marginRight: theme.spacing.md,
+  },
+  unreadMsg: {
+    color: theme.colors.text,
+    fontWeight: "600",
+  },
+  unreadMsgText: {
+    color: theme.colors.primary,
+    fontWeight: "700",
+    fontSize: theme.fontSize.sm,
+  },
+  badgeContainer: {
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.borderRadius.md,
+    minWidth: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.xs,
+    marginLeft: theme.spacing.sm,
+    // Add a subtle shadow for a "high-end" depth effect
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: theme.fontSize.xs,
+    fontWeight: "bold",
+  },
   badge: {
-    backgroundColor: "#FF3B30",
-    borderRadius: 10,
+    backgroundColor: theme.colors.danger,
+    borderRadius: theme.borderRadius.round,
     minWidth: 20,
     height: 20,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 6,
-  },
-  unreadMsgText: {
-    color: "#000",
-    fontWeight: "700", // Make text bold if unread
-  },
-  badgeContainer: {
-    backgroundColor: "#FF3B30", // WhatsApp Red
-    borderRadius: 12,
-    minWidth: 22,
-    height: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 5,
-    marginLeft: 10,
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
   },
 });

@@ -45,7 +45,6 @@ export async function fetchReceivedLikesSince(
   since: number,
   gender: string,
 ): Promise<Profile[]> {
-  // 1. 🔹 Use 'params' key so the wrapper appends them as ?uid=...&since=...
   const res = await api.get<{ profiles: Profile[] }>(
     `/likes/received-profiles`,
     {

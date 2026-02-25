@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useProfileContext } from "../../../context/ProfileContext";
 import { fetchReceivedLikesSince } from "../../home/apis/likeApis";
 import { Profile } from "../../../types/profile";
-import { formatDOB } from "../../../utils/dateUtils";
 
 // 1. The Strategy
 // Source: We take the likedSentIds (the array of UIDs you've liked).
@@ -38,7 +38,6 @@ export function useLikesSentProfilesList(uid: string) {
     });
 
     const profilesInCache = Array.from(profilesMap.keys());
-    console.log("IDs currently in Feed Cache:", profilesInCache);
 
     // 3. 🔹 Cross-reference IDs with Disk Cache
     // We reverse likedIds to get the most recent likes first
@@ -46,7 +45,7 @@ export function useLikesSentProfilesList(uid: string) {
     const reversedIds = [...likedIds].reverse();
 
     for (const id of reversedIds) {
-      if (matched.length >= 20) break; // ⚡ STOP at 20 (Requirement)
+      if (matched?.length >= 20) break; // ⚡ STOP at 20 (Requirement)
 
       const cachedProfile = profilesMap.get(id);
       if (cachedProfile) {
@@ -65,7 +64,7 @@ export function useLikesSentProfilesList(uid: string) {
           id: p.uid,
           name: p.fullName || "User", // Ensure correct key from Profile
           photo: p.thumbnail || null, // Ensure correct key from Profile
-          age: p.dateOfBirth ? formatDOB(p.dateOfBirth) : "18+",
+          age: p.dateOfBirth,
           profile: p, // Pass full profile for Details navigation
         };
       })
@@ -90,51 +89,70 @@ export function useLikesReceivedProfilesList(uid: string, gender: string) {
   const queryKey = ["likesReceivedProfiles", uid, gender];
   const syncKey = ["likesLastSync", uid];
 
-  return useQuery<Profile[]>({
+  const query = useQuery<Profile[]>({
     queryKey,
     queryFn: async () => {
       // 1. Get current cached profiles and last sync time from MMKV
       const existing = queryClient.getQueryData<Profile[]>(queryKey) || [];
-      const lastSync = queryClient.getQueryData<number>(syncKey) || 0;
+      const lastSyncData = queryClient.getQueryData(syncKey);
+      const lastSync = typeof lastSyncData === "number" ? lastSyncData : 1;
 
-      console.log(
-        `📡 Checking for new likes since: ${new Date(lastSync).toISOString()}`,
-      );
+      try {
+        // 2. Add '|| []' to the fetch result to prevent 'undefined' crashes
+        console.log("fetchReceivedLikesSince params:", uid, lastSync, gender);
+        const response = await fetchReceivedLikesSince(uid, lastSync, gender);
+        const newProfiles = response || []; // FAIL-SAFE
+        console.log("newprofiles:", newProfiles?.length);
 
-      // 2. Fetch only LIKES created after our last sync
-      // If lastSync is 0, it will fetch the latest batch (initial load)
-      const newProfiles = await fetchReceivedLikesSince(uid, lastSync, gender);
-      // 3. Merge: Newest at the top
-      const existingIds = new Set(newProfiles.map((p) => p.uid));
-      const merged = [
-        ...newProfiles,
-        ...existing.filter((p) => !existingIds.has(p.uid)),
-      ];
+        // 3. Early return if nothing new to save CPU/Memory
+        if (newProfiles.length === 0) {
+          return existing;
+        }
 
-      // 4. 🔹 THE PRUNE: Keep latest 50 forever
-      const pruned = merged.slice(0, 50);
+        const existingIds = new Set(newProfiles.map((p) => p.uid));
+        const merged = [
+          ...newProfiles,
+          ...existing.filter((p) => !existingIds.has(p.uid)),
+        ];
 
-      // 5. 🔹 UPDATE SYNC TIME: Use the 'ts' of the newest profile or current time
-      const nextSync =
-        newProfiles.length > 0
-          ? Math.max(
-              ...newProfiles.map((p) => {
-                // Handle both Firestore Timestamp objects and numeric ms
-                const ts = (p as any).createdAt;
-                return typeof ts === "number"
-                  ? ts
-                  : ts?.toMillis?.() || Date.now();
-              }),
-            )
-          : lastSync === 0
-            ? Date.now()
-            : lastSync;
-      queryClient.setQueryData(syncKey, nextSync);
+        const pruned = merged.slice(0, 50);
 
-      return pruned;
+        // 4. Calculate next sync timestamp safely
+        const latestTs = Math.max(
+          ...newProfiles.map((p) => {
+            const ts = (p as any).createdAt;
+            // High-end check: Handle Firestore Timestamp vs Date vs Number
+            if (!ts) return Date.now();
+            return typeof ts === "number" ? ts : ts?.toMillis?.() || Date.now();
+          }),
+        );
+
+        queryClient.setQueryData(syncKey, latestTs);
+        return pruned;
+      } catch (error) {
+        console.error("Sync Failed:", error);
+        // Return existing data so the UI doesn't go blank on network failure
+        return existing;
+      }
     },
     enabled: !!uid,
-    staleTime: 1000 * 60 * 60, // Check for new likes at most once per hour
+    staleTime: 1000 * 60 * 5, // Check for new likes at most once per hour
     gcTime: Infinity, // 🔹 Keep in MMKV disk cache forever
   });
+
+  // Maps the raw profiles to the exact UI-ready shape used in Sent Likes
+  const transformedData = (query.data || []).map((p) => ({
+    id: p.uid,
+    name: p.fullName || "User",
+    photo: p.thumbnail || null,
+    age: p.dateOfBirth,
+    profile: p, // Pass full profile for Details navigation
+  }));
+
+  return {
+    data: transformedData,
+    isLoading: query.isLoading,
+    //  isRefetching: query.isRefetching,
+    //  refetch: query.refetch,
+  };
 }

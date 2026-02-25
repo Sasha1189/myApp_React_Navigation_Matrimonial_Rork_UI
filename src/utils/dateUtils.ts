@@ -82,3 +82,24 @@ export const formatTime = (
     year: "2-digit",
   });
 };
+
+export const formatStatusTime = (timestamp: number | any): string => {
+  if (!timestamp) return "";
+
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const date = new Date(timestamp);
+  const isToday = new Date().toDateString() === date.toDateString();
+
+  if (isToday) {
+    return `today at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  }
+
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+};

@@ -25,6 +25,7 @@ import { ChatListHelper } from "../components/ChatListHelper";
 export default function MessagesScreen() {
   const { user } = useAuth();
   const uid = user?.uid;
+  const gender = user?.displayName;
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats",
   );
@@ -40,6 +41,11 @@ export default function MessagesScreen() {
     reset,
     isLoading: chatsLoading,
   } = useMessageInbox(uid!);
+  const { data: likesSent, isLoading: sentLoading } = useLikesSentProfilesList(
+    uid!,
+  );
+  const { data: likesReceived, isLoading: receivedLoading } =
+    useLikesReceivedProfilesList(uid!, gender!);
 
   const helper = ChatListHelper({
     isLive,
@@ -62,8 +68,13 @@ export default function MessagesScreen() {
     if (activeTab === "chats") {
       data = chatBanners;
       loading = chatsLoading;
+    } else if (activeTab === "sent") {
+      data = likesSent;
+      loading = sentLoading;
+    } else {
+      data = likesReceived!;
+      loading = receivedLoading;
     }
-    // Logic for other tabs goes here...
 
     return { currentData: data, isLoadingState: loading };
   }, [activeTab, chatBanners, chatsLoading]);
@@ -107,7 +118,6 @@ export default function MessagesScreen() {
         <EmptyState type={activeTab} />
       ) : (
         <View style={{ flex: 1 }}>
-          {/* {helper.renderOfflineBar()} */}
           <FlatList
             ref={flatListRef}
             data={currentData}

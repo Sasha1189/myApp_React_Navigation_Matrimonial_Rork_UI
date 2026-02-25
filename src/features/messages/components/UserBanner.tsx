@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { theme } from "../../../constants/theme";
 import { UserBannerItem } from "../type/chattype";
 import { useAppNavigation } from "../../../navigation/hooks";
+import { formatDOB } from "@/utils/dateUtils";
 
 interface UserBannerProps {
   item: UserBannerItem;
@@ -12,6 +13,9 @@ interface UserBannerProps {
 
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const navigation = useAppNavigation();
+
+  console.log("userbanner:", item?.age);
+  console.log("age:", formatDOB(item.age, "age"));
 
   const handlePress = () => {
     if (item.profile) {
@@ -35,7 +39,7 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
       />
       <View style={styles.activityContent}>
         <Text style={styles.activityName}>
-          {item?.name || "Unknown"}, {item?.age || "18+"}
+          {item?.name || "Username"}, {formatDOB(item?.age, "age") || "18+"}
         </Text>
         <Text style={styles.activityText}>
           {type === "sent" ? "You liked this profile ❤️" : "They liked you 💌"}
@@ -46,14 +50,11 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
 };
 
 const styles = StyleSheet.create({
-  activityContainer: {
-    paddingHorizontal: theme.spacing.md,
-  },
   activityCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "white",
-    padding: theme.spacing.md,
+    padding: theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
     marginBottom: theme.spacing.sm,
     shadowColor: theme.colors.shadow,

@@ -1,4 +1,5 @@
 import React from "react";
+import { theme } from "../../../theme/index";
 import { IMessage } from "../type/chattype";
 import { View, Text } from "react-native";
 import { ReadStatus } from "./ReadStatus";
@@ -9,7 +10,7 @@ export const MessageBubble = React.memo(
       <View
         style={{
           alignSelf: isMe ? "flex-end" : "flex-start",
-          backgroundColor: isMe ? "#DCF8C6" : "#ECECEC",
+          backgroundColor: isMe ? theme.colors.primary + "20" : "#ECECEC",
           padding: 10,
           margin: 5,
           borderRadius: 15,
