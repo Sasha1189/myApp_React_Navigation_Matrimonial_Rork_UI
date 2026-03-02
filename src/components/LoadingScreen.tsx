@@ -17,7 +17,7 @@ const LoadingScreen = () => {
           duration: 0,
           useNativeDriver: false,
         }),
-      ])
+      ]),
     );
     loopAnimation.start();
     return () => loopAnimation.stop();
@@ -74,68 +74,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
 });
-
-// emoji
-
-// import React, { useRef, useEffect } from "react";
-// import { View, Text, Animated, StyleSheet } from "react-native";
-
-// const LoadingScreen = () => {
-//   const bounceAnim = useRef(new Animated.Value(0)).current;
-
-//   useEffect(() => {
-//     const loop = Animated.loop(
-//       Animated.sequence([
-//         Animated.timing(bounceAnim, {
-//           toValue: -20,
-//           duration: 400,
-//           useNativeDriver: true,
-//         }),
-//         Animated.timing(bounceAnim, {
-//           toValue: 0,
-//           duration: 400,
-//           useNativeDriver: true,
-//         }),
-//       ])
-//     );
-//     loop.start();
-
-//     return () => loop.stop();
-//   }, []);
-
-//   return (
-//     <View style={styles.container}>
-//       <Animated.Text
-//         style={[
-//           styles.emoji,
-//           {
-//             transform: [{ translateY: bounceAnim }],
-//           },
-//         ]}
-//       >
-//         🍇
-//       </Animated.Text>
-//       <Text style={styles.text}>Warming up the vineyard...</Text>
-//     </View>
-//   );
-// };
-
-// export default LoadingScreen;
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#f0f2f5",
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-//   emoji: {
-//     fontSize: 64,
-//     marginBottom: 20,
-//   },
-//   text: {
-//     fontSize: 18,
-//     color: "#444",
-//     fontWeight: "500",
-//   },
-// });

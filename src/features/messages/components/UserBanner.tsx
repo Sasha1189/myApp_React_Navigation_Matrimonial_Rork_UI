@@ -14,9 +14,6 @@ interface UserBannerProps {
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const navigation = useAppNavigation();
 
-  console.log("userbanner:", item?.age);
-  console.log("age:", formatDOB(item.age, "age"));
-
   const handlePress = () => {
     if (item.profile) {
       navigation.navigate("Details", {

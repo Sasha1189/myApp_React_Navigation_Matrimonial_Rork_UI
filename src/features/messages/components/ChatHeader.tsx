@@ -5,7 +5,7 @@ import { Image } from "expo-image"; // Recommended for React Native 0.81
 interface ChatHeaderProps {
   name: string;
   photo?: string;
-  status: string;
+  statusLabel: string;
   isTyping: boolean;
   isOnline: boolean;
   theme: any;
@@ -14,7 +14,7 @@ interface ChatHeaderProps {
 export const ChatHeader = ({
   name,
   photo,
-  status,
+  statusLabel,
   isTyping,
   isOnline,
   theme,
@@ -33,14 +33,14 @@ export const ChatHeader = ({
       <Text style={styles.headerName} numberOfLines={1}>
         {name || "Chat"}
       </Text>
-      {status ? (
+      {statusLabel ? (
         <Text
           style={[
             styles.headerStatus,
             (isTyping || isOnline) && { color: theme.colors.textLight },
           ]}
         >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
         </Text>
       ) : null}
     </View>
@@ -48,9 +48,9 @@ export const ChatHeader = ({
 );
 
 const styles = StyleSheet.create({
-  headerContainer: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerContainer: { flexDirection: "row", alignItems: "center", gap: 15 },
   textContainer: { justifyContent: "center" },
   headerAvatar: { width: 36, height: 36, borderRadius: 18 },
-  headerName: { fontSize: 16, fontWeight: "600" },
-  headerStatus: { fontSize: 12, color: "gray" },
+  headerName: { fontSize: 16, color: "white", fontWeight: "600" },
+  headerStatus: { fontSize: 12, color: "white" },
 });

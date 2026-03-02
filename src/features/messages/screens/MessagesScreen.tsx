@@ -117,7 +117,7 @@ export default function MessagesScreen() {
       ) : currentData.length === 0 ? (
         <EmptyState type={activeTab} />
       ) : (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginHorizontal: 10 }}>
           <FlatList
             ref={flatListRef}
             data={currentData}

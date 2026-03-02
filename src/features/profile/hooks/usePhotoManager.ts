@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import storage from "@react-native-firebase/storage";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -12,6 +12,7 @@ const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
   const { user } = useAuth();
+  const uid = user?.uid;
   const { mutateAsync: updateProfile } = useUpdateProfileData(
     profile?.uid ?? "",
     profile?.gender,
@@ -19,6 +20,8 @@ export function usePhotoManager(profile: Profile | null) {
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [success, setSuccess] = useState(false);
 
   // keep photos in sync with profile updates
   useEffect(() => {
@@ -70,6 +73,12 @@ export function usePhotoManager(profile: Profile | null) {
     const toDelete = photos.find((p) => p.id === photoId);
     if (!toDelete) return;
 
+    if (toDelete.localUrl && !toDelete.downloadURL) {
+      const updated = photos.filter((p) => p.id !== photoId);
+      setPhotos(updated);
+      return;
+    }
+
     try {
       // 1. Delete the high-res file from Firebase Storage
       if (toDelete.downloadURL) {
@@ -83,30 +92,16 @@ export function usePhotoManager(profile: Profile | null) {
 
       // 3. 🔹 LOGIC CHANGE: If we deleted the primary, promote a new one
       if (toDelete.isPrimary && updated.length > 0) {
-        // Pick the first available photo as the new primary
-        updated[0].isPrimary = true;
-
-        // Generate a new root-level thumbnail for this new primary
-        const source = updated[0].localUrl || updated[0].downloadURL;
-        const thumb = await ImageManipulator.manipulateAsync(
-          source!,
-          [{ resize: { width: 80 } }],
-          {
-            compress: 0.5,
-            format: ImageManipulator.SaveFormat.JPEG,
-            base64: true,
-          },
-        );
-        newRootThumbnail = `data:image/jpeg;base64,${thumb.base64}`;
+        // 🔹 CALL HELPER if primary changed
+        if (toDelete.isPrimary) {
+          newRootThumbnail = await syncPrimaryThumbnail(updated[0], uid!);
+        }
       } else if (updated.length === 0) {
-        // Clear the banner if no photos are left
         newRootThumbnail = "";
       }
 
-      // 4. 🔹 STRIP localUrl for Database Sync
       const cleanPhotosForDb = updated.map(({ localUrl, ...rest }) => rest);
 
-      // 5. Sync both Photos and the Root Thumbnail to Firestore
       await updateProfile({
         photos: cleanPhotosForDb,
         thumbnail: newRootThumbnail,
@@ -127,35 +122,15 @@ export function usePhotoManager(profile: Profile | null) {
       const selectedPhoto = photos.find((p) => p.id === photoId);
       if (!selectedPhoto) return;
 
-      let selectedPhotoUrl = selectedPhoto.localUrl;
-
-      // 🔹 FIX: If localUrl is missing, download the remote image first
-      if (!selectedPhotoUrl && selectedPhoto.downloadURL) {
-        const downloadedFile = await File.downloadFileAsync(
-          selectedPhoto.downloadURL,
-          Paths.cache,
-        );
-        selectedPhotoUrl = downloadedFile.uri;
-      }
-
-      if (!selectedPhotoUrl) throw new Error("No source image found");
-
-      const processed = await processImage(selectedPhotoUrl!, "thumb");
-      const uniqueFilename = `thumb.jpg`;
-      const path = `users/${user?.uid}/thumbnail/${uniqueFilename}`;
-
-      const reference = storage().ref(path);
-      await reference.putFile(processed);
-      const newThumbnail = await reference.getDownloadURL();
-      // 2. 🔹 REORDER: Move primary to index 0
       const otherPhotos = photos.filter((p) => p.id !== photoId);
+
       const updatedPhotos = [
         { ...selectedPhoto, isPrimary: true }, // Put selected at index 0
         ...otherPhotos.map((p) => ({ ...p, isPrimary: false })), // Reset others
       ];
 
-      // 3. Update Local State
-      setPhotos(updatedPhotos);
+      // 2. 🔹 CALL HELPER
+      const newThumbnail = await syncPrimaryThumbnail(updatedPhotos[0], uid!);
 
       // 4. Update Database
       const cleanPhotosForDb = updatedPhotos.map(
@@ -165,7 +140,7 @@ export function usePhotoManager(profile: Profile | null) {
         photos: cleanPhotosForDb,
         thumbnail: newThumbnail,
       });
-
+      setPhotos(updatedPhotos);
       setIsEditing(false);
     } catch (err) {
       console.error("Set primary failed:", err);
@@ -183,11 +158,18 @@ export function usePhotoManager(profile: Profile | null) {
     }
 
     setLoading(true);
+    setProgress(0);
+    setSuccess(false);
+
+    // 1. Keep track of successfully uploaded Storage Refs to delete if Firestore fails
+    const uploadedRefs: any[] = [];
 
     try {
-      // const storage = getStorage();
       const updatedPhotos = [...photos];
       let rootThumbnail = profile?.thumbnail || "";
+
+      const totalFiles = pending.length;
+      let filesCompleted = 0;
 
       for (let p of pending) {
         const processed = await processImage(p.localUrl!, "photo");
@@ -195,40 +177,65 @@ export function usePhotoManager(profile: Profile | null) {
         const path = `users/${user?.uid}/profileImages/${uniqueFilename}`;
 
         const reference = storage().ref(path);
-        await reference.putFile(processed);
+        uploadedRefs.push(reference);
+
+        const task = reference.putFile(processed);
+        task.on("state_changed", (taskSnapshot) => {
+          const fileProgress =
+            (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes) * 100;
+          const totalPercent =
+            (filesCompleted * 100 + fileProgress) / totalFiles;
+          setProgress(totalPercent);
+        });
+
+        await task;
+        filesCompleted++;
+
         const downloadURL = await reference.getDownloadURL();
 
         const idx = updatedPhotos.findIndex((x) => x.id === p.id);
         if (idx !== -1) {
           updatedPhotos[idx].downloadURL = downloadURL;
-
-          if (updatedPhotos[idx].isPrimary) {
-            const processed = await processImage(p.localUrl!, "thumb");
-            const uniqueFilename = `thumb.jpg`;
-            const path = `users/${user?.uid}/thumbnail/${uniqueFilename}`;
-
-            const reference = storage().ref(path);
-            await reference.putFile(processed);
-            rootThumbnail = await reference.getDownloadURL();
+          if (idx === 0) {
+            console.log(
+              "📸 Syncing root thumbnail because Index 0 was updated...",
+            );
+            rootThumbnail = await syncPrimaryThumbnail(updatedPhotos[0], uid!);
           }
         }
       }
 
-      // 🔹 STRIP localUrl so it never touches Firestore
-      const cleanPhotosForDb = updatedPhotos.map(
-        ({ localUrl, ...rest }) => rest,
-      );
+      try {
+        const cleanPhotosForDb = updatedPhotos.map(
+          ({ localUrl, ...rest }) => rest,
+        );
 
-      await updateProfile({
-        photos: cleanPhotosForDb,
-        thumbnail: rootThumbnail,
-      });
-      setPhotos(updatedPhotos);
+        await updateProfile({
+          photos: cleanPhotosForDb,
+          thumbnail: rootThumbnail,
+        });
 
-      Alert.alert("Success", "Photos updated successfully!");
-      setIsEditing(false);
+        setPhotos(updatedPhotos);
+        setSuccess(true);
+        setProgress(100);
+        setIsEditing(false);
+
+        setTimeout(() => {
+          setSuccess(false);
+        }, 3000);
+
+        Alert.alert("Success", "Photos updated successfully!");
+      } catch (dbErr) {
+        console.error("Firestore Update Failed. Cleaning storage...", dbErr);
+        await Promise.all(
+          uploadedRefs.map((ref) => ref.delete().catch(() => {})),
+        );
+        throw new Error("Database Sync Failed");
+      }
     } catch (err) {
       console.error("Upload failed:", err);
+      setProgress(0);
+      setSuccess(false);
       Alert.alert("Error", "Failed to upload photos.");
     } finally {
       setLoading(false);
@@ -241,6 +248,8 @@ export function usePhotoManager(profile: Profile | null) {
     isEditing,
     setIsEditing,
     loading,
+    progress,
+    success,
     maxPhotos: MAX_PHOTOS,
     addPhoto,
     deletePhoto,
@@ -284,4 +293,34 @@ const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
   });
 
   return processed.uri;
+};
+
+const syncPrimaryThumbnail = async (
+  primaryPhoto: Photo,
+  uid: string,
+): Promise<string> => {
+  // 1. Determine Source (Priority: Local > Remote)
+  let sourceUri = primaryPhoto.localUrl;
+
+  if (!sourceUri && primaryPhoto.downloadURL) {
+    const downloadedFile = await File.downloadFileAsync(
+      primaryPhoto.downloadURL,
+      Paths.cache,
+    );
+    sourceUri = downloadedFile.uri;
+  }
+
+  if (!sourceUri) throw new Error("No source image found for thumbnail");
+
+  // 2. Process: Resize to 150px (Standard for your app)
+  const processedThumb = await processImage(sourceUri, "thumb");
+
+  // 3. Upload: Standardize path to 'thumb.jpg' (overwrites old one)
+  const thumbPath = `users/${uid}/thumbnail/thumb.jpg`;
+  const thumbRef = storage().ref(thumbPath);
+
+  await thumbRef.putFile(processedThumb);
+
+  // 4. Return new Storage URL
+  return await thumbRef.getDownloadURL();
 };

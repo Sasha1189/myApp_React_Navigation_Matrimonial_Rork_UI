@@ -31,8 +31,6 @@ export default function ManagePhotosGrid({
 }: Props) {
   const emptySlots = Math.max(0, maxPhotos - photos.length);
 
-  console.log("Photos:", photos);
-
   const renderPhotoSlot = (photo?: Photo, index?: number) => {
     if (!photo) {
       return (
@@ -106,6 +104,7 @@ const styles = StyleSheet.create({
   photoContainer: {
     position: "relative",
     marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.cardBackground,
   },
   photo: {
     width: photoSize,

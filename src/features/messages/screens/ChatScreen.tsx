@@ -15,7 +15,6 @@ import { Image } from "expo-image";
 import { theme } from "../../../theme/index";
 import { useProfileContext } from "src/context/ProfileContext";
 import { useChatSession } from "../hooks/useChatSession";
-import { formatTime } from "../../../utils/dateUtils";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInput } from "../components/ChatInput";
 import { useAppNavigation } from "src/navigation/hooks";
@@ -81,13 +80,12 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
 
   useLayoutEffect(() => {
     if (!otherUser?.uid) return;
-
     navigation.setOptions({
       headerTitle: () => (
         <ChatHeader
           name={otherUser.name}
           photo={otherUser.photo}
-          status={getStatusLabel()}
+          statusLabel={getStatusLabel()}
           isTyping={isOtherTyping}
           isOnline={otherStatus?.state === "online"}
           theme={theme}
@@ -157,9 +155,13 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
 export const styles = StyleSheet.create({
   container: { flex: 1 },
   inner: { flex: 1 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  center: {
+    flex: 1,
+    marginHorizontal: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   listContent: {
-    paddingHorizontal: 10,
     paddingVertical: 20,
     paddingBottom: 10,
   },

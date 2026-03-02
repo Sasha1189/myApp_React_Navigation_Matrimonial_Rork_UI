@@ -41,7 +41,6 @@ export function useChatSession(
   const lastTypingState = useRef(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Store unsubscription functions to prevent memory leaks
   const msgUnsubscribe = useRef<(() => void) | null>(null);
   const newMsgUnsubscribe = useRef<(() => void) | null>(null);
 
@@ -160,22 +159,29 @@ export function useChatSession(
     };
   }, [roomId, myUid, stopListeners]);
 
+  const clearUnreadBadge = useCallback(() => {
+    update(ref(rtdb, `inbox/${myUid}/${roomId}`), { u: null });
+  }, [myUid, roomId]);
+
   useFocusEffect(
     useCallback(() => {
       const otherUid = otherUser?.uid;
       if (!roomId || !myUid || !otherUid) return;
 
+      clearUnreadBadge();
+
       startLiveMessages();
 
       const statusRef = ref(rtdb, `status/${otherUid}`);
-      const typingRef = ref(rtdb, `typing/${roomId}/${otherUid}`);
+      const otherTypingRef = ref(rtdb, `typing/${roomId}/${otherUid}`);
 
       const unsubStatus = onValue(statusRef, (snap) =>
         setOtherStatus(snap.val()),
       );
-      const unsubTyping = onValue(typingRef, (snap) =>
-        setIsOtherTyping(!!snap.val()),
-      );
+      const unsubTyping = onValue(otherTypingRef, (snap) => {
+        const val = snap.val();
+        setIsOtherTyping(!!val); // If node exists, it's true. If removed, it's false.
+      });
 
       return () => {
         stopListeners();
@@ -184,7 +190,14 @@ export function useChatSession(
         remove(ref(rtdb, `typing/${roomId}/${myUid}`));
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       };
-    }, [roomId, myUid, otherUser?.uid, startLiveMessages, stopListeners]),
+    }, [
+      roomId,
+      myUid,
+      otherUser?.uid,
+      startLiveMessages,
+      stopListeners,
+      clearUnreadBadge,
+    ]),
   );
 
   const loadEarlier = useCallback(async () => {
@@ -270,6 +283,7 @@ export function useChatSession(
           name: sender.name || "User",
           photo: sender.photo || "",
         },
+        u: true, // <--- The "Unread" flag
       };
 
       return update(ref(rtdb), updates);
@@ -302,18 +316,14 @@ export function useChatSession(
   );
 
   const getStatusLabel = useCallback(() => {
-    // 1. Priority: Typing
     if (isOtherTyping) return "typing...";
 
-    // 2. Priority: Online
     if (otherStatus?.state === "online") return "online";
 
-    // 3. Priority: Last Seen (formatted)
     if (otherStatus?.lastChanged) {
-      // Uses the helper to return "just now", "5m ago", etc.
       return `last seen ${formatStatusTime(otherStatus.lastChanged)}`;
     }
-    // Fallback for new users with no status node yet
+
     return "";
   }, [isOtherTyping, otherStatus]);
 

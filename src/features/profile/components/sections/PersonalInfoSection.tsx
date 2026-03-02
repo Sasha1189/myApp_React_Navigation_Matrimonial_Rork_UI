@@ -29,6 +29,7 @@ import {
   manglikOptions,
   rashiOptions,
   horoscopeOptions,
+  isReady,
 } from "../form/profileOptions";
 import { isFieldLocked } from "../form/profileValidation";
 
@@ -266,6 +267,23 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             value={value}
             placeholder="Yes / No / Optional"
             options={horoscopeOptions}
+            onSelect={onChange}
+            editable={editable}
+            icon={Zap}
+          />
+        )}
+      />
+
+      {/* Horoscope Required */}
+      <Controller
+        control={control}
+        name="isReady"
+        render={({ field: { onChange, value } }) => (
+          <PickerField
+            label="Ready to get Married soon"
+            value={value}
+            placeholder="Yes / No"
+            options={isReady}
             onSelect={onChange}
             editable={editable}
             icon={Zap}

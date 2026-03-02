@@ -174,6 +174,16 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
               ? formatDOB(profile.dateOfBirth, "age")
               : "18+"}
           </Text>
+          <View
+            style={[
+              styles.badge,
+              {
+                backgroundColor: profile?.isActive
+                  ? theme.colors.primary
+                  : theme.colors.textLight,
+              },
+            ]}
+          />
         </View>
 
         {profile?.occupation && (
@@ -284,14 +294,22 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   name: {
-    fontSize: theme.fontSize.xxl,
+    fontSize: theme.fontSize.xl,
     fontWeight: "bold",
     color: "white",
     marginRight: theme.spacing.sm,
   },
   age: {
-    fontSize: theme.fontSize.xl,
+    fontSize: theme.fontSize.lg,
     color: "white",
+  },
+  badge: {
+    borderRadius: theme.borderRadius.round,
+    minWidth: 15,
+    height: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
   },
   infoRow: {
     flexDirection: "row",

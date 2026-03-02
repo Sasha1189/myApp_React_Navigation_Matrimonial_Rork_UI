@@ -3,16 +3,18 @@ import {
   View,
   Text,
   Modal,
+  Animated,
   Pressable,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { theme } from "../../../theme";
 import { Profile } from "../../../types/profile";
 import { api } from "../../../services/api";
 import { useAuth } from "../../../context/AuthContext";
-import LoadingScreen from "../../../components/LoadingScreen";
 
 interface GenderModalProps {
   visible: boolean;
@@ -32,6 +34,23 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
   const [gender, setGender] = useState<Gender>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [retry, setRetry] = useState<boolean>(false);
+
+  const scaleValue = useRef(new Animated.Value(1)).current;
+  const onPressIn = () => {
+    Animated.spring(scaleValue, {
+      toValue: 0.95, // Shrink to 95%
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const onPressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1, // Back to 100%
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
   const createUser = async (
     firebaseUser: FirebaseUserLike | null,
@@ -114,19 +133,25 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
               <Text style={styles.modalButtonText}>Female</Text>
             </Pressable>
           </View>
-          <TouchableOpacity
-            style={styles.modalButtonUpdate}
+          <AnimatedPressable
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
             onPress={updateFirebaseUser}
             disabled={loading || !gender}
+            style={[
+              styles.modalButtonUpdate,
+              { transform: [{ scale: scaleValue }] },
+              { backgroundColor: gender ? theme.colors.primary : "#A0AEC0" },
+            ]}
           >
             {loading ? (
-              <LoadingScreen />
+              <ActivityIndicator size="small" color="#ffffff" />
             ) : (
               <Text style={styles.modalButtonText}>
                 {retry ? "Try Again" : "Update"}
               </Text>
             )}
-          </TouchableOpacity>
+          </AnimatedPressable>
         </View>
       </View>
     </Modal>
@@ -167,13 +192,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   modalButtonUpdate: {
-    alignContent: "flex-end",
+    // alignContent: "flex-end",
+    // marginTop: 20,
+    // backgroundColor: "gray",
+    // paddingVertical: 10,
+    // paddingHorizontal: 24,
+    // borderRadius: 8,
     marginTop: 20,
-    backgroundColor: "gray",
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12, // More modern rounded look
+    minHeight: 48, // Standard touch target size
+    justifyContent: "center",
+    alignItems: "center",
+    // Soft shadow for depth
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
+
   modalButtonText: {
     color: "#fff",
     fontSize: 16,

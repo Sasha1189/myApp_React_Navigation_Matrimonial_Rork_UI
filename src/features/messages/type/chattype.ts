@@ -21,7 +21,7 @@ export interface IInboxItem {
   lastMessage: string;
   updatedAt: number;
   otherUser: ChatUser;
-  unreadCount: number;
+  u?: Boolean;
 }
 
 export interface ChatRouteProp {

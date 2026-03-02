@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import {
   Heart,
+  Cherry,
   MessageCircle,
   User,
   Filter,
@@ -30,8 +31,14 @@ export default function TabNavigator() {
 
         headerTitleAlign: "center",
         headerTitleStyle: {
+          // fontSize: 24,
+          // fontWeight: "600",
           fontSize: 24,
+          alignItems: "center",
           fontWeight: "600",
+          // fontStyle: "sans-serif-medium",
+          color: theme.colors.primaryLight,
+          letterSpacing: 2,
         },
 
         tabBarShowLabel: false,
@@ -68,7 +75,7 @@ export default function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: "Discover",
+          title: "Lonari",
           tabBarIcon: ({ color }) => <Heart size={30} color={color} />,
           headerRight: () => (
             <View style={{ flexDirection: "row", marginRight: 12 }}>
@@ -84,6 +91,19 @@ export default function TabNavigator() {
               >
                 <Search size={20} color="white" />
               </TouchableOpacity>
+            </View>
+          ),
+          headerLeft: () => (
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                borderWidth: 0.5,
+                borderColor: "#F5F7FA",
+              }}
+            >
+              <Cherry size={40} color="#F5F7FA" />
             </View>
           ),
         }}

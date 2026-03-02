@@ -1,6 +1,5 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Edit3 } from "lucide-react-native";
 import { theme } from "../../../theme";
 import { useProfileContext } from "../../../context/ProfileContext";
@@ -16,6 +15,8 @@ export default function ManagePhotosScreen() {
     maxPhotos,
     isEditing,
     loading,
+    progress,
+    success,
     addPhoto,
     deletePhoto,
     setPrimary,
@@ -37,6 +38,8 @@ export default function ManagePhotosScreen() {
         {/* Save Button */}
         <UploadButton
           loading={loading}
+          progress={progress}
+          success={success}
           isEditing={isEditing}
           onPress={uploadPhotos}
         />
@@ -56,21 +59,7 @@ export default function ManagePhotosScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
-  infoCard: {
-    backgroundColor: "white",
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    flexDirection: "row",
-  },
-  infoContent: { flex: 1, marginLeft: theme.spacing.md },
-  infoTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  infoText: { fontSize: theme.fontSize.sm, color: theme.colors.textLight },
+
   tipCard: {
     backgroundColor: theme.colors.accent + "20",
     borderRadius: theme.borderRadius.lg,

@@ -23,10 +23,9 @@ export const ChatBanner = React.memo(
         },
       });
     };
-
     return (
       <TouchableOpacity
-        style={styles.activityCard}
+        style={[styles.activityCard, item.u && styles.unreadCard]}
         onPress={handlePress}
         activeOpacity={0.7}
       >
@@ -48,19 +47,18 @@ export const ChatBanner = React.memo(
           </View>
           <View style={styles.footer}>
             <Text
-              style={[styles.msg, item.unreadCount > 0 && styles.unreadMsgText]}
+              style={[styles.msg, item?.u && styles.unreadMsgText]}
               numberOfLines={1}
             >
               {item.lastMessage}
             </Text>
-
-            {/* 🔹 THE RED BADGE */}
-            {item.unreadCount > 0 && (
-              <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>
-                  {item.unreadCount > 9 ? "9+" : item.unreadCount}
-                </Text>
-              </View>
+            {item.u && (
+              <View
+                style={[
+                  styles.badge,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+              />
             )}
           </View>
         </View>
@@ -73,7 +71,7 @@ const styles = StyleSheet.create({
   activityCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: theme.colors.cardBackground,
     padding: theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
     marginBottom: theme.spacing.sm,
@@ -82,6 +80,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  unreadCard: {
+    backgroundColor: theme.colors.primaryLight,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
   },
   activityImage: {
     width: 50,
@@ -147,10 +150,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   badge: {
-    backgroundColor: theme.colors.danger,
     borderRadius: theme.borderRadius.round,
-    minWidth: 20,
-    height: 20,
+    minWidth: 15,
+    height: 15,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 6,
