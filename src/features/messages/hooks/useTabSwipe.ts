@@ -19,10 +19,13 @@ export function useTabSwipe(
   currentTab: TabType,
   setTab: (tab: TabType) => void,
 ) {
+  // 🔹 FIX: Use a Ref to keep track of the tab so the Responder isn't "stale"
+  const currentTabRef = useRef(currentTab);
+  currentTabRef.current = currentTab;
+
   const tabs: TabType[] = ["chats", "sent", "received"];
 
   const triggerTabChange = (nextTab: TabType) => {
-    // Smooth transition for the switch
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setTab(nextTab);
   };
@@ -30,22 +33,25 @@ export function useTabSwipe(
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, { dx, dy }) => {
-        // Only trigger if horizontal movement is more than vertical
-        return Math.abs(dx) > 35 && Math.abs(dy) < 25;
+        // Capture if horizontal swipe is intentional (> 30px)
+        return Math.abs(dx) > 30 && Math.abs(dy) < 25;
       },
       onPanResponderRelease: (_, { dx }) => {
-        const currentIndex = tabs.indexOf(currentTab);
+        const active = currentTabRef.current;
+        const currentIndex = tabs.indexOf(active);
 
-        // 👈 SWIPE LEFT (Finger moves right -> left) = GO TO NEXT TAB
+        // LOGIC CHECK:
+        // dx < -60 (Swipe Right to Left) -> Move Forward (Next Tab)
+        // dx > 60  (Swipe Left to Right) -> Move Backward (Prev Tab)
+
         if (dx < -60) {
-          if (currentTab === "chats") triggerTabChange("sent");
-          else if (currentTab === "sent") triggerTabChange("received");
-        }
-
-        // 👉 SWIPE RIGHT (Finger moves left -> right) = GO TO PREVIOUS TAB
-        else if (dx > 60) {
-          if (currentTab === "received") triggerTabChange("sent");
-          else if (currentTab === "sent") triggerTabChange("chats");
+          // USER SWIPED LEFT (Move to next tab)
+          if (active === "chats") triggerTabChange("sent");
+          else if (active === "sent") triggerTabChange("received");
+        } else if (dx > 60) {
+          // USER SWIPED RIGHT (Move to previous tab)
+          if (active === "received") triggerTabChange("sent");
+          else if (active === "sent") triggerTabChange("chats");
         }
       },
     }),

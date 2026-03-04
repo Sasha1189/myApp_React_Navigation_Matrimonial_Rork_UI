@@ -79,10 +79,7 @@ export default function MessagesScreen() {
   }, [activeTab, chatBanners, chatsLoading]);
 
   return (
-    <LinearGradient
-      colors={[theme.colors.background, "white"]}
-      style={styles.container}
-    >
+    <View style={styles.container} {...panHandlers}>
       <View style={styles.tabsContainer}>
         <TabButton
           tab="chats"
@@ -108,47 +105,48 @@ export default function MessagesScreen() {
       </View>
 
       <Text style={styles.sectionTitle}>Recent Activity</Text>
-      <View style={{ flex: 1 }} {...panHandlers}>
-        {isLoadingState && currentData.length === 0 ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={theme.colors.primary} />
-          </View>
-        ) : currentData.length === 0 ? (
-          <EmptyState type={activeTab} />
-        ) : (
-          <View style={{ flex: 1, marginHorizontal: 10 }}>
-            <FlatList
-              key={activeTab}
-              ref={flatListRef}
-              data={currentData}
-              keyExtractor={(item) => item.roomId || item.uid || item.id}
-              renderItem={({ item }) =>
-                activeTab === "chats" ? (
-                  <ChatBanner item={item} uid={uid!} />
-                ) : (
-                  <UserBanner item={item} type={activeTab} />
-                )
-              }
-              initialNumToRender={8}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-              removeClippedSubviews={true}
-              ListFooterComponent={
-                activeTab === "chats" ? helper.renderFooter : null
-              }
-              contentContainerStyle={{ paddingBottom: 100 }}
-            />
-            {activeTab === "chats" && helper.renderFloating()}
-          </View>
-        )}
-      </View>
-    </LinearGradient>
+
+      {isLoadingState && currentData.length === 0 ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.colors.primary} />
+        </View>
+      ) : currentData.length === 0 ? (
+        <EmptyState type={activeTab} />
+      ) : (
+        <View style={{ flex: 1, marginHorizontal: 10 }}>
+          <FlatList
+            key={activeTab}
+            ref={flatListRef}
+            data={currentData}
+            keyExtractor={(item) => item.roomId || item.uid || item.id}
+            renderItem={({ item }) =>
+              activeTab === "chats" ? (
+                <ChatBanner item={item} uid={uid!} />
+              ) : (
+                <UserBanner item={item} type={activeTab} />
+              )
+            }
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
+            ListFooterComponent={
+              activeTab === "chats" ? helper.renderFooter : null
+            }
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+          {activeTab === "chats" && helper.renderFloating()}
+        </View>
+      )}
+    </View>
   );
 }
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
+    paddingBottom: theme.spacing.xl,
   },
   center: {
     flex: 1,

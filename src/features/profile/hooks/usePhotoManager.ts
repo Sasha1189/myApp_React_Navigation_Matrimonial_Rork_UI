@@ -142,6 +142,7 @@ export function usePhotoManager(profile: Profile | null) {
       });
       setPhotos(updatedPhotos);
       setIsEditing(false);
+      Alert.alert("Success", "Photos updated successfully!");
     } catch (err) {
       console.error("Set primary failed:", err);
     } finally {

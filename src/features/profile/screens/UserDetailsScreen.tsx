@@ -3,7 +3,7 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   Activity,
-  ArrowLeft,
+  HeartPulse,
   Brain,
   Briefcase,
   Building,
@@ -175,6 +175,11 @@ export default function UserDetailsScreen({
             label="Horoscope Required"
             value={profile.horoscopeRequired}
             icon={Zap}
+          />
+          <DetailRow
+            label="Ready to get married:"
+            value={profile.isReady}
+            icon={HeartPulse}
           />
         </DetailSection>
 
@@ -424,6 +429,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    paddingBottom: theme.spacing.xl,
   },
   cardContainer: {
     alignItems: "center",

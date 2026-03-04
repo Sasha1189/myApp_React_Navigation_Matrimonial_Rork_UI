@@ -53,99 +53,92 @@ export default function ProfileScreen(): React.ReactElement {
     },
   ];
   return (
-    <LinearGradient
-      colors={[theme.colors.primary, theme.colors.primaryDark]}
-      style={styles.container}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.compactHeader}>
-          <View style={styles.compactProfileColumn}>
-            <Image
-              source={
-                profile?.photos && profile.photos.length > 0
-                  ? { uri: profile.photos[0].downloadURL }
-                  : require("../../../../assets/images/profile.png")
-              }
-              style={styles.compactProfileImage}
-              contentFit={
-                profile?.photos && profile.photos.length > 0
-                  ? "cover"
-                  : "contain"
-              }
-              cachePolicy="disk"
-            />
-            <View style={styles.compactProfileInfo}>
-              <Text style={styles.compactName}>
-                {`${profile?.fullName}, ` || "User, "}
-              </Text>
-              <Text style={styles.compactAge}>
-                {profile?.dateOfBirth
-                  ? formatDOB(profile.dateOfBirth, "age")
-                  : "21"}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.statsContainerCompact}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValueCompact}>42</Text>
-              <Text style={styles.statLabelCompact}>Matches</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValueCompact}>156</Text>
-              <Text style={styles.statLabelCompact}>Likes Sent</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValueCompact}>89</Text>
-              <Text style={styles.statLabelCompact}>Likes Received</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.menuSection}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} onPress={item.onPress}>
-              <View style={styles.menuCard}>
-                <item.icon
-                  size={20}
-                  color={
-                    (item as any).danger
-                      ? theme.colors.danger
-                      : theme.colors.primary
-                  }
-                />
-                <Text
-                  style={[
-                    styles.menuItemText,
-                    (item as any).danger && styles.menuItemTextDanger,
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.premiumBanner}>
-          <LinearGradient
-            colors={["#FFD700", "#FFA500"]}
-            style={styles.premiumGradient}
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.compactHeader}>
+        <View style={styles.compactProfileColumn}>
+          <Image
+            source={
+              profile?.photos && profile.photos.length > 0
+                ? { uri: profile.photos[0].downloadURL }
+                : require("../../../../assets/images/profile.png")
+            }
+            style={styles.compactProfileImage}
+            contentFit={
+              profile?.photos && profile.photos.length > 0 ? "cover" : "contain"
+            }
+            cachePolicy="disk"
           />
-          <Text style={styles.premiumTitle}>Get Premium</Text>
-          <Text style={styles.premiumSubtitle}>
-            Unlimited likes, see who likes you, and more!
-          </Text>
-          <TouchableOpacity
-            style={styles.premiumButton}
-            onPress={() => navigation.navigate("Subscription")}
-          >
-            <Text style={styles.premiumButtonText}>Upgrade Now</Text>
-          </TouchableOpacity>
+          <View style={styles.compactProfileInfo}>
+            <Text style={styles.compactName}>
+              {`${profile?.fullName}, ` || "User, "}
+            </Text>
+            <Text style={styles.compactAge}>
+              {profile?.dateOfBirth
+                ? formatDOB(profile.dateOfBirth, "age")
+                : "21"}
+            </Text>
+          </View>
         </View>
-      </ScrollView>
-    </LinearGradient>
+        <View style={styles.statsContainerCompact}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValueCompact}>42</Text>
+            <Text style={styles.statLabelCompact}>Matches</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValueCompact}>156</Text>
+            <Text style={styles.statLabelCompact}>Likes Sent</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValueCompact}>89</Text>
+            <Text style={styles.statLabelCompact}>Likes Received</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.menuSection}>
+        {menuItems.map((item, index) => (
+          <TouchableOpacity key={index} onPress={item.onPress}>
+            <View style={styles.menuCard}>
+              <item.icon
+                size={20}
+                color={
+                  (item as any).danger
+                    ? theme.colors.danger
+                    : theme.colors.primary
+                }
+              />
+              <Text
+                style={[
+                  styles.menuItemText,
+                  (item as any).danger && styles.menuItemTextDanger,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.premiumBanner}>
+        <LinearGradient
+          colors={["#FFD700", "#FFA500"]}
+          style={styles.premiumGradient}
+        />
+        <Text style={styles.premiumTitle}>Get Premium</Text>
+        <Text style={styles.premiumSubtitle}>
+          Unlimited likes, see who likes you, and more!
+        </Text>
+        <TouchableOpacity
+          style={styles.premiumButton}
+          onPress={() => navigation.navigate("Subscription")}
+        >
+          <Text style={styles.premiumButtonText}>Upgrade Now</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -153,6 +146,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 10,
+    paddingBottom: 30,
+    backgroundColor: theme.colors.primary,
   },
   statItem: {
     flex: 1,

@@ -57,7 +57,11 @@ export default function ManagePhotosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    paddingBottom: theme.spacing.xs,
+  },
   content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
 
   tipCard: {

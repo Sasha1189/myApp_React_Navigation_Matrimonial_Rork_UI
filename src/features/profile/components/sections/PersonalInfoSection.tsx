@@ -2,6 +2,7 @@ import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import {
   UserCheck,
+  HeartIcon,
   Calendar,
   User,
   HeartHandshake,
@@ -274,19 +275,19 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         )}
       />
 
-      {/* Horoscope Required */}
+      {/* Marriage Ready */}
       <Controller
         control={control}
         name="isReady"
         render={({ field: { onChange, value } }) => (
           <PickerField
-            label="Ready to get Married soon"
+            label="Ready to get Married soon?"
             value={value}
             placeholder="Yes / No"
             options={isReady}
             onSelect={onChange}
             editable={editable}
-            icon={Zap}
+            icon={HeartIcon}
           />
         )}
       />
