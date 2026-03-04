@@ -1,8 +1,18 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
 import { Image } from "expo-image";
 import { theme } from "../../../constants/theme";
 import { UserBannerItem } from "../type/chattype";
+import { useAuth } from "src/context/AuthContext";
+import { LikesReceivedCache } from "../../../cache/cacheConfig";
+import { getProfile } from "../../profile/api/profileApi";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { formatDOB } from "@/utils/dateUtils";
 
@@ -12,41 +22,81 @@ interface UserBannerProps {
 }
 
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
+  const { user } = useAuth();
   const navigation = useAppNavigation();
+  const [isFetching, setIsFetching] = useState(false); // Add local loading state
 
-  const handlePress = () => {
-    if (item.profile) {
-      navigation.navigate("Details", {
-        profile: item.profile,
-      });
+  const handlePress = async () => {
+    if (isFetching) return;
+    setIsFetching(true);
+
+    try {
+      // 1. Try Cache (Cost: $0)
+      let profile = LikesReceivedCache.getProfileDetail(item.id);
+
+      if (!profile) {
+        // 2. Fetch Firestore if not in cache (Cost: 1 Read)
+        // Ensure you pass the correct gender and ID
+        profile = await getProfile(item.id, user?.displayName || "");
+
+        // 3. Save to cache for next time
+        LikesReceivedCache.saveProfileDetail(item.id, profile);
+      }
+
+      // 4. Navigate only AFTER data is ready
+      navigation.navigate("Details", { profile });
+    } catch (error) {
+      console.error("Failed to load profile:", error);
+    } finally {
+      setIsFetching(false);
     }
   };
 
   return (
-    <TouchableOpacity style={styles.activityCard} onPress={handlePress}>
-      <Image
-        source={
-          item.photo
-            ? { uri: item.photo }
-            : require("../../../../assets/images/profile.png")
-        }
-        style={styles.activityImage}
-        contentFit={item.photo ? "cover" : "contain"}
-        cachePolicy="disk"
-      />
-      <View style={styles.activityContent}>
-        <Text style={styles.activityName}>
-          {item?.name || "Username"}, {formatDOB(item?.age, "age") || "18+"}
-        </Text>
-        <Text style={styles.activityText}>
-          {type === "sent" ? "You liked this profile ❤️" : "They liked you 💌"}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    <>
+      {/* 1. The Screen Lock Overlay */}
+      <Modal visible={isFetching} transparent animationType="none">
+        <View style={styles.lockOverlay}>
+          {/* Spinner shows in the middle of the screen */}
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </Modal>
+      {/* 2. The Actual Banner */}
+      <TouchableOpacity style={styles.activityCard} onPress={handlePress}>
+        <Image
+          source={
+            item.photo
+              ? { uri: item.photo }
+              : require("../../../../assets/images/profile.png")
+          }
+          style={styles.activityImage}
+          contentFit={item.photo ? "cover" : "contain"}
+          cachePolicy="disk"
+        />
+        <View style={styles.activityContent}>
+          <Text style={styles.activityName}>
+            {item?.name || "Username"}
+            {/* {formatDOB(item?.age, "age") || "18+"} */}
+          </Text>
+          <Text style={styles.activityText}>
+            {type === "sent"
+              ? "You liked this profile ❤️"
+              : "They liked you 💌"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.1)", // Very subtle tint to show it's "thinking"
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 999,
+  },
   activityCard: {
     flexDirection: "row",
     alignItems: "center",

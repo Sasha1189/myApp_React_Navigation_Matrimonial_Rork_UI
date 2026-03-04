@@ -12,10 +12,8 @@ import { Heart, MessageCircle, Send } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
 import { theme } from "../../../theme/index";
 import { useMessageInbox } from "../hooks/useMessageInbox";
-import {
-  useLikesReceivedProfilesList,
-  useLikesSentProfilesList,
-} from "../hooks/useLikesProfileData";
+import { useLikeSent, useLikeReceived } from "../hooks/useLikesList";
+import { useTabSwipe } from "../hooks/useTabSwipe";
 import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
 import { UserBanner } from "../components/UserBanner";
@@ -29,6 +27,10 @@ export default function MessagesScreen() {
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats",
   );
+  const { panHandlers, triggerTabChange } = useTabSwipe(
+    activeTab,
+    setActiveTab,
+  );
   const flatListRef = useRef<FlatList>(null);
 
   const {
@@ -41,11 +43,8 @@ export default function MessagesScreen() {
     reset,
     isLoading: chatsLoading,
   } = useMessageInbox(uid!);
-  const { data: likesSent, isLoading: sentLoading } = useLikesSentProfilesList(
-    uid!,
-  );
-  const { data: likesReceived, isLoading: receivedLoading } =
-    useLikesReceivedProfilesList(uid!, gender!);
+  const { data: likesSent, isLoading: sentLoading } = useLikeSent(uid!);
+  const { data: likesReceived, isLoading: recLoading } = useLikeReceived(uid!);
 
   const helper = ChatListHelper({
     isLive,
@@ -73,7 +72,7 @@ export default function MessagesScreen() {
       loading = sentLoading;
     } else {
       data = likesReceived!;
-      loading = receivedLoading;
+      loading = recLoading;
     }
 
     return { currentData: data, isLoadingState: loading };
@@ -90,57 +89,59 @@ export default function MessagesScreen() {
           label="Chats"
           icon={MessageCircle}
           isActive={activeTab === "chats"}
-          onPress={() => setActiveTab("chats")}
+          onPress={() => triggerTabChange("chats")}
         />
         <TabButton
           tab="sent"
           label="Sent"
           icon={Send}
           isActive={activeTab === "sent"}
-          onPress={() => setActiveTab("sent")}
+          onPress={() => triggerTabChange("sent")}
         />
         <TabButton
           tab="received"
           label="Received"
           icon={Heart}
           isActive={activeTab === "received"}
-          onPress={() => setActiveTab("received")}
+          onPress={() => triggerTabChange("received")}
         />
       </View>
 
       <Text style={styles.sectionTitle}>Recent Activity</Text>
-
-      {isLoadingState && currentData.length === 0 ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={theme.colors.primary} />
-        </View>
-      ) : currentData.length === 0 ? (
-        <EmptyState type={activeTab} />
-      ) : (
-        <View style={{ flex: 1, marginHorizontal: 10 }}>
-          <FlatList
-            ref={flatListRef}
-            data={currentData}
-            keyExtractor={(item) => item.roomId || item.uid || item.id}
-            renderItem={({ item }) =>
-              activeTab === "chats" ? (
-                <ChatBanner item={item} uid={uid!} />
-              ) : (
-                <UserBanner item={item} type={activeTab} />
-              )
-            }
-            initialNumToRender={8}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            removeClippedSubviews={true}
-            ListFooterComponent={
-              activeTab === "chats" ? helper.renderFooter : null
-            }
-            contentContainerStyle={{ paddingBottom: 100 }}
-          />
-          {activeTab === "chats" && helper.renderFloating()}
-        </View>
-      )}
+      <View style={{ flex: 1 }} {...panHandlers}>
+        {isLoadingState && currentData.length === 0 ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={theme.colors.primary} />
+          </View>
+        ) : currentData.length === 0 ? (
+          <EmptyState type={activeTab} />
+        ) : (
+          <View style={{ flex: 1, marginHorizontal: 10 }}>
+            <FlatList
+              key={activeTab}
+              ref={flatListRef}
+              data={currentData}
+              keyExtractor={(item) => item.roomId || item.uid || item.id}
+              renderItem={({ item }) =>
+                activeTab === "chats" ? (
+                  <ChatBanner item={item} uid={uid!} />
+                ) : (
+                  <UserBanner item={item} type={activeTab} />
+                )
+              }
+              initialNumToRender={8}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              removeClippedSubviews={true}
+              ListFooterComponent={
+                activeTab === "chats" ? helper.renderFooter : null
+              }
+              contentContainerStyle={{ paddingBottom: 100 }}
+            />
+            {activeTab === "chats" && helper.renderFloating()}
+          </View>
+        )}
+      </View>
     </LinearGradient>
   );
 }

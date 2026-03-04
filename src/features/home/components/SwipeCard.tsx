@@ -15,7 +15,7 @@ import { theme } from "../../../constants/theme";
 import { Profile } from "../../../types/profile";
 import { formatDOB } from "../../../utils/dateUtils";
 import { ActionButtons } from "../components/ActionButtons";
-import { useFeedActions } from "../hooks/useFeedActions";
+import { useButtonActions } from "../hooks/useButtonActions";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const SWIPE_THRESHOLD = screenHeight * 0.25;
@@ -130,7 +130,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     ],
   };
 
-  const { handleActionBtnTap } = useFeedActions(uid, profile);
+  const { handleActionBtnTap } = useButtonActions(uid, profile);
 
   return (
     <Animated.View
@@ -178,9 +178,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             style={[
               styles.badge,
               {
-                backgroundColor: profile?.isActive
-                  ? theme.colors.primary
-                  : theme.colors.textLight,
+                backgroundColor:
+                  profile?.isReady === "Yes"
+                    ? theme.colors.primary
+                    : theme.colors.textLight,
               },
             ]}
           />
@@ -310,6 +311,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 6,
+    marginLeft: 6,
   },
   infoRow: {
     flexDirection: "row",

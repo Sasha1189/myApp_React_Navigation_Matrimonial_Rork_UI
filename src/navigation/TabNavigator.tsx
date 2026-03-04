@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import {
   Heart,
+  Settings2,
   Cherry,
   MessageCircle,
   User,
@@ -9,6 +10,7 @@ import {
   Search,
   Settings,
 } from "lucide-react-native";
+import { Image } from "expo-image";
 import { theme } from "../constants/theme";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { TabParamList } from "./types";
@@ -31,13 +33,10 @@ export default function TabNavigator() {
 
         headerTitleAlign: "center",
         headerTitleStyle: {
-          // fontSize: 24,
-          // fontWeight: "600",
           fontSize: 24,
           alignItems: "center",
-          fontWeight: "600",
-          // fontStyle: "sans-serif-medium",
-          color: theme.colors.primaryLight,
+          fontWeight: "bold",
+          color: theme.colors.background,
           letterSpacing: 2,
         },
 
@@ -75,35 +74,62 @@ export default function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: "Lonari",
+          title: "LONARI",
           tabBarIcon: ({ color }) => <Heart size={30} color={color} />,
           headerRight: () => (
             <View style={{ flexDirection: "row", marginRight: 12 }}>
               <TouchableOpacity
                 style={{ marginHorizontal: 8 }}
-                onPress={() => navigation.navigate("Filter")}
+                onPress={() => navigation.navigate("Search")}
               >
-                <Filter size={20} color="white" />
+                <Search size={20} color={theme.colors.background} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ marginHorizontal: 8 }}
-                onPress={() => navigation.navigate("Search")}
+                onPress={() => navigation.navigate("Filter")}
               >
-                <Search size={20} color="white" />
+                <Settings2 size={20} color={theme.colors.background} />
               </TouchableOpacity>
             </View>
           ),
           headerLeft: () => (
             <View
               style={{
+                // 1. SHADOW WRAPPER: Holds the elevation/shadow
                 width: 50,
                 height: 50,
+                marginLeft: 15,
                 borderRadius: 25,
-                borderWidth: 0.5,
-                borderColor: "#F5F7FA",
+                backgroundColor: "transparent",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4.65,
+                elevation: 8, // Crucial for Android
               }}
             >
-              <Cherry size={40} color="#F5F7FA" />
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: 25,
+                  overflow: "hidden",
+                  backgroundColor: theme.colors.background, // Light lavender/gray background
+                  borderWidth: 2,
+                  borderColor: "rgba(255,255,255,0.4)", // White glass-effect border
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  source={require("../../assets/icon.png")}
+                  style={{
+                    width: "200%",
+                    height: "200%",
+                  }}
+                  contentFit="contain"
+                  cachePolicy={"memory-disk"}
+                />
+              </View>
             </View>
           ),
         }}

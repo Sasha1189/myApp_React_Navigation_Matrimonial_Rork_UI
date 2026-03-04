@@ -11,7 +11,6 @@ import { useTheme } from "../../../theme/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../../../context/AuthContext";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { useLikeSync } from "../hooks/useLikeSync";
 import { useActiveFeed } from "../hooks/useActiveFeed";
 import { SwipeCard } from "../components/SwipeCard";
 import { FeedStatusContent } from "../components/FeedStatusContent";
@@ -42,8 +41,6 @@ export default function HomeScreen() {
     });
     return unsubscribe;
   }, [navigation, showModal]);
-
-  const { forceSync } = useLikeSync(uid);
 
   const feed = useActiveFeed(user?.uid!, user?.displayName!);
 

@@ -1,19 +1,19 @@
+import React, { useState } from "react";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
-import { useToggleLike } from "./useSwipeMutations";
+import { toggleLike } from "./useToggleLike";
 import { useProfileContext } from "../../../context/ProfileContext";
 
-export function useFeedActions(uid: string, profile: Profile | undefined) {
+export function useButtonActions(uid: string, profile: Profile | undefined) {
   const navigation = useAppNavigation();
-  const toggleLikeMutation = useToggleLike(uid);
+  const [isLiking, setIsLiking] = useState(false);
 
   const { profile: myProfile } = useProfileContext();
 
   const handleActionBtnTap = async (
     action: "like" | "message" | "profileDetails",
   ) => {
-    if (!profile) return;
-    const profileId = profile.uid;
+    if (!profile || !myProfile) return;
 
     if (action === "message") {
       try {
@@ -27,6 +27,10 @@ export function useFeedActions(uid: string, profile: Profile | undefined) {
             name: profile.fullName,
             photo: profile.thumbnail || "",
           },
+          // sender: {
+          //   name: myProfile.fullName,
+          //   photo: myProfile.thumbnail || "",
+          // },
         });
       } catch (err) {
         console.error("Failed to start chat:", err);
@@ -34,7 +38,28 @@ export function useFeedActions(uid: string, profile: Profile | undefined) {
     }
 
     if (action === "like") {
-      toggleLikeMutation.mutate(profileId);
+      if (isLiking) return;
+      setIsLiking(true);
+      console.log("hit like on usefeedaction");
+
+      try {
+        await toggleLike(
+          {
+            myUid: myProfile.uid,
+            name: myProfile.fullName,
+            photo: myProfile.thumbnail!,
+          },
+          {
+            uid: profile.uid,
+            name: profile.fullName || "User",
+            photo: profile.thumbnail || "",
+          },
+        );
+      } catch (err) {
+        console.error("Like toggle failed:", err);
+      } finally {
+        setIsLiking(false);
+      }
     }
 
     if (action === "profileDetails") {

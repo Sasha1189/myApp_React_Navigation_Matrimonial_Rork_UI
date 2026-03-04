@@ -14,6 +14,9 @@ import {
 } from "@react-native-firebase/auth";
 import {
   ref,
+  query,
+  get,
+  limitToLast,
   onValue,
   set,
   onDisconnect,
@@ -25,6 +28,7 @@ import {
 } from "@react-native-firebase/database";
 import { AppState, AppStateStatus } from "react-native";
 import { rtdb } from "../config/firebase";
+import { LikesCache, storage } from "../cache/cacheConfig";
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
@@ -56,9 +60,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const myStatusRef = ref(rtdb, `/status/${user.uid}`);
     const connectedRef = ref(rtdb, ".info/connected");
     const inboxRef = ref(rtdb, `inbox/${user.uid}`);
+    //sync likedid to device if device changed
+    const likesSentRef = query(
+      ref(rtdb, `likesSent/${user.uid}`),
+      limitToLast(1000),
+    );
 
     // A. Proactive Sync: Keep Inbox on disk for 0ms loading
     keepSynced(inboxRef, true);
+
+    const syncIdIndex = async () => {
+      // Only sync if the index is brand new/empty to save bandwidth
+      if (LikesCache.getIds().length > 0) return;
+
+      const snap = await get(likesSentRef);
+      if (snap.exists()) {
+        const ids = Object.keys(snap.val()); // Just get the UIDs
+        storage.set("likes_ids_index", JSON.stringify(ids));
+      }
+    };
+
+    syncIdIndex();
 
     // 1. Connection Listener (Standard Presence)
     const unsubConnection = onValue(connectedRef, (snap) => {
