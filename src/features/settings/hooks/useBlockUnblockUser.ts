@@ -1,13 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useUpdateProfileData } from "../../profile/hooks/useProfileData";
+import { useAuth } from "@/context/AuthContext";
 import { Profile, BlockedUserDetail } from "../../../types/profile";
 
 export const useBlockUnblockUser = (
   uid: string,
-  gender: "" | "Male" | "Female" = ""
+  gender: "" | "Male" | "Female" = "",
 ) => {
   const queryClient = useQueryClient();
-  const updateProfile = useUpdateProfileData(uid, gender);
+  const { updateProfile } = useAuth();
   const isReady = !!uid && !!gender;
 
   const getCurrentBlockedUIDs = (): string[] => {
@@ -17,10 +17,12 @@ export const useBlockUnblockUser = (
   };
 
   const getCurrentBlockedDetails = (): BlockedUserDetail[] => {
-    return queryClient.getQueryData<BlockedUserDetail[]>([
-      "blockedUserDetails",
-      uid,
-    ]) ?? [];
+    return (
+      queryClient.getQueryData<BlockedUserDetail[]>([
+        "blockedUserDetails",
+        uid,
+      ]) ?? []
+    );
   };
 
   const blockUser = (target: BlockedUserDetail) => {
@@ -33,7 +35,7 @@ export const useBlockUnblockUser = (
     const nextUIDs = [...currentUIDs, target.uid];
 
     // 1) Update Firestore (profile)
-    updateProfile.mutate({ blockedUserUIDs: nextUIDs });
+    updateProfile({ blockedUserUIDs: nextUIDs });
 
     // 2) Optimistically update cache-only details list
     const currentDetails = getCurrentBlockedDetails();
@@ -41,7 +43,7 @@ export const useBlockUnblockUser = (
     if (!exists) {
       queryClient.setQueryData<BlockedUserDetail[]>(
         ["blockedUserDetails", uid],
-        [...currentDetails, target]
+        [...currentDetails, target],
       );
     }
   };
@@ -56,7 +58,7 @@ export const useBlockUnblockUser = (
     const nextUIDs = currentUIDs.filter((id) => id !== targetUid);
 
     // 1) Update Firestore
-    updateProfile.mutate({ blockedUserUIDs: nextUIDs });
+    updateProfile({ blockedUserUIDs: nextUIDs });
 
     // 2) Update cache-only details list
     const currentDetails = getCurrentBlockedDetails();
@@ -64,7 +66,7 @@ export const useBlockUnblockUser = (
 
     queryClient.setQueryData<BlockedUserDetail[]>(
       ["blockedUserDetails", uid],
-      nextDetails
+      nextDetails,
     );
   };
 
@@ -73,6 +75,6 @@ export const useBlockUnblockUser = (
     unblockUser,
     isReady,
     // isLoading: updateProfile.isLoading,
-    error: updateProfile.error,
+    // error: updateProfile.error,
   };
 };

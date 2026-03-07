@@ -10,7 +10,7 @@ import {
 import { Image } from "expo-image";
 import { Edit3, Camera, Eye } from "lucide-react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { useProfileContext } from "../../../context/ProfileContext";
+import { useAuth } from "../../../context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../../../constants/theme";
 import { formatDOB } from "../../../utils/dateUtils";
@@ -23,7 +23,7 @@ interface MenuItem {
 }
 
 export default function ProfileScreen(): React.ReactElement {
-  const { profile } = useProfileContext();
+  const { profile } = useAuth();
   const navigation = useAppNavigation();
 
   const openPreview = (): void => {

@@ -23,16 +23,21 @@ import {
 } from "react-native";
 import BlockedUsersModal from "../components/BlockedUsersModal";
 import { useBlockUnblockUser } from "../hooks/useBlockUnblockUser";
-import { useProfileContext } from "../../../context/ProfileContext";
 import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
-
-import { getAuth, signOut } from "@react-native-firebase/auth";
+import { signOut } from "@react-native-firebase/auth";
+import { auth, rtdb } from "../../../config/firebase";
 import { useAuth } from "../../../context/AuthContext";
-import { clearCacheOnLogout, storage } from "../../../cache/cacheConfig";
+import { clearCacheOnLogout } from "../../../cache/cacheConfig";
+import {
+  ref,
+  serverTimestamp,
+  update,
+  goOffline,
+  keepSynced,
+} from "@react-native-firebase/database";
 
 export default function SettingsScreen() {
-  const { setUser } = useAuth();
-  const { profile } = useProfileContext();
+  const { profile, setUser } = useAuth();
   const [settings, setSettings] = useState({
     notifications: true,
     darkMode: false,
@@ -116,12 +121,26 @@ export default function SettingsScreen() {
           text: "Log Out",
           onPress: async () => {
             try {
-              const auth = getAuth();
+              const currentUser = auth.currentUser;
+              if (currentUser) {
+                // 1. SET OFFLINE FIRST (While still authenticated)
+                const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
+                await update(statusRef, {
+                  state: "offline",
+                  lastChanged: serverTimestamp(),
+                });
+
+                // 2. Clear sync/listeners
+                const inboxRef = ref(rtdb, `inbox/${currentUser.uid}`);
+                keepSynced(inboxRef, false);
+              }
               await signOut(auth);
 
               await clearCacheOnLogout();
 
               setUser(null);
+
+              goOffline(rtdb);
             } catch (error: any) {
               console.error("Logout error:", error);
               Alert.alert("Error", "Could not log out. Please try again.");
@@ -361,6 +380,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 10,
+    paddingBottom: 30,
     backgroundColor: theme.colors.background,
   },
   headerGradient: {

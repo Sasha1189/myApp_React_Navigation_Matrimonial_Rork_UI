@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
 import { toggleLike } from "./useToggleLike";
-import { useProfileContext } from "../../../context/ProfileContext";
+import { useAuth } from "../../../context/AuthContext";
 
 export function useButtonActions(uid: string, profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const [isLiking, setIsLiking] = useState(false);
 
-  const { profile: myProfile } = useProfileContext();
+  const { profile: myProfile } = useAuth();
 
   const handleActionBtnTap = async (
     action: "like" | "message" | "profileDetails",

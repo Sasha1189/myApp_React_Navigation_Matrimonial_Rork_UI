@@ -1,25 +1,21 @@
-import { getAuth, getIdToken  } from '@react-native-firebase/auth';
+import { getAuth, getIdToken } from "@react-native-firebase/auth";
 
 // Add a fallback and force the /api/v1 suffix if it's missing
-const RAW_URL = process.env.EXPO_PUBLIC_API_URL || "https://homopolar-chantell-unscoring.ngrok-free.dev";
-const API_URL = RAW_URL.endsWith('/api/v1') ? RAW_URL : `${RAW_URL}/api/v1`;
+console.log("URL from env:", process.env.EXPO_PUBLIC_API_URL);
 
-console.log("DEBUG: Final API URL is:", API_URL);
+// "https://homopolar-chantell-unscoring.ngrok-free.dev";
 
-if (!API_URL) {
-  console.warn("API_URL is not defined! Check your .env file.");
-}
+// const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-interface ApiResponse<T> {
-  data: T;
-  error?: string;
-  message?: string;
-}
+const API_URL = "https://homopolar-chantell-unscoring.ngrok-free.dev/api/v1";
 
 class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
@@ -30,11 +26,9 @@ async function getAuthToken(): Promise<string | null> {
   if (!user) {
     return null;
   }
-  
+
   try {
-    // 3. CHANGE: Native getIdToken is highly reliable for backend auth
-    // Force refresh (true) is optional but useful if you just updated a profile
-    return await getIdToken(user, false); 
+    return await getIdToken(user, false);
   } catch (error) {
     console.error("Failed to get ID token:", error);
     return null;
@@ -45,7 +39,7 @@ function buildHeaders(token?: string | null) {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     // This bypasses the ngrok splash screen so your fetch() works
-    "ngrok-skip-browser-warning": "true", 
+    "ngrok-skip-browser-warning": "true",
   };
 
   if (token) {
@@ -80,7 +74,10 @@ async function handleResponse<T>(response: Response): Promise<T> {
   }
 
   if (!response.ok) {
-    const message = parsed && typeof parsed === 'object' ? parsed.message ?? parsed.error : String(parsed ?? 'An error occurred');
+    const message =
+      parsed && typeof parsed === "object"
+        ? (parsed.message ?? parsed.error)
+        : String(parsed ?? "An error occurred");
     throw new ApiError(response.status, message);
   }
 
@@ -89,7 +86,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const api = {
-  async get<T>(endpoint: string, params?: Record<string, any>, timeout = 15000): Promise<T> {
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, any>,
+    timeout = 15000,
+  ): Promise<T> {
     const token = await getAuthToken();
     const url = new URL(`${API_URL}${endpoint}`);
 
@@ -99,7 +100,7 @@ export const api = {
 
         if (Array.isArray(value)) {
           // Append multiple values for same key
-          value.forEach(v => url.searchParams.append(key, String(v)));
+          value.forEach((v) => url.searchParams.append(key, String(v)));
         } else {
           url.searchParams.append(key, String(value));
         }

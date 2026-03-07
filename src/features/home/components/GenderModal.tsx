@@ -1,4 +1,5 @@
 import { auth } from "../../../config/firebase";
+import { useAuth } from "../../../context/AuthContext";
 import {
   View,
   Text,
@@ -13,16 +14,13 @@ import {
 import React, { useState, useRef } from "react";
 import { theme } from "../../../theme";
 import { Profile } from "../../../types/profile";
-import { api } from "../../../services/api";
-import { useAuth } from "../../../context/AuthContext";
+import { createUserOnBackend } from "../apis/userApi";
 
 interface GenderModalProps {
   visible: boolean;
   onClose: () => void;
 }
-
 type Gender = Profile["gender"];
-
 interface FirebaseUserLike {
   uid: string;
   phoneNumber?: string | null;
@@ -56,17 +54,15 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
     firebaseUser: FirebaseUserLike | null,
   ): Promise<void> => {
     try {
-      if (!firebaseUser) return;
-      const newUser = {
-        uid: firebaseUser.uid,
-        phoneNumber: firebaseUser.phoneNumber,
-        displayName: firebaseUser.displayName,
-      };
-      // create on backend
-      await api.post(`/users/create-user`, newUser);
+      if (firebaseUser) {
+        await createUserOnBackend({
+          uid: firebaseUser.uid,
+          phoneNumber: firebaseUser?.phoneNumber!,
+          displayName: firebaseUser?.displayName!,
+        });
+      }
     } catch (error) {
       console.error("Error creating user in backend:", error);
-      // swallow - optional retry handled elsewhere
     }
   };
 
@@ -192,17 +188,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   modalButtonUpdate: {
-    // alignContent: "flex-end",
-    // marginTop: 20,
-    // backgroundColor: "gray",
-    // paddingVertical: 10,
-    // paddingHorizontal: 24,
-    // borderRadius: 8,
     marginTop: 20,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 12, // More modern rounded look
-    minHeight: 48, // Standard touch target size
+    borderRadius: 12,
+    minHeight: 48,
     justifyContent: "center",
     alignItems: "center",
     // Soft shadow for depth

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Alert,
   ActivityIndicator,
@@ -13,10 +13,11 @@ import {
   ToastAndroid,
   BackHandler,
 } from "react-native";
-
-import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-
-// ---------------- Types ----------------
+import {
+  getAuth,
+  signInWithPhoneNumber,
+  FirebaseAuthTypes,
+} from "@react-native-firebase/auth";
 type OTPVerifyProps = {
   route: {
     params: {
@@ -72,15 +73,12 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
     return () => backHandler.remove();
   }, [timer]);
 
-  // Auto verify when full OTP entered (SAFE)
   useEffect(() => {
     if (code.length === CODE_LENGTH && !verifying) {
       Keyboard.dismiss();
       verifyCode();
     }
   }, [code]);
-
-  // ---------------- Functions ----------------
 
   const verifyCode = async () => {
     if (verifying) return;
@@ -90,11 +88,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       setLoading(true);
       setError("");
 
-      // 4. CHANGE: Simply call .confirm(code) on the confirmation object
-      // This internally handles the credential and signs the user in
       await confirmation.confirm(code);
-
-      // Success! Firebase triggers the onAuthStateChanged listener automatically
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -111,7 +105,8 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       setLoading(true);
 
       // 5. CHANGE: Use native signInWithPhoneNumber
-      const newConfirmation = await auth().signInWithPhoneNumber(phone);
+      const auth = getAuth();
+      const newConfirmation = await signInWithPhoneNumber(auth, phone);
 
       setConfirmation(newConfirmation);
       setResendMessage("Code sent again!");
@@ -124,16 +119,6 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   };
 
   const handleError = (error: any) => {
-    // let message = "Something went wrong. Please try again.";
-
-    // if (error?.code === "auth/code-expired") {
-    //   message = "OTP expired. Please resend the code.";
-    // } else if (error?.code === "auth/invalid-verification-code") {
-    //   message = "Invalid OTP. Please try again.";
-    // } else if (error?.message) {
-    //   message = error.message;
-    // }
-
     // setError(message);
     let message = "Something went wrong. Please try again.";
 
@@ -166,8 +151,6 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const handleCodeChange = (text: string) => {
     setCode(text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH));
   };
-
-  // ---------------- JSX ----------------
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -228,7 +211,6 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
 
 export default OTPVerify;
 
-// ---------------- Styles ----------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,

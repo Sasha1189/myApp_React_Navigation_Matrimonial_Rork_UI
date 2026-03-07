@@ -6,17 +6,12 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { File, Paths } from "expo-file-system";
 import { Profile, Photo } from "../../../types/profile";
 import { useAuth } from "../../../context/AuthContext";
-import { useUpdateProfileData } from "./useProfileData";
 
 const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const uid = user?.uid;
-  const { mutateAsync: updateProfile } = useUpdateProfileData(
-    profile?.uid ?? "",
-    profile?.gender,
-  );
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

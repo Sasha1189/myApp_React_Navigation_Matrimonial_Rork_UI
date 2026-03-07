@@ -14,20 +14,16 @@ export async function getProfile(
   }
   const params: Record<string, string> = { uid, gender };
 
-  const res = await api.get<ProfileApiResponse>(
-    `/profiles/get-profile`,
-    params,
-  );
+  const res = await api.get<ProfileApiResponse>(`/profile/get-profile`, params);
 
   return res?.profile;
 }
 
-// ✅ Update profile & return normalized response
-export async function updateProfile(
-  payload: Partial<Profile> & { uid: string; gender: "" | "Male" | "Female" },
+export async function apiUpdateProfile(
+  payload: Partial<Profile> & { uid: string; gender: "Male" | "Female" },
 ): Promise<Profile> {
   const res = await api.post<ProfileApiResponse>(
-    `/profiles/update-profile`,
+    `/profile/update-profile`,
     payload,
   );
 

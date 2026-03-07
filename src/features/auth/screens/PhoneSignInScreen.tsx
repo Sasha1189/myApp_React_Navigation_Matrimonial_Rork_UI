@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthNavigation } from "../../../navigation/hooks";
 import { Phone, ArrowRight, Heart } from "lucide-react-native";
 import { theme } from "../../../constants/theme";
-import auth from "@react-native-firebase/auth";
+import { getAuth, signInWithPhoneNumber } from "@react-native-firebase/auth";
 
 const { width, height } = Dimensions.get("window");
 
@@ -33,14 +33,14 @@ export default function PhoneSignInScreen() {
     const fullPhone = `+91${phoneNumber}`;
 
     try {
-      const confirmation = await auth().signInWithPhoneNumber(fullPhone);
+      const auth = getAuth();
+      const confirmation = await signInWithPhoneNumber(auth, fullPhone);
 
       navigation.navigate("OTPVerify", {
         phone: fullPhone,
         confirmation: confirmation,
       });
     } catch (error: any) {
-      console.log("Phone auth error:", error);
       // Helpful hint for APKs
       const msg =
         error.code === "auth/app-not-authorized"

@@ -30,22 +30,17 @@ export const toggleLike = async (
   const theirReceivedPath = `likesReceived/${otherUser.uid}/${myProfile.myUid}`;
 
   if (isCurrentlyLiked) {
-    // 🗑️ UNLIKE
-    console.log("unlike");
     updates[mySentPath] = null;
     updates[theirReceivedPath] = null;
-    // 🔹 Update both caches
     LikesCache.updateIds(otherUser.uid, "remove");
     LikesCache.saveProfile(otherUser, "remove");
   } else {
-    // ❤️ LIKE
     const likeData = {
       uid: otherUser.uid,
       name: otherUser.name,
       photo: otherUser.photo,
       ts,
     };
-    console.log("liked data:", likeData);
     updates[mySentPath] = { ...likeData, ts: serverTimestamp() };
     updates[theirReceivedPath] = {
       uid: myProfile.myUid,
@@ -54,7 +49,6 @@ export const toggleLike = async (
       ts: tsServer,
       u: true, // Unread badge for them
     };
-    // 🔹 Update both caches
     LikesCache.updateIds(otherUser.uid, "add");
     LikesCache.saveProfile(likeData, "add");
   }

@@ -4,7 +4,6 @@ import { queryClient, persistOptions } from "./cacheConfig";
 import { useAppCacheManager } from "./useAppCacheManager";
 
 export function CacheProvider({ children }: { children: ReactNode }) {
-  // 🔹 Logic for pruning/app state management lives here now
   useAppCacheManager();
 
   return (

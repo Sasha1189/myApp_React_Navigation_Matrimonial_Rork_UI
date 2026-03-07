@@ -26,7 +26,6 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 60 * 24, // 24h
       gcTime: 1000 * 60 * 60 * 24 * 7, // 7d
-      // Ensure data is retrieved from cache even if offline
       networkMode: "offlineFirst",
     },
   },
@@ -42,28 +41,7 @@ export const persistOptions = {
   maxAge: 1000 * 60 * 60 * 24 * 6, // 7 days
   buster: "v1-cache-key", // Change this to wipe cache on breaking schema changes
 };
-//............
-// const LIKES_SENT_CACHE_KEY = "likes_sent_cache";
-
-// export const LikesCache = {
-//   // Get full list
-//   getSent: (): any[] => {
-//     const data = storage.getString(LIKES_SENT_CACHE_KEY);
-//     return data ? JSON.parse(data) : [];
-//   },
-
-//   // Save/Update list (Limit to 100)
-//   saveSent: (list: any[]) => {
-//     const limited = list.sort((a, b) => b.ts - a.ts).slice(0, 100);
-//     storage.set(LIKES_SENT_CACHE_KEY, JSON.stringify(limited));
-//   },
-
-//   // Quick check if liked
-//   isLiked: (targetUid: string): boolean => {
-//     const list = LikesCache.getSent();
-//     return list.some((p) => p.uid === targetUid);
-//   },
-// };
+//Like unlike Cache
 const LIKES_IDS_KEY = "likes_ids_index";
 const LIKES_PROFILES_KEY = "likes_profiles_cache";
 
@@ -103,7 +81,6 @@ export const LikesCache = {
     storage.set(LIKES_PROFILES_KEY, JSON.stringify(list));
   },
 };
-
 //............
 const LIKES_REC_CACHE_KEY = "likes_received_list";
 const PROFILE_DETAIL_PREFIX = "profile_detail_";

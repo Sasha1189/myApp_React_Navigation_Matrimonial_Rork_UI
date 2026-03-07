@@ -1,7 +1,6 @@
 import React from "react";
 import { CacheProvider } from "./cache/CacheProvider";
 import { AuthProvider } from "./context/AuthContext";
-import { ProfileProvider } from "./context/ProfileContext";
 import { ThemeProvider } from "./theme/useTheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -13,13 +12,11 @@ export default function App() {
     <SafeAreaProvider>
       <CacheProvider>
         <AuthProvider>
-          <ProfileProvider>
-            <ThemeProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <RootNavigator />
-              </GestureHandlerRootView>
-            </ThemeProvider>
-          </ProfileProvider>
+          <ThemeProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <RootNavigator />
+            </GestureHandlerRootView>
+          </ThemeProvider>
         </AuthProvider>
       </CacheProvider>
     </SafeAreaProvider>

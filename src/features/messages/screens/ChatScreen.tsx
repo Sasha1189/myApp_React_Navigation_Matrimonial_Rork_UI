@@ -11,9 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Image } from "expo-image";
 import { theme } from "../../../theme/index";
-import { useProfileContext } from "src/context/ProfileContext";
+import { useAuth } from "src/context/AuthContext";
 import { useChatSession } from "../hooks/useChatSession";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInput } from "../components/ChatInput";
@@ -24,7 +23,7 @@ import { ChatHeader } from "../components/ChatHeader";
 
 export default function ChatScreen({ route }: { route: ChatRouteProp }) {
   const { roomId, otherUser, uid } = route.params;
-  const { profile } = useProfileContext();
+  const { profile } = useAuth();
   const sender = {
     uid,
     name: profile?.fullName || "User",

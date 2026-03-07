@@ -39,7 +39,6 @@ import {
 import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppStackParamList } from "../../../navigation/types";
-import { useProfileContext } from "../../../context/ProfileContext";
 import LoadingScreen from "../../../components/LoadingScreen";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
 import { Profile } from "../../../types/profile";
@@ -108,12 +107,6 @@ export default function UserDetailsScreen({
   if ("profile" in route.params) {
     // Case 1: full profile passed in
     profile = route.params.profile ?? null;
-  } else if ("userId" in route.params) {
-    // Case 2: only userId, fetch profile from backend here
-    // profile = await fetchProfile(route.params.userId);
-  } else if ("self" in route.params && route.params.self) {
-    // Case 3: self profile, use context
-    profile = useProfileContext().profile ?? null;
   }
 
   if (!profile) {
@@ -429,7 +422,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    paddingBottom: theme.spacing.xl,
+    paddingBottom: 30,
   },
   cardContainer: {
     alignItems: "center",

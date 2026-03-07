@@ -12,8 +12,6 @@ import { Edit3, Save, X } from "lucide-react-native";
 import { useForm, FormProvider } from "react-hook-form";
 import { theme } from "../../../constants/theme";
 import { useTabNavigation } from "../../../navigation/hooks";
-import { useProfileContext } from "../../../context/ProfileContext";
-import { useUpdateProfileData } from "../hooks/useProfileData";
 import { Profile } from "../../../types/profile";
 import {
   PersonalInfoSection,
@@ -29,16 +27,13 @@ import {
   immutableFields,
   isFieldLocked,
 } from "../components/form/profileValidation";
+import { useAuth } from "@/context/AuthContext";
 import { isDeepEqual } from "../../../utils/deepEqual";
 import { useUnsavedChangesPrompt } from "../hooks/useUnsavedChangesPrompt";
 
 export default function EditProfileScreen() {
   const navigation = useTabNavigation();
-  const { profile } = useProfileContext();
-  const { mutateAsync: updateProfile } = useUpdateProfileData(
-    profile?.uid,
-    profile?.gender,
-  );
+  const { profile, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -173,7 +168,7 @@ export default function EditProfileScreen() {
 
   return (
     <FormProvider {...methods}>
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1, paddingBottom: 30 }}>
         <View
           style={{ padding: theme.spacing.lg, paddingTop: theme.spacing.xl }}
         >

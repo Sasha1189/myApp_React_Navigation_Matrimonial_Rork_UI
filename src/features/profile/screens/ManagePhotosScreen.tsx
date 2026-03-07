@@ -2,13 +2,13 @@ import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Edit3 } from "lucide-react-native";
 import { theme } from "../../../theme";
-import { useProfileContext } from "../../../context/ProfileContext";
+import { useAuth } from "../../../context/AuthContext";
 import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 
 export default function ManagePhotosScreen() {
-  const { profile } = useProfileContext();
+  const { profile } = useAuth();
 
   const {
     photos,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    paddingBottom: theme.spacing.xs,
+    paddingBottom: 30,
   },
   content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
 
