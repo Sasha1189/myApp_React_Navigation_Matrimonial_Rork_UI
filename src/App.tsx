@@ -1,9 +1,13 @@
+import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { CacheProvider } from "./cache/CacheProvider";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./theme/useTheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* ignore error */
+});
 
 import RootNavigator from "./navigation/RootNavigator";
 
@@ -13,9 +17,7 @@ export default function App() {
       <CacheProvider>
         <AuthProvider>
           <ThemeProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <RootNavigator />
-            </GestureHandlerRootView>
+            <RootNavigator />
           </ThemeProvider>
         </AuthProvider>
       </CacheProvider>

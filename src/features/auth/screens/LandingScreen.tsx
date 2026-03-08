@@ -22,59 +22,59 @@ export default function LandingScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
+      {/* <ImageBackground
         source={{
           uri: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&h=1200&fit=crop",
         }}
         style={styles.backgroundImage}
         resizeMode="cover"
-      >
-        <View style={styles.overlay} />
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Heart
-                  size={40}
-                  color={theme.colors.accent}
-                  fill={theme.colors.accent}
-                />
-                <Text style={styles.appName}>LonariConnect</Text>
-              </View>
-              <Text style={styles.tagline}>Find Your Perfect Match</Text>
+      > */}
+      <View style={styles.overlay} />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Heart
+                size={40}
+                color={theme.colors.accent}
+                fill={theme.colors.accent}
+              />
+              <Text style={styles.appName}>Lonari Yuva Connect</Text>
             </View>
+            <Text style={styles.tagline}>Find Your Perfect Match</Text>
+          </View>
 
-            <View style={styles.featuresContainer}>
-              <View style={styles.feature}>
-                <Sparkles size={24} color="white" />
-                <Text style={styles.featureText}>Smart Matching</Text>
-              </View>
-              <View style={styles.feature}>
-                <Users size={24} color="white" />
-                <Text style={styles.featureText}>Verified Profiles</Text>
-              </View>
-              <View style={styles.feature}>
-                <Heart size={24} color="white" />
-                <Text style={styles.featureText}>Meaningful Connections</Text>
-              </View>
+          <View style={styles.featuresContainer}>
+            <View style={styles.feature}>
+              <Sparkles size={24} color="white" />
+              <Text style={styles.featureText}>Smart Matching</Text>
             </View>
-
-            <View style={styles.bottomSection}>
-              <TouchableOpacity
-                style={styles.getStartedButton}
-                onPress={handleGetStarted}
-              >
-                <Text style={styles.getStartedText}>Get Started</Text>
-              </TouchableOpacity>
-
-              <Text style={styles.termsText}>
-                By continuing, you agree to our Terms of Service and Privacy
-                Policy
-              </Text>
+            <View style={styles.feature}>
+              <Users size={24} color="white" />
+              <Text style={styles.featureText}>Verified Profiles</Text>
+            </View>
+            <View style={styles.feature}>
+              <Heart size={24} color="white" />
+              <Text style={styles.featureText}>Meaningful Connections</Text>
             </View>
           </View>
-        </SafeAreaView>
-      </ImageBackground>
+
+          <View style={styles.bottomSection}>
+            <TouchableOpacity
+              style={styles.getStartedButton}
+              onPress={handleGetStarted}
+            >
+              <Text style={styles.getStartedText}>Get Started</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.termsText}>
+              By continuing, you agree to our Terms of Service and Privacy
+              Policy
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+      {/* </ImageBackground> */}
     </View>
   );
 }
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
   },
   safeArea: {
     flex: 1,
