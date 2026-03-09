@@ -1,4 +1,3 @@
-import { theme } from "../../../theme/index";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   ChevronRight,
@@ -35,6 +34,9 @@ import {
   goOffline,
   keepSynced,
 } from "@react-native-firebase/database";
+import { useAppTheme } from "@/theme/ThemeContext";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
 
 export default function SettingsScreen() {
   const { profile, setUser } = useAuth();
@@ -43,10 +45,12 @@ export default function SettingsScreen() {
     darkMode: false,
     hideProfile: false,
   });
+
   // theme related
-  const updateSetting = (key: string, value: boolean | string) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
+  const { theme, mode, toggleTheme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  const isDark = mode === "dark";
 
   // block/unblock related
   const { unblockUser, isReady } = useBlockUnblockUser(
@@ -166,28 +170,32 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Appearance</Text>
             <View style={styles.sectionContent}>
               {/* Dark Mode (toggle) */}
-              <TouchableOpacity style={styles.settingItem} activeOpacity={1}>
+              <TouchableOpacity
+                style={styles.settingItem}
+                activeOpacity={1}
+                onPress={toggleTheme}
+              >
                 <View style={styles.settingLeft}>
                   <View style={styles.iconContainer}>
                     <Moon size={20} color={theme.colors.primary} />
                   </View>
                   <View style={styles.settingContent}>
                     <Text style={styles.settingTitle}>Dark Mode</Text>
-                    <Text style={styles.settingSubtitle}>Use dark theme</Text>
+                    <Text style={styles.settingSubtitle}>
+                      {isDark ? "Dark theme is active" : "Use dark theme"}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.settingRight}>
                   <Switch
-                    value={settings.darkMode}
-                    onValueChange={(value) => updateSetting("darkMode", value)}
+                    value={isDark}
+                    onValueChange={toggleTheme}
                     trackColor={{
                       false: theme.colors.border,
                       true: theme.colors.primary + "40",
                     }}
                     thumbColor={
-                      settings.darkMode
-                        ? theme.colors.primary
-                        : theme.colors.textLight
+                      isDark ? theme.colors.primary : theme.colors.textLight
                     }
                   />
                 </View>
@@ -376,79 +384,80 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingBottom: 30,
-    backgroundColor: theme.colors.background,
-  },
-  headerGradient: {
-    height: 100,
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-  content: {
-    // padding: theme.spacing.lg,
-    paddingTop: theme.spacing.xl,
-    marginBottom: theme.spacing.lg,
-  },
-  section: {
-    marginBottom: theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-    marginLeft: theme.spacing.sm,
-  },
-  sectionContent: {
-    backgroundColor: "white",
-    borderRadius: theme.borderRadius.lg,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  settingItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: theme.spacing.lg,
-  },
-  settingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.borderRadius.round,
-    backgroundColor: theme.colors.primary + "20",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: theme.spacing.md,
-  },
-  settingContent: {
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "600",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  settingSubtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textLight,
-    lineHeight: 18,
-  },
-  settingRight: {
-    marginLeft: theme.spacing.md,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 10,
+      paddingBottom: 30,
+      backgroundColor: theme.colors.background,
+    },
+    headerGradient: {
+      height: 100,
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+    },
+    content: {
+      // padding: theme.spacing.lg,
+      paddingTop: theme.spacing.xl,
+      marginBottom: theme.spacing.lg,
+    },
+    section: {
+      marginBottom: theme.spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize.lg,
+      fontWeight: "bold",
+      color: theme.colors.text,
+      marginBottom: theme.spacing.md,
+      marginLeft: theme.spacing.sm,
+    },
+    sectionContent: {
+      backgroundColor: "white",
+      borderRadius: theme.borderRadius.lg,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    settingItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: theme.spacing.lg,
+    },
+    settingLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    iconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: theme.borderRadius.round,
+      backgroundColor: theme.colors.primary + "20",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: theme.spacing.md,
+    },
+    settingContent: {
+      flex: 1,
+    },
+    settingTitle: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "600",
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xs,
+    },
+    settingSubtitle: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.textLight,
+      lineHeight: 18,
+    },
+    settingRight: {
+      marginLeft: theme.spacing.md,
+    },
+  });

@@ -153,11 +153,14 @@ export function usePhotoManager(profile: Profile | null) {
       return;
     }
 
+    // 2. Create a DEEP COPY for the upload process
+    // This prevents 'photos' from being modified accidentally during the loop
+    let tempPhotos = photos.map((p) => ({ ...p }));
+
     setLoading(true);
     setProgress(0);
     setSuccess(false);
 
-    // 1. Keep track of successfully uploaded Storage Refs to delete if Firestore fails
     const uploadedRefs: any[] = [];
 
     try {
@@ -189,14 +192,14 @@ export function usePhotoManager(profile: Profile | null) {
 
         const downloadURL = await reference.getDownloadURL();
 
-        const idx = updatedPhotos.findIndex((x) => x.id === p.id);
+        const idx = tempPhotos.findIndex((x) => x.id === p.id);
         if (idx !== -1) {
-          updatedPhotos[idx].downloadURL = downloadURL;
+          tempPhotos[idx].downloadURL = downloadURL;
           if (idx === 0) {
             console.log(
               "📸 Syncing root thumbnail because Index 0 was updated...",
             );
-            rootThumbnail = await syncPrimaryThumbnail(updatedPhotos[0], uid!);
+            rootThumbnail = await syncPrimaryThumbnail(tempPhotos[0], uid!);
           }
         }
       }
@@ -205,21 +208,17 @@ export function usePhotoManager(profile: Profile | null) {
         const cleanPhotosForDb = updatedPhotos.map(
           ({ localUrl, ...rest }) => rest,
         );
-
         await updateProfile({
           photos: cleanPhotosForDb,
           thumbnail: rootThumbnail,
         });
-
-        setPhotos(updatedPhotos);
+        setPhotos(tempPhotos);
         setSuccess(true);
         setProgress(100);
         setIsEditing(false);
-
         setTimeout(() => {
           setSuccess(false);
         }, 3000);
-
         Alert.alert("Success", "Photos updated successfully!");
       } catch (dbErr) {
         console.error("Firestore Update Failed. Cleaning storage...", dbErr);

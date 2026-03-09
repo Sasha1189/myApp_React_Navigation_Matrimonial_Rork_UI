@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import {
   Text,
   StyleSheet,
@@ -35,6 +38,10 @@ const CODE_LENGTH = 6;
 const RESEND_TIME = 60;
 
 const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const { confirmation: initialConfirmation, phone } = route.params;
 
   const [confirmation, setConfirmation] = useState(initialConfirmation);
@@ -211,76 +218,77 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
 
 export default OTPVerify;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    padding: 24,
-  },
-  backButton: {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    zIndex: 10,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 8,
-    elevation: 3,
-  },
-  timer: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#888",
-    marginBottom: 12,
-  },
-  desc: {
-    textAlign: "center",
-    fontSize: 18,
-    marginBottom: 24,
-    fontWeight: "500",
-  },
-  otpInput: {
-    fontSize: 24,
-    letterSpacing: 16,
-    color: "#000",
-    textAlign: "center",
-    borderWidth: 1,
-    borderColor: "#ffa500",
-    paddingVertical: 12,
-    marginBottom: 24,
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 20,
-    fontSize: 14,
-  },
-  feedbackText: {
-    textAlign: "center",
-    color: "green",
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  resendBtn: {
-    marginTop: 20,
-    marginBottom: 50,
-  },
-  resendText: {
-    textAlign: "right",
-    color: "#ff9800",
-    fontSize: 16,
-  },
-  doneBtn: {
-    height: 50,
-    backgroundColor: "#ffa500",
-    borderRadius: 10,
-    justifyContent: "center",
-  },
-  doneText: {
-    textAlign: "center",
-    fontSize: 20,
-    color: "#fff",
-    fontWeight: "bold",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#fff",
+      justifyContent: "center",
+      padding: 24,
+    },
+    backButton: {
+      position: "absolute",
+      top: 10,
+      left: 10,
+      zIndex: 10,
+      backgroundColor: "#fff",
+      borderRadius: 20,
+      padding: 8,
+      elevation: 3,
+    },
+    timer: {
+      textAlign: "center",
+      fontSize: 16,
+      color: "#888",
+      marginBottom: 12,
+    },
+    desc: {
+      textAlign: "center",
+      fontSize: 18,
+      marginBottom: 24,
+      fontWeight: "500",
+    },
+    otpInput: {
+      fontSize: 24,
+      letterSpacing: 16,
+      color: "#000",
+      textAlign: "center",
+      borderWidth: 1,
+      borderColor: "#ffa500",
+      paddingVertical: 12,
+      marginBottom: 24,
+    },
+    errorText: {
+      color: "red",
+      textAlign: "center",
+      marginBottom: 20,
+      fontSize: 14,
+    },
+    feedbackText: {
+      textAlign: "center",
+      color: "green",
+      fontSize: 16,
+      marginBottom: 10,
+    },
+    resendBtn: {
+      marginTop: 20,
+      marginBottom: 50,
+    },
+    resendText: {
+      textAlign: "right",
+      color: "#ff9800",
+      fontSize: 16,
+    },
+    doneBtn: {
+      height: 50,
+      backgroundColor: "#ffa500",
+      borderRadius: 10,
+      justifyContent: "center",
+    },
+    doneText: {
+      textAlign: "center",
+      fontSize: 20,
+      color: "#fff",
+      fontWeight: "bold",
+    },
+  });

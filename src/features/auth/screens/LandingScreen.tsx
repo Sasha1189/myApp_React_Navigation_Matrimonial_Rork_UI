@@ -10,11 +10,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthNavigation } from "../../../navigation/hooks";
 import { Heart, Sparkles, Users } from "lucide-react-native";
-import { theme } from "../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 
 export default function LandingScreen() {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const navigation = useAuthNavigation();
   const handleGetStarted = () => {
     navigation.navigate("PhoneSignIn");
@@ -79,100 +85,101 @@ export default function LandingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
-  },
-  safeArea: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-    justifyContent: "space-between",
-  },
-  header: {
-    alignItems: "center",
-    marginTop: height * 0.1,
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-  },
-  appName: {
-    fontSize: theme.fontSize.xxl + 8,
-    fontWeight: "bold",
-    color: "white",
-    marginLeft: theme.spacing.sm,
-  },
-  tagline: {
-    fontSize: theme.fontSize.lg,
-    color: "white",
-    textAlign: "center",
-    opacity: 0.9,
-  },
-  featuresContainer: {
-    alignItems: "center",
-    gap: theme.spacing.lg,
-  },
-  feature: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    minWidth: width * 0.6,
-    justifyContent: "center",
-  },
-  featureText: {
-    color: "white",
-    fontSize: theme.fontSize.md,
-    fontWeight: "600",
-    marginLeft: theme.spacing.sm,
-  },
-  bottomSection: {
-    alignItems: "center",
-    paddingBottom: theme.spacing.xl,
-  },
-  getStartedButton: {
-    backgroundColor: theme.colors.accent,
-    paddingHorizontal: theme.spacing.xxl,
-    paddingVertical: theme.spacing.md + 4,
-    borderRadius: theme.borderRadius.round,
-    marginBottom: theme.spacing.lg,
-    minWidth: width * 0.7,
-    alignItems: "center",
-    shadowColor: theme.colors.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 4,
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  getStartedText: {
-    color: "white",
-    fontSize: theme.fontSize.lg,
-    fontWeight: "bold",
-  },
-  termsText: {
-    color: "white",
-    fontSize: theme.fontSize.sm,
-    textAlign: "center",
-    opacity: 0.8,
-    lineHeight: 20,
-    paddingHorizontal: theme.spacing.md,
-  },
-});
+    backgroundImage: {
+      flex: 1,
+      width: "100%",
+      height: "100%",
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.2)",
+    },
+    safeArea: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.lg,
+      justifyContent: "space-between",
+    },
+    header: {
+      alignItems: "center",
+      marginTop: height * 0.1,
+    },
+    logoContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: theme.spacing.md,
+    },
+    appName: {
+      fontSize: theme.fontSize.xxl + 8,
+      fontWeight: "bold",
+      color: "white",
+      marginLeft: theme.spacing.sm,
+    },
+    tagline: {
+      fontSize: theme.fontSize.lg,
+      color: "white",
+      textAlign: "center",
+      opacity: 0.9,
+    },
+    featuresContainer: {
+      alignItems: "center",
+      gap: theme.spacing.lg,
+    },
+    feature: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.lg,
+      minWidth: width * 0.6,
+      justifyContent: "center",
+    },
+    featureText: {
+      color: "white",
+      fontSize: theme.fontSize.md,
+      fontWeight: "600",
+      marginLeft: theme.spacing.sm,
+    },
+    bottomSection: {
+      alignItems: "center",
+      paddingBottom: theme.spacing.xl,
+    },
+    getStartedButton: {
+      backgroundColor: theme.colors.accent,
+      paddingHorizontal: theme.spacing.xxl,
+      paddingVertical: theme.spacing.md + 4,
+      borderRadius: theme.borderRadius.round,
+      marginBottom: theme.spacing.lg,
+      minWidth: width * 0.7,
+      alignItems: "center",
+      shadowColor: theme.colors.shadow,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    getStartedText: {
+      color: "white",
+      fontSize: theme.fontSize.lg,
+      fontWeight: "bold",
+    },
+    termsText: {
+      color: "white",
+      fontSize: theme.fontSize.sm,
+      textAlign: "center",
+      opacity: 0.8,
+      lineHeight: 20,
+      paddingHorizontal: theme.spacing.md,
+    },
+  });

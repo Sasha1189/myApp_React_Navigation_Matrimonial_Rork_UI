@@ -12,7 +12,9 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useRef } from "react";
-import { theme } from "../../../theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../types/profile";
 import { createUserOnBackend } from "../apis/userApi";
 
@@ -28,6 +30,9 @@ interface FirebaseUserLike {
 }
 
 const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   const { setUser } = useAuth();
   const [gender, setGender] = useState<Gender>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -156,61 +161,62 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
 
 export default GenderModal;
 
-const styles = StyleSheet.create({
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    padding: 24,
-    borderRadius: 10,
-    width: "80%",
-    alignItems: "center",
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  modalButtonMale: {
-    backgroundColor: "lightgray",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  modalButtonFemale: {
-    backgroundColor: "lightgray",
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  modalButtonUpdate: {
-    marginTop: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    minHeight: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    // Soft shadow for depth
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContainer: {
+      backgroundColor: "#fff",
+      padding: 24,
+      borderRadius: 10,
+      width: "80%",
+      alignItems: "center",
+    },
+    modalText: {
+      fontSize: 16,
+      marginBottom: 20,
+      textAlign: "center",
+    },
+    modalButtonMale: {
+      backgroundColor: "lightgray",
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+      borderRadius: 8,
+    },
+    modalButtonFemale: {
+      backgroundColor: "lightgray",
+      paddingVertical: 10,
+      paddingHorizontal: 24,
+      borderRadius: 8,
+    },
+    modalButtonUpdate: {
+      marginTop: 20,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      minHeight: 48,
+      justifyContent: "center",
+      alignItems: "center",
+      // Soft shadow for depth
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
 
-  modalButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  femaleSelected: {
-    backgroundColor: "#FF1493", // Pink for Female
-  },
-  maleSelected: {
-    backgroundColor: "#007AFF", // Blue for Male
-  },
-});
+    modalButtonText: {
+      color: "#fff",
+      fontSize: 16,
+    },
+    femaleSelected: {
+      backgroundColor: "#FF1493", // Pink for Female
+    },
+    maleSelected: {
+      backgroundColor: "#007AFF", // Blue for Male
+    },
+  });

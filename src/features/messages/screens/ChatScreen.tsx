@@ -11,7 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { theme } from "../../../theme/index";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { useAuth } from "src/context/AuthContext";
 import { useChatSession } from "../hooks/useChatSession";
 import { MessageBubble } from "../components/MessageBubble";
@@ -22,6 +24,9 @@ import { ChatListHelper } from "../components/ChatListHelper";
 import { ChatHeader } from "../components/ChatHeader";
 
 export default function ChatScreen({ route }: { route: ChatRouteProp }) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const { roomId, otherUser, uid } = route.params;
   const { profile } = useAuth();
   const sender = {
@@ -99,7 +104,7 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
     getStatusLabel,
     theme,
   ]);
-
+  if (!theme) return null;
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "padding"}
@@ -151,39 +156,40 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
     </KeyboardAvoidingView>
   );
 }
-export const styles = StyleSheet.create({
-  container: { flex: 1 },
-  inner: { flex: 1 },
-  center: {
-    flex: 1,
-    marginHorizontal: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  listContent: {
-    paddingVertical: 20,
-    paddingBottom: 10,
-  },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: -20,
-  },
-  headerAvatar: {
-    width: 35,
-    height: 35,
-    borderRadius: 17.5,
-    marginRight: 10,
-    backgroundColor: "#f0f0f0",
-  },
-  headerName: { fontSize: 16, fontWeight: "700", color: "#000" },
-  headerStatus: { fontSize: 11, color: "#4CAF50" }, // Green for online
-  loadMoreBtn: {
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: { flex: 1 },
+    inner: { flex: 1 },
+    center: {
+      flex: 1,
+      marginHorizontal: 10,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    listContent: {
+      paddingVertical: 20,
+      paddingBottom: 10,
+    },
+    headerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginLeft: -20,
+    },
+    headerAvatar: {
+      width: 35,
+      height: 35,
+      borderRadius: 17.5,
+      marginRight: 10,
+      backgroundColor: "#f0f0f0",
+    },
+    headerName: { fontSize: 16, fontWeight: "700", color: "#000" },
+    headerStatus: { fontSize: 11, color: "#4CAF50" }, // Green for online
+    loadMoreBtn: {
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+    },
+  });

@@ -13,10 +13,6 @@ export const useUpdateProfile = (
     const gender = user?.displayName;
     if (!user?.uid || !gender) return;
 
-    // 1. Optimistic Update (Immediate UI)
-    // const updatedLocally = { ...profile, ...newData };
-    // setProfile(updatedLocally);
-
     try {
       // 2. Server Update
       const updatedFromServer = await apiUpdateProfile({
@@ -30,7 +26,6 @@ export const useUpdateProfile = (
       storage.set(PROFILE_CACHE_KEY, JSON.stringify(updatedFromServer));
     } catch (error) {
       console.error("Update failed:", error);
-      // Optional: Rollback if needed
     }
   };
 };

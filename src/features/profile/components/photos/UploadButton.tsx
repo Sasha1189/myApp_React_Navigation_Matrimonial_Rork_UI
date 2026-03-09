@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import {
   Text,
   StyleSheet,
@@ -7,8 +7,10 @@ import {
   Pressable,
   View,
 } from "react-native";
-import { CheckCircle2 } from "lucide-react-native"; // Lucide Icon
-import { theme } from "../../../../theme"; // Adjust path to your theme file
+import { CheckCircle2 } from "lucide-react-native";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface Props {
   loading: boolean;
@@ -25,6 +27,10 @@ export default function UploadButton({
   isEditing,
   onPress,
 }: Props) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const scaleValue = useRef(new Animated.Value(1)).current;
 
   // Press animations
@@ -88,41 +94,42 @@ export default function UploadButton({
   );
 }
 
-const styles = StyleSheet.create({
-  uploadButton: {
-    height: 56,
-    borderRadius: theme.borderRadius.lg,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden", // Important for the progress bar overlay
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-    marginHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-  },
-  content: {
-    zIndex: 2, // Keeps text above the progress bar
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-  },
-  buttonText: {
-    color: theme.colors.primary,
-    fontSize: theme.fontSize.md,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  progressBar: {
-    position: "absolute",
-    left: 0,
-    bottom: 0,
-    top: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.15)", // Subtle white overlay
-    zIndex: 1,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    uploadButton: {
+      height: 56,
+      borderRadius: theme.borderRadius.lg,
+      justifyContent: "center",
+      alignItems: "center",
+      overflow: "hidden", // Important for the progress bar overlay
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+      marginHorizontal: theme.spacing.md,
+      marginBottom: theme.spacing.lg,
+    },
+    content: {
+      zIndex: 2, // Keeps text above the progress bar
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.sm,
+    },
+    buttonText: {
+      color: theme.colors.primary,
+      fontSize: theme.fontSize.md,
+      fontWeight: "700",
+      letterSpacing: 0.5,
+    },
+    progressBar: {
+      position: "absolute",
+      left: 0,
+      bottom: 0,
+      top: 0,
+      backgroundColor: "rgba(255, 255, 255, 0.15)", // Subtle white overlay
+      zIndex: 1,
+    },
+  });

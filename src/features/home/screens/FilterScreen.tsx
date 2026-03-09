@@ -7,7 +7,6 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import { router } from 'expo-router';
 import {
   X,
   MapPin,
@@ -15,7 +14,9 @@ import {
   GraduationCap,
   DollarSign,
 } from "lucide-react-native";
-import { theme } from "../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 
 interface FilterState {
@@ -26,6 +27,9 @@ interface FilterState {
 }
 
 export default function FilterScreen() {
+  const { theme, mode } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   const [filters, setFilters] = useState<FilterState>({
     ageRange: [21, 35],
     location: [],
@@ -177,103 +181,104 @@ export default function FilterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.cardBackground,
-  },
-  closeButton: {
-    padding: theme.spacing.xs,
-  },
-  headerTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "bold",
-    color: theme.colors.text,
-  },
-  clearText: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.primary,
-    fontWeight: "600",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  section: {
-    marginVertical: theme.spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "600",
-    color: theme.colors.text,
-    marginLeft: theme.spacing.sm,
-  },
-  ageRangeContainer: {
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  ageRangeText: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    textAlign: "center",
-  },
-  optionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: theme.spacing.sm,
-  },
-  option: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.round,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.cardBackground,
-  },
-  selectedOption: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  optionText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.text,
-  },
-  selectedOptionText: {
-    color: "white",
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.cardBackground,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  applyButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.md + 4,
-    borderRadius: theme.borderRadius.md,
-    alignItems: "center",
-  },
-  applyButtonText: {
-    color: "white",
-    fontSize: theme.fontSize.md,
-    fontWeight: "600",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      backgroundColor: theme.colors.card,
+    },
+    closeButton: {
+      padding: theme.spacing.xs,
+    },
+    headerTitle: {
+      fontSize: theme.fontSize.lg,
+      fontWeight: "bold",
+      color: theme.colors.text,
+    },
+    clearText: {
+      fontSize: theme.fontSize.md,
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.lg,
+    },
+    section: {
+      marginVertical: theme.spacing.lg,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: theme.spacing.md,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "600",
+      color: theme.colors.text,
+      marginLeft: theme.spacing.sm,
+    },
+    ageRangeContainer: {
+      backgroundColor: theme.colors.card,
+      padding: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    ageRangeText: {
+      fontSize: theme.fontSize.md,
+      color: theme.colors.text,
+      textAlign: "center",
+    },
+    optionsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: theme.spacing.sm,
+    },
+    option: {
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.round,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.card,
+    },
+    selectedOption: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    optionText: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.text,
+    },
+    selectedOptionText: {
+      color: "white",
+    },
+    footer: {
+      padding: theme.spacing.lg,
+      backgroundColor: theme.colors.card,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+    },
+    applyButton: {
+      backgroundColor: theme.colors.primary,
+      paddingVertical: theme.spacing.md + 4,
+      borderRadius: theme.borderRadius.md,
+      alignItems: "center",
+    },
+    applyButtonText: {
+      color: "white",
+      fontSize: theme.fontSize.md,
+      fontWeight: "600",
+    },
+  });

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { ChevronDown, ChevronUp } from "lucide-react-native";
 
 interface FormSectionProps {
@@ -16,6 +18,9 @@ const FormSection: React.FC<FormSectionProps> = ({
   children,
   editable = false,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   // start all sections collapsed regardless of `editable`
   const [collapsed, setCollapsed] = useState<boolean>(true);
 
@@ -55,35 +60,36 @@ const FormSection: React.FC<FormSectionProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  section: {
-    backgroundColor: "white",
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    elevation: 3,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "bold",
-    marginLeft: theme.spacing.sm,
-    color: theme.colors.text,
-  },
-  sectionContent: { gap: theme.spacing.md },
-  chevronButton: {
-    padding: theme.spacing.xs,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    section: {
+      backgroundColor: "white",
+      borderRadius: theme.borderRadius.lg,
+      marginBottom: theme.spacing.lg,
+      padding: theme.spacing.lg,
+      elevation: 3,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.sm,
+      paddingBottom: theme.spacing.sm,
+    },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "bold",
+      marginLeft: theme.spacing.sm,
+      color: theme.colors.text,
+    },
+    sectionContent: { gap: theme.spacing.md },
+    chevronButton: {
+      padding: theme.spacing.xs,
+    },
+  });
 
 export default FormSection;

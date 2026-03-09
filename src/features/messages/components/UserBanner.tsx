@@ -8,13 +8,14 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Image } from "expo-image";
-import { theme } from "../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { UserBannerItem } from "../type/chattype";
 import { useAuth } from "src/context/AuthContext";
 import { LikesReceivedCache } from "../../../cache/cacheConfig";
 import { getProfile } from "../../profile/api/profileApi";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { formatDOB } from "@/utils/dateUtils";
 
 interface UserBannerProps {
   item: UserBannerItem;
@@ -22,6 +23,9 @@ interface UserBannerProps {
 }
 
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const { user } = useAuth();
   const navigation = useAppNavigation();
   const [isFetching, setIsFetching] = useState(false); // Add local loading state
@@ -51,6 +55,7 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
       setIsFetching(false);
     }
   };
+  if (!theme) return null;
 
   return (
     <>
@@ -89,44 +94,45 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  lockOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.1)", // Very subtle tint to show it's "thinking"
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 999,
-  },
-  activityCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    padding: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.sm,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  activityImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: theme.spacing.md,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityName: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "600",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  activityText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textLight,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    lockOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.1)", // Very subtle tint to show it's "thinking"
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 999,
+    },
+    activityCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "white",
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing.sm,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    activityImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      marginRight: theme.spacing.md,
+    },
+    activityContent: {
+      flex: 1,
+    },
+    activityName: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "600",
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xs,
+    },
+    activityText: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.textLight,
+    },
+  });

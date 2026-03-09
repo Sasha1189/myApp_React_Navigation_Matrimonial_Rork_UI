@@ -9,11 +9,14 @@ import SettingsScreen from "../features/settings/screens/SettingsScreen";
 import SubscriptionScreen from "../features/subscription/screens/SubscriptionScreen";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
-import { theme } from "../constants/theme";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppNavigator() {
+  const { theme } = useAppTheme();
+  if (!theme) return null;
+
   return (
     <Stack.Navigator initialRouteName="Tabs">
       <Stack.Screen

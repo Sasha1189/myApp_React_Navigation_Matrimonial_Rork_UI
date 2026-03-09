@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -8,15 +8,10 @@ import {
   StyleSheet,
 } from "react-native";
 import { Image } from "expo-image";
-import {
-  Info,
-  RefreshCw,
-  AlertCircle,
-  ThumbsUp,
-  MessageCircleMore,
-  ArrowDownAZ,
-} from "lucide-react-native";
-import { theme } from "../../../constants/theme";
+import { Info, AlertCircle } from "lucide-react-native";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { ActionButtons } from "../components/ActionButtons";
 
 interface FeedStatusCardProps {
@@ -36,6 +31,9 @@ export function FeedStatusCard({
   onAction,
   actionText,
 }: FeedStatusCardProps) {
+  const { theme, mode } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   return (
     <View style={styles.card}>
       <TouchableOpacity activeOpacity={1} style={styles.imageContainer}>
@@ -79,15 +77,6 @@ export function FeedStatusCard({
 
       <View style={styles.actionsContainer}>
         <View style={styles.rightActions}>
-          {/* <TouchableOpacity style={styles.dummybutton}>
-            <ThumbsUp color={theme.colors.textLight} size={40} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.dummybutton}>
-            <MessageCircleMore size={40} color={theme.colors.textLight} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.dummybutton}>
-            <ArrowDownAZ size={40} color={theme.colors.textLight} />
-          </TouchableOpacity> */}
           <ActionButtons
             onLike={() => void 0}
             onMessage={() => void 0}
@@ -108,6 +97,9 @@ export function FeedPreviousProfiles({
   currentIndex: number;
   updateIndex: (index: number) => void;
 }) {
+  const { theme, mode } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   return (
     <View style={styles.previousFeedBtnContainer}>
       <TouchableOpacity
@@ -120,77 +112,82 @@ export function FeedPreviousProfiles({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    position: "absolute",
-    width: screenWidth - 20,
-    height: screenHeight * 0.75,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.cardBackground,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  cardContent: {
-    position: "absolute",
-    bottom: 60,
-    left: 0,
-    right: 55,
-    padding: theme.spacing.lg,
-  },
-  content: { alignItems: "center" },
-  iconContainer: { flexDirection: "row" },
-  iconFit: { margin: 10 },
-  imageContainer: {
-    width: "100%",
-    height: "100%",
-    borderRadius: theme.borderRadius.xl,
-  },
-  image: { width: "100%", height: "100%", borderRadius: theme.borderRadius.xl },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-    textAlignVertical: "center",
-    marginBottom: 10,
-    color: theme.colors.text,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 30,
-    paddingHorizontal: 20,
-  },
-  button: { paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25 },
-  buttonText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: 16,
-    textAlign: "center",
-  },
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    card: {
+      position: "absolute",
+      width: screenWidth - 20,
+      height: screenHeight * 0.75,
+      borderRadius: theme.borderRadius.xl,
+      backgroundColor: theme.colors.card,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    cardContent: {
+      position: "absolute",
+      bottom: 60,
+      left: 0,
+      right: 55,
+      padding: theme.spacing.lg,
+    },
+    content: { alignItems: "center" },
+    iconContainer: { flexDirection: "row" },
+    iconFit: { margin: 10 },
+    imageContainer: {
+      width: "100%",
+      height: "100%",
+      borderRadius: theme.borderRadius.xl,
+    },
+    image: {
+      width: "100%",
+      height: "100%",
+      borderRadius: theme.borderRadius.xl,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: "bold",
+      textAlign: "center",
+      textAlignVertical: "center",
+      marginBottom: 10,
+      color: theme.colors.text,
+    },
+    message: {
+      fontSize: 16,
+      textAlign: "center",
+      marginBottom: 30,
+      paddingHorizontal: 20,
+    },
+    button: { paddingVertical: 12, paddingHorizontal: 30, borderRadius: 25 },
+    buttonText: {
+      color: "white",
+      fontWeight: "600",
+      fontSize: 16,
+      textAlign: "center",
+    },
 
-  actionsContainer: {
-    position: "absolute",
-    right: theme.spacing.lg,
-    bottom: theme.spacing.lg,
-    alignItems: "flex-end",
-    elevation: 10,
-  },
-  rightActions: {
-    alignItems: "center",
-  },
-  dummybutton: {
-    opacity: 0.5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  previousFeedBtnContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 55,
-    padding: theme.spacing.lg,
-  },
-});
+    actionsContainer: {
+      position: "absolute",
+      right: theme.spacing.lg,
+      bottom: theme.spacing.lg,
+      alignItems: "flex-end",
+      elevation: 10,
+    },
+    rightActions: {
+      alignItems: "center",
+    },
+    dummybutton: {
+      opacity: 0.5,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    previousFeedBtnContainer: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 55,
+      padding: theme.spacing.lg,
+    },
+  });

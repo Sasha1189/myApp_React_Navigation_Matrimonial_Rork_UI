@@ -7,7 +7,11 @@ import {
   Alert,
 } from "react-native";
 import GenderModal from "../components/GenderModal";
-import { useTheme } from "../../../theme/useTheme";
+
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../../../context/AuthContext";
 import { useAppNavigation } from "../../../navigation/hooks";
@@ -16,8 +20,10 @@ import { SwipeCard } from "../components/SwipeCard";
 import { FeedStatusContent } from "../components/FeedStatusContent";
 
 export default function HomeScreen() {
-  const theme = useTheme();
-  const styles = createStyles(theme);
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const { user } = useAuth();
   const uid = user?.uid as string;
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -100,7 +106,7 @@ export default function HomeScreen() {
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
+export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,

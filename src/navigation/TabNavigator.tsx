@@ -3,15 +3,13 @@ import { View, TouchableOpacity } from "react-native";
 import {
   Heart,
   Settings2,
-  Cherry,
   MessageCircle,
   User,
-  Filter,
   Search,
   Settings,
 } from "lucide-react-native";
 import { Image } from "expo-image";
-import { theme } from "../constants/theme";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { TabParamList } from "./types";
 import { useAppNavigation } from "./hooks";
@@ -22,6 +20,9 @@ import ProfileScreen from "../features/profile/screens/ProfileScreen";
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function TabNavigator() {
+  const { theme } = useAppTheme();
+  if (!theme) return null;
+
   const navigation = useAppNavigation();
   return (
     <Tab.Navigator

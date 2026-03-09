@@ -1,7 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface PickerFieldProps {
   label: string;
@@ -26,6 +28,10 @@ const PickerField: React.FC<PickerFieldProps> = ({
   required = false,
   locked = false,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
@@ -75,57 +81,58 @@ const PickerField: React.FC<PickerFieldProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: { marginBottom: theme.spacing.sm },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-    gap: theme.spacing.xs,
-  },
-  label: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "500",
-    color: theme.colors.text,
-  },
-  button: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    backgroundColor: "white",
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: "white",
-    marginBottom: theme.spacing.sm,
-  },
-  text: { fontSize: theme.fontSize.md, color: theme.colors.text },
-  placeholder: { color: theme.colors.textLight },
-  options: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: "white",
-    marginTop: theme.spacing.xs,
-    maxHeight: 200,
-  },
-  optionItem: {
-    padding: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  optionText: { fontSize: theme.fontSize.md, color: theme.colors.text },
-  lockNote: {
-    color: theme.colors.textLight,
-    marginTop: theme.spacing.xs,
-    fontSize: theme.fontSize.sm,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: { marginBottom: theme.spacing.sm },
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 4,
+      gap: theme.spacing.xs,
+    },
+    label: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "500",
+      color: theme.colors.text,
+    },
+    button: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      backgroundColor: "white",
+    },
+    pickerContainer: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: "white",
+      marginBottom: theme.spacing.sm,
+    },
+    text: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    placeholder: { color: theme.colors.textLight },
+    options: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      backgroundColor: "white",
+      marginTop: theme.spacing.xs,
+      maxHeight: 200,
+    },
+    optionItem: {
+      padding: theme.spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    optionText: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    lockNote: {
+      color: theme.colors.textLight,
+      marginTop: theme.spacing.xs,
+      fontSize: theme.fontSize.sm,
+    },
+  });
 
 export default PickerField;

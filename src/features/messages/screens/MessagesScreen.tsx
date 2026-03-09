@@ -7,10 +7,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
-import { theme } from "../../../theme/index";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { useMessageInbox } from "../hooks/useMessageInbox";
 import { useLikeSent, useLikeReceived } from "../hooks/useLikesList";
 import { useTabSwipe } from "../hooks/useTabSwipe";
@@ -18,20 +19,18 @@ import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
 import { UserBanner } from "../components/UserBanner";
 import { ChatBanner } from "../components/ChatBanner";
-import { ChatListHelper } from "../components/ChatListHelper";
+import { ChatFooter } from "../components/ChatFooter";
+import { ChatFloatingUI } from "@/features/messages/components/ChatFloatingUI";
 
 export default function MessagesScreen() {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
   const { user } = useAuth();
+
   const uid = user?.uid;
-  const gender = user?.displayName;
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats",
   );
-  const { panHandlers, triggerTabChange } = useTabSwipe(
-    activeTab,
-    setActiveTab,
-  );
-  const flatListRef = useRef<FlatList>(null);
 
   const {
     banners: chatBanners,
@@ -42,23 +41,17 @@ export default function MessagesScreen() {
     hasMore,
     reset,
     isLoading: chatsLoading,
-  } = useMessageInbox(uid!);
-  const { data: likesSent, isLoading: sentLoading } = useLikeSent(uid!);
-  const { data: likesReceived, isLoading: recLoading } = useLikeReceived(uid!);
+  } = useMessageInbox(uid || "");
+  const { data: likesSent, isLoading: sentLoading } = useLikeSent(uid || "");
+  const { data: likesReceived, isLoading: recLoading } = useLikeReceived(
+    uid || "",
+  );
 
-  const helper = ChatListHelper({
-    isLive,
-    hasMore,
-    theme,
-    mode: "inbox",
-    isLoadingMore: isFetchingMore,
-    hasNewContent: hasNewAtTop,
-    onLoadMore: loadMore,
-    onReset: () => {
-      reset();
-      flatListRef.current?.scrollToOffset({ offset: 0 });
-    },
-  });
+  const { panHandlers, triggerTabChange } = useTabSwipe(
+    activeTab,
+    setActiveTab,
+  );
+  const flatListRef = useRef<FlatList>(null);
 
   const { currentData, isLoadingState } = useMemo(() => {
     let data: any[] = [];
@@ -77,6 +70,8 @@ export default function MessagesScreen() {
 
     return { currentData: data, isLoadingState: loading };
   }, [activeTab, chatBanners, chatsLoading]);
+
+  if (!theme) return null;
 
   return (
     <View style={styles.container} {...panHandlers}>
@@ -130,63 +125,78 @@ export default function MessagesScreen() {
             maxToRenderPerBatch={10}
             windowSize={5}
             removeClippedSubviews={true}
-            ListFooterComponent={
-              activeTab === "chats" ? helper.renderFooter : null
-            }
             contentContainerStyle={{ paddingBottom: 100 }}
+            ListFooterComponent={
+              activeTab === "chats" ? (
+                <ChatFooter
+                  hasMore={hasMore}
+                  isLoadingMore={isFetchingMore}
+                  onLoadMore={loadMore}
+                  mode="inbox"
+                />
+              ) : null
+            }
           />
-          {activeTab === "chats" && helper.renderFloating()}
+          {activeTab === "chats" && (
+            <ChatFloatingUI
+              isLive={isLive}
+              hasNewContent={hasNewAtTop}
+              onReset={reset}
+              mode="inbox"
+            />
+          )}
         </View>
       )}
     </View>
   );
 }
 
-export const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    paddingBottom: theme.spacing.xl,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  activityContainer: {
-    paddingHorizontal: theme.spacing.md,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginHorizontal: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
-  },
-  footerContainer: {
-    paddingVertical: theme.spacing.md,
-    alignItems: "center",
-  },
-  noMoreText: {
-    color: theme.colors.textLight,
-    fontSize: theme.fontSize.sm,
-  },
-  loadMoreBtn: {
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingBottom: theme.spacing.xl,
+    },
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    tabsContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    activityContainer: {
+      paddingHorizontal: theme.spacing.md,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize.lg,
+      fontWeight: "bold",
+      color: theme.colors.text,
+      marginHorizontal: theme.spacing.md,
+      marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.md,
+    },
+    footerContainer: {
+      paddingVertical: theme.spacing.md,
+      alignItems: "center",
+    },
+    noMoreText: {
+      color: theme.colors.textLight,
+      fontSize: theme.fontSize.sm,
+    },
+    loadMoreBtn: {
+      marginTop: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+    },
+  });

@@ -1,16 +1,9 @@
-import { theme } from "../../../constants/theme";
-import {
-  Heart,
-  Star,
-  X,
-  ThumbsUp,
-  MessageCircleMore,
-  MessageSquareMore,
-  ArrowDownAZ,
-  ArrowDownIcon,
-} from "lucide-react-native";
+import { ThumbsUp, MessageCircleMore, ArrowDownAZ } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface ActionButtonsProps {
   onLike: () => void;
@@ -29,6 +22,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   liked,
   color = true,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -76,16 +72,17 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.lg,
-    gap: theme.spacing.lg,
-  },
-  button: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: theme.spacing.lg,
+      gap: theme.spacing.lg,
+    },
+    button: {
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  });

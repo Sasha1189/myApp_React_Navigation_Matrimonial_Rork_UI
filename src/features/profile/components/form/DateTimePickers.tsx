@@ -7,7 +7,9 @@ import {
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface DatePickerProps {
   label: string;
@@ -29,6 +31,10 @@ export const DatePickerField: React.FC<DatePickerProps> = ({
   required = true,
   locked,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const [showPicker, setShowPicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     value
@@ -152,6 +158,10 @@ export const TimePickerField: React.FC<TimePickerProps> = ({
   required = false,
   locked = false,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState<Date | undefined>(
     value ? parseTimeString(value) : undefined,
@@ -216,28 +226,29 @@ export const TimePickerField: React.FC<TimePickerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "500",
-    color: theme.colors.text,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    backgroundColor: "white",
-    marginTop: 6,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.xs,
+      marginBottom: 4,
+    },
+    label: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "500",
+      color: theme.colors.text,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      fontSize: theme.fontSize.md,
+      color: theme.colors.text,
+      backgroundColor: "white",
+      marginTop: 6,
+    },
+  });
 
 export default DatePickerField;

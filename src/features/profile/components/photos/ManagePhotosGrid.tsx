@@ -8,11 +8,13 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { Plus, Star, X } from "lucide-react-native";
-import { theme } from "../../../../theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { Photo } from "../../../../types/profile";
 
 const { width } = Dimensions.get("window");
-const photoSize = (width - theme.spacing.lg * 3) / 2;
+// const photoSize = (width - theme.spacing.lg * 3) / 2;
 
 interface Props {
   photos: Photo[];
@@ -29,6 +31,10 @@ export default function ManagePhotosGrid({
   onDelete,
   onSetPrimary,
 }: Props) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const emptySlots = Math.max(0, maxPhotos - photos.length);
 
   const renderPhotoSlot = (photo?: Photo, index?: number) => {
@@ -94,70 +100,71 @@ export default function ManagePhotosGrid({
   );
 }
 
-const styles = StyleSheet.create({
-  photosGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.lg,
-  },
-  photoContainer: {
-    position: "relative",
-    marginBottom: theme.spacing.md,
-    backgroundColor: theme.colors.cardBackground,
-  },
-  photo: {
-    width: photoSize,
-    height: photoSize * 1.3,
-    borderRadius: theme.borderRadius.lg,
-  },
-  emptyPhotoSlot: {
-    width: photoSize,
-    height: photoSize * 1.3,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: theme.colors.background,
-    marginBottom: theme.spacing.md,
-  },
-  addPhotoText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textLight,
-    marginTop: theme.spacing.xs,
-  },
-  primaryBadge: {
-    position: "absolute",
-    top: theme.spacing.sm,
-    left: theme.spacing.sm,
-    backgroundColor: theme.colors.warning,
-    borderRadius: theme.borderRadius.round,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  primaryText: {
-    color: "white",
-    fontSize: theme.fontSize.xs,
-    fontWeight: "bold",
-    marginLeft: theme.spacing.xs,
-  },
-  photoActions: {
-    position: "absolute",
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
-    flexDirection: "row",
-    gap: theme.spacing.xs,
-  },
-  actionButton: {
-    backgroundColor: "rgba(0,0,0,0.6)",
-    borderRadius: theme.borderRadius.round,
-    padding: theme.spacing.xs,
-  },
-  deleteButton: {
-    backgroundColor: theme.colors.danger,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    photosGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.lg,
+    },
+    photoContainer: {
+      position: "relative",
+      marginBottom: theme.spacing.md,
+      backgroundColor: theme.colors.card,
+    },
+    photo: {
+      width: (width - theme.spacing.lg * 3) / 2,
+      height: ((width - theme.spacing.lg * 3) / 2) * 1.3,
+      borderRadius: theme.borderRadius.lg,
+    },
+    emptyPhotoSlot: {
+      width: (width - theme.spacing.lg * 3) / 2,
+      height: ((width - theme.spacing.lg * 3) / 2) * 1.3,
+      borderRadius: theme.borderRadius.lg,
+      borderWidth: 2,
+      borderColor: theme.colors.border,
+      borderStyle: "dashed",
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background,
+      marginBottom: theme.spacing.md,
+    },
+    addPhotoText: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.textLight,
+      marginTop: theme.spacing.xs,
+    },
+    primaryBadge: {
+      position: "absolute",
+      top: theme.spacing.sm,
+      left: theme.spacing.sm,
+      backgroundColor: theme.colors.warning,
+      borderRadius: theme.borderRadius.round,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    primaryText: {
+      color: "white",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "bold",
+      marginLeft: theme.spacing.xs,
+    },
+    photoActions: {
+      position: "absolute",
+      top: theme.spacing.sm,
+      right: theme.spacing.sm,
+      flexDirection: "row",
+      gap: theme.spacing.xs,
+    },
+    actionButton: {
+      backgroundColor: "rgba(0,0,0,0.6)",
+      borderRadius: theme.borderRadius.round,
+      padding: theme.spacing.xs,
+    },
+    deleteButton: {
+      backgroundColor: theme.colors.danger,
+    },
+  });

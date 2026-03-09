@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../../types/profile";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -22,6 +24,10 @@ interface ProfileCarouselProps {
 export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   profile,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -95,59 +101,60 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  imageContainer: {
-    flex: 1,
-    borderRadius: theme.borderRadius.lg,
-    overflow: "hidden", // important for rounded edges!
-  },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  imageGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "40%",
-  },
-  imageIndicators: {
-    position: "absolute",
-    bottom: 10,
-    left: theme.spacing.md,
-    right: theme.spacing.md,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  indicator: {
-    flex: 1,
-    height: 3,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    marginHorizontal: 2,
-    borderRadius: 1.5,
-  },
-  activeIndicator: {
-    backgroundColor: "white",
-  },
-  premiumBanner: {
-    position: "absolute",
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  premiumText: {
-    color: "white",
-    fontSize: theme.fontSize.xs,
-    fontWeight: "bold",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    imageContainer: {
+      flex: 1,
+      borderRadius: theme.borderRadius.lg,
+      overflow: "hidden", // important for rounded edges!
+    },
+    profileImage: {
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
+    },
+    imageGradient: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: "40%",
+    },
+    imageIndicators: {
+      position: "absolute",
+      bottom: 10,
+      left: theme.spacing.md,
+      right: theme.spacing.md,
+      flexDirection: "row",
+      justifyContent: "center",
+    },
+    indicator: {
+      flex: 1,
+      height: 3,
+      backgroundColor: "rgba(255, 255, 255, 0.5)",
+      marginHorizontal: 2,
+      borderRadius: 1.5,
+    },
+    activeIndicator: {
+      backgroundColor: "white",
+    },
+    premiumBanner: {
+      position: "absolute",
+      top: theme.spacing.sm,
+      right: theme.spacing.sm,
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    premiumText: {
+      color: "white",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "bold",
+    },
+  });

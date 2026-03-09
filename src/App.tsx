@@ -2,7 +2,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { CacheProvider } from "./cache/CacheProvider";
 import { AuthProvider } from "./context/AuthContext";
-import { ThemeProvider } from "./theme/useTheme";
+import { ThemeProvider } from "./theme/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync().catch(() => {

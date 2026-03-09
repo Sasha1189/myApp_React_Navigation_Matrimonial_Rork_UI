@@ -1,4 +1,6 @@
-import { theme } from "../../../theme/index";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
@@ -54,15 +56,21 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   title,
   icon: Icon,
   children,
-}) => (
-  <View style={styles.section}>
-    <View style={styles.sectionHeader}>
-      <Icon size={20} color={theme.colors.primary} />
-      <Text style={styles.sectionTitle}>{title}</Text>
+}) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Icon size={20} color={theme.colors.primary} />
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      <View style={styles.sectionContent}>{children}</View>
     </View>
-    <View style={styles.sectionContent}>{children}</View>
-  </View>
-);
+  );
+};
 
 interface DetailRowProps {
   label: string;
@@ -77,6 +85,9 @@ interface DetailRowProps {
 }
 
 const DetailRow: React.FC<DetailRowProps> = ({ label, value, icon: Icon }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   if (value === undefined || value === null || value === "") return null;
   return (
     <View style={styles.detailRow}>
@@ -101,6 +112,9 @@ export default function UserDetailsScreen({
 }: {
   route: RouteProp<AppStackParamList, "Details">;
 }) {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const navigation = useNavigation<UserDetailsScreenNavigationProp>();
   let profile: Profile | null = null;
 
@@ -109,9 +123,9 @@ export default function UserDetailsScreen({
     profile = route.params.profile ?? null;
   }
 
-  if (!profile) {
-    return <LoadingScreen />;
-  }
+  if (!profile) return <LoadingScreen />;
+  if (!theme) return null;
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
@@ -418,103 +432,104 @@ export default function UserDetailsScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    paddingBottom: 30,
-  },
-  cardContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-  },
-  card: {
-    width: screenWidth - 10 * 2,
-    height: screenHeight * 0.7,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.cardBackground,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: theme.spacing.lg,
-  },
-  content: {
-    padding: 10,
-    paddingBottom: 30,
-  },
-  section: {
-    backgroundColor: "white",
-    borderRadius: theme.borderRadius.lg,
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.lg,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-    paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginLeft: theme.spacing.sm,
-  },
-  sectionContent: {
-    gap: theme.spacing.sm,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingVertical: theme.spacing.xs,
-  },
-  detailLabelContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  detailLabel: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textLight,
-    fontWeight: "500",
-  },
-  detailValue: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-    flex: 1.5,
-    textAlign: "right",
-  },
-  hobbiesContainer: {
-    paddingVertical: theme.spacing.xs,
-  },
-  hobbiesList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: theme.spacing.xs,
-  },
-  hobbyTag: {
-    backgroundColor: theme.colors.primary + "20",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.round,
-    marginRight: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  hobbyText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.primary,
-    fontWeight: "500",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingBottom: 30,
+    },
+    cardContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 10,
+    },
+    card: {
+      width: screenWidth - 10 * 2,
+      height: screenHeight * 0.7,
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor: theme.colors.card,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      marginBottom: theme.spacing.lg,
+    },
+    content: {
+      padding: 10,
+      paddingBottom: 30,
+    },
+    section: {
+      backgroundColor: "white",
+      borderRadius: theme.borderRadius.lg,
+      marginBottom: theme.spacing.lg,
+      padding: theme.spacing.lg,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize.lg,
+      fontWeight: "bold",
+      color: theme.colors.text,
+      marginLeft: theme.spacing.sm,
+    },
+    sectionContent: {
+      gap: theme.spacing.sm,
+    },
+    detailRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      paddingVertical: theme.spacing.xs,
+    },
+    detailLabelContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+      gap: theme.spacing.xs,
+    },
+    detailLabel: {
+      fontSize: theme.fontSize.md,
+      color: theme.colors.textLight,
+      fontWeight: "500",
+    },
+    detailValue: {
+      fontSize: theme.fontSize.md,
+      color: theme.colors.text,
+      flex: 1.5,
+      textAlign: "right",
+    },
+    hobbiesContainer: {
+      paddingVertical: theme.spacing.xs,
+    },
+    hobbiesList: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: theme.spacing.xs,
+    },
+    hobbyTag: {
+      backgroundColor: theme.colors.primary + "20",
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.round,
+      marginRight: theme.spacing.sm,
+      marginBottom: theme.spacing.xs,
+    },
+    hobbyText: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.primary,
+      fontWeight: "500",
+    },
+  });

@@ -7,7 +7,9 @@ import {
   StyleSheet,
 } from "react-native";
 import { SendHorizonal } from "lucide-react-native";
-import { useTheme } from "../../../theme/useTheme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -15,8 +17,10 @@ interface ChatInputProps {
 }
 
 export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
   const [text, setText] = useState("");
-  const theme = useTheme();
   const MAX_CHARS = 100;
 
   // Refs to manage typing state without triggering re-renders
@@ -126,7 +130,7 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
       setText("");
     }
   };
-
+  if (!theme) return null;
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.primary }]}>
       <TextInput
@@ -155,35 +159,36 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
   );
 });
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderTopWidth: 0.5,
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 120, // Prevents input from taking over the whole screen
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingTop: 10,
-    paddingBottom: 10,
-    fontSize: 16,
-    marginRight: 8,
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 2, // Alignment with text input baseline
-  },
-  counter: {
-    fontSize: 16,
-    // color: theme.colors.textLight,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderTopWidth: 0.5,
+    },
+    input: {
+      flex: 1,
+      minHeight: 40,
+      maxHeight: 120, // Prevents input from taking over the whole screen
+      borderRadius: 20,
+      paddingHorizontal: 15,
+      paddingTop: 10,
+      paddingBottom: 10,
+      fontSize: 16,
+      marginRight: 8,
+    },
+    sendBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 2, // Alignment with text input baseline
+    },
+    counter: {
+      fontSize: 16,
+      // color: theme.colors.textLight,
+    },
+  });

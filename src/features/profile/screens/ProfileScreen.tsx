@@ -12,7 +12,9 @@ import { Edit3, Camera, Eye } from "lucide-react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { useAuth } from "../../../context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
-import { theme } from "../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { formatDOB } from "../../../utils/dateUtils";
 
 interface MenuItem {
@@ -23,6 +25,10 @@ interface MenuItem {
 }
 
 export default function ProfileScreen(): React.ReactElement {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  // if (!theme) return null;
+
   const { profile } = useAuth();
   const navigation = useAppNavigation();
 
@@ -142,145 +148,146 @@ export default function ProfileScreen(): React.ReactElement {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingBottom: 30,
-    backgroundColor: theme.colors.primary,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    marginHorizontal: theme.spacing.md,
-  },
-  compactHeader: {
-    // paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-  },
-  compactProfileColumn: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "space-between",
-    margin: theme.spacing.sm,
-  },
-  compactProfileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "white",
-  },
-  compactProfileInfo: {
-    flexDirection: "row",
-    padding: theme.spacing.md,
-  },
-  compactName: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "500",
-    color: "white",
-  },
-  compactAge: {
-    fontSize: theme.fontSize.lg,
-    color: "rgba(255,255,255,0.85)",
-  },
-  statsContainerCompact: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
-    borderRadius: theme.borderRadius.md,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-  },
-  statValueCompact: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "700",
-    color: "white",
-  },
-  statLabelCompact: {
-    fontSize: theme.fontSize.xs,
-    color: "rgba(255,255,255,0.85)",
-  },
-  menuSection: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
-    padding: theme.spacing.sm,
-  },
-  menuCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  menuItemText: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.text,
-    padding: theme.spacing.sm,
-  },
-  menuItemTextDanger: {
-    color: theme.colors.danger,
-  },
-  premiumBanner: {
-    margin: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    overflow: "hidden",
-    backgroundColor: theme.colors.cardBackground,
-    padding: theme.spacing.lg,
-    alignItems: "center",
-  },
-  premiumGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.1,
-  },
-  premiumTitle: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  premiumSubtitle: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.textLight,
-    textAlign: "center",
-    marginBottom: theme.spacing.md,
-  },
-  premiumButton: {
-    backgroundColor: "#FFD700",
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.round,
-  },
-  premiumButtonText: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "bold",
-    color: theme.colors.text,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 10,
+      paddingBottom: 30,
+      backgroundColor: theme.colors.primary,
+    },
+    statItem: {
+      flex: 1,
+      alignItems: "center",
+    },
+    statDivider: {
+      width: 1,
+      height: 30,
+      backgroundColor: "rgba(255, 255, 255, 0.3)",
+      marginHorizontal: theme.spacing.md,
+    },
+    compactHeader: {
+      // paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.sm,
+    },
+    compactProfileColumn: {
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "space-between",
+      margin: theme.spacing.sm,
+    },
+    compactProfileImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      borderWidth: 3,
+      borderColor: "white",
+    },
+    compactProfileInfo: {
+      flexDirection: "row",
+      padding: theme.spacing.md,
+    },
+    compactName: {
+      fontSize: theme.fontSize.lg,
+      fontWeight: "500",
+      color: "white",
+    },
+    compactAge: {
+      fontSize: theme.fontSize.lg,
+      color: "rgba(255,255,255,0.85)",
+    },
+    statsContainerCompact: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "rgba(255, 255, 255, 0.06)",
+      borderRadius: theme.borderRadius.md,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
+    },
+    statValueCompact: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "700",
+      color: "white",
+    },
+    statLabelCompact: {
+      fontSize: theme.fontSize.xs,
+      color: "rgba(255,255,255,0.85)",
+    },
+    menuSection: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.lg,
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor: "rgba(255, 255, 255, 0.06)",
+      padding: theme.spacing.sm,
+    },
+    menuCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.card,
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 3,
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    menuItemText: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.text,
+      padding: theme.spacing.sm,
+    },
+    menuItemTextDanger: {
+      color: theme.colors.danger,
+    },
+    premiumBanner: {
+      margin: theme.spacing.lg,
+      borderRadius: theme.borderRadius.lg,
+      overflow: "hidden",
+      backgroundColor: theme.colors.card,
+      padding: theme.spacing.lg,
+      alignItems: "center",
+    },
+    premiumGradient: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.1,
+    },
+    premiumTitle: {
+      fontSize: theme.fontSize.xl,
+      fontWeight: "bold",
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xs,
+    },
+    premiumSubtitle: {
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.textLight,
+      textAlign: "center",
+      marginBottom: theme.spacing.md,
+    },
+    premiumButton: {
+      backgroundColor: "#FFD700",
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.round,
+    },
+    premiumButtonText: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "bold",
+      color: theme.colors.text,
+    },
+  });

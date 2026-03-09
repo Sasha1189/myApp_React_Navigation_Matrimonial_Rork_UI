@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { Edit3, Save, X } from "lucide-react-native";
 import { useForm, FormProvider } from "react-hook-form";
-import { theme } from "../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { useTabNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
 import {
@@ -32,6 +34,9 @@ import { isDeepEqual } from "../../../utils/deepEqual";
 import { useUnsavedChangesPrompt } from "../hooks/useUnsavedChangesPrompt";
 
 export default function EditProfileScreen() {
+  const { theme } = useAppTheme();
+  if (!theme) return null;
+
   const navigation = useTabNavigation();
   const { profile, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);

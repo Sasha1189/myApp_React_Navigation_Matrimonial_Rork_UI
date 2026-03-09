@@ -11,7 +11,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Briefcase, GraduationCap } from "lucide-react-native";
-import { theme } from "../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../types/profile";
 import { formatDOB } from "../../../utils/dateUtils";
 import { ActionButtons } from "../components/ActionButtons";
@@ -39,6 +41,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   onSwipeDown,
   isTopCard,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handleImageTap = (event: any) => {
@@ -250,191 +255,192 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    position: "absolute",
-    width: screenWidth - 20,
-    height: screenHeight * 0.75,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.cardBackground,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  imageContainer: {
-    width: "100%",
-    height: "100%",
-    borderRadius: theme.borderRadius.xl,
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: theme.borderRadius.xl,
-  },
-  gradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-    borderBottomLeftRadius: theme.borderRadius.xl,
-    borderBottomRightRadius: theme.borderRadius.xl,
-  },
-  cardContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 55,
-    padding: theme.spacing.lg,
-  },
-  nameAge: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginBottom: theme.spacing.sm,
-  },
-  name: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: "bold",
-    color: "white",
-    marginRight: theme.spacing.sm,
-  },
-  age: {
-    fontSize: theme.fontSize.lg,
-    color: "white",
-  },
-  badge: {
-    borderRadius: theme.borderRadius.round,
-    minWidth: 15,
-    height: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 6,
-    marginLeft: 6,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: theme.spacing.xs,
-  },
-  infoText: {
-    color: "white",
-    fontSize: theme.fontSize.sm,
-    marginLeft: theme.spacing.sm,
-  },
-  bio: {
-    color: "white",
-    fontSize: theme.fontSize.md,
-    marginBottom: theme.spacing.xs,
-    lineHeight: 22,
-  },
-  interests: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: theme.spacing.sm,
-  },
-  interestTag: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.round,
-    marginRight: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  interestText: {
-    color: "white",
-    fontSize: theme.fontSize.xs,
-  },
-  likeLabel: {
-    position: "absolute",
-    top: 50,
-    left: 40,
-    borderWidth: 4,
-    borderColor: theme.colors.success,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.sm,
-    transform: [{ rotate: "-30deg" }],
-  },
-  likeLabelText: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: "bold",
-    color: theme.colors.success,
-  },
-  nopeLabel: {
-    position: "absolute",
-    top: 50,
-    right: 40,
-    borderWidth: 4,
-    borderColor: theme.colors.danger,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.sm,
-    transform: [{ rotate: "30deg" }],
-  },
-  nopeLabelText: {
-    fontSize: theme.fontSize.xxl,
-    fontWeight: "bold",
-    color: theme.colors.danger,
-  },
-  superLikeLabel: {
-    position: "absolute",
-    bottom: 100,
-    alignSelf: "center",
-    borderWidth: 4,
-    borderColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.sm,
-    padding: theme.spacing.sm,
-  },
-  superLikeLabelText: {
-    fontSize: theme.fontSize.xl,
-    fontWeight: "bold",
-    color: theme.colors.primary,
-  },
-  imageIndicators: {
-    position: "absolute",
-    bottom: 10,
-    left: theme.spacing.md,
-    right: theme.spacing.md,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  indicator: {
-    flex: 1,
-    height: 3,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    marginHorizontal: 2,
-    borderRadius: 1.5,
-  },
-  activeIndicator: {
-    backgroundColor: "white",
-  },
-  premiumBanner: {
-    position: "absolute",
-    top: theme.spacing.md,
-    right: theme.spacing.md,
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  premiumText: {
-    color: "white",
-    fontSize: theme.fontSize.xs,
-    fontWeight: "bold",
-  },
-  actionsContainer: {
-    position: "absolute",
-    right: theme.spacing.lg,
-    bottom: theme.spacing.lg,
-    alignItems: "flex-end",
-    elevation: 10,
-  },
-  rightActions: {
-    alignItems: "center",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    card: {
+      position: "absolute",
+      width: screenWidth - 20,
+      height: screenHeight * 0.75,
+      borderRadius: theme.borderRadius.xl,
+      backgroundColor: theme.colors.card,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    imageContainer: {
+      width: "100%",
+      height: "100%",
+      borderRadius: theme.borderRadius.xl,
+    },
+    image: {
+      width: "100%",
+      height: "100%",
+      borderRadius: theme.borderRadius.xl,
+    },
+    gradient: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: "50%",
+      borderBottomLeftRadius: theme.borderRadius.xl,
+      borderBottomRightRadius: theme.borderRadius.xl,
+    },
+    cardContent: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 55,
+      padding: theme.spacing.lg,
+    },
+    nameAge: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      marginBottom: theme.spacing.sm,
+    },
+    name: {
+      fontSize: theme.fontSize.xl,
+      fontWeight: "bold",
+      color: "white",
+      marginRight: theme.spacing.sm,
+    },
+    age: {
+      fontSize: theme.fontSize.lg,
+      color: "white",
+    },
+    badge: {
+      borderRadius: theme.borderRadius.round,
+      minWidth: 15,
+      height: 15,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 6,
+      marginLeft: 6,
+    },
+    infoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: theme.spacing.xs,
+    },
+    infoText: {
+      color: "white",
+      fontSize: theme.fontSize.sm,
+      marginLeft: theme.spacing.sm,
+    },
+    bio: {
+      color: "white",
+      fontSize: theme.fontSize.md,
+      marginBottom: theme.spacing.xs,
+      lineHeight: 22,
+    },
+    interests: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: theme.spacing.sm,
+    },
+    interestTag: {
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.round,
+      marginRight: theme.spacing.sm,
+      marginBottom: theme.spacing.xs,
+    },
+    interestText: {
+      color: "white",
+      fontSize: theme.fontSize.xs,
+    },
+    likeLabel: {
+      position: "absolute",
+      top: 50,
+      left: 40,
+      borderWidth: 4,
+      borderColor: theme.colors.success,
+      borderRadius: theme.borderRadius.sm,
+      padding: theme.spacing.sm,
+      transform: [{ rotate: "-30deg" }],
+    },
+    likeLabelText: {
+      fontSize: theme.fontSize.xxl,
+      fontWeight: "bold",
+      color: theme.colors.success,
+    },
+    nopeLabel: {
+      position: "absolute",
+      top: 50,
+      right: 40,
+      borderWidth: 4,
+      borderColor: theme.colors.danger,
+      borderRadius: theme.borderRadius.sm,
+      padding: theme.spacing.sm,
+      transform: [{ rotate: "30deg" }],
+    },
+    nopeLabelText: {
+      fontSize: theme.fontSize.xxl,
+      fontWeight: "bold",
+      color: theme.colors.danger,
+    },
+    superLikeLabel: {
+      position: "absolute",
+      bottom: 100,
+      alignSelf: "center",
+      borderWidth: 4,
+      borderColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.sm,
+      padding: theme.spacing.sm,
+    },
+    superLikeLabelText: {
+      fontSize: theme.fontSize.xl,
+      fontWeight: "bold",
+      color: theme.colors.primary,
+    },
+    imageIndicators: {
+      position: "absolute",
+      bottom: 10,
+      left: theme.spacing.md,
+      right: theme.spacing.md,
+      flexDirection: "row",
+      justifyContent: "center",
+    },
+    indicator: {
+      flex: 1,
+      height: 3,
+      backgroundColor: "rgba(255, 255, 255, 0.5)",
+      marginHorizontal: 2,
+      borderRadius: 1.5,
+    },
+    activeIndicator: {
+      backgroundColor: "white",
+    },
+    premiumBanner: {
+      position: "absolute",
+      top: theme.spacing.md,
+      right: theme.spacing.md,
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    premiumText: {
+      color: "white",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "bold",
+    },
+    actionsContainer: {
+      position: "absolute",
+      right: theme.spacing.lg,
+      bottom: theme.spacing.lg,
+      alignItems: "flex-end",
+      elevation: 10,
+    },
+    rightActions: {
+      alignItems: "center",
+    },
+  });

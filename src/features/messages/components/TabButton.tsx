@@ -1,6 +1,8 @@
 import React from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
-import { theme } from "../../../theme/index";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface TabButtonProps {
   tab: "chats" | "sent" | "received";
@@ -17,6 +19,10 @@ export const TabButton: React.FC<TabButtonProps> = ({
   isActive,
   onPress,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   return (
     <TouchableOpacity
       style={[styles.tabButton, isActive && styles.activeTabButton]}
@@ -33,26 +39,27 @@ export const TabButton: React.FC<TabButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  tabButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-  },
-  activeTabButton: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + "20",
-  },
-  tabText: {
-    marginLeft: theme.spacing.sm,
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.text,
-  },
-  activeTabText: {
-    color: theme.colors.primary,
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    tabButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.sm,
+      borderWidth: 2,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+    },
+    activeTabButton: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primary + "20",
+    },
+    tabText: {
+      marginLeft: theme.spacing.sm,
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.text,
+    },
+    activeTabText: {
+      color: theme.colors.primary,
+    },
+  });

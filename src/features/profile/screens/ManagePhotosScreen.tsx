@@ -1,13 +1,19 @@
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Edit3 } from "lucide-react-native";
-import { theme } from "../../../theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
 import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 
 export default function ManagePhotosScreen() {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const { profile } = useAuth();
 
   const {
@@ -56,25 +62,26 @@ export default function ManagePhotosScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    paddingBottom: 30,
-  },
-  content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      paddingBottom: 30,
+    },
+    content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
 
-  tipCard: {
-    backgroundColor: theme.colors.accent + "20",
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  tipText: {
-    flex: 1,
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.text,
-    marginLeft: theme.spacing.md,
-  },
-});
+    tipCard: {
+      backgroundColor: theme.colors.accent + "20",
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    tipText: {
+      flex: 1,
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.text,
+      marginLeft: theme.spacing.md,
+    },
+  });

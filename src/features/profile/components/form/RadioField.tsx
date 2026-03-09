@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface RadioFieldProps {
   label: string;
@@ -25,6 +27,10 @@ const RadioField: React.FC<RadioFieldProps> = ({
   locked = false,
   error = null,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
@@ -32,11 +38,6 @@ const RadioField: React.FC<RadioFieldProps> = ({
         <Text style={styles.label}>
           {label}
           {required && <Text style={{ color: "red" }}> *</Text>}
-          {/* {locked && (
-            <Text style={{ color: theme.colors.textLight, marginLeft: 8 }}>
-              (This cannot be changed later)
-            </Text>
-          )} */}
         </Text>
       </View>
 
@@ -103,62 +104,63 @@ const RadioField: React.FC<RadioFieldProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: { marginBottom: theme.spacing.sm },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.xs,
-  },
-  label: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "500",
-    color: theme.colors.text,
-  },
-  optionsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: theme.spacing.sm,
-  },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    marginRight: theme.spacing.sm,
-    backgroundColor: "white",
-  },
-  optionSelected: {
-    borderColor: theme.colors.primary,
-  },
-  circle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: theme.colors.textLight,
-    marginRight: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.primary,
-  },
-  optionText: {
-    color: theme.colors.text,
-    fontSize: theme.fontSize.md,
-  },
-  placeholder: {
-    color: theme.colors.textLight,
-    marginTop: theme.spacing.xs,
-  },
-  error: { color: "red", marginTop: theme.spacing.xs },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: { marginBottom: theme.spacing.sm },
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.xs,
+    },
+    label: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "500",
+      color: theme.colors.text,
+    },
+    optionsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: theme.spacing.sm,
+    },
+    option: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      marginRight: theme.spacing.sm,
+      backgroundColor: "white",
+    },
+    optionSelected: {
+      borderColor: theme.colors.primary,
+    },
+    circle: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 2,
+      borderColor: theme.colors.textLight,
+      marginRight: 8,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.colors.primary,
+    },
+    optionText: {
+      color: theme.colors.text,
+      fontSize: theme.fontSize.md,
+    },
+    placeholder: {
+      color: theme.colors.textLight,
+      marginTop: theme.spacing.xs,
+    },
+    error: { color: "red", marginTop: theme.spacing.xs },
+  });
 
 export default RadioField;

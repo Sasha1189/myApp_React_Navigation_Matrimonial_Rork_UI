@@ -8,7 +8,9 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface Props {
   label: string;
@@ -27,6 +29,10 @@ const MultiSelectField: React.FC<Props> = ({
   editable = true,
   icon: Icon,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const [open, setOpen] = useState(false);
 
   const values = Array.isArray(value) ? value : value ? [value] : [];
@@ -97,59 +103,63 @@ const MultiSelectField: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: { marginBottom: theme.spacing.sm },
-  labelRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-    gap: theme.spacing.xs,
-  },
-  label: {
-    fontSize: theme.fontSize.md,
-    fontWeight: "500",
-    color: theme.colors.text,
-  },
-  field: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    backgroundColor: "white",
-  },
-  disabled: { opacity: 0.6 },
-  text: { fontSize: theme.fontSize.md, color: theme.colors.text },
-  placeholder: { color: theme.colors.textLight },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: theme.borderRadius.lg,
-    maxHeight: "80%",
-    padding: theme.spacing.md,
-  },
-  modalTitle: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: "600",
-    marginBottom: theme.spacing.md,
-  },
-  optionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  optionText: { fontSize: theme.fontSize.md, color: theme.colors.text },
-  checkOn: { color: theme.colors.primary, fontSize: 18 },
-  checkOff: { color: "transparent", fontSize: 18 },
-  modalActions: { marginTop: theme.spacing.md, alignItems: "flex-end" },
-  actionBtn: { padding: theme.spacing.sm, borderRadius: theme.borderRadius.md },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: { marginBottom: theme.spacing.sm },
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 4,
+      gap: theme.spacing.xs,
+    },
+    label: {
+      fontSize: theme.fontSize.md,
+      fontWeight: "500",
+      color: theme.colors.text,
+    },
+    field: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      backgroundColor: "white",
+    },
+    disabled: { opacity: 0.6 },
+    text: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    placeholder: { color: theme.colors.textLight },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "center",
+      padding: theme.spacing.lg,
+    },
+    modalContent: {
+      backgroundColor: "white",
+      borderRadius: theme.borderRadius.lg,
+      maxHeight: "80%",
+      padding: theme.spacing.md,
+    },
+    modalTitle: {
+      fontSize: theme.fontSize.lg,
+      fontWeight: "600",
+      marginBottom: theme.spacing.md,
+    },
+    optionRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    optionText: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    checkOn: { color: theme.colors.primary, fontSize: 18 },
+    checkOff: { color: "transparent", fontSize: 18 },
+    modalActions: { marginTop: theme.spacing.md, alignItems: "flex-end" },
+    actionBtn: {
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.md,
+    },
+  });
 
 export default MultiSelectField;

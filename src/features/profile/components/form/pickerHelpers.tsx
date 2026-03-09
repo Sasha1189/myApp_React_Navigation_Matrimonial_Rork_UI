@@ -7,7 +7,9 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { theme } from "../../../../constants/theme";
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 interface EnumPickerProps {
   value?: string;
@@ -24,6 +26,10 @@ export const EnumPicker: React.FC<EnumPickerProps> = ({
   placeholder = "Select...",
   enabled = true,
 }) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  if (!theme) return null;
+
   const [visible, setVisible] = useState(false);
 
   return (
@@ -68,48 +74,49 @@ export const EnumPicker: React.FC<EnumPickerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  pickerButton: {
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
-    backgroundColor: "white",
-    marginBottom: theme.spacing.sm,
-  },
-  placeholderText: {
-    color: theme.colors.textLight,
-  },
-  valueText: {
-    color: theme.colors.text,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: "50%",
-  },
-  optionItem: {
-    padding: theme.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  optionText: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.text,
-  },
-  cancelButton: {
-    padding: theme.spacing.lg,
-    alignItems: "center",
-  },
-  cancelText: {
-    fontSize: theme.fontSize.md,
-    color: theme.colors.primary,
-    fontWeight: "bold",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    pickerButton: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.md,
+      backgroundColor: "white",
+      marginBottom: theme.spacing.sm,
+    },
+    placeholderText: {
+      color: theme.colors.textLight,
+    },
+    valueText: {
+      color: theme.colors.text,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContent: {
+      backgroundColor: "white",
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      maxHeight: "50%",
+    },
+    optionItem: {
+      padding: theme.spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    optionText: {
+      fontSize: theme.fontSize.md,
+      color: theme.colors.text,
+    },
+    cancelButton: {
+      padding: theme.spacing.lg,
+      alignItems: "center",
+    },
+    cancelText: {
+      fontSize: theme.fontSize.md,
+      color: theme.colors.primary,
+      fontWeight: "bold",
+    },
+  });
