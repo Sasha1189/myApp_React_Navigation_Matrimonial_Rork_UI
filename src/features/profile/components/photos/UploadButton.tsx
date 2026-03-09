@@ -29,7 +29,6 @@ export default function UploadButton({
 }: Props) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
 
   const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -43,7 +42,7 @@ export default function UploadButton({
     Animated.spring(scaleValue, { toValue: 1, useNativeDriver: true }).start();
 
   const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
+  if (!theme) return null;
   return (
     <AnimatedPressable
       onPressIn={onPressIn}
@@ -119,7 +118,7 @@ export const createStyles = (theme: AppTheme) =>
       gap: theme.spacing.sm,
     },
     buttonText: {
-      color: theme.colors.primary,
+      color: theme.colors.card,
       fontSize: theme.fontSize.md,
       fontWeight: "700",
       letterSpacing: 0.5,

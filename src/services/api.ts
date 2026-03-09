@@ -1,10 +1,5 @@
 import { getAuth, getIdToken } from "@react-native-firebase/auth";
 
-// Add a fallback and force the /api/v1 suffix if it's missing
-console.log("URL from env:", process.env.EXPO_PUBLIC_API_URL);
-
-// "https://homopolar-chantell-unscoring.ngrok-free.dev";
-
 // const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const API_URL = "https://homopolar-chantell-unscoring.ngrok-free.dev/api/v1";

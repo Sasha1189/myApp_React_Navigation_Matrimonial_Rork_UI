@@ -8,7 +8,7 @@ import {
   setPersistenceCacheSizeBytes,
 } from "@react-native-firebase/database";
 
-const app = getApp();
+export const app = getApp();
 export const auth = getAuth();
 
 const DB_URL =
@@ -39,3 +39,8 @@ export {
   goOffline,
   keepSynced, // Import this for your Inbox logic
 } from "@react-native-firebase/database";
+export {
+  ref as refStorage,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "@react-native-firebase/storage";

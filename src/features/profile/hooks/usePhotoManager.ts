@@ -1,4 +1,10 @@
 import { useState, useEffect } from "react";
+// import {
+//   storage,
+//   refStorage,
+//   uploadBytesResumable,
+//   getDownloadURL,
+// } from "@/config/firebase";
 import storage from "@react-native-firebase/storage";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -153,9 +159,7 @@ export function usePhotoManager(profile: Profile | null) {
       return;
     }
 
-    // 2. Create a DEEP COPY for the upload process
-    // This prevents 'photos' from being modified accidentally during the loop
-    let tempPhotos = photos.map((p) => ({ ...p }));
+    const backupPhotos = structuredClone(photos);
 
     setLoading(true);
     setProgress(0);
@@ -192,14 +196,14 @@ export function usePhotoManager(profile: Profile | null) {
 
         const downloadURL = await reference.getDownloadURL();
 
-        const idx = tempPhotos.findIndex((x) => x.id === p.id);
+        const idx = updatedPhotos.findIndex((x) => x.id === p.id);
         if (idx !== -1) {
-          tempPhotos[idx].downloadURL = downloadURL;
+          updatedPhotos[idx].downloadURL = downloadURL;
           if (idx === 0) {
             console.log(
               "📸 Syncing root thumbnail because Index 0 was updated...",
             );
-            rootThumbnail = await syncPrimaryThumbnail(tempPhotos[0], uid!);
+            rootThumbnail = await syncPrimaryThumbnail(updatedPhotos[0], uid!);
           }
         }
       }
@@ -212,7 +216,7 @@ export function usePhotoManager(profile: Profile | null) {
           photos: cleanPhotosForDb,
           thumbnail: rootThumbnail,
         });
-        setPhotos(tempPhotos);
+        setPhotos(updatedPhotos);
         setSuccess(true);
         setProgress(100);
         setIsEditing(false);
@@ -231,6 +235,7 @@ export function usePhotoManager(profile: Profile | null) {
       console.error("Upload failed:", err);
       setProgress(0);
       setSuccess(false);
+      setPhotos(backupPhotos);
       Alert.alert("Error", "Failed to upload photos.");
     } finally {
       setLoading(false);
