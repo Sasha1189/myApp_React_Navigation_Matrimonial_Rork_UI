@@ -20,7 +20,7 @@ const FormSection: React.FC<FormSectionProps> = ({
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+
   // start all sections collapsed regardless of `editable`
   const [collapsed, setCollapsed] = useState<boolean>(true);
 
@@ -29,7 +29,7 @@ const FormSection: React.FC<FormSectionProps> = ({
     borderColor:
       editable && !collapsed ? theme.colors.primary : theme.colors.border,
   } as const;
-
+  if (!theme) return null;
   return (
     <View style={[styles.section, borderStyle]}>
       {/* Header is static; only the chevron toggles expand/collapse for this section */}

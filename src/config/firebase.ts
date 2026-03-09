@@ -8,17 +8,22 @@ import {
   setPersistenceCacheSizeBytes,
 } from "@react-native-firebase/database";
 
+// 1. Core Instances
 export const app = getApp();
-export const auth = getAuth();
+export const auth = getAuth(app);
+export const firestore = getFirestore(app);
+export const storage = getStorage(app);
 
+// 2. Realtime Database Setup
 const DB_URL =
   "https://smooth-pivot-453409-f7-default-rtdb.asia-southeast1.firebasedatabase.app/";
-
 export const rtdb = getDatabase(app, DB_URL);
+
+// Apply persistence settings to the rtdb instance
 setPersistenceEnabled(rtdb, true);
 setPersistenceCacheSizeBytes(rtdb, 50 * 1024 * 1024); //50 MB cache
-export const firestore = getFirestore();
-export const storage = getStorage();
+
+// 3. RTDB Exports
 export {
   ref,
   get,
@@ -37,10 +42,30 @@ export {
   onDisconnect,
   goOnline,
   goOffline,
-  keepSynced, // Import this for your Inbox logic
+  keepSynced,
 } from "@react-native-firebase/database";
+
+// 4. Storage Exports
 export {
   ref as refStorage,
-  uploadBytesResumable,
   getDownloadURL,
+  deleteObject,
+  putFile,
+  refFromURL,
 } from "@react-native-firebase/storage";
+
+// 5. Firestore Exports (Modular)
+export {
+  doc,
+  collection,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query as queryFs, // Alias to avoid conflict with RTDB query
+  where,
+  orderBy,
+  limit,
+} from "@react-native-firebase/firestore";

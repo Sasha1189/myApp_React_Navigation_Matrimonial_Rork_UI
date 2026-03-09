@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-// import {
-//   storage,
-//   refStorage,
-//   uploadBytesResumable,
-//   getDownloadURL,
-// } from "@/config/firebase";
-import storage from "@react-native-firebase/storage";
+import {
+  storage,
+  refStorage,
+  getDownloadURL,
+  putFile,
+  refFromURL,
+  deleteObject,
+} from "@/config/firebase";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -65,7 +66,7 @@ export function usePhotoManager(profile: Profile | null) {
       setIsEditing(true);
     } catch (err) {
       console.error("Failed to add photo:", err);
-      Alert.alert("Error", "Could not process image.");
+      Alert.alert("Error", "Could not add image.");
     }
   };
 
@@ -74,35 +75,36 @@ export function usePhotoManager(profile: Profile | null) {
     const toDelete = photos.find((p) => p.id === photoId);
     if (!toDelete) return;
 
+    // Case: Only exists locally (not uploaded yet)
     if (toDelete.localUrl && !toDelete.downloadURL) {
-      const updated = photos.filter((p) => p.id !== photoId);
-      setPhotos(updated);
+      setPhotos(photos.filter((p) => p.id !== photoId));
       return;
     }
 
     try {
-      // 1. Delete the high-res file from Firebase Storage
+      // 1. Modular Delete from Storage
       if (toDelete.downloadURL) {
-        const imageRef = storage().refFromURL(toDelete.downloadURL);
-        await imageRef.delete();
+        const imageRef = refFromURL(storage, toDelete.downloadURL);
+        await deleteObject(imageRef);
       }
 
-      // 2. Remove from local list
-      let updated = photos.filter((p) => p.id !== photoId);
+      // 2. Filter local list
+      const updated = photos.filter((p) => p.id !== photoId);
       let newRootThumbnail = profile?.thumbnail || "";
 
-      // 3. 🔹 LOGIC CHANGE: If we deleted the primary, promote a new one
-      if (toDelete.isPrimary && updated.length > 0) {
-        // 🔹 CALL HELPER if primary changed
-        if (toDelete.isPrimary) {
+      // 3. Handle Primary Promotion
+      if (toDelete.isPrimary) {
+        if (updated.length > 0) {
+          // Promote the next photo in line as primary
           newRootThumbnail = await syncPrimaryThumbnail(updated[0], uid!);
+        } else {
+          // No photos left
+          newRootThumbnail = "";
         }
-      } else if (updated.length === 0) {
-        newRootThumbnail = "";
       }
 
+      // 4. Update Database (Firestore/RTDB)
       const cleanPhotosForDb = updated.map(({ localUrl, ...rest }) => rest);
-
       await updateProfile({
         photos: cleanPhotosForDb,
         thumbnail: newRootThumbnail,
@@ -179,10 +181,11 @@ export function usePhotoManager(profile: Profile | null) {
         const uniqueFilename = `IMG_${Date.now()}.jpg`;
         const path = `users/${user?.uid}/profileImages/${uniqueFilename}`;
 
-        const reference = storage().ref(path);
+        const reference = refStorage(storage, path);
         uploadedRefs.push(reference);
 
-        const task = reference.putFile(processed);
+        const task = putFile(reference, processed);
+
         task.on("state_changed", (taskSnapshot) => {
           const fileProgress =
             (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes) * 100;
@@ -194,7 +197,7 @@ export function usePhotoManager(profile: Profile | null) {
         await task;
         filesCompleted++;
 
-        const downloadURL = await reference.getDownloadURL();
+        const downloadURL = await getDownloadURL(reference);
 
         const idx = updatedPhotos.findIndex((x) => x.id === p.id);
         if (idx !== -1) {
@@ -272,7 +275,6 @@ const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
 
   // 🔹 Step 1: Always resize to a max width.
   // Mobile screens rarely need more than 1080px.
-  // This drastically reduces file size before we even touch compression.
   const manipOptions = isThumb
     ? [{ resize: { width: 150 } }] // Tiny for lists (avatar/messages)
     : [{ resize: { width: 1080 } }]; // High quality for profile page
@@ -314,13 +316,11 @@ const syncPrimaryThumbnail = async (
 
   // 2. Process: Resize to 150px (Standard for your app)
   const processedThumb = await processImage(sourceUri, "thumb");
-
-  // 3. Upload: Standardize path to 'thumb.jpg' (overwrites old one)
   const thumbPath = `users/${uid}/thumbnail/thumb.jpg`;
-  const thumbRef = storage().ref(thumbPath);
 
-  await thumbRef.putFile(processedThumb);
+  const thumbRef = refStorage(storage, thumbPath);
 
-  // 4. Return new Storage URL
-  return await thumbRef.getDownloadURL();
+  await putFile(thumbRef, processedThumb);
+
+  return await getDownloadURL(thumbRef);
 };
