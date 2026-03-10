@@ -5,11 +5,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
-import { Svg, Circle } from "react-native-svg";
+import Svg, { Circle } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Edit3,
@@ -19,43 +19,27 @@ import {
   Crown,
   ChevronRight,
 } from "lucide-react-native";
-
+import { ALL_PROFILE_FIELDS } from "../components/form/profileValidation";
 import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
-import { useAppNavigation } from "../../../navigation/hooks";
-import { ALL_PROFILE_FIELDS } from "../components/form/profileValidation";
 import { formatDOB } from "../../../utils/dateUtils";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { profile } = useAuth(); // Assuming refreshProfile exists in context
-  const navigation = useAppNavigation();
+  const { profile } = useAuth();
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Calculate Progress for Circle
-  const completionPercent = useMemo(() => {
-    if (!profile) return 0;
-    const filled = ALL_PROFILE_FIELDS.filter((key) => !!profile[key]).length;
-    return (filled / ALL_PROFILE_FIELDS.length) * 100;
-  }, [profile]);
-
-  const age = profile?.dateOfBirth
-    ? formatDOB(profile.dateOfBirth, "age")
-    : "21";
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      // await refreshProfile?.();
-    } catch (e) {
-      Alert.alert("Error", "Could not refresh profile");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // Optimized sizes for "No-Scroll" feel
+  const size = 85;
+  const strokeWidth = 3;
+  const center = size / 2;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (circumference * 75) / 100; // Example 75%
 
   const menuItems = [
     {
@@ -76,19 +60,36 @@ export default function ProfileScreen() {
     },
   ];
 
-  const size = 110;
-  const strokeWidth = 4;
-  const center = size / 2;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (circumference * completionPercent) / 100;
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      // await refreshProfile?.();
+    } catch (e) {
+      Alert.alert("Error", "Could not refresh profile");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
+  // Calculate Progress for Circle
+  const completionPercent = useMemo(() => {
+    if (!profile) return 0;
+    const filled = ALL_PROFILE_FIELDS.filter((key) => !!profile[key]).length;
+    return (filled / ALL_PROFILE_FIELDS.length) * 100;
+  }, [profile]);
+
+  const age = profile?.dateOfBirth
+    ? formatDOB(profile.dateOfBirth, "age")
+    : "21";
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* 1. Header Section */}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* 1. SLIM HEADER */}
       <View style={styles.headerCard}>
         <View style={styles.imageContainer}>
-          {/* Progress Circle */}
           <Svg width={size} height={size} style={styles.progressSvg}>
             <Circle
               cx={center}
@@ -111,7 +112,6 @@ export default function ProfileScreen() {
               transform={`rotate(-90 ${center} ${center})`}
             />
           </Svg>
-
           <Image
             source={
               profile?.photos?.[0]?.downloadURL
@@ -122,7 +122,6 @@ export default function ProfileScreen() {
             contentFit="cover"
             cachePolicy="disk"
           />
-
           {/* Refresh Button at 45 Degrees */}
           <TouchableOpacity
             style={styles.refreshBtn}
@@ -145,21 +144,24 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
-      {/* 2. Stats Section */}
-      <View style={styles.statsRow}>
+      {/* 2. CONDENSED STATS BAR */}
+      <View style={styles.statsBar}>
         {[
           { l: "Matches", v: "42" },
-          { l: "Likes Sent", v: "156" },
-          { l: "Likes Recv", v: "89" },
+          { l: "Sent", v: "156" },
+          { l: "Recv", v: "89" },
         ].map((s, i) => (
-          <View key={i} style={styles.statBox}>
-            <Text style={styles.statVal}>{s.v}</Text>
-            <Text style={styles.statLab}>{s.l}</Text>
-          </View>
+          <React.Fragment key={i}>
+            <View style={styles.statItem}>
+              <Text style={styles.statVal}>{s.v}</Text>
+              <Text style={styles.statLab}>{s.l}</Text>
+            </View>
+            {i < 2 && <View style={styles.statDivider} />}
+          </React.Fragment>
         ))}
       </View>
 
-      {/* 3. Menu Section */}
+      {/* 3. MENU SECTION */}
       <View style={styles.menuContainer}>
         {menuItems.map((item, i) => (
           <TouchableOpacity
@@ -173,13 +175,17 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.menuLabel}>{item.label}</Text>
             </View>
-            <ChevronRight size={18} color={theme.colors.textLight} />
+            <ChevronRight size={16} color={theme.colors.textLight} />
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* 4. Premium Banner */}
-      <TouchableOpacity style={styles.premiumCard}>
+      {/* 4. PREMIUM BANNER */}
+      <TouchableOpacity
+        style={styles.premiumCard}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate("Subscription")}
+      >
         <LinearGradient
           colors={["#6B46C1", "#9F7AEA"]}
           start={{ x: 0, y: 0 }}
@@ -193,7 +199,9 @@ export default function ProfileScreen() {
                 See who likes you & Unlimited Swipes
               </Text>
             </View>
-            <Crown size={24} color="#FFD700" />
+            <View style={styles.crownCircle}>
+              <Crown size={20} color="#FFD700" />
+            </View>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -204,95 +212,135 @@ export default function ProfileScreen() {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
-    headerCard: { alignItems: "center", paddingTop: 40, paddingBottom: 20 },
-    imageContainer: { width: 110, height: 110, position: "relative" },
+    scrollContent: { paddingBottom: 30 },
+    headerCard: { alignItems: "center", paddingTop: 25, paddingBottom: 15 },
+    imageContainer: { width: 85, height: 85, position: "relative" },
     progressSvg: { position: "absolute", top: 0, left: 0 },
-    profileImage: { width: 100, height: 100, borderRadius: 50, margin: 5 },
+    profileImage: { width: 77, height: 77, borderRadius: 38.5, margin: 4 },
     refreshBtn: {
       position: "absolute",
-      bottom: 5,
-      right: 5,
+      bottom: 0,
+      right: 0,
       backgroundColor: theme.colors.primary,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      borderWidth: 3,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 2,
       borderColor: theme.colors.background,
       alignItems: "center",
       justifyContent: "center",
       elevation: 4,
-      shadowOpacity: 0.2,
     },
+
+    // SOFT TYPOGRAPHY
     nameText: {
-      fontSize: 22,
+      fontSize: 19,
       fontWeight: "700",
       color: theme.colors.text,
-      marginTop: 15,
+      marginTop: 10,
+      letterSpacing: 0.5,
+      opacity: 0.9,
     },
     completionText: {
-      fontSize: 12,
-      color: theme.colors.textLight,
-      marginTop: 4,
+      fontSize: 11,
+      color: theme.colors.text,
+      opacity: 0.6,
+      marginTop: 2,
       fontWeight: "500",
+      letterSpacing: 0.3,
     },
-    statsRow: {
+
+    // CONDENSED STATS BAR
+    statsBar: {
       flexDirection: "row",
-      paddingHorizontal: 20,
-      marginVertical: 20,
-      justifyContent: "space-between",
-    },
-    statBox: {
-      flex: 1,
-      alignItems: "center",
-      paddingVertical: 15,
       backgroundColor: theme.colors.card,
-      borderRadius: 12,
-      marginHorizontal: 5,
+      marginHorizontal: 20,
+      marginVertical: 15,
+      borderRadius: 15,
+      paddingVertical: 12,
+      alignItems: "center",
       elevation: 1,
     },
-    statVal: { fontSize: 18, fontWeight: "bold", color: theme.colors.primary },
-    statLab: {
-      fontSize: 11,
-      color: theme.colors.textLight,
-      marginTop: 4,
-      textTransform: "uppercase",
+    statItem: { flex: 1, alignItems: "center" },
+    statVal: {
+      fontSize: 15,
+      fontWeight: "bold",
+      color: theme.colors.primary,
+      letterSpacing: 0.5,
     },
+    statLab: {
+      fontSize: 9,
+      color: theme.colors.text,
+      opacity: 0.5,
+      marginTop: 2,
+      textTransform: "uppercase",
+      fontWeight: "700",
+      letterSpacing: 0.8,
+    },
+    statDivider: { width: 1, height: 20, backgroundColor: theme.colors.border },
+
     menuContainer: {
       backgroundColor: theme.colors.card,
       marginHorizontal: 20,
       borderRadius: 16,
-      padding: 8,
+      padding: 4,
       elevation: 2,
     },
     menuItem: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: 12,
+      padding: 10,
     },
     menuLeft: { flexDirection: "row", alignItems: "center" },
     iconWrapper: {
-      width: 36,
-      height: 36,
+      width: 32,
+      height: 32,
       borderRadius: 10,
       backgroundColor: `${theme.colors.primary}15`,
       alignItems: "center",
       justifyContent: "center",
       marginRight: 12,
     },
-    menuLabel: { fontSize: 15, fontWeight: "600", color: theme.colors.text },
+    menuLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      letterSpacing: 0.3,
+      color: theme.colors.text,
+      opacity: 0.8,
+    },
+
     premiumCard: {
-      margin: 20,
+      marginHorizontal: 20,
+      marginTop: 20,
       borderRadius: 16,
       overflow: "hidden",
       elevation: 4,
     },
-    premiumGrad: { padding: 20 },
+    premiumGrad: { padding: 18 },
     premiumContent: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
     },
-    premTitle: { color: "white", fontSize: 16, fontWeight: "bold" },
-    premSub: { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 2 },
+    premTitle: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+      letterSpacing: 0.5,
+    },
+    premSub: {
+      color: "rgba(255,255,255,0.85)",
+      fontSize: 11,
+      marginTop: 2,
+      letterSpacing: 0.2,
+    },
+    crownCircle: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: "rgba(255,255,255,0.2)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
   });

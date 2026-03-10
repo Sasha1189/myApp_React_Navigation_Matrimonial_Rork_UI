@@ -1,535 +1,380 @@
-import { AppTheme } from "@/theme/theme";
-import { useStyles } from "@/theme/useStyles";
-import { useAppTheme } from "@/theme/ThemeContext";
-import { RouteProp, useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React from "react";
+import { ScrollView, View, StyleSheet, Text } from "react-native";
 import {
-  Activity,
-  HeartPulse,
-  Brain,
-  Briefcase,
-  Building,
+  Users,
+  UserCheck,
   Calendar,
-  Church,
-  Cigarette,
-  DollarSign,
-  Droplets,
-  Dumbbell,
-  GraduationCap,
-  Heart,
-  HeartHandshake,
-  Home,
-  Link,
-  Mail,
+  Timer,
   MapPin,
-  MessageCircle,
-  Phone,
+  User,
+  HeartHandshake,
   Ruler,
   Scale,
+  Activity,
+  Droplets,
   Sparkles,
   Star,
-  Target,
-  Timer,
-  User,
-  UserCheck,
-  UserPlus,
-  Users,
-  Utensils,
-  Wine,
   Zap,
+  HeartPulse,
+  MessageCircle,
+  Target,
+  Church,
+  Home,
+  Phone,
+  Mail,
+  UserPlus,
+  GraduationCap,
+  Briefcase,
+  Building,
+  DollarSign,
+  Utensils,
+  Cigarette,
+  Wine,
+  Dumbbell,
+  Brain,
+  Heart,
 } from "lucide-react-native";
-import React from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
-import { AppStackParamList } from "../../../navigation/types";
-import LoadingScreen from "../../../components/LoadingScreen";
-import { ProfileCarousel } from "../components/photos/ProfileCarousel";
-import { Profile } from "../../../types/profile";
+import { useAuth } from "@/context/AuthContext";
+import { useAppTheme } from "@/theme/ThemeContext";
 import { formatDOB } from "../../../utils/dateUtils";
+import { ProfileCarousel } from "../components/photos/ProfileCarousel";
+import {
+  DetailSection,
+  DetailRow,
+} from "../components/profileDetailView/ProfileInfoGrid";
+// import { useProfileActions } from "../hooks/useProfileActions";
+import { ProfileActionFooter } from "../components/profileDetailView/ProfileActionFooter";
 
-interface DetailSectionProps {
-  title: string;
-  icon: React.ComponentType<any>;
-  children: React.ReactNode;
-}
-
-const DetailSection: React.FC<DetailSectionProps> = ({
-  title,
-  icon: Icon,
-  children,
-}) => {
+export default function UserDetailsScreen({ route }: any) {
   const { theme } = useAppTheme();
-  const styles = useStyles(createStyles);
-  if (!theme) return null;
+  const { profile: myProfile } = useAuth();
+  const profile = route.params?.profile;
+
+  // Hook for Share/Block logic
+  // const { generateAndSharePDF, handleBlock } = useProfileActions(profile);
+
+  if (!profile) return null;
+  const isSelf = myProfile?.uid === profile?.uid;
 
   return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <Icon size={20} color={theme.colors.primary} />
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
-      <View style={styles.sectionContent}>{children}</View>
-    </View>
-  );
-};
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={{
+          flex: 1,
+          backgroundColor: theme.colors.background,
+          paddingBottom: isSelf ? 50 : 150,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ padding: 12 }}>
+          {/* Profile Photos */}
+          <View style={styles.carouselCard}>
+            <ProfileCarousel profile={profile} />
+          </View>
 
-interface DetailRowProps {
-  label: string;
-  value?:
-    | string
-    | number
-    | boolean
-    | Date
-    | { min: number; max: number }
-    | null;
-  icon?: React.ComponentType<any>;
-}
+          {/* 1. Personal Info - Parallel Grid */}
+          <DetailSection title="Personal Information" icon={Users}>
+            <DetailRow
+              label="Full Name"
+              value={profile.fullName}
+              icon={UserCheck}
+              fullWidth
+            />
+            <DetailRow label="Gender" value={profile.gender} icon={User} />
+            <DetailRow
+              label="Age"
+              value={formatDOB(profile?.dateOfBirth, "age")}
+              icon={Calendar}
+            />
+            <DetailRow label="Height" value={profile.height} icon={Ruler} />
+            <DetailRow label="Weight" value={profile.weight} icon={Scale} />
+            <DetailRow
+              label="Marital Status"
+              value={profile.maritalStatus}
+              icon={HeartHandshake}
+            />
+            <DetailRow
+              label="Blood Group"
+              value={profile.bloodGroup}
+              icon={Droplets}
+            />
+            <DetailRow label="Rashi" value={profile.rashi} icon={Star} />
+            <DetailRow
+              label="Manglik"
+              value={profile.manglikStatus}
+              icon={Sparkles}
+            />
+            <DetailRow
+              label="Birth Place"
+              value={profile.placeOfBirth}
+              icon={MapPin}
+              fullWidth
+            />
+          </DetailSection>
 
-const DetailRow: React.FC<DetailRowProps> = ({ label, value, icon: Icon }) => {
-  const { theme } = useAppTheme();
-  const styles = useStyles(createStyles);
-  if (!theme) return null;
-  if (value === undefined || value === null || value === "") return null;
-  return (
-    <View style={styles.detailRow}>
-      <View style={styles.detailLabelContainer}>
-        {Icon && <Icon size={16} color={theme.colors.primary} />}
-        <Text style={styles.detailLabel}>{label}:</Text>
-      </View>
-      <Text style={styles.detailValue}>{String(value)}</Text>
-    </View>
-  );
-};
+          {/* 2. About Me - Full Width Blocks */}
+          <DetailSection title="About Me" icon={Heart}>
+            <DetailRow
+              label="Bio"
+              value={profile.shortBio}
+              icon={MessageCircle}
+              fullWidth
+            />
+            <DetailRow
+              label="Life Goals"
+              value={profile?.aspirations}
+              icon={Target}
+              fullWidth
+            />
+            <DetailRow
+              label="Beliefs"
+              value={profile?.beliefsValues}
+              icon={Church}
+              fullWidth
+            />
+          </DetailSection>
 
-type UserDetailsScreenNavigationProp = NativeStackNavigationProp<
-  AppStackParamList,
-  "Details"
->;
+          {/* 3. Education & Career - Parallel Grid */}
+          <DetailSection title="Education & Career" icon={GraduationCap}>
+            <DetailRow
+              label="Qualification"
+              value={profile.highestQualification}
+              icon={GraduationCap}
+            />
+            <DetailRow
+              label="Study Field"
+              value={profile.fieldOfStudy}
+              icon={GraduationCap}
+            />
+            <DetailRow
+              label="Occupation"
+              value={profile.occupation}
+              icon={Briefcase}
+            />
+            <DetailRow
+              label="Industry"
+              value={profile.industry}
+              icon={Building}
+            />
+            <DetailRow
+              label="Company"
+              value={profile.companyName}
+              icon={Building}
+              fullWidth
+            />
+            <DetailRow
+              label="Work City"
+              value={profile.workLocation}
+              icon={MapPin}
+            />
+            <DetailRow
+              label="Income"
+              value={profile.annualIncome}
+              icon={DollarSign}
+            />
+          </DetailSection>
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+          {/* 4. Family Details - Parallel Grid */}
+          <DetailSection title="Family Details" icon={Home}>
+            <DetailRow
+              label="Family Type"
+              value={profile.familyType}
+              icon={Home}
+            />
+            <DetailRow
+              label="Values"
+              value={profile.familyValues}
+              icon={Heart}
+            />
+            <DetailRow
+              label="Brothers"
+              value={profile.numberOfBrothers}
+              icon={User}
+            />
+            <DetailRow
+              label="Sisters"
+              value={profile.numberOfSisters}
+              icon={User}
+            />
+            <DetailRow
+              label="Father Occ."
+              value={profile.fatherOccupation}
+              icon={User}
+            />
+            <DetailRow
+              label="Mother Occ."
+              value={profile.motherOccupation}
+              icon={User}
+            />
+            <DetailRow
+              label="Siblings Info"
+              value={profile.siblingsDetails}
+              icon={Users}
+              fullWidth
+            />
+          </DetailSection>
 
-export default function UserDetailsScreen({
-  route,
-}: {
-  route: RouteProp<AppStackParamList, "Details">;
-}) {
-  const { theme } = useAppTheme();
-  const styles = useStyles(createStyles);
+          {/* 2. Contact Details - Parallel Grid */}
+          <DetailSection title="Contact Details" icon={Phone}>
+            <DetailRow
+              label="Current City"
+              value={profile.currentCity}
+              icon={MapPin}
+            />
+            <DetailRow
+              label="Native Place"
+              value={profile.nativePlace}
+              icon={Home}
+            />
+            <DetailRow
+              label="Mobile"
+              value={profile.mobileNumber}
+              icon={Phone}
+            />
+            <DetailRow
+              label="Email"
+              value={profile.emailAddress}
+              icon={Mail}
+              fullWidth
+            />
+            <DetailRow
+              label="Contact Preference"
+              value={profile.preferredContact}
+              icon={MessageCircle}
+            />
+            <DetailRow
+              label="Created By"
+              value={profile.profileCreatedBy}
+              icon={UserPlus}
+            />
+          </DetailSection>
 
-  const navigation = useNavigation<UserDetailsScreenNavigationProp>();
-  let profile: Profile | null = null;
+          {/* 5. Lifestyle - Parallel Grid */}
+          <DetailSection title="Lifestyle" icon={Activity}>
+            <DetailRow
+              label="Diet"
+              value={profile.dietPreferences}
+              icon={Utensils}
+            />
+            <DetailRow
+              label="Smoking"
+              value={profile.smokingHabit}
+              icon={Cigarette}
+            />
+            <DetailRow
+              label="Drinking"
+              value={profile.drinkingHabit}
+              icon={Wine}
+            />
+            <DetailRow
+              label="Exercise"
+              value={profile.exerciseRoutine}
+              icon={Dumbbell}
+            />
+            <DetailRow
+              label="Fitness"
+              value={profile.fitnessLevel}
+              icon={Activity}
+            />
+            <DetailRow
+              label="Personality"
+              value={profile.personalityType}
+              icon={Brain}
+            />
 
-  if ("profile" in route.params) {
-    // Case 1: full profile passed in
-    profile = route.params.profile ?? null;
-  }
-
-  if (!profile) return <LoadingScreen />;
-  if (!theme) return null;
-
-  return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.content}>
-        <View style={styles.card}>
-          <ProfileCarousel profile={profile} />
-        </View>
-
-        <DetailSection title="Personal Information" icon={Users}>
-          <DetailRow
-            label="Full Name"
-            value={profile.fullName}
-            icon={UserCheck}
-          />
-          <DetailRow
-            label="Date of Birth"
-            value={formatDOB(profile?.dateOfBirth, "dob")}
-            icon={Calendar}
-          />
-          <DetailRow
-            label="Time of Birth"
-            value={profile.timeOfBirth}
-            icon={Timer}
-          />
-          <DetailRow
-            label="Place of Birth"
-            value={profile.placeOfBirth}
-            icon={MapPin}
-          />
-          <DetailRow label="Gender" value={profile.gender} icon={User} />
-          <DetailRow
-            label="Marital Status"
-            value={profile.maritalStatus}
-            icon={HeartHandshake}
-          />
-          <DetailRow label="Height" value={profile.height} icon={Ruler} />
-          <DetailRow label="Weight" value={profile.weight} icon={Scale} />
-          <DetailRow
-            label="Body Type"
-            value={profile.bodyType}
-            icon={Activity}
-          />
-          <DetailRow
-            label="Blood Group"
-            value={profile.bloodGroup}
-            icon={Droplets}
-          />
-          <DetailRow
-            label="Manglik Status"
-            value={profile.manglikStatus}
-            icon={Sparkles}
-          />
-          <DetailRow label="Rashi" value={profile.rashi} icon={Star} />
-          <DetailRow
-            label="Horoscope Required"
-            value={profile.horoscopeRequired}
-            icon={Zap}
-          />
-          <DetailRow
-            label="Ready to get married:"
-            value={profile.isReady}
-            icon={HeartPulse}
-          />
-        </DetailSection>
-
-        <DetailSection title="About Me" icon={Heart}>
-          <DetailRow
-            label="Bio"
-            value={profile.shortBio}
-            icon={MessageCircle}
-          />
-          <DetailRow
-            label="Life Goals"
-            value={profile?.aspirations}
-            icon={Target}
-          />
-          <DetailRow
-            label="Beliefs & Values"
-            value={profile?.beliefsValues}
-            icon={Church}
-          />
-          <DetailRow label="Strengths" value={profile?.strengths} icon={Zap} />
-          <DetailRow
-            label="Likes & Dislikes"
-            value={profile?.likesDislikesText}
-            icon={Heart}
-          />
-          <DetailRow
-            label="Social Media"
-            value={profile?.socialMedia}
-            icon={Link}
-          />
-        </DetailSection>
-
-        <DetailSection title="Contact Details" icon={Phone}>
-          <DetailRow
-            label="Current City"
-            value={profile.currentCity}
-            icon={MapPin}
-          />
-          <DetailRow
-            label="Native Place"
-            value={profile.nativePlace}
-            icon={Home}
-          />
-          <DetailRow
-            label="Mobile Number"
-            value={profile.mobileNumber}
-            icon={Phone}
-          />
-          <DetailRow label="Email" value={profile.emailAddress} icon={Mail} />
-          <DetailRow
-            label="Preferred Contact"
-            value={profile.preferredContact}
-            icon={MessageCircle}
-          />
-          <DetailRow
-            label="Profile Created By"
-            value={profile.profileCreatedBy}
-            icon={UserPlus}
-          />
-        </DetailSection>
-
-        <DetailSection title="Education & Career" icon={GraduationCap}>
-          <DetailRow
-            label="Highest Qualification"
-            value={profile.highestQualification}
-            icon={GraduationCap}
-          />
-          <DetailRow
-            label="Field of Study"
-            value={profile.fieldOfStudy}
-            icon={GraduationCap}
-          />
-          <DetailRow
-            label="Current Occupation"
-            value={profile?.occupation}
-            icon={Briefcase}
-          />
-          <DetailRow
-            label="Industry"
-            value={profile.industry}
-            icon={Building}
-          />
-          <DetailRow
-            label="Job Title"
-            value={profile.jobTitle}
-            icon={Briefcase}
-          />
-          <DetailRow
-            label="Company"
-            value={profile.companyName}
-            icon={Building}
-          />
-          <DetailRow
-            label="Work Location"
-            value={profile.workLocation}
-            icon={MapPin}
-          />
-          <DetailRow
-            label="Annual Income"
-            value={profile.annualIncome}
-            icon={DollarSign}
-          />
-        </DetailSection>
-
-        <DetailSection title="Family Details" icon={Home}>
-          <DetailRow
-            label="Father's Occupation"
-            value={profile.fatherOccupation}
-            icon={User}
-          />
-          <DetailRow
-            label="Mother's Occupation"
-            value={profile.motherOccupation}
-            icon={User}
-          />
-          <DetailRow
-            label="Brothers"
-            value={profile.numberOfBrothers}
-            icon={User}
-          />
-          <DetailRow
-            label="Sisters"
-            value={profile.numberOfSisters}
-            icon={User}
-          />
-          <DetailRow
-            label="Siblings Details"
-            value={profile.siblingsDetails}
-            icon={Users}
-          />
-          <DetailRow
-            label="Family Type"
-            value={profile.familyType}
-            icon={Home}
-          />
-          <DetailRow
-            label="Family Values"
-            value={profile.familyValues}
-            icon={Heart}
-          />
-        </DetailSection>
-
-        <DetailSection title="Lifestyle & Habits" icon={Activity}>
-          <DetailRow
-            label="Diet"
-            value={profile.dietPreferences}
-            icon={Utensils}
-          />
-          <DetailRow
-            label="Smoking"
-            value={profile.smokingHabit}
-            icon={Cigarette}
-          />
-          <DetailRow
-            label="Drinking"
-            value={profile.drinkingHabit}
-            icon={Wine}
-          />
-          <DetailRow
-            label="Exercise"
-            value={profile.exerciseRoutine}
-            icon={Dumbbell}
-          />
-          <DetailRow
-            label="Fitness Level"
-            value={profile.fitnessLevel}
-            icon={Activity}
-          />
-          <DetailRow
-            label="Personality"
-            value={profile.personalityType}
-            icon={Brain}
-          />
-          <DetailRow
-            label="Belief System"
-            value={profile.beliefSystem}
-            icon={Church}
-          />
-
-          {profile?.hobbies?.length > 0 && (
-            <View style={styles.hobbiesContainer}>
-              <Text style={styles.detailLabel}>Hobbies:</Text>
-              <View style={styles.hobbiesList}>
-                {profile?.hobbies.map((hobby: string, index: number) => (
-                  <View key={index} style={styles.hobbyTag}>
-                    <Text style={styles.hobbyText}>{hobby}</Text>
-                  </View>
-                ))}
+            {/* Hobbies - Custom Chip Layout */}
+            {profile?.hobbies?.length > 0 && (
+              <View style={styles.hobbiesBox}>
+                <Text style={styles.hobbyLabel}>Hobbies</Text>
+                <View style={styles.hobbyList}>
+                  {profile.hobbies.map((h: string, i: number) => (
+                    <View key={i} style={styles.tag}>
+                      <Text style={styles.tagText}>{h}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          )}
-        </DetailSection>
-
-        <DetailSection title="Partner Preferences" icon={Star}>
-          {/* <DetailRow
-            label="Age Range"
-            value={`${profile.preferredAgeRange.min} - ${profile.preferredAgeRange.max} years`}
-            icon={Calendar}
-          />
-          <DetailRow
-            label="Height Range"
-            value={`${profile.preferredHeightRange.min} - ${profile.preferredHeightRange.max}`}
-            icon={Ruler}
-          /> */}
-          <DetailRow
-            label="Marital Status"
-            value={profile.preferredMaritalStatus}
-            icon={HeartHandshake}
-          />
-          <DetailRow
-            label="Manglik Preference"
-            value={profile.manglikPreference}
-            icon={Sparkles}
-          />
-          <DetailRow
-            label="Education"
-            value={profile.preferredEducation}
-            icon={GraduationCap}
-          />
-          <DetailRow
-            label="Profession"
-            value={profile.preferredProfession}
-            icon={Briefcase}
-          />
-          <DetailRow
-            label="Income Range"
-            value={profile.preferredIncomeRange}
-            icon={DollarSign}
-          />
-          <DetailRow
-            label="Location"
-            value={profile.locationPreference}
-            icon={MapPin}
-          />
-          <DetailRow
-            label="Living with Parents"
-            value={profile.livingWithParents}
-            icon={Home}
-          />
-        </DetailSection>
-      </View>
-    </ScrollView>
+            )}
+          </DetailSection>
+          {/* 5. Partner Preferences - Parallel Grid */}
+          <DetailSection title="Partner Preferences" icon={Star}>
+            <DetailRow
+              label="Marital Status"
+              value={profile.preferredMaritalStatus}
+              icon={HeartHandshake}
+            />
+            <DetailRow
+              label="Manglik"
+              value={profile.manglikPreference}
+              icon={Sparkles}
+            />
+            <DetailRow
+              label="Education"
+              value={profile.preferredEducation}
+              icon={GraduationCap}
+            />
+            <DetailRow
+              label="Profession"
+              value={profile.preferredProfession}
+              icon={Briefcase}
+            />
+            <DetailRow
+              label="Min. Income"
+              value={profile.preferredIncomeRange}
+              icon={DollarSign}
+            />
+            <DetailRow
+              label="Living with Parents"
+              value={profile.livingWithParents}
+              icon={Home}
+              fullWidth
+            />
+          </DetailSection>
+        </View>
+      </ScrollView>
+      {/* Only show for feed profiles */}
+      {!isSelf && (
+        <ProfileActionFooter
+          onShare={() => {}}
+          onBlock={() => {}}
+          // loading={isProcessing}
+        />
+      )}
+    </View>
   );
 }
 
-export const createStyles = (theme: AppTheme) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-      paddingBottom: 30,
-    },
-    cardContainer: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 10,
-    },
-    card: {
-      width: screenWidth - 10 * 2,
-      height: screenHeight * 0.7,
-      borderRadius: theme.borderRadius.lg,
-      backgroundColor: theme.colors.card,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-      marginBottom: theme.spacing.lg,
-    },
-    content: {
-      padding: 10,
-      paddingBottom: 30,
-    },
-    section: {
-      backgroundColor: "white",
-      borderRadius: theme.borderRadius.lg,
-      marginBottom: theme.spacing.lg,
-      padding: theme.spacing.lg,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    sectionHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: theme.spacing.md,
-      paddingBottom: theme.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-    },
-    sectionTitle: {
-      fontSize: theme.fontSize.lg,
-      fontWeight: "bold",
-      color: theme.colors.text,
-      marginLeft: theme.spacing.sm,
-    },
-    sectionContent: {
-      gap: theme.spacing.sm,
-    },
-    detailRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-      paddingVertical: theme.spacing.xs,
-    },
-    detailLabelContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      flex: 1,
-      gap: theme.spacing.xs,
-    },
-    detailLabel: {
-      fontSize: theme.fontSize.md,
-      color: theme.colors.textLight,
-      fontWeight: "500",
-    },
-    detailValue: {
-      fontSize: theme.fontSize.md,
-      color: theme.colors.text,
-      flex: 1.5,
-      textAlign: "right",
-    },
-    hobbiesContainer: {
-      paddingVertical: theme.spacing.xs,
-    },
-    hobbiesList: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      marginTop: theme.spacing.xs,
-    },
-    hobbyTag: {
-      backgroundColor: theme.colors.primary + "20",
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-      borderRadius: theme.borderRadius.round,
-      marginRight: theme.spacing.sm,
-      marginBottom: theme.spacing.xs,
-    },
-    hobbyText: {
-      fontSize: theme.fontSize.sm,
-      color: theme.colors.primary,
-      fontWeight: "500",
-    },
-  });
+const styles = StyleSheet.create({
+  carouselCard: {
+    borderRadius: 20,
+    overflow: "hidden",
+    elevation: 8,
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    height: 400, // Matches your carousel requirement
+  },
+  card: {
+    borderRadius: 20,
+    overflow: "hidden",
+    elevation: 5,
+    marginBottom: 16,
+  },
+  hobbiesBox: { width: "100%", padding: 4, marginTop: 8 },
+  hobbyLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#7F8C8D",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  hobbyList: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
+  tag: {
+    backgroundColor: "#6B46C115",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: "#6B46C130",
+  },
+  tagText: { fontSize: 12, color: "#6B46C1", fontWeight: "700" },
+});
