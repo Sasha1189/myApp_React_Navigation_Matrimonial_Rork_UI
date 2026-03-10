@@ -27,7 +27,7 @@ export const rashiOptions = [
   "Pisces",
 ];
 export const horoscopeOptions = ["Yes", "No", "Optional"];
-export const isReady = ["Yes", "No"];
+export const isReady = ["Yes", "No still studying"];
 export const contactOptions = ["WhatsApp", "Phone", "Email", "Chat only"];
 export const createdByOptions = ["Self", "Father", "Mother", "Sibling"];
 export const highestQualification = [

@@ -40,6 +40,13 @@ export type AppStackParamList = {
   HelpSupport: undefined;
   SafetyPrivacy: undefined;
   Subscription: undefined;
+  EditAboutMe: undefined;
+  EditPersonal: undefined;
+  EditContact: undefined;
+  EditEducation: undefined;
+  EditFamily: undefined;
+  EditLifestyle: undefined;
+  EditPartner: undefined;
 };
 
 export type TabParamList = {

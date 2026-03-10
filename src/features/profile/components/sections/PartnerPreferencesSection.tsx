@@ -1,10 +1,26 @@
 import React from "react";
-import { Controller, useFormContext } from "react-hook-form";
-import FormSection from "../form/FormSection";
+import { ScrollView, View } from "react-native";
+import { Controller } from "react-hook-form";
+import {
+  HeartHandshake,
+  Ruler,
+  MapPin,
+  Home,
+  GraduationCap,
+  Briefcase,
+  Banknote,
+} from "lucide-react-native";
+
+import { useAuth } from "@/context/AuthContext";
+import { useAppTheme } from "@/theme/ThemeContext";
+import { useSectionEditor } from "../../hooks/useSectionEditor";
+import { SECTION_CONFIG } from "../form/profileValidation";
+import { Profile } from "../../../../types/profile";
+
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
-import { HeartHandshake, Ruler, MapPin, Home } from "lucide-react-native";
-import { Profile } from "../../../../types/profile";
+
+// Your Options
 import {
   maritalStatusOptions,
   highestQualification,
@@ -13,123 +29,132 @@ import {
   livingWithParentsOptions,
 } from "../form/profileOptions";
 
-interface PartnerPreferencesSectionProps {
-  editable?: boolean;
-}
+export default function EditPartnerPreferencesScreen({ navigation }: any) {
+  const { profile, updateProfile } = useAuth();
+  const { theme } = useAppTheme();
 
-export const PartnerPreferencesSection: React.FC<
-  PartnerPreferencesSectionProps
-> = ({ editable = true }) => {
-  const { control } = useFormContext<Profile>();
+  const config = SECTION_CONFIG.find((s) => s.id === "partner")!;
+
+  const { control } = useSectionEditor<Profile>(
+    profile as Profile,
+    config.fields,
+    updateProfile,
+    navigation,
+    theme,
+    config.title,
+  );
 
   return (
-    <FormSection
-      title="Partner Preferences"
-      icon={HeartHandshake}
-      editable={editable}
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      contentContainerStyle={{
+        padding: theme.spacing.lg,
+        paddingBottom: theme.spacing.xxl,
+      }}
+      keyboardShouldPersistTaps="handled"
     >
-      {/* Preferred Marital Status */}
-      <Controller
-        control={control}
-        name="preferredMaritalStatus"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Preferred Marital Status"
-            value={value}
-            placeholder="Select Marital Status"
-            options={maritalStatusOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={HeartHandshake}
-          />
-        )}
-      />
+      <View style={{ gap: theme.spacing.xs }}>
+        {/* Preferred Marital Status */}
+        <Controller
+          control={control}
+          name="preferredMaritalStatus"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Partner Marital Status"
+              value={value}
+              placeholder="Never Married, Divorced..."
+              options={maritalStatusOptions}
+              onSelect={onChange}
+              icon={HeartHandshake}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Preferred Education */}
-      <Controller
-        control={control}
-        name="preferredEducation"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Preferred Education"
-            value={value}
-            placeholder="Select Education Level"
-            options={highestQualification}
-            onSelect={onChange}
-            editable={editable}
-            icon={Ruler}
-          />
-        )}
-      />
+        {/* Preferred Education */}
+        <Controller
+          control={control}
+          name="preferredEducation"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Education Preference"
+              value={value}
+              placeholder="Select qualification"
+              options={highestQualification}
+              onSelect={onChange}
+              icon={GraduationCap}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Preferred Profession */}
-      <Controller
-        control={control}
-        name="preferredProfession"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Preferred Profession"
-            value={value}
-            placeholder="Select Profession"
-            options={occupationOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={Ruler}
-          />
-        )}
-      />
+        {/* Preferred Profession */}
+        <Controller
+          control={control}
+          name="preferredProfession"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Profession Preference"
+              value={value}
+              placeholder="Select occupation"
+              options={occupationOptions}
+              onSelect={onChange}
+              icon={Briefcase}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Preferred Income Range */}
-      <Controller
-        control={control}
-        name="preferredIncomeRange"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Preferred Income Range"
-            value={value}
-            placeholder="Select Income Range"
-            options={incomeOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={Ruler}
-          />
-        )}
-      />
+        {/* Preferred Income Range */}
+        <Controller
+          control={control}
+          name="preferredIncomeRange"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Income Preference"
+              value={value}
+              placeholder="Select range"
+              options={incomeOptions}
+              onSelect={onChange}
+              icon={Banknote}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Preferred Location */}
-      <Controller
-        control={control}
-        name="locationPreference"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Preferred Location"
-            value={value || ""}
-            onChangeText={onChange}
-            placeholder="Enter preferred district"
-            icon={MapPin}
-            editable={editable}
-          />
-        )}
-      />
+        {/* Preferred Location */}
+        <Controller
+          control={control}
+          name="locationPreference"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Location Preference"
+              value={value || ""}
+              onChangeText={onChange}
+              placeholder="e.g. Pune, Mumbai, etc."
+              icon={MapPin}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Living with Parents */}
-      <Controller
-        control={control}
-        name="livingWithParents"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Living with Parents"
-            value={value}
-            placeholder="Select Option"
-            options={livingWithParentsOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={Home}
-          />
-        )}
-      />
-    </FormSection>
+        {/* Living with Parents */}
+        <Controller
+          control={control}
+          name="livingWithParents"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Living with Parents"
+              value={value}
+              placeholder="Select option"
+              options={livingWithParentsOptions}
+              onSelect={onChange}
+              icon={Home}
+              editable={true}
+            />
+          )}
+        />
+      </View>
+    </ScrollView>
   );
-};
-
-export default PartnerPreferencesSection;
+}

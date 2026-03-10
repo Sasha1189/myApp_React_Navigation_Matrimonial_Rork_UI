@@ -1,94 +1,103 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { ChevronRight } from "lucide-react-native"; // Changed to Right Arrow
+import { ProfileProgressBar } from "./ProfileProgressBar";
 
 interface FormSectionProps {
   title: string;
   icon: React.ComponentType<any>;
-  children: React.ReactNode;
-  editable?: boolean; // when true, section is collapsible for editing
+  onPress: () => void;
+  data: any;
+  fields: readonly string[];
 }
 
 const FormSection: React.FC<FormSectionProps> = ({
   title,
   icon: Icon,
-  children,
-  editable = false,
+  onPress,
+  data,
+  fields,
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-
-  // start all sections collapsed regardless of `editable`
-  const [collapsed, setCollapsed] = useState<boolean>(true);
-
-  const borderStyle = {
-    borderWidth: editable && !collapsed ? 2 : 1,
-    borderColor:
-      editable && !collapsed ? theme.colors.primary : theme.colors.border,
-  } as const;
-  if (!theme) return null;
   return (
-    <View style={[styles.section, borderStyle]}>
-      {/* Header is static; only the chevron toggles expand/collapse for this section */}
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={styles.section}
+    >
       <View style={styles.sectionHeader}>
-        <View style={styles.headerLeft}>
-          <Icon size={20} color={theme.colors.primary} />
-          <Text style={styles.sectionTitle}>{title}</Text>
+        {/* Icon Wrapper: Centred and Tinted */}
+        <View style={styles.iconWrapper}>
+          <Icon size={18} color={theme.colors.primary} />
         </View>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => setCollapsed((s) => !s)}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
-          style={styles.chevronButton}
-          accessibilityRole="button"
-          accessibilityLabel={`${
-            collapsed ? "Expand" : "Collapse"
-          } ${title} section`}
-        >
-          {collapsed ? (
-            <ChevronDown size={20} color={theme.colors.textLight} />
-          ) : (
-            <ChevronUp size={20} color={theme.colors.textLight} />
-          )}
-        </TouchableOpacity>
+
+        {/* Text Area: Centred vertically with letter spacing */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <View style={styles.progressWrapper}>
+            <ProfileProgressBar
+              data={data}
+              trackedFields={fields}
+              showCount={false}
+            />
+          </View>
+        </View>
+
+        {/* Right Arrow: Perfectly centred */}
+        <View style={styles.chevronWrapper}>
+          <ChevronRight size={18} color={theme.colors.textLight} />
+        </View>
       </View>
-      {!collapsed && <View style={styles.sectionContent}>{children}</View>}
-    </View>
+    </TouchableOpacity>
   );
 };
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     section: {
-      backgroundColor: "white",
-      borderRadius: theme.borderRadius.lg,
-      marginBottom: theme.spacing.lg,
-      padding: theme.spacing.lg,
-      elevation: 3,
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing.md,
+      padding: theme.spacing.md, // Balanced padding, not too tight
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     sectionHeader: {
       flexDirection: "row",
-      alignItems: "center",
+      alignItems: "center", // Align everything (Icon, Text, Arrow) to the vertical center
       justifyContent: "space-between",
-      marginBottom: theme.spacing.sm,
-      paddingBottom: theme.spacing.sm,
     },
-    headerLeft: {
-      flexDirection: "row",
+    iconWrapper: {
+      width: 40,
+      height: 40,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor: `${theme.colors.primary}12`, // Subtle 12% opacity tint
       alignItems: "center",
+      justifyContent: "center",
+    },
+    titleContainer: {
+      flex: 1,
+      marginLeft: theme.spacing.md,
+      justifyContent: "center",
     },
     sectionTitle: {
-      fontSize: theme.fontSize.md,
-      fontWeight: "bold",
-      marginLeft: theme.spacing.sm,
+      fontSize: theme.fontSize.sm,
+      fontWeight: "600",
       color: theme.colors.text,
+      letterSpacing: 0.5, // Better readability like RHF demo
+      marginBottom: 4,
     },
-    sectionContent: { gap: theme.spacing.md },
-    chevronButton: {
-      padding: theme.spacing.xs,
+    progressWrapper: {
+      marginTop: 2,
+    },
+    chevronWrapper: {
+      marginLeft: theme.spacing.sm,
+      justifyContent: "center",
     },
   });
 

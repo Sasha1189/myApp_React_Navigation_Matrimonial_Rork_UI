@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,123 +7,27 @@ import {
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { AppTheme } from "@/theme/theme";
-import { useStyles } from "@/theme/useStyles";
+import { Lock } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
+import { useStyles } from "@/theme/useStyles";
+import { AppTheme } from "@/theme/theme";
 
-interface DatePickerProps {
+interface DateTimeProps {
   label: string;
   value?: Date | string;
   placeholder?: string;
-  onChange: (date?: Date) => void;
+  onChange: (val?: any) => void;
   editable?: boolean;
-  icon?: React.ComponentType<any>;
+  icon?: any;
   required?: boolean;
   locked?: boolean;
 }
 
-export const DatePickerField: React.FC<DatePickerProps> = ({
-  label,
-  value,
-  onChange,
-  editable,
-  icon: Icon,
-  required = true,
-  locked,
-}) => {
-  const { theme } = useAppTheme();
-  const styles = useStyles(createStyles);
-  if (!theme) return null;
-
-  const [showPicker, setShowPicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    value
-      ? value instanceof Date
-        ? value
-        : new Date(value as string)
-      : undefined,
-  );
-
-  useEffect(() => {
-    if (value) {
-      setSelectedDate(
-        value instanceof Date ? value : new Date(value as string),
-      );
-    }
-  }, [value]);
-
-  const display = selectedDate
-    ? `${String(selectedDate.getDate()).padStart(2, "0")}/${String(
-        selectedDate.getMonth() + 1,
-      ).padStart(2, "0")}/${selectedDate.getFullYear()}`
-    : "";
-
-  const handleChange = (_e: any, date?: Date) => {
-    if (date) {
-      setSelectedDate(date);
-      onChange(date);
-    }
-    if (Platform.OS === "android") setShowPicker(false);
-  };
-
-  return (
-    <View style={{ marginBottom: 12 }}>
-      <TouchableOpacity
-        onPress={() => editable && !locked && setShowPicker(true)}
-        disabled={!editable || locked}
-        style={{ opacity: editable && !locked ? 1 : 0.6 }}
-      >
-        <View style={styles.labelRow}>
-          {Icon && <Icon size={16} color={theme.colors.primary} />}
-          <Text style={styles.label}>
-            {label}
-            {required && <Text style={{ color: "red" }}> *</Text>}
-          </Text>
-        </View>
-        <View style={styles.input}>
-          <Text
-            style={{
-              color: display ? theme.colors.text : theme.colors.textLight,
-            }}
-          >
-            {display || "DD/MM/YYYY"}
-          </Text>
-        </View>
-      </TouchableOpacity>
-      <Text
-        style={{
-          color: theme.colors.textLight,
-          marginTop: 6,
-          fontSize: theme.fontSize.sm,
-        }}
-      >
-        This cannot be changed later
-      </Text>
-      {showPicker && (
-        <DateTimePicker
-          value={selectedDate || new Date(1990, 0, 1)}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "calendar"}
-          maximumDate={new Date()}
-          onChange={handleChange}
-        />
-      )}
-    </View>
-  );
+const formatDisplayDate = (date: Date) => {
+  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 };
 
-interface TimePickerProps {
-  label: string;
-  value?: string;
-  placeholder?: string;
-  onChange: (time?: string) => void;
-  editable?: boolean;
-  icon?: React.ComponentType<any>;
-  required?: boolean;
-  locked?: boolean;
-}
-
-const formatTime = (date: Date) => {
+const formatDisplayTime = (date: Date) => {
   const hours = date.getHours();
   const minutes = date.getMinutes();
   const ampm = hours >= 12 ? "PM" : "AM";
@@ -131,24 +35,7 @@ const formatTime = (date: Date) => {
   return `${h}:${String(minutes).padStart(2, "0")} ${ampm}`;
 };
 
-const parseTimeString = (t?: string) => {
-  if (!t) return undefined;
-  const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-  if (!m) return undefined;
-  let hour = Number(m[1]);
-  const minute = Number(m[2]);
-  const ampm = m[3];
-  if (ampm) {
-    const up = ampm.toUpperCase();
-    if (up === "PM" && hour < 12) hour += 12;
-    if (up === "AM" && hour === 12) hour = 0;
-  }
-  const d = new Date();
-  d.setHours(hour, minute, 0, 0);
-  return d;
-};
-
-export const TimePickerField: React.FC<TimePickerProps> = ({
+export const DatePickerField: React.FC<DateTimeProps> = ({
   label,
   value,
   onChange,
@@ -160,94 +47,207 @@ export const TimePickerField: React.FC<TimePickerProps> = ({
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+  const [show, setShow] = useState(false);
 
-  const [showPicker, setShowPicker] = useState(false);
-  const [selected, setSelected] = useState<Date | undefined>(
-    value ? parseTimeString(value) : undefined,
-  );
-
-  useEffect(() => {
-    if (value) setSelected(parseTimeString(value));
-  }, [value]);
-
-  const display = selected ? formatTime(selected) : "";
-  const handleChange = (_e: any, date?: Date) => {
-    if (date) {
-      setSelected(date);
-      onChange(formatTime(date));
-    }
-    if (Platform.OS === "android") setShowPicker(false);
-  };
+  const dateValue = value
+    ? value instanceof Date
+      ? value
+      : new Date(value)
+    : new Date(1995, 0, 1);
+  const display = value ? formatDisplayDate(new Date(value)) : "";
 
   return (
-    <View style={{ marginBottom: 12 }}>
-      <TouchableOpacity
-        onPress={() => editable && !locked && setShowPicker(true)}
-        disabled={!editable || locked}
-        style={{ opacity: editable && !locked ? 1 : 0.6 }}
-      >
-        <View style={styles.labelRow}>
+    <View style={styles.container}>
+      <View style={styles.labelRow}>
+        <View style={styles.labelLeft}>
+          {Icon && (
+            <View style={styles.iconWrapper}>
+              <Icon size={14} color={theme.colors.primary} />
+            </View>
+          )}
           <Text style={styles.label}>
             {label}
-            {required && <Text style={{ color: "red" }}> *</Text>}
+            {required && <Text style={styles.requiredStar}> *</Text>}
           </Text>
         </View>
-        <View style={styles.input}>
-          <Text
-            style={{
-              color: display ? theme.colors.text : theme.colors.textLight,
-            }}
-          >
-            {display || "e.g., 10:30 AM"}
-          </Text>
-        </View>
-      </TouchableOpacity>
-      {locked && (
+        {locked && (
+          <View style={styles.lockBadge}>
+            <Lock size={10} color={theme.colors.success} />
+            <Text style={styles.lockBadgeText}>Verified</Text>
+          </View>
+        )}
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => editable && !locked && setShow(true)}
+        style={[
+          styles.trigger,
+          locked && styles.lockedTrigger,
+          !editable && styles.disabledTrigger,
+        ]}
+      >
         <Text
-          style={{
-            color: theme.colors.textLight,
-            marginTop: 6,
-            fontSize: theme.fontSize.sm,
-          }}
+          style={[
+            styles.valueText,
+            !display && { color: theme.colors.textLight },
+          ]}
         >
-          This cannot be changed later
+          {display || placeholder || "DD/MM/YYYY"}
+        </Text>
+      </TouchableOpacity>
+
+      {locked && (
+        <Text style={styles.lockNote}>
+          This verified date cannot be changed.
         </Text>
       )}
-      {showPicker && (
+
+      {show && (
         <DateTimePicker
-          value={selected || new Date()}
-          mode="time"
-          display={Platform.OS === "ios" ? "spinner" : "clock"}
-          onChange={handleChange}
+          value={dateValue}
+          mode="date"
+          display={Platform.OS === "ios" ? "spinner" : "calendar"}
+          maximumDate={new Date()}
+          onChange={(event: any, date?: Date) => {
+            setShow(false);
+            if (date) {
+              onChange(date);
+            }
+          }}
         />
       )}
     </View>
   );
 };
 
-export const createStyles = (theme: AppTheme) =>
+export const TimePickerField: React.FC<DateTimeProps> = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  editable = true,
+  icon: Icon,
+  required = false,
+  locked = false,
+}) => {
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  const [show, setShow] = useState(false);
+
+  const display = value
+    ? typeof value === "string"
+      ? value
+      : formatDisplayTime(value)
+    : "";
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.labelRow}>
+        <View style={styles.labelLeft}>
+          {Icon && (
+            <View style={styles.iconWrapper}>
+              <Icon size={14} color={theme.colors.primary} />
+            </View>
+          )}
+          <Text style={styles.label}>
+            {label}
+            {required && <Text style={styles.requiredStar}> *</Text>}
+          </Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => editable && !locked && setShow(true)}
+        style={[styles.trigger, !editable && styles.disabledTrigger]}
+      >
+        <Text
+          style={[
+            styles.valueText,
+            !display && { color: theme.colors.textLight },
+          ]}
+        >
+          {display || placeholder || "Select Time"}
+        </Text>
+      </TouchableOpacity>
+
+      {show && (
+        <DateTimePicker
+          value={new Date()}
+          mode="time"
+          display={Platform.OS === "ios" ? "spinner" : "clock"}
+          maximumDate={new Date()}
+          onChange={(event: any, date?: Date) => {
+            setShow(false);
+            if (date) {
+              onChange(date);
+            }
+          }}
+        />
+      )}
+    </View>
+  );
+};
+
+const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
+    container: { marginBottom: theme.spacing.md },
     labelRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: theme.spacing.xs,
-      marginBottom: 4,
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.xs,
+    },
+    labelLeft: { flexDirection: "row", alignItems: "center" },
+    iconWrapper: {
+      width: 28,
+      height: 28,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor: `${theme.colors.primary}12`,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: theme.spacing.sm,
     },
     label: {
-      fontSize: theme.fontSize.md,
-      fontWeight: "500",
+      fontSize: theme.fontSize.sm,
+      fontWeight: "600",
       color: theme.colors.text,
+      letterSpacing: 0.4,
     },
-    input: {
+    requiredStar: { color: theme.colors.danger },
+    lockBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: `${theme.colors.success}10`,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 100,
+    },
+    lockBadgeText: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: theme.colors.success,
+      marginLeft: 4,
+      textTransform: "uppercase",
+    },
+    trigger: {
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: theme.borderRadius.md,
       padding: theme.spacing.md,
-      fontSize: theme.fontSize.md,
-      color: theme.colors.text,
-      backgroundColor: "white",
-      marginTop: 6,
+      backgroundColor: theme.colors.card,
+      minHeight: 48,
+      justifyContent: "center",
+    },
+    lockedTrigger: { backgroundColor: `${theme.colors.background}80` },
+    disabledTrigger: { opacity: 0.6 },
+    valueText: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    lockNote: {
+      color: theme.colors.textLight,
+      marginTop: 4,
+      fontSize: 11,
+      fontStyle: "italic",
     },
   });
 

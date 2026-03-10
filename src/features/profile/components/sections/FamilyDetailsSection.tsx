@@ -1,108 +1,128 @@
 import React from "react";
-import { Controller, useFormContext } from "react-hook-form";
-import { Users, User } from "lucide-react-native";
+import { ScrollView, View } from "react-native";
+import { Controller } from "react-hook-form";
+import { Users, User, Info } from "lucide-react-native";
 
-import FormSection from "../form/FormSection";
-import InputField from "../form/InputField";
+import { useAuth } from "@/context/AuthContext";
+import { useAppTheme } from "@/theme/ThemeContext";
+import { useSectionEditor } from "../../hooks/useSectionEditor";
+import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 
-interface FamilyDetailsSectionProps {
-  editable?: boolean;
-  immutableFields?: (keyof Profile)[];
-  confirmedImmutable?: (keyof Profile)[];
-}
+import InputField from "../form/InputField";
 
-export const FamilyDetailsSection: React.FC<FamilyDetailsSectionProps> = ({
-  editable = true,
-  immutableFields,
-  confirmedImmutable,
-}) => {
-  const { control } = useFormContext<Profile>();
+export default function EditFamilyDetailsScreen({ navigation }: any) {
+  const { profile, updateProfile } = useAuth();
+  const { theme } = useAppTheme();
+
+  // Find config for "family" section
+  const config = SECTION_CONFIG.find((s) => s.id === "family")!;
+
+  const { control } = useSectionEditor<Profile>(
+    profile as Profile,
+    config.fields,
+    updateProfile,
+    navigation,
+    theme,
+    config.title,
+  );
+
+  const getLockState = (name: keyof Profile) =>
+    isFieldLocked(profile as Profile, name);
 
   return (
-    <FormSection title="Family Details" icon={Users} editable={editable}>
-      {/* Father's Occupation */}
-      <Controller
-        control={control}
-        name="fatherOccupation"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Father's Occupation"
-            value={value ?? ""}
-            onChangeText={onChange}
-            placeholder="e.g., Farmer"
-            icon={User}
-            editable={editable}
-          />
-        )}
-      />
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      contentContainerStyle={{
+        padding: theme.spacing.lg,
+        paddingBottom: theme.spacing.xxl,
+      }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={{ gap: theme.spacing.xs }}>
+        {/* Father's Occupation */}
+        <Controller
+          control={control}
+          name="fatherOccupation"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Father's Occupation"
+              value={value ?? ""}
+              onChangeText={onChange}
+              placeholder="e.g. Farmer, Retired Govt Officer"
+              icon={User}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Mother's Occupation */}
-      <Controller
-        control={control}
-        name="motherOccupation"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Mother's Occupation"
-            value={value ?? ""}
-            onChangeText={onChange}
-            placeholder="e.g., Homemaker"
-            icon={User}
-            editable={editable}
-          />
-        )}
-      />
+        {/* Mother's Occupation */}
+        <Controller
+          control={control}
+          name="motherOccupation"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Mother's Occupation"
+              value={value ?? ""}
+              onChangeText={onChange}
+              placeholder="e.g. Homemaker, Teacher"
+              icon={User}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Number of Brothers */}
-      <Controller
-        control={control}
-        name="numberOfBrothers"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Number of Brothers"
-            value={value?.toString() ?? "0"}
-            onChangeText={(t) => onChange(parseInt(t) || 0)}
-            placeholder="e.g., 2"
-            icon={Users}
-            editable={editable}
-          />
-        )}
-      />
+        {/* Number of Brothers */}
+        <Controller
+          control={control}
+          name="numberOfBrothers"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Number of Brothers"
+              value={value?.toString() ?? ""}
+              onChangeText={(t) => onChange(t.replace(/[^0-9]/g, ""))} // Numbers only
+              placeholder="0"
+              keyboardType="numeric"
+              icon={Users}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Number of Sisters */}
-      <Controller
-        control={control}
-        name="numberOfSisters"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Number of Sisters"
-            value={value?.toString() ?? "0"}
-            onChangeText={(t) => onChange(parseInt(t) || 0)}
-            placeholder="e.g., 1"
-            icon={Users}
-            editable={editable}
-          />
-        )}
-      />
+        {/* Number of Sisters */}
+        <Controller
+          control={control}
+          name="numberOfSisters"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Number of Sisters"
+              value={value?.toString() ?? ""}
+              onChangeText={(t) => onChange(t.replace(/[^0-9]/g, ""))} // Numbers only
+              placeholder="0"
+              keyboardType="numeric"
+              icon={Users}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Siblings' Details */}
-      <Controller
-        control={control}
-        name="siblingsDetails"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Siblings' Details"
-            value={value ?? ""}
-            onChangeText={onChange}
-            placeholder="e.g., Elder brother married, working in TCS"
-            multiline
-            icon={Users}
-            editable={editable}
-          />
-        )}
-      />
-    </FormSection>
+        {/* Siblings' Details - SMART AUTO-EXPANDING BOX */}
+        <Controller
+          control={control}
+          name="siblingsDetails"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Siblings' Details"
+              value={value ?? ""}
+              onChangeText={onChange}
+              placeholder="e.g. Elder brother married, living in Pune"
+              multiline
+              icon={Info}
+              editable={true}
+            />
+          )}
+        />
+      </View>
+    </ScrollView>
   );
-};
-
-export default FamilyDetailsSection;
+}

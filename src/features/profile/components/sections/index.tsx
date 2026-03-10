@@ -1,5 +1,5 @@
 export { PersonalInfoSection } from "./PersonalInfoSection";
-export { AboutMeSection } from "./AboutMeSection";
+export { EditAboutMeScreen } from "./EditAboutMeScreen";
 export { ContactDetailsSection } from "./ContactDetailsSection";
 export { EducationCareerSection } from "./EducationCareerSection";
 export { FamilyDetailsSection } from "./FamilyDetailsSection";

@@ -1,123 +1,140 @@
 import React from "react";
-import { Controller, useFormContext } from "react-hook-form";
+import { ScrollView, View } from "react-native";
+import { Controller } from "react-hook-form";
 import { Phone, MapPin, UserPlus } from "lucide-react-native";
 
-import FormSection from "../form/FormSection";
-import InputField from "../form/InputField";
-import PickerField from "../form/PickerField";
+import { useAuth } from "@/context/AuthContext";
+import { useAppTheme } from "@/theme/ThemeContext";
+import { useSectionEditor } from "../../hooks/useSectionEditor";
+import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 
+import InputField from "../form/InputField";
+import PickerField from "../form/PickerField";
+
+// Your Options
 import {
   districtOptions,
   preferredContactOptions,
   profileCreatedByOptions,
 } from "../form/profileOptions";
 
-interface ContactDetailsSectionProps {
-  editable?: boolean;
-  immutableFields?: (keyof Profile)[];
-  confirmedImmutable?: (keyof Profile)[];
-}
+export default function EditContactDetailsScreen({ navigation }: any) {
+  const { profile, updateProfile } = useAuth();
+  const { theme } = useAppTheme();
 
-export const ContactDetailsSection: React.FC<ContactDetailsSectionProps> = ({
-  editable = true,
-  immutableFields,
-  confirmedImmutable,
-}) => {
-  const { control } = useFormContext<Profile>();
+  // Find config for "contact" section
+  const config = SECTION_CONFIG.find((s) => s.id === "contact")!;
+
+  const { control } = useSectionEditor<Profile>(
+    profile as Profile,
+    config.fields,
+    updateProfile,
+    navigation,
+    theme,
+    config.title,
+  );
+
+  const getLockState = (name: keyof Profile) =>
+    isFieldLocked(profile as Profile, name);
 
   return (
-    <FormSection title="Contact Details" icon={Phone} editable={editable}>
-      {/* Mobile Number */}
-      <Controller
-        control={control}
-        name="mobileNumber"
-        render={({ field: { onChange, value } }) => (
-          <InputField
-            label="Mobile Number"
-            value={value}
-            onChangeText={onChange}
-            placeholder="Enter your mobile number"
-            keyboardType="phone-pad"
-            icon={Phone}
-            editable={editable}
-            locked={
-              immutableFields?.includes("mobileNumber") &&
-              confirmedImmutable?.includes("mobileNumber")
-            }
-          />
-        )}
-      />
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      contentContainerStyle={{
+        padding: theme.spacing.lg,
+        paddingBottom: theme.spacing.xxl,
+      }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={{ gap: theme.spacing.xs }}>
+        {/* Mobile Number - Often Locked/Verified */}
+        <Controller
+          control={control}
+          name="mobileNumber"
+          render={({ field: { onChange, value } }) => (
+            <InputField
+              label="Mobile Number"
+              value={value}
+              onChangeText={onChange}
+              placeholder="Enter mobile number"
+              keyboardType="phone-pad"
+              icon={Phone}
+              required
+              locked={getLockState("mobileNumber")}
+              editable={!getLockState("mobileNumber")}
+            />
+          )}
+        />
 
-      {/* Current City */}
-      <Controller
-        control={control}
-        name="currentCity"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Current City"
-            value={value}
-            placeholder="Select your current city"
-            options={districtOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={MapPin}
-          />
-        )}
-      />
+        {/* Current City (District List) */}
+        <Controller
+          control={control}
+          name="currentCity"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Current City"
+              value={value}
+              placeholder="Select your city"
+              options={districtOptions}
+              onSelect={onChange}
+              icon={MapPin}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Hometown */}
-      <Controller
-        control={control}
-        name="nativePlace"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Hometown"
-            value={value}
-            placeholder="Select your hometown"
-            options={districtOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={MapPin}
-          />
-        )}
-      />
+        {/* Hometown (District List) */}
+        <Controller
+          control={control}
+          name="nativePlace"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Hometown"
+              value={value}
+              placeholder="Select your hometown"
+              options={districtOptions}
+              onSelect={onChange}
+              icon={MapPin}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Preferred Contact */}
-      <Controller
-        control={control}
-        name="preferredContact"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Preferred Contact"
-            value={value}
-            placeholder="Select preferred contact method"
-            options={preferredContactOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={Phone}
-          />
-        )}
-      />
+        {/* Preferred Contact Method */}
+        <Controller
+          control={control}
+          name="preferredContact"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Preferred Contact"
+              value={value}
+              placeholder="How should we reach you?"
+              options={preferredContactOptions}
+              onSelect={onChange}
+              icon={Phone}
+              editable={true}
+            />
+          )}
+        />
 
-      {/* Profile Created By */}
-      <Controller
-        control={control}
-        name="profileCreatedBy"
-        render={({ field: { onChange, value } }) => (
-          <PickerField
-            label="Profile Created By"
-            value={value}
-            placeholder="Select who created the profile"
-            options={profileCreatedByOptions}
-            onSelect={onChange}
-            editable={editable}
-            icon={UserPlus}
-          />
-        )}
-      />
-    </FormSection>
+        {/* Profile Created By */}
+        <Controller
+          control={control}
+          name="profileCreatedBy"
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label="Profile Created By"
+              value={value}
+              placeholder="Who is managing this profile?"
+              options={profileCreatedByOptions}
+              onSelect={onChange}
+              icon={UserPlus}
+              editable={true}
+            />
+          )}
+        />
+      </View>
+    </ScrollView>
   );
-};
-
-export default ContactDetailsSection;
+}

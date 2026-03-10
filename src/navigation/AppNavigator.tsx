@@ -7,6 +7,12 @@ import ManagePhotosScreen from "../features/profile/screens/ManagePhotosScreen";
 import UserDetailsScreen from "../features/profile/screens/UserDetailsScreen";
 import SettingsScreen from "../features/settings/screens/SettingsScreen";
 import SubscriptionScreen from "../features/subscription/screens/SubscriptionScreen";
+import EditAboutMeScreen from "@/features/profile/components/sections/EditAboutMeScreen";
+import EditPersonalInfoScreen from "@/features/profile/components/sections/PersonalInfoSection";
+import EditContactDetailsScreen from "@/features/profile/components/sections/ContactDetailsSection";
+import EditEducationCareerScreen from "@/features/profile/components/sections/EducationCareerSection";
+import EditLifestyleScreen from "@/features/profile/components/sections/LifestyleSection";
+import EditPartnerPreferencesScreen from "@/features/profile/components/sections/PartnerPreferencesSection";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -90,6 +96,66 @@ export default function AppNavigator() {
         options={{
           headerShown: true,
           title: "Subscription",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="EditAboutMe"
+        component={EditAboutMeScreen}
+        options={{
+          headerShown: true,
+          title: "Edit About Me",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="EditPersonal"
+        component={EditPersonalInfoScreen}
+        options={{
+          headerShown: true,
+          title: "Edit About Me",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="EditContact"
+        component={EditContactDetailsScreen}
+        options={{
+          headerShown: true,
+          title: "Edit Contact Details",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="EditEducation"
+        component={EditEducationCareerScreen}
+        options={{
+          headerShown: true,
+          title: "Edit Education Details",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="EditLifestyle"
+        component={EditLifestyleScreen}
+        options={{
+          headerShown: true,
+          title: "Edit Lifestyle Details",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="EditPartner"
+        component={EditPartnerPreferencesScreen}
+        options={{
+          headerShown: true,
+          title: "Edit Preferance Details",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
