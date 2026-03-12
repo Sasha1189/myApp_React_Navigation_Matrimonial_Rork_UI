@@ -1,19 +1,19 @@
 import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Animated } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 
 interface ProgressBarProps {
-  data: any; // The profile object or a sub-section of it
-  trackedFields: readonly string[]; // List of keys to check for completion
-  label?: string; // Optional title like "Section Progress"
-  showCount?: boolean; // Toggle "X / Y fields" text
+  data: any;
+  trackedFields: readonly string[];
+  label?: string;
+  showCount?: boolean;
 }
 
 export const ProfileProgressBar = ({
   data,
   trackedFields,
   label,
-  showCount = true,
+  showCount = false,
 }: ProgressBarProps) => {
   const { theme } = useAppTheme();
 
@@ -70,7 +70,7 @@ export const ProfileProgressBar = ({
             styles.fill,
             {
               width: `${stats.percent}%`,
-              backgroundColor: theme.colors.primary,
+              backgroundColor: theme.colors.tint,
               borderRadius: theme.borderRadius.sm,
             },
           ]}

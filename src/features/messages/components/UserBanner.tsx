@@ -7,6 +7,7 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
+import { Heart, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
@@ -25,114 +26,131 @@ interface UserBannerProps {
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-
   const { user } = useAuth();
   const navigation = useAppNavigation();
-  const [isFetching, setIsFetching] = useState(false); // Add local loading state
+  const [isFetching, setIsFetching] = useState(false);
 
   const handlePress = async () => {
     if (isFetching) return;
     setIsFetching(true);
-
     try {
-      // 1. Try Cache (Cost: $0)
       let profile = LikesReceivedCache.getProfileDetail(item.id);
-
       if (!profile) {
-        // 2. Fetch Firestore if not in cache (Cost: 1 Read)
-        // Ensure you pass the correct gender and ID
         profile = await getProfile(item.id, user?.displayName || "");
-
-        // 3. Save to cache for next time
         LikesReceivedCache.saveProfileDetail(item.id, profile);
       }
-
-      // 4. Navigate only AFTER data is ready
       navigation.navigate("Details", { profile });
     } catch (error) {
-      console.error("Failed to load profile:", error);
+      console.error("Profile load failed:", error);
     } finally {
       setIsFetching(false);
     }
   };
+
   if (!theme) return null;
 
   return (
-    <>
-      {/* 1. The Screen Lock Overlay */}
-      <Modal visible={isFetching} transparent animationType="none">
-        <View style={styles.lockOverlay}>
-          {/* Spinner shows in the middle of the screen */}
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </Modal>
-      {/* 2. The Actual Banner */}
-      <TouchableOpacity style={styles.activityCard} onPress={handlePress}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={handlePress}
+      activeOpacity={0.6}
+      disabled={isFetching}
+    >
+      <View style={styles.imageWrapper}>
         <Image
           source={
             item.photo
               ? { uri: item.photo }
               : require("../../../../assets/images/profile.png")
           }
-          style={styles.activityImage}
-          contentFit={item.photo ? "cover" : "contain"}
+          style={styles.image}
+          contentFit="cover"
           cachePolicy="disk"
         />
-        <View style={styles.activityContent}>
-          <Text style={styles.activityName}>
-            {item?.name || "Username"}
-            {/* {formatDOB(item?.age, "age") || "18+"} */}
+        {isFetching && (
+          <View style={styles.imageLoader}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          </View>
+        )}
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.name} numberOfLines={1}>
+            {item?.name || "User"}
           </Text>
-          <Text style={styles.activityText}>
-            {type === "sent"
-              ? "You liked this profile ❤️"
-              : "They liked you 💌"}
+          <ChevronRight size={16} color={theme.colors.border} />
+        </View>
+
+        <View style={styles.statusRow}>
+          <Heart
+            size={12}
+            color={
+              type === "sent" ? theme.colors.textLight : theme.colors.primary
+            }
+            fill={type === "received" ? theme.colors.primary : "transparent"}
+          />
+          <Text style={styles.statusText}>
+            {type === "sent" ? "You liked them" : "Liked you"}
           </Text>
         </View>
-      </TouchableOpacity>
-    </>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    lockOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0,0,0,0.1)", // Very subtle tint to show it's "thinking"
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 999,
-    },
-    activityCard: {
+    container: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "white",
-      padding: theme.spacing.sm,
-      borderRadius: theme.borderRadius.md,
-      marginBottom: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
+      backgroundColor: theme.colors.card,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
     },
-    activityImage: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
+    imageWrapper: {
+      position: "relative",
+    },
+    image: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      marginRight: theme.spacing.md,
+      backgroundColor: theme.colors.background,
+    },
+    imageLoader: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(255,255,255,0.7)",
+      borderRadius: 26,
+      justifyContent: "center",
+      alignItems: "center",
       marginRight: theme.spacing.md,
     },
-    activityContent: {
+    content: {
       flex: 1,
     },
-    activityName: {
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 4,
+    },
+    name: {
       fontSize: theme.fontSize.md,
       fontWeight: "600",
       color: theme.colors.text,
-      marginBottom: theme.spacing.xs,
+      letterSpacing: 0.2,
     },
-    activityText: {
-      fontSize: theme.fontSize.sm,
+    statusRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    statusText: {
+      fontSize: theme.fontSize.xs,
       color: theme.colors.textLight,
+      fontWeight: "500",
     },
   });

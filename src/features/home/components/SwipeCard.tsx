@@ -1,6 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Image } from "expo-image";
 import {
+  FlatList,
   Animated,
   Dimensions,
   PanResponder,
@@ -8,9 +9,16 @@ import {
   Text,
   TouchableOpacity,
   View,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Briefcase, GraduationCap } from "lucide-react-native";
+import {
+  Briefcase,
+  GraduationCap,
+  Sparkles,
+  MapPin,
+} from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -20,7 +28,7 @@ import { ActionButtons } from "../components/ActionButtons";
 import { useButtonActions } from "../hooks/useButtonActions";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const SWIPE_THRESHOLD = screenHeight * 0.25;
+const SWIPE_THRESHOLD = screenHeight * 0.2;
 
 const SWIPE_OUT_DURATION = 250;
 
@@ -28,6 +36,7 @@ interface SwipeCardProps {
   uid: string;
   profile: Profile;
   currentIndex: number;
+  nextImageUrl?: string | null;
   onSwipeUp: () => void;
   onSwipeDown: () => void;
   isTopCard: boolean;
@@ -37,220 +46,250 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   uid,
   profile,
   currentIndex,
+  nextImageUrl,
   onSwipeUp,
   onSwipeDown,
   isTopCard,
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const translateY = useRef(new Animated.Value(0)).current;
 
-  const handleImageTap = (event: any) => {
-    const { locationX } = event.nativeEvent;
+  useEffect(() => {
+    if (nextImageUrl) {
+      Image.prefetch(nextImageUrl);
+    }
+  }, [nextImageUrl]);
+
+  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const cardWidth = screenWidth - 20;
-    const photosCount = profile?.photos?.length || 1;
-    const tapZone = cardWidth / photosCount;
-    const tappedIndex = Math.floor(locationX / tapZone);
-    const clamped = Math.max(0, Math.min(tappedIndex, photosCount - 1));
-    setCurrentImageIndex(clamped);
+    const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
+    setActiveIndex(index);
   };
 
-  // -------------------- animated values --------------------
-  const position = useRef(new Animated.ValueXY()).current;
-  const rotateCard = position.x.interpolate({
-    inputRange: [-screenWidth / 2, 0, screenWidth / 2],
-    outputRange: ["-10deg", "0deg", "10deg"],
-    extrapolate: "clamp",
-  });
-  const superLikeOpacity = position.y.interpolate({
-    inputRange: [-screenHeight / 6, 0],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  // -------------------- panResponder (replace current create) --------------------
   const panResponder = useRef(
     PanResponder.create({
-      // don't take the touch on start — let taps go to children
       onStartShouldSetPanResponder: () => false,
-
-      // take the responder *only* when there is meaningful movement (user is swiping)
       onMoveShouldSetPanResponder: (_, gesture) => {
         if (!isTopCard) return false;
-        const { dx, dy } = gesture;
-        const MOVEMENT_THRESHOLD = 6; // small number to ignore taps
+        // Capture only if vertical pull is dominant
         return (
-          Math.abs(dx) > MOVEMENT_THRESHOLD || Math.abs(dy) > MOVEMENT_THRESHOLD
+          Math.abs(gesture.dy) > Math.abs(gesture.dx) &&
+          Math.abs(gesture.dy) > 5
         );
       },
-
       onPanResponderMove: (_, gesture) => {
-        position.setValue({ x: gesture.dx, y: gesture.dy });
+        translateY.setValue(gesture.dy);
       },
-
       onPanResponderRelease: (_, gesture) => {
-        if (gesture.dy < -SWIPE_THRESHOLD) {
+        const isFast = Math.abs(gesture.vy) > 0.5;
+        if (gesture.dy < -SWIPE_THRESHOLD || (gesture.dy < -50 && isFast)) {
           forceSwipe("up");
-        } else if (gesture.dy > SWIPE_THRESHOLD && currentIndex > 0) {
+        } else if (
+          (gesture.dy > SWIPE_THRESHOLD || (gesture.dy > 50 && isFast)) &&
+          currentIndex > 0
+        ) {
           forceSwipe("down");
         } else {
           resetPosition();
         }
       },
-
-      onPanResponderTerminate: () => {
-        resetPosition();
-      },
     }),
   ).current;
 
-  const useNativeDriver = true;
+  // 1. Update forceSwipe to ONLY trigger the parent update
+  const forceSwipe = (direction: "up" | "down") => {
+    const toValue = direction === "up" ? -screenHeight : screenHeight;
 
-  const forceSwipe = (direction: "left" | "right" | "up" | "down") => {
-    const y = direction === "down" ? screenHeight : -screenHeight;
-
-    Animated.timing(position, {
-      toValue: { x: 0, y },
-      duration: SWIPE_OUT_DURATION,
-      useNativeDriver,
+    Animated.spring(translateY, {
+      toValue,
+      velocity: 3,
+      tension: 40,
+      friction: 8,
+      useNativeDriver: true,
     }).start(() => {
-      if (direction === "up") onSwipeUp();
-      else onSwipeDown();
+      // Call the parent update
+      if (direction === "up") {
+        onSwipeUp();
+      } else {
+        onSwipeDown();
+      }
     });
   };
 
   const resetPosition = () => {
-    Animated.spring(position, {
-      toValue: { x: 0, y: 0 },
-      useNativeDriver: false,
+    Animated.spring(translateY, {
+      toValue: 0,
+      friction: 4,
+      useNativeDriver: true,
     }).start();
   };
 
-  const animatedCardStyle = {
-    transform: [
-      { translateX: position.x },
-      { translateY: position.y },
-      { rotate: rotateCard },
-    ],
-  };
+  useEffect(() => {
+    translateY.setValue(0);
+  }, [uid]);
+
+  const animatedCardStyle = { transform: [{ translateY: translateY }] };
+
+  const nextOpacity = translateY.interpolate({
+    inputRange: [-screenHeight / 6, 0],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  const previousOpacity = translateY.interpolate({
+    inputRange: [0, screenHeight / 6],
+    outputRange: [0, 1],
+    extrapolate: "clamp",
+  });
 
   const { handleActionBtnTap } = useButtonActions(uid, profile);
 
+  if (!theme) return null;
   return (
     <Animated.View
       style={[styles.card, animatedCardStyle]}
       {...panResponder.panHandlers}
     >
-      <TouchableOpacity
-        onPress={handleImageTap}
-        activeOpacity={1}
-        style={styles.imageContainer}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-      >
-        <Image
-          source={
-            profile?.photos?.[currentImageIndex]?.downloadURL
-              ? { uri: profile.photos[currentImageIndex].downloadURL }
-              : require("../../../../assets/images/profile.png")
-          }
-          style={styles.image}
-          contentFit={
-            profile?.photos?.[currentImageIndex]?.downloadURL
-              ? "cover"
-              : "contain"
-          }
-          cachePolicy="disk"
-          transition={200}
-        />
-      </TouchableOpacity>
-
-      <LinearGradient
-        pointerEvents="none"
-        colors={["transparent", "rgba(0,0,0,0.8)"]}
-        style={styles.gradient}
-      />
-
-      <View style={styles.cardContent}>
-        <View style={styles.nameAge}>
-          <Text style={styles.name}>{profile?.fullName}</Text>
-          <Text style={styles.age}>
-            {profile?.dateOfBirth
-              ? formatDOB(profile.dateOfBirth, "age")
-              : "18+"}
-          </Text>
-          <View
-            style={[
-              styles.badge,
-              {
-                backgroundColor:
-                  profile?.isReady === "Yes"
-                    ? theme.colors.primary
-                    : theme.colors.textLight,
-              },
-            ]}
-          />
-        </View>
-
-        {profile?.occupation && (
-          <View style={styles.infoRow}>
-            <Briefcase size={16} color="white" />
-            <Text style={styles.infoText}>{profile?.occupation}</Text>
-          </View>
-        )}
-
-        {profile?.fieldOfStudy && (
-          <View style={styles.infoRow}>
-            <GraduationCap size={16} color="white" />
-            <Text style={styles.infoText}>{profile?.fieldOfStudy}</Text>
-          </View>
-        )}
-
-        <Text style={styles.bio} numberOfLines={1}>
-          {profile?.shortBio}
-        </Text>
-
-        <View style={styles.interests}>
-          {profile?.hobbies.slice(0, 3).map((hobby, index) => (
-            <View key={index} style={styles.interestTag}>
-              <Text style={styles.interestText}>{hobby}</Text>
+      <View style={styles.imageContainer}>
+        <FlatList
+          data={profile?.photos || [null]}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          scrollEnabled={isTopCard}
+          keyExtractor={(_, index) => index.toString()}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          renderItem={({ item }) => (
+            <View style={styles.slideFrame}>
+              <Image
+                source={
+                  item?.downloadURL
+                    ? { uri: item.downloadURL }
+                    : require("../../../../assets/images/profile.png")
+                }
+                style={styles.image}
+                contentFit="cover"
+                cachePolicy="disk"
+                transition={400}
+                placeholderContentFit="cover"
+              />
             </View>
-          ))}
-        </View>
+          )}
+        />
       </View>
 
-      <Animated.View
+      {/* 2. SMOOTH GRADIENT OVERLAY */}
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.9)"]}
+        style={styles.gradient}
         pointerEvents="none"
-        style={[styles.superLikeLabel, { opacity: superLikeOpacity }]}
-      >
-        <Text style={styles.superLikeLabelText}>NEXT</Text>
-      </Animated.View>
+      />
 
-      <Animated.View pointerEvents="none" style={styles.imageIndicators}>
+      {/* CLEAN INDICATORS AT BOTTOM */}
+      <View style={styles.imageIndicators}>
         {profile?.photos?.map((_, index) => (
           <View
             key={index}
             style={[
               styles.indicator,
-              index === currentImageIndex && styles.activeIndicator,
+              index === activeIndex && styles.activeIndicator,
             ]}
           />
         ))}
+      </View>
+
+      {/* 3. PREMIUM CONTENT LAYOUT */}
+      <View style={styles.cardContent}>
+        <View style={styles.nameAgeRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {profile?.fullName}
+          </Text>
+          <Text style={styles.age}>
+            {formatDOB(profile.dateOfBirth, "age")}
+          </Text>
+          {/* NEW: READY PILL POSITIONED NEXT TO AGE */}
+          <View
+            style={[
+              styles.readyPill,
+              {
+                backgroundColor:
+                  profile?.isReady === "Yes"
+                    ? theme.colors.primary
+                    : `${theme.colors.primary}12`,
+              },
+            ]}
+          >
+            <Sparkles size={10} color="white" />
+            <Text style={styles.readyPillText}>
+              {profile?.isReady === "Yes" ? "READY" : "PLANNING"}
+            </Text>
+          </View>
+        </View>
+
+        {/* GLASSMORPHISM BADGES */}
+        <View style={styles.badgeRow}>
+          {profile?.occupation && (
+            <View style={styles.glassBadge}>
+              <Briefcase size={12} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.badgeText}>{profile.occupation}</Text>
+            </View>
+          )}
+          {profile?.fieldOfStudy && (
+            <View style={styles.glassBadge}>
+              <GraduationCap size={12} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.badgeText}>{profile.fieldOfStudy}</Text>
+            </View>
+          )}
+        </View>
+        {/* PARALLEL GLASS BADGES (CITY & STUDY) */}
+        <View style={styles.badgeRow}>
+          {profile?.currentCity && (
+            <View style={styles.glassBadge}>
+              <MapPin size={12} color="white" />
+              <Text style={styles.badgeText}>{profile.currentCity}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* OCCUPATION & BIO */}
+        {profile?.shortBio && (
+          <Text style={styles.bio} numberOfLines={1}>
+            {profile?.shortBio}
+          </Text>
+        )}
+      </View>
+
+      {/* 4. FLOATING ACTION BUTTONS */}
+      <View style={styles.floatingActions}>
+        <ActionButtons
+          onLike={() => handleActionBtnTap("like")}
+          onMessage={() => handleActionBtnTap("message")}
+          onProfileDetails={() => handleActionBtnTap("profileDetails")}
+          liked={profile?.liked}
+        />
+      </View>
+      {/* NEXT LABEL (Swiping Up) */}
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.statusLabel, styles.nextLabel, { opacity: nextOpacity }]}
+      >
+        <Text style={styles.statusLabelText}>NEXT</Text>
       </Animated.View>
 
-      <View style={styles.premiumBanner}>
-        <Text style={styles.premiumText}>Premium</Text>
-      </View>
-      <View style={styles.actionsContainer}>
-        <View style={styles.rightActions}>
-          <ActionButtons
-            onLike={() => handleActionBtnTap("like")}
-            onMessage={() => handleActionBtnTap("message")}
-            onProfileDetails={() => handleActionBtnTap("profileDetails")}
-            liked={profile?.liked}
-          />
-        </View>
-      </View>
+      {/* PREVIOUS LABEL (Swiping Down) */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.statusLabel,
+          styles.prevLabel,
+          { opacity: previousOpacity },
+        ]}
+      >
+        <Text style={styles.statusLabelText}>PREVIOUS</Text>
+      </Animated.View>
     </Animated.View>
   );
 };
@@ -259,188 +298,172 @@ export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       position: "absolute",
-      width: screenWidth - 20,
-      height: screenHeight * 0.75,
-      borderRadius: theme.borderRadius.xl,
+      width: screenWidth - 12 * 2,
+      height: screenHeight * 0.73, // Slightly tighter height
+      borderRadius: 20,
       backgroundColor: theme.colors.card,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 10,
-      elevation: 5,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+      elevation: 10,
+      overflow: "hidden",
     },
-    imageContainer: {
-      width: "100%",
-      height: "100%",
-      borderRadius: theme.borderRadius.xl,
+    imageContainer: { width: "100%", height: "100%" },
+    slideFrame: { width: screenWidth - 12 * 2, height: "100%" },
+    image: { width: "100%", height: "100%" },
+
+    // INDICATORS AT TOP
+    imageIndicators: {
+      position: "absolute",
+      bottom: 12,
+      left: 20,
+      right: 20, // Leave room for actions
+      flexDirection: "row",
+      gap: 4,
     },
-    image: {
-      width: "100%",
-      height: "100%",
-      borderRadius: theme.borderRadius.xl,
+    indicator: {
+      flex: 1,
+      height: 3,
+      backgroundColor: "rgba(255, 255, 255, 0.4)",
+      borderRadius: 2,
     },
+    activeIndicator: { backgroundColor: "white" },
+
     gradient: {
       position: "absolute",
       bottom: 0,
       left: 0,
       right: 0,
-      height: "50%",
-      borderBottomLeftRadius: theme.borderRadius.xl,
-      borderBottomRightRadius: theme.borderRadius.xl,
+      height: "60%", // Taller gradient for better text legibility
     },
+
     cardContent: {
       position: "absolute",
-      bottom: 0,
+      bottom: 10,
       left: 0,
-      right: 55,
-      padding: theme.spacing.lg,
+      right: 60,
+      padding: 20,
     },
-    nameAge: {
+    verifiedPill: {
       flexDirection: "row",
-      alignItems: "baseline",
-      marginBottom: theme.spacing.sm,
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      marginLeft: 10,
+    },
+    verifiedText: {
+      fontSize: 9,
+      fontWeight: "900",
+      color: "white",
+      marginLeft: 3,
+    },
+
+    // GLASSMORPHISM BADGES
+    bio: {
+      color: "rgba(255,255,255,0.8)",
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0.3,
+    },
+
+    floatingActions: {
+      position: "absolute",
+      right: 12,
+      bottom: 20,
+      alignItems: "center",
+      zIndex: 20,
+    },
+
+    statusLabel: {
+      position: "absolute",
+      alignSelf: "center",
+      paddingHorizontal: 25,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 2,
+      zIndex: 100,
+      backgroundColor: "rgba(0,0,0,0.7)", // Premium dark glass feel
+    },
+    nextLabel: {
+      bottom: 120, // Positioned near the bottom for "Up" swipe feedback
+      borderColor: theme.colors.primary,
+    },
+    prevLabel: {
+      top: 120, // Positioned near the top for "Down" swipe feedback
+      borderColor: theme.colors.primary,
+    },
+    statusLabelText: {
+      fontSize: 18,
+      fontWeight: "900",
+      color: "white",
+      letterSpacing: 3, // Wide spacing for pro look
+    },
+    nameAgeRow: {
+      flexDirection: "row",
+      alignItems: "center", // Perfectly centers the Pill with the Text
+      marginBottom: 10,
+      flexWrap: "wrap", // Prevents overflow if name is long
     },
     name: {
-      fontSize: theme.fontSize.xl,
-      fontWeight: "bold",
+      fontSize: 22,
+      fontWeight: "800",
       color: "white",
-      marginRight: theme.spacing.sm,
+      letterSpacing: 0.5,
     },
     age: {
-      fontSize: theme.fontSize.lg,
-      color: "white",
+      fontSize: 20,
+      color: "rgba(255,255,255,0.9)",
+      marginHorizontal: 8,
     },
-    badge: {
-      borderRadius: theme.borderRadius.round,
-      minWidth: 15,
-      height: 15,
-      justifyContent: "center",
+    readyPill: {
+      flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      // No more far-right positioning
+    },
+    readyPillText: {
+      fontSize: 9,
+      fontWeight: "900",
+      color: "white",
+      marginLeft: 4,
+      letterSpacing: 0.5,
+    },
+    badgeRow: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 10,
+    },
+    glassBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "rgba(255,255,255,0.15)",
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.2)",
+    },
+    badgeText: {
+      color: "white",
+      fontSize: 11,
+      fontWeight: "600",
       marginLeft: 6,
     },
     infoRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: theme.spacing.xs,
+      marginBottom: 6,
+      opacity: 0.9,
     },
     infoText: {
       color: "white",
-      fontSize: theme.fontSize.sm,
-      marginLeft: theme.spacing.sm,
-    },
-    bio: {
-      color: "white",
-      fontSize: theme.fontSize.md,
-      marginBottom: theme.spacing.xs,
-      lineHeight: 22,
-    },
-    interests: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      marginTop: theme.spacing.sm,
-    },
-    interestTag: {
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-      borderRadius: theme.borderRadius.round,
-      marginRight: theme.spacing.sm,
-      marginBottom: theme.spacing.xs,
-    },
-    interestText: {
-      color: "white",
-      fontSize: theme.fontSize.xs,
-    },
-    likeLabel: {
-      position: "absolute",
-      top: 50,
-      left: 40,
-      borderWidth: 4,
-      borderColor: theme.colors.success,
-      borderRadius: theme.borderRadius.sm,
-      padding: theme.spacing.sm,
-      transform: [{ rotate: "-30deg" }],
-    },
-    likeLabelText: {
-      fontSize: theme.fontSize.xxl,
-      fontWeight: "bold",
-      color: theme.colors.success,
-    },
-    nopeLabel: {
-      position: "absolute",
-      top: 50,
-      right: 40,
-      borderWidth: 4,
-      borderColor: theme.colors.danger,
-      borderRadius: theme.borderRadius.sm,
-      padding: theme.spacing.sm,
-      transform: [{ rotate: "30deg" }],
-    },
-    nopeLabelText: {
-      fontSize: theme.fontSize.xxl,
-      fontWeight: "bold",
-      color: theme.colors.danger,
-    },
-    superLikeLabel: {
-      position: "absolute",
-      bottom: 100,
-      alignSelf: "center",
-      borderWidth: 4,
-      borderColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.sm,
-      padding: theme.spacing.sm,
-    },
-    superLikeLabelText: {
-      fontSize: theme.fontSize.xl,
-      fontWeight: "bold",
-      color: theme.colors.primary,
-    },
-    imageIndicators: {
-      position: "absolute",
-      bottom: 10,
-      left: theme.spacing.md,
-      right: theme.spacing.md,
-      flexDirection: "row",
-      justifyContent: "center",
-    },
-    indicator: {
-      flex: 1,
-      height: 3,
-      backgroundColor: "rgba(255, 255, 255, 0.5)",
-      marginHorizontal: 2,
-      borderRadius: 1.5,
-    },
-    activeIndicator: {
-      backgroundColor: "white",
-    },
-    premiumBanner: {
-      position: "absolute",
-      top: theme.spacing.md,
-      right: theme.spacing.md,
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-      borderRadius: theme.borderRadius.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 10,
-      elevation: 5,
-    },
-    premiumText: {
-      color: "white",
-      fontSize: theme.fontSize.xs,
-      fontWeight: "bold",
-    },
-    actionsContainer: {
-      position: "absolute",
-      right: theme.spacing.lg,
-      bottom: theme.spacing.lg,
-      alignItems: "flex-end",
-      elevation: 10,
-    },
-    rightActions: {
-      alignItems: "center",
+      fontSize: 13,
+      marginLeft: 8,
+      fontWeight: "500",
     },
   });

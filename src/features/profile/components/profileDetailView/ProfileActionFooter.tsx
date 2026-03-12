@@ -43,7 +43,7 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     footer: {
       position: "absolute",
-      bottom: 0,
+      bottom: 32,
       flexDirection: "row",
       width: "100%",
       padding: 16,

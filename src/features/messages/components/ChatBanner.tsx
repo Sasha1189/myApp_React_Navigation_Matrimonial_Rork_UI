@@ -12,12 +12,12 @@ export const ChatBanner = React.memo(
   ({ item, uid }: { item: IInboxItem; uid: string }) => {
     const { theme } = useAppTheme();
     const styles = useStyles(createStyles);
-
     const navigation = useAppNavigation();
+
     if (!theme) return null;
+
     const handlePress = () => {
       if (!item.otherUser) return;
-
       navigation.navigate("Chat", {
         roomId: item.roomId,
         uid: uid,
@@ -28,28 +28,40 @@ export const ChatBanner = React.memo(
         },
       });
     };
+
     return (
       <TouchableOpacity
-        style={[styles.activityCard, item.u && styles.unreadCard]}
+        style={styles.activityCard} // Removed unreadCard from here for a cleaner look
         onPress={handlePress}
-        activeOpacity={0.7}
+        activeOpacity={0.6}
       >
-        <Image
-          source={
-            item?.otherUser?.photo
-              ? { uri: item.otherUser.photo }
-              : require("../../../../assets/images/profile.png")
-          }
-          style={styles.activityImage}
-          cachePolicy="disk"
-        />
+        <View style={styles.imageWrapper}>
+          <Image
+            source={
+              item?.otherUser?.photo
+                ? { uri: item.otherUser.photo }
+                : require("../../../../assets/images/profile.png")
+            }
+            style={styles.activityImage}
+            contentFit="cover"
+            cachePolicy="disk"
+          />
+          {/* Subtle Online/Status indicator could go here later */}
+        </View>
+
         <View style={styles.activityContent}>
           <View style={styles.header}>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text
+              style={[styles.name, item.u && styles.unreadName]}
+              numberOfLines={1}
+            >
               {item.otherUser.name}
             </Text>
-            <Text style={styles.time}>{formatTime(item.updatedAt)}</Text>
+            <Text style={[styles.time, item.u && styles.unreadTime]}>
+              {formatTime(item.updatedAt)}
+            </Text>
           </View>
+
           <View style={styles.footer}>
             <Text
               style={[styles.msg, item?.u && styles.unreadMsgText]}
@@ -57,14 +69,8 @@ export const ChatBanner = React.memo(
             >
               {item.lastMessage}
             </Text>
-            {item.u && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: theme.colors.primary },
-                ]}
-              />
-            )}
+
+            {item.u && <View style={styles.unreadDot} />}
           </View>
         </View>
       </TouchableOpacity>
@@ -78,42 +84,50 @@ export const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.card,
-      padding: theme.spacing.sm,
-      borderRadius: theme.borderRadius.md,
-      marginBottom: theme.spacing.sm,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border, // Border instead of shadow for RHF look
     },
-    unreadCard: {
-      backgroundColor: theme.colors.primaryLight,
-      borderLeftWidth: 4,
-      borderLeftColor: theme.colors.primary,
+    imageWrapper: {
+      position: "relative",
     },
     activityImage: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
       marginRight: theme.spacing.md,
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     activityContent: {
       flex: 1,
+      justifyContent: "center",
     },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginBottom: theme.spacing.xs,
+      alignItems: "center",
+      marginBottom: 2,
     },
     name: {
       fontSize: theme.fontSize.md,
-      fontWeight: "600",
+      fontWeight: "500", // Standard weight
       color: theme.colors.text,
+      letterSpacing: 0.2,
+    },
+    unreadName: {
+      fontWeight: "700", // Bold only when unread
     },
     time: {
-      fontSize: theme.fontSize.sm,
+      fontSize: theme.fontSize.xs,
       color: theme.colors.textLight,
+      fontWeight: "400",
+    },
+    unreadTime: {
+      color: theme.colors.primary,
+      fontWeight: "600",
     },
     footer: {
       flexDirection: "row",
@@ -121,46 +135,20 @@ export const createStyles = (theme: AppTheme) =>
       alignItems: "center",
     },
     msg: {
+      flex: 1,
       fontSize: theme.fontSize.sm,
       color: theme.colors.textLight,
-      marginRight: theme.spacing.md,
-    },
-    unreadMsg: {
-      color: theme.colors.text,
-      fontWeight: "600",
+      lineHeight: 20,
     },
     unreadMsgText: {
-      color: theme.colors.primary,
-      fontWeight: "700",
-      fontSize: theme.fontSize.sm,
+      color: theme.colors.text, // Darker text for unread
+      fontWeight: "600",
     },
-    badgeContainer: {
-      backgroundColor: theme.colors.accent,
-      borderRadius: theme.borderRadius.md,
-      minWidth: 22,
-      height: 22,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingHorizontal: theme.spacing.xs,
+    unreadDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.colors.primary,
       marginLeft: theme.spacing.sm,
-      // Add a subtle shadow for a "high-end" depth effect
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    badgeText: {
-      color: "#FFFFFF",
-      fontSize: theme.fontSize.xs,
-      fontWeight: "bold",
-    },
-    badge: {
-      borderRadius: theme.borderRadius.round,
-      minWidth: 15,
-      height: 15,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingHorizontal: 6,
     },
   });

@@ -1,3 +1,5 @@
+import React from "react";
+import { Platform } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ChatScreen from "../features/messages/screens/ChatScreen";
 import FilterScreen from "../features/home/screens/FilterScreen";
@@ -13,6 +15,7 @@ import EditContactDetailsScreen from "@/features/profile/components/sections/Con
 import EditEducationCareerScreen from "@/features/profile/components/sections/EducationCareerSection";
 import EditLifestyleScreen from "@/features/profile/components/sections/LifestyleSection";
 import EditPartnerPreferencesScreen from "@/features/profile/components/sections/PartnerPreferencesSection";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -21,6 +24,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppNavigator() {
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   if (!theme) return null;
 
   return (
@@ -35,9 +39,17 @@ export default function AppNavigator() {
         component={ChatScreen}
         options={{
           headerShown: true,
-          title: "Chat",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
+          title: "CHAT", // Uppercase for that RHF Pro look
+          headerStyle: {
+            backgroundColor: theme.colors.card,
+          },
+          headerTitleAlign: "center",
+          headerTintColor: theme.colors.primary, // Back button matches primary brand color
+          headerTitleStyle: {
+            fontSize: theme.fontSize.sm, // Slightly smaller/refined
+            fontWeight: "800",
+            color: theme.colors.text, // Dark text for high contrast on light card
+          },
         }}
       />
       <Stack.Screen

@@ -15,7 +15,7 @@ import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../../types/profile";
 
-const { width: screenWidth } = Dimensions.get("window");
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 interface ProfileCarouselProps {
   profile: Profile;
@@ -26,7 +26,6 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -34,7 +33,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
     const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
     setActiveIndex(index);
   };
-
+  if (!theme) return null;
   return (
     <View style={styles.imageContainer}>
       {profile?.photos && profile?.photos.length > 0 ? (
@@ -48,7 +47,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             renderItem={({ item }) => (
               <View
                 style={{
-                  width: screenWidth - 10 * 2,
+                  width: screenWidth - 12 * 2,
                   height: "100%",
                 }}
               >

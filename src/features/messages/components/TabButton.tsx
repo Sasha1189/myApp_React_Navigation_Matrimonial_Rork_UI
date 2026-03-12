@@ -11,7 +11,6 @@ interface TabButtonProps {
   isActive: boolean;
   onPress: () => void;
 }
-
 export const TabButton: React.FC<TabButtonProps> = ({
   tab,
   label,
@@ -21,16 +20,18 @@ export const TabButton: React.FC<TabButtonProps> = ({
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+
   if (!theme) return null;
 
   return (
     <TouchableOpacity
+      activeOpacity={0.7}
       style={[styles.tabButton, isActive && styles.activeTabButton]}
       onPress={onPress}
     >
       <Icon
-        size={16}
-        color={isActive ? theme.colors.primary : theme.colors.primary}
+        size={14} // Slightly smaller for a more refined look
+        color={isActive ? theme.colors.primary : theme.colors.textLight}
       />
       <Text style={[styles.tabText, isActive && styles.activeTabText]}>
         {label}
@@ -44,22 +45,33 @@ export const createStyles = (theme: AppTheme) =>
     tabButton: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.sm,
-      borderWidth: 2,
+      paddingVertical: 8, // Fixed height for consistency
+      paddingHorizontal: theme.spacing.md,
+      borderWidth: 1, // Thinner border is more modern
       borderColor: theme.colors.border,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.round, // Pill-shaped
+      backgroundColor: theme.colors.card,
+      // Subtle shadow for depth
+      elevation: 1,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
     },
     activeTabButton: {
       borderColor: theme.colors.primary,
-      backgroundColor: theme.colors.primary + "20",
+      backgroundColor: theme.colors.primaryLight, // Using your new theme variable
+      elevation: 0, // Flatten when active
     },
     tabText: {
-      marginLeft: theme.spacing.sm,
-      fontSize: theme.fontSize.sm,
-      color: theme.colors.text,
+      marginLeft: 6,
+      fontSize: theme.fontSize.xs, // Smaller font + spacing = "Pro" look
+      fontWeight: "600",
+      color: theme.colors.textLight,
+      letterSpacing: 0.3,
     },
     activeTabText: {
       color: theme.colors.primary,
+      fontWeight: "700",
     },
   });

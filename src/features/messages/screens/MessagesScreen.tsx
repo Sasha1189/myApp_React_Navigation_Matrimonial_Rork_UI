@@ -21,11 +21,14 @@ import { UserBanner } from "../components/UserBanner";
 import { ChatBanner } from "../components/ChatBanner";
 import { ChatFooter } from "../components/ChatFooter";
 import { ChatFloatingUI } from "@/features/messages/components/ChatFloatingUI";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function MessagesScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { user } = useAuth();
+  const insets = useSafeAreaInsets(); // Add this for safe spacing
 
   const uid = user?.uid;
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
@@ -74,42 +77,50 @@ export default function MessagesScreen() {
   if (!theme) return null;
 
   return (
-    <View style={styles.container} {...panHandlers}>
-      <View style={styles.tabsContainer}>
-        <TabButton
-          tab="chats"
-          label="Chats"
-          icon={MessageCircle}
-          isActive={activeTab === "chats"}
-          onPress={() => triggerTabChange("chats")}
-        />
-        <TabButton
-          tab="sent"
-          label="Sent"
-          icon={Send}
-          isActive={activeTab === "sent"}
-          onPress={() => triggerTabChange("sent")}
-        />
-        <TabButton
-          tab="received"
-          label="Received"
-          icon={Heart}
-          isActive={activeTab === "received"}
-          onPress={() => triggerTabChange("received")}
-        />
+    <View style={styles.container}>
+      {/* 1. Refined Tab Section */}
+      <View style={styles.headerWrapper}>
+        <View style={styles.tabsContainer}>
+          <TabButton
+            tab="chats"
+            label="Chats"
+            icon={MessageCircle}
+            isActive={activeTab === "chats"}
+            onPress={() => triggerTabChange("chats")}
+          />
+          <TabButton
+            tab="sent"
+            label="Sent"
+            icon={Send}
+            isActive={activeTab === "sent"}
+            onPress={() => triggerTabChange("sent")}
+          />
+          <TabButton
+            tab="received"
+            label="Received"
+            icon={Heart}
+            isActive={activeTab === "received"}
+            onPress={() => triggerTabChange("received")}
+          />
+        </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Recent Activity</Text>
+      {/* 2. RHF Style Section Title */}
+      <View style={styles.titleWrapper}>
+        <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <View style={styles.titleUnderline} />
+      </View>
 
       {isLoadingState && currentData.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator color={theme.colors.primary} />
+          <ActivityIndicator color={theme.colors.primary} size="small" />
         </View>
       ) : currentData.length === 0 ? (
         <EmptyState type={activeTab} />
       ) : (
-        <View style={{ flex: 1, marginHorizontal: 10 }}>
+        <View style={{ flex: 1 }}>
           <FlatList
+            {...panHandlers}
             key={activeTab}
             ref={flatListRef}
             data={currentData}
@@ -121,11 +132,8 @@ export default function MessagesScreen() {
                 <UserBanner item={item} type={activeTab} />
               )
             }
-            initialNumToRender={8}
-            maxToRenderPerBatch={10}
-            windowSize={5}
-            removeClippedSubviews={true}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
             ListFooterComponent={
               activeTab === "chats" ? (
                 <ChatFooter
@@ -134,7 +142,9 @@ export default function MessagesScreen() {
                   onLoadMore={loadMore}
                   mode="inbox"
                 />
-              ) : null
+              ) : (
+                <View style={{ height: 40 }} />
+              )
             }
           />
           {activeTab === "chats" && (
@@ -156,47 +166,46 @@ export const createStyles = (theme: AppTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      paddingBottom: theme.spacing.xl,
+    },
+    headerWrapper: {
+      backgroundColor: theme.colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      paddingTop: theme.spacing.sm,
+    },
+    tabsContainer: {
+      flexDirection: "row",
+      paddingHorizontal: theme.spacing.md,
+      paddingBottom: theme.spacing.sm,
+      gap: theme.spacing.xs,
+    },
+    titleWrapper: {
+      paddingHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSize.xs, // Small and sophisticated
+      fontWeight: "800",
+      color: theme.colors.textLight,
+      textTransform: "uppercase",
+      letterSpacing: 1.5,
+    },
+    titleUnderline: {
+      height: 2,
+      width: 24,
+      backgroundColor: theme.colors.primary,
+      marginTop: 4,
+      borderRadius: 1,
+    },
+    listContent: {
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: 120, // Space for floating buttons/tabs
     },
     center: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-    },
-    tabsContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      backgroundColor: theme.colors.background,
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-    },
-    activityContainer: {
-      paddingHorizontal: theme.spacing.md,
-    },
-    sectionTitle: {
-      fontSize: theme.fontSize.lg,
-      fontWeight: "bold",
-      color: theme.colors.text,
-      marginHorizontal: theme.spacing.md,
-      marginTop: theme.spacing.lg,
-      marginBottom: theme.spacing.md,
-    },
-    footerContainer: {
-      paddingVertical: theme.spacing.md,
-      alignItems: "center",
-    },
-    noMoreText: {
-      color: theme.colors.textLight,
-      fontSize: theme.fontSize.sm,
-    },
-    loadMoreBtn: {
-      marginTop: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: theme.colors.primary,
     },
   });

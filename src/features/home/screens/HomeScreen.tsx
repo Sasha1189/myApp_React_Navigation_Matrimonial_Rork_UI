@@ -56,6 +56,8 @@ export default function HomeScreen() {
 
   const { profiles, currentIndex, updateIndex } = feed;
   const currentProfile = profiles[currentIndex];
+  const nextProfile = profiles[currentIndex + 1];
+  const nextImageUrl = nextProfile?.photos?.[0]?.downloadURL || null;
 
   const handleSwipe = (direction: "up" | "down") => {
     if (direction === "up") {
@@ -93,6 +95,7 @@ export default function HomeScreen() {
               key={currentProfile.uid}
               profile={currentProfile}
               currentIndex={currentIndex}
+              nextImageUrl={nextImageUrl}
               onSwipeUp={() => handleSwipe("up")}
               onSwipeDown={() => handleSwipe("down")}
               isTopCard={true}
@@ -115,7 +118,7 @@ export const createStyles = (theme: AppTheme) =>
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 10,
+      paddingHorizontal: 12,
     },
     centerContainer: {
       flex: 1,

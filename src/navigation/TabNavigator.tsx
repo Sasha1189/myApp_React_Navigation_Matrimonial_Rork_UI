@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, Platform } from "react-native";
 import {
   Heart,
   Settings2,
@@ -16,131 +16,130 @@ import { useAppNavigation } from "./hooks";
 import HomeScreen from "../features/home/screens/HomeScreen";
 import MessagesScreen from "../features/messages/screens/MessagesScreen";
 import ProfileScreen from "../features/profile/screens/ProfileScreen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function TabNavigator() {
   const { theme } = useAppTheme();
+  const navigation = useAppNavigation();
+  const insets = useSafeAreaInsets();
+
   if (!theme) return null;
 
-  const navigation = useAppNavigation();
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
         headerShown: true,
-        headerStyle: { backgroundColor: theme.colors.primary },
-        headerTintColor: "white",
-
+        // RHF Aesthetic: White/Clean headers instead of solid colors
+        headerStyle: {
+          backgroundColor: theme.colors.card,
+          elevation: 0, // Remove shadow for flat look
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.colors.border,
+        },
         headerTitleAlign: "center",
         headerTitleStyle: {
-          fontSize: 24,
-          alignItems: "center",
-          fontWeight: "bold",
-          color: theme.colors.background,
-          letterSpacing: 2,
+          fontSize: theme.fontSize.sm,
+          fontWeight: "800",
+          color: theme.colors.text,
+          textTransform: "uppercase", // RHF style
+          letterSpacing: 1.5,
         },
-
+        tabBarStyle: {
+          backgroundColor: theme.colors.card,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.border,
+          height:
+            Platform.OS === "ios"
+              ? 60 + insets.bottom // iOS Home Indicator
+              : 64 + (insets.bottom > 0 ? insets.bottom : 0), // Android Buttons/Gestures
+          paddingBottom: insets.bottom > 0 ? insets.bottom : theme.spacing.sm,
+        },
         tabBarShowLabel: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textLight,
-
-        tabBarItemStyle: {
-          paddingVertical: theme.spacing.sm,
-        },
       }}
     >
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => <User size={30} color={color} />,
-          headerRight: () => (
-            <TouchableOpacity
-              style={{
-                backgroundColor: "rgba(255,255,255,0.12)",
-                padding: theme.spacing.sm,
-                borderRadius: theme.borderRadius.md,
-                marginHorizontal: theme.spacing.lg,
-              }}
-              onPress={() => navigation.navigate("Settings")}
-            >
-              <Settings size={24} color="white" />
-            </TouchableOpacity>
-          ),
-        }}
-      />
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
-          title: "LONARI",
-          tabBarIcon: ({ color }) => <Heart size={30} color={color} />,
-          headerRight: () => (
-            <View style={{ flexDirection: "row", marginRight: 12 }}>
-              <TouchableOpacity
-                style={{ marginHorizontal: 8 }}
-                onPress={() => navigation.navigate("Search")}
-              >
-                <Search size={20} color={theme.colors.background} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ marginHorizontal: 8 }}
-                onPress={() => navigation.navigate("Filter")}
-              >
-                <Settings2 size={20} color={theme.colors.background} />
-              </TouchableOpacity>
-            </View>
-          ),
+          title: "Lonari",
+          tabBarIcon: ({ color }) => <Heart size={26} color={color} />,
           headerLeft: () => (
-            <View
-              style={{
-                // 1. SHADOW WRAPPER: Holds the elevation/shadow
-                width: 50,
-                height: 50,
-                marginLeft: 15,
-                borderRadius: 25,
-                backgroundColor: "transparent",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4.65,
-                elevation: 8, // Crucial for Android
-              }}
-            >
+            <View style={{ marginLeft: theme.spacing.md }}>
               <View
                 style={{
-                  flex: 1,
-                  borderRadius: 25,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 18,
+                  backgroundColor: theme.colors.primaryLight,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
                   overflow: "hidden",
-                  backgroundColor: theme.colors.background, // Light lavender/gray background
-                  borderWidth: 2,
-                  borderColor: "rgba(255,255,255,0.4)", // White glass-effect border
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <Image
                   source={require("../../assets/icon.png")}
-                  style={{
-                    width: "200%",
-                    height: "200%",
-                  }}
+                  style={{ width: "200%", height: "200%" }}
                   contentFit="contain"
-                  cachePolicy={"memory-disk"}
+                  cachePolicy={"disk"}
                 />
               </View>
             </View>
           ),
+          headerRight: () => (
+            <View
+              style={{ flexDirection: "row", marginRight: theme.spacing.md }}
+            >
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Search")}
+                style={{ padding: 8 }}
+              >
+                <Search size={22} color={theme.colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Filter")}
+                style={{ padding: 8 }}
+              >
+                <Settings2 size={22} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+          ),
         }}
       />
+
       <Tab.Screen
         name="Messages"
         component={MessagesScreen}
         options={{
           title: "Messages",
-          tabBarIcon: ({ color }) => <MessageCircle size={30} color={color} />,
+          tabBarIcon: ({ color }) => <MessageCircle size={26} color={color} />,
+        }}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => <User size={26} color={color} />,
+          headerRight: () => (
+            <TouchableOpacity
+              style={{
+                marginRight: theme.spacing.md,
+                padding: 8,
+              }}
+              onPress={() => navigation.navigate("Settings")}
+            >
+              <Settings size={22} color={theme.colors.text} />
+            </TouchableOpacity>
+          ),
         }}
       />
     </Tab.Navigator>
