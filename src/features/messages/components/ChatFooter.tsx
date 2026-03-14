@@ -8,6 +8,7 @@ import {
 import { AppTheme } from "@/theme/theme";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
+import { useTranslation } from "react-i18next";
 
 export const ChatFooter = ({
   hasMore,
@@ -17,6 +18,7 @@ export const ChatFooter = ({
 }: any) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles); // Hooks are safe here at the top!
+  const { t } = useTranslation();
 
   if (!hasMore && !isLoadingMore) return null;
 
@@ -27,7 +29,9 @@ export const ChatFooter = ({
       ) : (
         <TouchableOpacity onPress={onLoadMore} style={styles.loadBtn}>
           <Text style={{ color: theme.colors.primary, fontWeight: "bold" }}>
-            {mode === "inbox" ? "Load Older" : "Load Earlier"}
+            {mode === "inbox"
+              ? t("chat.footer.loadOlder")
+              : t("chat.footer.loadEarlier")}
           </Text>
         </TouchableOpacity>
       )}

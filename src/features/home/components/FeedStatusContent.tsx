@@ -1,5 +1,6 @@
 import { FeedStatusCard, FeedPreviousProfiles } from "./FeedStatusCard";
 import { FeedHookResult } from "../type/type";
+import { useTranslation } from "react-i18next";
 
 export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
   const {
@@ -13,16 +14,17 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
     refetch,
     updateIndex,
   } = feed;
+  const { t } = useTranslation();
 
   // 1. Error Card
   if (isError) {
     return (
       <FeedStatusCard
         type="error"
-        title="Oops!"
-        message={error?.message || "Something went wrong"}
+        title={t("feed.errorTitle")}
+        message={error?.message || t("feed.errorMessage")}
         onAction={refetch}
-        actionText="Retry"
+        actionText={t("feed.retry")}
       />
     );
   }
@@ -37,10 +39,10 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
       <>
         <FeedStatusCard
           type="empty"
-          title="End of the line"
-          message="You've swiped through everyone"
+          title={t("feed.endTitle")}
+          message={t("feed.endMessage")}
           onAction={resetFeed}
-          actionText="Start Over"
+          actionText={t("feed.startOver")}
         />
         {currentIndex > 0 && (
           <FeedPreviousProfiles
@@ -57,8 +59,8 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
     return (
       <FeedStatusCard
         type="loading"
-        title="Loading..."
-        message="Loading profiles for you..."
+        title={t("feed.loadingTitle")}
+        message={t("feed.loadingMessage")}
       />
     );
   }
@@ -67,10 +69,10 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
   return (
     <FeedStatusCard
       type="empty"
-      title={"No profiles found"}
-      message={"Try adjusting your filters to see more people."}
+      title={t("feed.emptyTitle")}
+      message={t("feed.emptyMessage")}
       onAction={resetFeed}
-      actionText={"Reload Feed"}
+      actionText={t("feed.reload")}
     />
   );
 }

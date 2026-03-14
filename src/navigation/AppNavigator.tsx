@@ -8,7 +8,7 @@ import EditProfileScreen from "../features/profile/screens/EditProfileScreen";
 import ManagePhotosScreen from "../features/profile/screens/ManagePhotosScreen";
 import UserDetailsScreen from "../features/profile/screens/UserDetailsScreen";
 import SettingsScreen from "../features/settings/screens/SettingsScreen";
-import SubscriptionScreen from "../features/subscription/screens/SubscriptionScreen";
+import UpgradeScreen from "../features/subscription/screens/UpgradeScreen";
 import EditAboutMeScreen from "@/features/profile/components/sections/EditAboutMeScreen";
 import EditPersonalInfoScreen from "@/features/profile/components/sections/PersonalInfoSection";
 import EditContactDetailsScreen from "@/features/profile/components/sections/ContactDetailsSection";
@@ -103,11 +103,11 @@ export default function AppNavigator() {
         }}
       />
       <Stack.Screen
-        name="Subscription"
-        component={SubscriptionScreen}
+        name="Upgrade"
+        component={UpgradeScreen}
         options={{
           headerShown: true,
-          title: "Subscription",
+          title: "Upgrade Plan",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}

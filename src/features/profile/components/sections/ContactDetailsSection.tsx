@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import { Phone, MapPin, UserPlus } from "lucide-react-native";
@@ -8,6 +8,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
+import { useTranslation } from "react-i18next";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
@@ -22,9 +23,15 @@ import {
 export default function EditContactDetailsScreen({ navigation }: any) {
   const { profile, updateProfile } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
 
   // Find config for "contact" section
   const config = SECTION_CONFIG.find((s) => s.id === "contact")!;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("details.sections.contact"),
+    });
+  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,
@@ -54,10 +61,10 @@ export default function EditContactDetailsScreen({ navigation }: any) {
           name="mobileNumber"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Mobile Number"
+              label={t("details.labels.mobile")}
               value={value}
               onChangeText={onChange}
-              placeholder="Enter mobile number"
+              placeholder={t("details.placeholders.mobile")}
               keyboardType="phone-pad"
               icon={Phone}
               required
@@ -73,9 +80,9 @@ export default function EditContactDetailsScreen({ navigation }: any) {
           name="currentCity"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Current City"
+              label={t("details.labels.currentCity")}
               value={value}
-              placeholder="Select your city"
+              placeholder={t("details.placeholders.city")}
               options={districtOptions}
               onSelect={onChange}
               icon={MapPin}
@@ -90,9 +97,9 @@ export default function EditContactDetailsScreen({ navigation }: any) {
           name="nativePlace"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Hometown"
+              label={t("details.labels.nativePlace")}
               value={value}
-              placeholder="Select your hometown"
+              placeholder={t("details.placeholders.hometown")}
               options={districtOptions}
               onSelect={onChange}
               icon={MapPin}
@@ -107,9 +114,9 @@ export default function EditContactDetailsScreen({ navigation }: any) {
           name="preferredContact"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Preferred Contact"
+              label={t("details.labels.contactPref")}
               value={value}
-              placeholder="How should we reach you?"
+              placeholder={t("details.placeholders.contactMethod")}
               options={preferredContactOptions}
               onSelect={onChange}
               icon={Phone}
@@ -124,9 +131,9 @@ export default function EditContactDetailsScreen({ navigation }: any) {
           name="profileCreatedBy"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Profile Created By"
+              label={t("details.labels.createdBy")}
               value={value}
-              placeholder="Who is managing this profile?"
+              placeholder={t("details.placeholders.managedBy")}
               options={profileCreatedByOptions}
               onSelect={onChange}
               icon={UserPlus}

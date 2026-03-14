@@ -17,6 +17,7 @@ import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../types/profile";
 import { createUserOnBackend } from "../apis/userApi";
+import { useTranslation } from "react-i18next";
 
 interface GenderModalProps {
   visible: boolean;
@@ -37,6 +38,7 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
   const [gender, setGender] = useState<Gender>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [retry, setRetry] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   const scaleValue = useRef(new Animated.Value(1)).current;
   const onPressIn = () => {
@@ -74,7 +76,10 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
   const updateFirebaseUser = async (): Promise<void> => {
     const currentUser = auth.currentUser;
     if (!gender) {
-      Alert.alert("Select Gender", "Please select a gender before updating.");
+      Alert.alert(
+        t("genderModal.selectGender"),
+        t("genderModal.selectGenderMsg"),
+      );
       return;
     }
     setLoading(true);
@@ -92,16 +97,13 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
         setUser(updatedUser);
         await createUser(updatedUser);
 
-        Alert.alert(
-          "Done!",
-          "Gender updated successfully. Next Add your profile.",
-        );
+        Alert.alert(t("genderModal.done"), t("genderModal.successMsg"));
         onClose();
       }
     } catch (error) {
       console.error("Update failed:", error);
       setRetry(true);
-      Alert.alert("Error", "Could not update profile. Please try again.");
+      Alert.alert(t("common.error"), t("genderModal.updateError"));
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalBackdrop}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalText}>Please select your gender</Text>
+          <Text style={styles.modalText}>{t("genderModal.title")}</Text>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Pressable
               style={[
@@ -121,7 +123,9 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
               onPress={() => setGender("Male")}
               disabled={loading}
             >
-              <Text style={styles.modalButtonText}>Male</Text>
+              <Text style={styles.modalButtonText}>
+                {t("genderModal.male")}
+              </Text>
             </Pressable>
             <Pressable
               style={[
@@ -131,7 +135,9 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
               onPress={() => setGender("Female")}
               disabled={loading}
             >
-              <Text style={styles.modalButtonText}>Female</Text>
+              <Text style={styles.modalButtonText}>
+                {t("genderModal.female")}
+              </Text>
             </Pressable>
           </View>
           <AnimatedPressable
@@ -149,7 +155,7 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
               <Text style={styles.modalButtonText}>
-                {retry ? "Try Again" : "Update"}
+                {retry ? t("genderModal.retry") : t("genderModal.update")}
               </Text>
             )}
           </AnimatedPressable>

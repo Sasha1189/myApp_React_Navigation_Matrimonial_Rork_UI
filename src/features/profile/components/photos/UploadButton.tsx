@@ -11,6 +11,7 @@ import { CheckCircle2 } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   loading: boolean;
@@ -29,6 +30,7 @@ export default function UploadButton({
 }: Props) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { t } = useTranslation();
 
   const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -67,20 +69,22 @@ export default function UploadButton({
           // 1. Success State: Lucide Check Icon
           <Animated.View style={styles.row}>
             <CheckCircle2 size={20} color="white" strokeWidth={3} />
-            <Text style={styles.buttonText}> Photos Saved</Text>
+            <Text style={styles.buttonText}> {t("photos.button.saved")}</Text>
           </Animated.View>
         ) : loading ? (
           // 2. Loading State: Spinner + Progress %
           <View style={styles.row}>
             <ActivityIndicator size="small" color="white" />
             <Text style={styles.buttonText}>
-              {` Uploading ${Math.round(progress)}%`}
+              {t("photos.button.uploading", { percent: Math.round(progress) })}
             </Text>
           </View>
         ) : (
           // 3. Idle State
           <Text style={styles.buttonText}>
-            {isEditing ? "Save Photos" : "No Changes"}
+            {isEditing
+              ? t("photos.button.saveChanges")
+              : t("photos.button.noChanges")}
           </Text>
         )}
       </View>

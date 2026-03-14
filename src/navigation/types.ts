@@ -5,6 +5,7 @@ import { Profile } from "src/types/profile";
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   App: NavigatorScreenParams<AppStackParamList>;
+  Paywall: undefined;
 };
 
 export type AuthStackParamList = {
@@ -39,7 +40,7 @@ export type AppStackParamList = {
   Settings: undefined;
   HelpSupport: undefined;
   SafetyPrivacy: undefined;
-  Subscription: undefined;
+  Upgrade: undefined;
   EditAboutMe: undefined;
   EditPersonal: undefined;
   EditContact: undefined;
@@ -56,9 +57,6 @@ export type TabParamList = {
   Profile: undefined;
 };
 
-//
-// ✅ Convenience Types
-//
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
   import("@react-navigation/stack").StackScreenProps<RootStackParamList, T>;
 

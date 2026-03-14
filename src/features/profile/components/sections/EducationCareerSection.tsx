@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
@@ -13,6 +13,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
+import { useTranslation } from "react-i18next";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
@@ -29,9 +30,15 @@ import {
 export default function EditEducationCareerScreen({ navigation }: any) {
   const { profile, updateProfile } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
 
   // Find config for "education" section
   const config = SECTION_CONFIG.find((s) => s.id === "education")!;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("details.sections.education"),
+    });
+  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,
@@ -61,9 +68,9 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="highestQualification"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Highest Qualification"
+              label={t("details.labels.qualification")}
               value={value}
-              placeholder="e.g. Master's, Bachelor's"
+              placeholder={t("details.placeholders.qualification")}
               options={highestQualification}
               onSelect={onChange}
               icon={GraduationCap}
@@ -79,9 +86,9 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="fieldOfStudy"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Field of Study"
+              label={t("details.labels.studyField")}
               value={value}
-              placeholder="e.g. Engineering, Commerce"
+              placeholder={t("details.placeholders.studyField")}
               options={studyFieldOptions}
               onSelect={onChange}
               icon={GraduationCap}
@@ -96,9 +103,9 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="occupation"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Current Occupation"
+              label={t("details.labels.occupation")}
               value={value}
-              placeholder="Select your occupation"
+              placeholder={t("details.placeholders.occupation")}
               options={occupationOptions}
               onSelect={onChange}
               icon={Briefcase}
@@ -113,9 +120,9 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="industry"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Industry"
+              label={t("details.labels.industry")}
               value={value}
-              placeholder="e.g. IT, Healthcare"
+              placeholder={t("details.placeholders.industry")}
               options={industryOptions}
               onSelect={onChange}
               icon={Briefcase}
@@ -130,10 +137,10 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="jobTitle"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Job Title"
+              label={t("details.labels.jobTitle")}
               value={value ?? ""}
               onChangeText={onChange}
-              placeholder="e.g. Senior Software Engineer"
+              placeholder={t("details.placeholders.jobTitle")}
               icon={Briefcase}
               editable={true}
             />
@@ -146,10 +153,10 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="companyName"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Company Name"
+              label={t("details.labels.company")}
               value={value ?? ""}
               onChangeText={onChange}
-              placeholder="Enter your current company"
+              placeholder={t("details.placeholders.company")}
               icon={Building2}
               editable={true}
             />
@@ -162,10 +169,10 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="workLocation"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Work Location"
+              label={t("details.labels.workCity")}
               value={value ?? ""}
               onChangeText={onChange}
-              placeholder="City, State"
+              placeholder={t("details.placeholders.workLocation")}
               icon={MapPin}
               editable={true}
             />
@@ -178,9 +185,9 @@ export default function EditEducationCareerScreen({ navigation }: any) {
           name="annualIncome"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Annual Income"
+              label={t("details.labels.income")}
               value={value}
-              placeholder="Select income range"
+              placeholder={t("details.placeholders.income")}
               options={annualIncomeOptions}
               onSelect={onChange}
               icon={Briefcase}

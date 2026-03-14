@@ -17,10 +17,13 @@ import { useBlockUnblockUser } from "../hooks/useBlockUnblockUser";
 import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
 import SettingRow from "../components/SettingRow";
 import BlockedUsersModal from "../components/BlockedUsersModal";
+import { LanguageSelector } from "../../../components/LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
   const { profile } = useAuth();
   const { theme, mode, toggleTheme } = useAppTheme();
+  const { t } = useTranslation();
   const styles = useStyles(createStyles);
   const [blockedOpen, setBlockedOpen] = useState(false);
   const isDark = mode === "dark";
@@ -36,76 +39,83 @@ export default function SettingsScreen() {
     <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.sectionLabel}>Appearance</Text>
+          <Text style={styles.sectionLabel}>{t("settings.language")}</Text>
+          <View style={styles.card}>
+            <LanguageSelector />
+          </View>
+
+          <Text style={styles.sectionLabel}>{t("settings.appearance")}</Text>
           <View style={styles.card}>
             <SettingRow
               type="toggle"
               icon={Moon}
-              title="Dark Mode"
-              subtitle={isDark ? "Dark theme active" : "Use dark theme"}
+              title={t("settings.darkMode")}
+              subtitle={
+                isDark ? t("settings.darkActive") : t("settings.useDark")
+              }
               value={isDark}
               onToggle={toggleTheme}
             />
           </View>
 
-          <Text style={styles.sectionLabel}>Safety & Support</Text>
+          <Text style={styles.sectionLabel}>{t("settings.safety")}</Text>
           <View style={styles.card}>
             <SettingRow
               icon={UserX}
-              title="Blocked Users"
-              subtitle="Manage users you blocked"
+              title={t("settings.blocked")}
+              subtitle={t("settings.manageBlocked")}
               onPress={() => setBlockedOpen(true)}
             />
             <View style={styles.divider} />
             <SettingRow
               icon={Flag}
-              title="Report a User"
-              subtitle="Report inappropriate behavior"
+              title={t("settings.reportUser")}
+              subtitle={t("settings.reportUserDesc")}
               onPress={() => composeWhatsApp("report-user")}
             />
           </View>
 
-          <Text style={styles.sectionLabel}>Feedback</Text>
+          <Text style={styles.sectionLabel}>{t("settings.feedback")}</Text>
           <View style={styles.card}>
             <SettingRow
               icon={Bug}
-              title="Report a Bug"
-              subtitle="Tell us about a technical issue"
+              title={t("settings.reportBug")}
+              subtitle={t("settings.reportBugDesc")}
               onPress={() => composeWhatsApp("bug")}
             />
             <View style={styles.divider} />
             <SettingRow
               icon={Star}
-              title="Request a Feature"
-              subtitle="Suggest new ideas"
+              title={t("settings.requestFeature")}
+              subtitle={t("settings.requestFeatureDesc")}
               onPress={() => composeWhatsApp("feature")}
             />
           </View>
 
-          <Text style={styles.sectionLabel}>Legal</Text>
+          <Text style={styles.sectionLabel}>{t("settings.legal")}</Text>
           <View style={styles.card}>
             <SettingRow
               icon={FileText}
-              title="Terms & Conditions"
-              subtitle="View our service terms"
+              title={t("settings.terms")}
+              subtitle={t("settings.termsDesc")}
               onPress={() => openLink("https://sasha1189.github.io", "Terms")}
             />
             <View style={styles.divider} />
             <SettingRow
               icon={FileText}
-              title="Privacy Policy"
-              subtitle="How we handle your data"
+              title={t("settings.privacy")}
+              subtitle={t("settings.privacyDesc")}
               onPress={() => openLink("https://sasha1189.github.io", "Privacy")}
             />
           </View>
 
-          <Text style={styles.sectionLabel}>Account</Text>
+          <Text style={styles.sectionLabel}>{t("settings.account")}</Text>
           <View style={styles.card}>
             <SettingRow
               type="danger"
               icon={LogOut}
-              title="Log Out"
-              subtitle="Sign out securely"
+              title={t("settings.logout")}
+              subtitle={t("settings.signOutDesc")}
               onPress={handleLogout}
             />
           </View>

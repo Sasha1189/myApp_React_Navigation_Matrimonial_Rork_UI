@@ -17,12 +17,16 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { getAuth, signInWithPhoneNumber } from "@react-native-firebase/auth";
+import { LanguageSelector } from "../../../components/LanguageSelector";
+import { useTranslation } from "react-i18next";
+import i18n from "../../../i18n/i18n";
 
 const { width, height } = Dimensions.get("window");
 
 export default function PhoneSignInScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { t } = useTranslation();
   if (!theme) return null;
 
   const [phoneNumber, setPhoneNumber] = useState<string>("");
@@ -74,6 +78,9 @@ export default function PhoneSignInScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.topBar}>
+          <LanguageSelector />
+        </View>
         <View style={styles.content}>
           <View style={styles.header}>
             <View style={styles.logoContainer}>
@@ -83,11 +90,11 @@ export default function PhoneSignInScreen() {
                 fill={theme.colors.accent}
               />
               <Text style={styles.appName}>LoveConnect</Text>
+              <Text>{i18n.language}</Text>
+              <Text>{t("common.loading")}</Text>
             </View>
-            <Text style={styles.title}>Enter your phone number</Text>
-            <Text style={styles.subtitle}>
-              We'll send you a verification code to confirm your number
-            </Text>
+            <Text style={styles.title}>{t("auth.enterPhone")}</Text>
+            <Text style={styles.subtitle}>{t("auth.phoneSubtitle")}</Text>
           </View>
 
           <View style={styles.formContainer}>
@@ -118,10 +125,10 @@ export default function PhoneSignInScreen() {
               disabled={!phoneNumber.trim() || isLoading}
             >
               {isLoading ? (
-                <Text style={styles.continueText}>Sending...</Text>
+                <Text style={styles.continueText}>{t("auth.sending")}</Text>
               ) : (
                 <>
-                  <Text style={styles.continueText}>Continue</Text>
+                  <Text style={styles.continueText}>{t("auth.continue")}</Text>
                   <ArrowRight size={20} color="white" />
                 </>
               )}
@@ -129,10 +136,7 @@ export default function PhoneSignInScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.termsText}>
-              By continuing, you agree to receive SMS messages from LoveConnect.
-              Message and data rates may apply.
-            </Text>
+            <Text style={styles.termsText}>{t("auth.terms")}</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -149,6 +153,10 @@ export const createStyles = (theme: AppTheme) =>
     safeArea: {
       flex: 1,
     },
+    topBar: {
+      alignItems: "flex-end",
+      paddingHorizontal: theme.spacing.md,
+    },
     content: {
       flex: 1,
       paddingHorizontal: theme.spacing.lg,
@@ -156,7 +164,7 @@ export const createStyles = (theme: AppTheme) =>
     },
     header: {
       alignItems: "center",
-      marginTop: height * 0.1,
+      marginTop: height * 0.05,
     },
     logoContainer: {
       flexDirection: "row",

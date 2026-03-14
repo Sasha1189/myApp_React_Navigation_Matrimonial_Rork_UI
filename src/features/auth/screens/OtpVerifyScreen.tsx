@@ -21,6 +21,7 @@ import {
   signInWithPhoneNumber,
   FirebaseAuthTypes,
 } from "@react-native-firebase/auth";
+import { useTranslation } from "react-i18next";
 type OTPVerifyProps = {
   route: {
     params: {
@@ -40,6 +41,7 @@ const RESEND_TIME = 60;
 const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const { t } = useTranslation();
   if (!theme) return null;
 
   const { confirmation: initialConfirmation, phone } = route.params;
@@ -116,7 +118,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       const newConfirmation = await signInWithPhoneNumber(auth, phone);
 
       setConfirmation(newConfirmation);
-      setResendMessage("Code sent again!");
+      setResendMessage(t("auth.otpSent"));
       setTimeout(() => setResendMessage(""), 4000);
     } catch (err: any) {
       handleError(err);
@@ -127,13 +129,13 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
 
   const handleError = (error: any) => {
     // setError(message);
-    let message = "Something went wrong. Please try again.";
+    let message = t("auth.genericError");
 
     // Native SDK error codes are slightly different but similar
     if (error?.code === "auth/invalid-verification-code") {
-      message = "Invalid OTP. Please try again.";
+      message = t("auth.invalidOtp");
     } else if (error?.code === "auth/session-expired") {
-      message = "OTP expired. Please resend the code.";
+      message = t("auth.otpExpired");
     } else {
       message = error.message;
     }
@@ -143,7 +145,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
     if (Platform.OS === "android") {
       ToastAndroid.show(message, ToastAndroid.SHORT);
     } else {
-      Alert.alert("Error", message);
+      Alert.alert(t("common.error"), message);
     }
   };
 
@@ -167,12 +169,12 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text>Back</Text>
+          <Text>{t("common.back")}</Text>
         </TouchableOpacity>
       )}
 
       <Text style={styles.timer}>{formatTime(timer)}</Text>
-      <Text style={styles.desc}>Enter the 6-digit OTP we sent to {phone}</Text>
+      <Text style={styles.desc}>{t("auth.enterOtp", { phone })}</Text>
 
       {resendMessage ? (
         <Text style={styles.feedbackText}>{resendMessage}</Text>
@@ -196,7 +198,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
         onPress={handleResend}
         style={[styles.resendBtn, { opacity: timer > 0 ? 0.4 : 1 }]}
       >
-        <Text style={styles.resendText}>Resend OTP</Text>
+        <Text style={styles.resendText}>{t("auth.resendOtp")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -207,7 +209,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
         disabled={code.length !== CODE_LENGTH || loading}
       >
         {!loading ? (
-          <Text style={styles.doneText}>Verifying…</Text>
+          <Text style={styles.doneText}>{t("auth.verifying")}</Text>
         ) : (
           <ActivityIndicator size="large" color="#fff" />
         )}

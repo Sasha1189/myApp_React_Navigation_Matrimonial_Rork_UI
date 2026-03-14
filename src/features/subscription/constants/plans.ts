@@ -1,0 +1,58 @@
+// src/features/subscription/constants/plans.ts
+export const SUBSCRIPTION_PLANS = [
+  {
+    id: "basic",
+    name: "Basic",
+    price: "Free",
+    period: "Forever",
+    features: [
+      { text: "Create profile", included: true },
+      { text: "Browse profiles", included: true },
+      { text: "Limited likes per day", included: true },
+      { text: "Basic matching", included: true },
+      { text: "See who liked you", included: false },
+      { text: "Create profile", included: true },
+      { text: "Browse profiles", included: true },
+      { text: "Limited likes per day", included: true },
+      { text: "Basic matching", included: true },
+      { text: "See who liked you", included: false },
+      { text: "Unlimited likes", included: false },
+      { text: "Super likes", included: false },
+      { text: "Boost profile", included: false },
+      { text: "Advanced filters", included: false },
+      { text: "Read receipts", included: false },
+    ],
+  },
+  {
+    id: "trial",
+    name: "7-Day Trial",
+    price: "₹1",
+    period: "for 7 days",
+    originalPrice: "₹199",
+    discount: "Try Premium",
+    features: [
+      /* ... your trial features */
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "₹499",
+    period: "per month",
+    originalPrice: "₹999",
+    discount: "50% OFF",
+    popular: true,
+    features: [
+      { text: "Everything in Basic", included: true },
+      { text: "See who liked you", included: true },
+      { text: "Unlimited likes", included: true },
+      { text: "Message before matching", included: true },
+      { text: "Advanced filters", included: true },
+      { text: "Read receipts", included: true },
+      { text: "Incognito mode", included: true },
+      { text: "Ad-free experience", included: true },
+      { text: "Profile verification badge", included: true },
+      { text: "Priority support", included: false },
+    ],
+  },
+];

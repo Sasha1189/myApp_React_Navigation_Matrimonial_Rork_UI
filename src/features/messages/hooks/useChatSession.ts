@@ -21,6 +21,7 @@ import {
 } from "@react-native-firebase/database";
 import { IMessage } from "../type/chattype";
 import { formatStatusTime } from "../../../utils/dateUtils";
+import { useTranslation } from "react-i18next";
 
 export function useChatSession(
   roomId: string,
@@ -29,6 +30,7 @@ export function useChatSession(
   otherUser: { uid: string; name?: string; photo?: string },
 ) {
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const { t } = useTranslation();
   const [isLive, setIsLive] = useState(true);
   const [hasNewAtBottom, setHasNewAtBottom] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -316,16 +318,18 @@ export function useChatSession(
   );
 
   const getStatusLabel = useCallback(() => {
-    if (isOtherTyping) return "typing...";
+    if (isOtherTyping) return t("chat.typing");
 
-    if (otherStatus?.state === "online") return "online";
+    if (otherStatus?.state === "online") return t("chat.online");
 
     if (otherStatus?.lastChanged) {
-      return `last seen ${formatStatusTime(otherStatus.lastChanged)}`;
+      return t("chat.lastSeen", {
+        time: formatStatusTime(otherStatus.lastChanged),
+      });
     }
 
     return "";
-  }, [isOtherTyping, otherStatus]);
+  }, [isOtherTyping, otherStatus, t]);
 
   return {
     messages,

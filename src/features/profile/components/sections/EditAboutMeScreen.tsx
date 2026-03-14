@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import {
   View,
   TouchableOpacity,
@@ -22,11 +22,19 @@ import InputField from "../form/InputField";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "@/types/profile";
+import { useTranslation } from "react-i18next";
 
 export default function EditAboutMeScreen({ navigation }: any) {
   const { profile, updateProfile } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
   const config = SECTION_CONFIG.find((s) => s.id === "about")!;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("details.sections.about"),
+    });
+  }, [navigation, t]);
 
   const { control } = useSectionEditor(
     profile,
@@ -59,10 +67,10 @@ export default function EditAboutMeScreen({ navigation }: any) {
             const isLocked = isFieldLocked(profile, "shortBio");
             return (
               <InputField
-                label="Short Bio"
+                label={t("details.labels.shortBio")}
                 value={value}
                 onChangeText={onChange}
-                placeholder="Tell us about yourself.."
+                placeholder={t("details.placeholders.bio")}
                 multiline
                 editable={!isLocked}
                 locked={isLocked}
@@ -77,10 +85,10 @@ export default function EditAboutMeScreen({ navigation }: any) {
           name="aspirations"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Aspirations"
+              label={t("details.labels.aspirations")}
               value={value ?? ""}
               onChangeText={onChange}
-              placeholder="e.g., Build a successful career and a happy family"
+              placeholder={t("details.placeholders.aspirations")}
               multiline
               editable={!isFieldLocked(profile as Profile, "aspirations")}
               icon={Target}
@@ -94,10 +102,10 @@ export default function EditAboutMeScreen({ navigation }: any) {
           name="beliefsValues"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Beliefs & Values"
+              label={t("details.labels.beliefsValues")}
               value={value}
               onChangeText={onChange}
-              placeholder="e.g., Respect, honesty, and compassion"
+              placeholder={t("details.placeholders.beliefs")}
               multiline
               editable={!isFieldLocked(profile as Profile, "beliefsValues")}
               icon={Church}
@@ -111,10 +119,10 @@ export default function EditAboutMeScreen({ navigation }: any) {
           name="strengths"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Strengths"
+              label={t("details.labels.strengths")}
               value={value}
               onChangeText={onChange}
-              placeholder="e.g., Hardworking, empathetic, and a good listener"
+              placeholder={t("details.placeholders.strengths")}
               editable={!isFieldLocked(profile as Profile, "strengths")}
               icon={Zap}
             />
@@ -127,10 +135,10 @@ export default function EditAboutMeScreen({ navigation }: any) {
           name="likesDislikesText"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Likes & Dislikes"
+              label={t("details.labels.likesDislikesText")}
               value={value}
               onChangeText={onChange}
-              placeholder="e.g., Likes: Traveling, Dislikes: Smoking"
+              placeholder={t("details.placeholders.likes")}
               editable={!isFieldLocked(profile as Profile, "likesDislikesText")}
               icon={Heart}
             />
@@ -143,10 +151,10 @@ export default function EditAboutMeScreen({ navigation }: any) {
           name="socialMedia"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Social Media"
+              label={t("details.labels.socialMedia")}
               value={value}
               onChangeText={onChange}
-              placeholder="e.g., https://twitter.com/yourprofile"
+              placeholder={t("details.placeholders.social")}
               editable={!isFieldLocked(profile as Profile, "socialMedia")}
               icon={Link}
             />

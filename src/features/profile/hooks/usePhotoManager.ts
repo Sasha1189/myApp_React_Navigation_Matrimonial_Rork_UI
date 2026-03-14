@@ -13,11 +13,13 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { File, Paths } from "expo-file-system";
 import { Profile, Photo } from "../../../types/profile";
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
   const { user, updateProfile } = useAuth();
+  const { t } = useTranslation();
   const uid = user?.uid;
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
   const [isEditing, setIsEditing] = useState(false);
@@ -36,10 +38,7 @@ export function usePhotoManager(profile: Profile | null) {
   const addPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission required",
-        "Please allow access to your gallery.",
-      );
+      Alert.alert(t("photo.permissionTitle"), t("photo.permissionMsg"));
       return;
     }
 
@@ -66,7 +65,7 @@ export function usePhotoManager(profile: Profile | null) {
       setIsEditing(true);
     } catch (err) {
       console.error("Failed to add photo:", err);
-      Alert.alert("Error", "Could not add image.");
+      Alert.alert(t("photo.errorTitle"), t("photo.addError"));
     }
   };
 
@@ -111,10 +110,10 @@ export function usePhotoManager(profile: Profile | null) {
       });
 
       setPhotos(updated);
-      Alert.alert("Deleted", "Photo removed successfully.");
+      Alert.alert(t("photo.deleteTitle"), t("photo.deleteMsg"));
     } catch (err) {
       console.error("Delete failed:", err);
-      Alert.alert("Error", "Failed to delete photo.");
+      Alert.alert(t("photo.errorTitle"), t("photo.deleteError"));
     }
   };
 
@@ -145,7 +144,7 @@ export function usePhotoManager(profile: Profile | null) {
       });
       setPhotos(updatedPhotos);
       setIsEditing(false);
-      Alert.alert("Success", "Photos updated successfully!");
+      Alert.alert(t("photo.successTitle"), t("photo.updateMsg"));
     } catch (err) {
       console.error("Set primary failed:", err);
     } finally {
@@ -157,7 +156,7 @@ export function usePhotoManager(profile: Profile | null) {
   const uploadPhotos = async () => {
     const pending = photos.filter((p) => !p.downloadURL);
     if (!pending.length) {
-      Alert.alert("No Changes", "Nothing new to upload.");
+      Alert.alert(t("photo.noChangesTitle"), t("photo.noChangesMsg"));
       return;
     }
 
@@ -226,7 +225,7 @@ export function usePhotoManager(profile: Profile | null) {
         setTimeout(() => {
           setSuccess(false);
         }, 3000);
-        Alert.alert("Success", "Photos updated successfully!");
+        Alert.alert(t("photo.successTitle"), t("photo.updateMsg"));
       } catch (dbErr) {
         console.error("Firestore Update Failed. Cleaning storage...", dbErr);
         await Promise.all(
@@ -239,7 +238,7 @@ export function usePhotoManager(profile: Profile | null) {
       setProgress(0);
       setSuccess(false);
       setPhotos(backupPhotos);
-      Alert.alert("Error", "Failed to upload photos.");
+      Alert.alert(t("photo.errorTitle"), t("photo.uploadError"));
     } finally {
       setLoading(false);
     }

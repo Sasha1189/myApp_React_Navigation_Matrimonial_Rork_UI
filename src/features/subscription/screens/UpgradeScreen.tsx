@@ -40,7 +40,7 @@ interface SubscriptionPlan {
   features: PlanFeature[];
 }
 
-export default function SubscriptionScreen() {
+export default function UpgradeScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   if (!theme) return null;

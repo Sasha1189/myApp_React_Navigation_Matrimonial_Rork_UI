@@ -80,6 +80,7 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
       flatListRef.current?.scrollToOffset({ offset: 0 });
     },
     mode: "chat",
+    styles,
   });
 
   useLayoutEffect(() => {
@@ -92,7 +93,6 @@ export default function ChatScreen({ route }: { route: ChatRouteProp }) {
           statusLabel={getStatusLabel()}
           isTyping={isOtherTyping}
           isOnline={otherStatus?.state === "online"}
-          theme={theme}
         />
       ),
     });

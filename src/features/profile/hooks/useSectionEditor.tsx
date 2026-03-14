@@ -10,6 +10,7 @@ import { X, Save } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { isDeepEqual } from "@/utils/deepEqual";
 import { isFieldLocked } from "../components/form/profileValidation";
+import { useTranslation } from "react-i18next";
 
 export function useSectionEditor<T extends FieldValues>(
   profile: T | any,
@@ -20,6 +21,7 @@ export function useSectionEditor<T extends FieldValues>(
   title: string,
 ) {
   const [isSaving, setIsSaving] = useState(false);
+  const { t } = useTranslation();
 
   const {
     control,
@@ -33,10 +35,10 @@ export function useSectionEditor<T extends FieldValues>(
   // Handle Discard Alert
   const handleBack = useCallback(() => {
     if (isDirty) {
-      Alert.alert("Discard Changes?", "You have unsaved changes.", [
-        { text: "Keep Editing", style: "cancel" },
+      Alert.alert(t("editor.discardTitle"), t("editor.discardMsg"), [
+        { text: t("editor.keepEditing"), style: "cancel" },
         {
-          text: "Discard",
+          text: t("editor.discard"),
           style: "destructive",
           onPress: () => navigation.goBack(),
         },
@@ -45,7 +47,7 @@ export function useSectionEditor<T extends FieldValues>(
     }
     navigation.goBack();
     return true;
-  }, [isDirty, navigation]);
+  }, [isDirty, navigation, t]);
 
   // Android Hardware Back
   useFocusEffect(
@@ -79,7 +81,7 @@ export function useSectionEditor<T extends FieldValues>(
       }
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to save");
+      Alert.alert(t("common.error"), err.message || t("editor.saveError"));
     } finally {
       setIsSaving(false);
     }

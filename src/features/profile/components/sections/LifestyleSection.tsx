@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
@@ -15,6 +15,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
+import { useTranslation } from "react-i18next";
 
 import PickerField from "../form/PickerField";
 import MultiSelectField from "../form/MultiSelectField";
@@ -32,8 +33,14 @@ import {
 export default function EditLifestyleScreen({ navigation }: any) {
   const { profile, updateProfile } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
 
   const config = SECTION_CONFIG.find((s) => s.id === "lifestyle")!;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("details.sections.lifestyle"),
+    });
+  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,
@@ -60,9 +67,9 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="dietPreferences"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Dietary Habits"
+              label={t("details.labels.diet")}
               value={value}
-              placeholder="Vegetarian, Non-Veg..."
+              placeholder={t("details.placeholders.diet")}
               options={dietOptions}
               onSelect={onChange}
               icon={Coffee}
@@ -77,9 +84,9 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="smokingHabit"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Smoking"
+              label={t("details.labels.smoking")}
               value={value}
-              placeholder="Select habit"
+              placeholder={t("details.placeholders.habit")}
               options={habitOptions}
               onSelect={onChange}
               icon={Droplets}
@@ -94,9 +101,9 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="drinkingHabit"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Drinking"
+              label={t("details.labels.drinking")}
               value={value}
-              placeholder="Select habit"
+              placeholder={t("details.placeholders.habit")}
               options={habitOptions}
               onSelect={onChange}
               icon={Wine}
@@ -111,9 +118,9 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="exerciseRoutine"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Exercise"
+              label={t("details.labels.exercise")}
               value={value}
-              placeholder="Regular, Sometimes..."
+              placeholder={t("details.placeholders.exercise")}
               options={exerciseOptions}
               onSelect={onChange}
               icon={Activity}
@@ -128,9 +135,9 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="fitnessLevel"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Fitness"
+              label={t("details.labels.fitness")}
               value={value}
-              placeholder="Fit, Average..."
+              placeholder={t("details.placeholders.fitness")}
               options={fitnessOptions}
               onSelect={onChange}
               icon={Heart}
@@ -145,11 +152,11 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="hobbies"
           render={({ field: { onChange, value } }) => (
             <MultiSelectField
-              label="Hobbies & Interests"
+              label={t("details.labels.hobbies")}
               value={Array.isArray(value) ? value : []}
               options={hobbyOptions}
               onChange={onChange}
-              // placeholder="Select multiple hobbies"
+              placeholder={t("details.placeholders.multiHobbies")}
               icon={Sparkles}
               editable={true}
             />
@@ -162,9 +169,9 @@ export default function EditLifestyleScreen({ navigation }: any) {
           name="beliefSystem"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Belief System"
+              label={t("details.labels.beliefSystem")}
               value={value}
-              placeholder="Spiritual, Traditional..."
+              placeholder={t("details.placeholders.beliefSystem")}
               options={beliefOptions}
               onSelect={onChange}
               icon={Sparkles}

@@ -21,13 +21,14 @@ import { UserBanner } from "../components/UserBanner";
 import { ChatBanner } from "../components/ChatBanner";
 import { ChatFooter } from "../components/ChatFooter";
 import { ChatFloatingUI } from "@/features/messages/components/ChatFloatingUI";
-import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function MessagesScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { user } = useAuth();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets(); // Add this for safe spacing
 
   const uid = user?.uid;
@@ -83,21 +84,21 @@ export default function MessagesScreen() {
         <View style={styles.tabsContainer}>
           <TabButton
             tab="chats"
-            label="Chats"
+            label={t("chat.tabs.chats")}
             icon={MessageCircle}
             isActive={activeTab === "chats"}
             onPress={() => triggerTabChange("chats")}
           />
           <TabButton
             tab="sent"
-            label="Sent"
+            label={t("chat.tabs.sent")}
             icon={Send}
             isActive={activeTab === "sent"}
             onPress={() => triggerTabChange("sent")}
           />
           <TabButton
             tab="received"
-            label="Received"
+            label={t("chat.tabs.received")}
             icon={Heart}
             isActive={activeTab === "received"}
             onPress={() => triggerTabChange("received")}
@@ -107,7 +108,7 @@ export default function MessagesScreen() {
 
       {/* 2. RHF Style Section Title */}
       <View style={styles.titleWrapper}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <Text style={styles.sectionTitle}>{t("chat.recentActivity")}</Text>
         <View style={styles.titleUnderline} />
       </View>
 

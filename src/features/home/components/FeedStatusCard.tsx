@@ -74,18 +74,6 @@ export function FeedStatusCard({
           </TouchableOpacity>
         )}
       </View>
-
-      <View style={styles.actionsContainer}>
-        <View style={styles.rightActions}>
-          <ActionButtons
-            onLike={() => void 0}
-            onMessage={() => void 0}
-            onProfileDetails={() => void 0}
-            disabled={true}
-            color={false}
-          />
-        </View>
-      </View>
     </View>
   );
 }

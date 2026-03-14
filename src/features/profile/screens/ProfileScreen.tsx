@@ -25,11 +25,14 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 import { formatDOB } from "../../../utils/dateUtils";
+import { useTranslation } from "react-i18next";
 
 export default function ProfileScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { profile } = useAuth();
+  const { t } = useTranslation();
+  // const { refreshProfile } = useProfileActions(profile);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -44,18 +47,18 @@ export default function ProfileScreen({ navigation }: any) {
   const menuItems = [
     {
       icon: Edit3,
-      label: "Edit Profile",
+      label: t("profile.editProfile"),
       onPress: () => navigation.navigate("EditProfile"),
     },
     {
       icon: Eye,
-      label: "View Preview",
+      label: t("profile.viewPreview"),
       onPress: () =>
         profile ? navigation.navigate("Details", { profile }) : null,
     },
     {
       icon: Camera,
-      label: "Manage Photos",
+      label: t("profile.managePhotos"),
       onPress: () => navigation.navigate("ManagePhotos"),
     },
   ];
@@ -81,6 +84,7 @@ export default function ProfileScreen({ navigation }: any) {
   const age = profile?.dateOfBirth
     ? formatDOB(profile.dateOfBirth, "age")
     : "21";
+
   return (
     <ScrollView
       style={styles.container}
@@ -140,16 +144,16 @@ export default function ProfileScreen({ navigation }: any) {
           {profile?.fullName || "My Name"}, {age}
         </Text>
         <Text style={styles.completionText}>
-          {Math.round(completionPercent)}% Profile Completed
+          {t("profile.completion", { percent: Math.round(completionPercent) })}
         </Text>
       </View>
 
       {/* 2. CONDENSED STATS BAR */}
       <View style={styles.statsBar}>
         {[
-          { l: "Matches", v: "42" },
-          { l: "Sent", v: "156" },
-          { l: "Recv", v: "89" },
+          { l: t("profile.stats.matches"), v: "42" },
+          { l: t("profile.stats.sent"), v: "156" },
+          { l: t("profile.stats.received"), v: "89" },
         ].map((s, i) => (
           <React.Fragment key={i}>
             <View style={styles.statItem}>
@@ -184,7 +188,7 @@ export default function ProfileScreen({ navigation }: any) {
       <TouchableOpacity
         style={styles.premiumCard}
         activeOpacity={0.9}
-        onPress={() => navigation.navigate("Subscription")}
+        onPress={() => navigation.navigate("Upgrade")}
       >
         <LinearGradient
           colors={["#6B46C1", "#9F7AEA"]}
@@ -194,9 +198,11 @@ export default function ProfileScreen({ navigation }: any) {
         >
           <View style={styles.premiumContent}>
             <View>
-              <Text style={styles.premTitle}>Upgrade to Premium</Text>
+              <Text style={styles.premTitle}>
+                {t("profile.premium.upgrade")}
+              </Text>
               <Text style={styles.premSub}>
-                See who likes you & Unlimited Swipes
+                {t("profile.premium.benefits")}
               </Text>
             </View>
             <View style={styles.crownCircle}>

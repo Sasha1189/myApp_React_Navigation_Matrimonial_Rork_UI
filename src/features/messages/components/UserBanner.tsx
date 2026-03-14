@@ -17,6 +17,7 @@ import { useAuth } from "src/context/AuthContext";
 import { LikesReceivedCache } from "../../../cache/cacheConfig";
 import { getProfile } from "../../profile/api/profileApi";
 import { useAppNavigation } from "../../../navigation/hooks";
+import { useTranslation } from "react-i18next";
 
 interface UserBannerProps {
   item: UserBannerItem;
@@ -27,6 +28,7 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { user } = useAuth();
+  const { t } = useTranslation();
   const navigation = useAppNavigation();
   const [isFetching, setIsFetching] = useState(false);
 
@@ -77,7 +79,7 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.name} numberOfLines={1}>
-            {item?.name || "User"}
+            {item?.name || t("chat.status.defaultUser")}
           </Text>
           <ChevronRight size={16} color={theme.colors.border} />
         </View>
@@ -91,7 +93,9 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
             fill={type === "received" ? theme.colors.primary : "transparent"}
           />
           <Text style={styles.statusText}>
-            {type === "sent" ? "You liked them" : "Liked you"}
+            {type === "sent"
+              ? t("chat.status.sent")
+              : t("chat.status.received")}
           </Text>
         </View>
       </View>

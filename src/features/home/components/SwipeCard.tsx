@@ -26,6 +26,7 @@ import { Profile } from "../../../types/profile";
 import { formatDOB } from "../../../utils/dateUtils";
 import { ActionButtons } from "../components/ActionButtons";
 import { useButtonActions } from "../hooks/useButtonActions";
+import { useTranslation } from "react-i18next";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 const SWIPE_THRESHOLD = screenHeight * 0.2;
@@ -55,6 +56,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   const styles = useStyles(createStyles);
   const [activeIndex, setActiveIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (nextImageUrl) {
@@ -224,7 +226,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           >
             <Sparkles size={10} color="white" />
             <Text style={styles.readyPillText}>
-              {profile?.isReady === "Yes" ? "READY" : "PLANNING"}
+              {profile?.isReady === "Yes"
+                ? t("card.ready")
+                : t("card.planning")}
             </Text>
           </View>
         </View>
@@ -276,7 +280,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         pointerEvents="none"
         style={[styles.statusLabel, styles.nextLabel, { opacity: nextOpacity }]}
       >
-        <Text style={styles.statusLabelText}>NEXT</Text>
+        <Text style={styles.statusLabelText}>{t("card.next")}</Text>
       </Animated.View>
 
       {/* PREVIOUS LABEL (Swiping Down) */}
@@ -288,7 +292,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           { opacity: previousOpacity },
         ]}
       >
-        <Text style={styles.statusLabelText}>PREVIOUS</Text>
+        <Text style={styles.statusLabelText}>{t("card.previous")}</Text>
       </Animated.View>
     </Animated.View>
   );

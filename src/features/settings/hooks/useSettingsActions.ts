@@ -11,9 +11,11 @@ import {
 } from "@react-native-firebase/database";
 import { useAuth } from "@/context/AuthContext";
 import { clearCacheOnLogout } from "@/cache/cacheConfig";
+import { useTranslation } from "react-i18next";
 
 export const useSettingsActions = () => {
   const { setUser } = useAuth();
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const WHATSAPP_NUMBER = "919921794390";
 
@@ -21,23 +23,23 @@ export const useSettingsActions = () => {
     try {
       await Linking.openURL(url);
     } catch (e) {
-      Alert.alert("Error", `Couldn't open ${label}.`);
+      Alert.alert(t("common.error"), t("settings.openLinkError", { label }));
     }
   };
 
   const composeWhatsApp = async (type: "bug" | "feature" | "report-user") => {
     const heading =
       type === "bug"
-        ? "Bug report"
+        ? t("settings.waBug")
         : type === "feature"
-          ? "Feature request"
-          : "Report user";
+          ? t("settings.waFeature")
+          : t("settings.waReport");
     const preset =
       type === "bug"
-        ? "Issue:\nSteps:"
+        ? t("settings.waBugPreset")
         : type === "feature"
-          ? "Idea:"
-          : "User ID/Reason:";
+          ? t("settings.waFeaturePreset")
+          : t("settings.waReportPreset");
     const text = encodeURIComponent(
       `${heading} — Lonari Youva Connect\n\n${preset}`,
     );
@@ -51,10 +53,10 @@ export const useSettingsActions = () => {
   };
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("settings.logoutTitle"), t("settings.logoutConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Log Out",
+        text: t("settings.logout"),
         style: "destructive",
         onPress: async () => {
           setIsProcessing(true);
@@ -73,7 +75,7 @@ export const useSettingsActions = () => {
             setUser(null);
             goOffline(rtdb);
           } catch (error) {
-            Alert.alert("Error", "Could not log out.");
+            Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {
             setIsProcessing(false);
           }

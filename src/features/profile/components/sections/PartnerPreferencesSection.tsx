@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
@@ -16,6 +16,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
+import { useTranslation } from "react-i18next";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
@@ -32,8 +33,14 @@ import {
 export default function EditPartnerPreferencesScreen({ navigation }: any) {
   const { profile, updateProfile } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
 
   const config = SECTION_CONFIG.find((s) => s.id === "partner")!;
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("details.sections.partner"),
+    });
+  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,
@@ -60,9 +67,9 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
           name="preferredMaritalStatus"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Partner Marital Status"
+              label={t("details.labels.maritalStatus")}
               value={value}
-              placeholder="Never Married, Divorced..."
+              placeholder={t("details.placeholders.prefMarital")}
               options={maritalStatusOptions}
               onSelect={onChange}
               icon={HeartHandshake}
@@ -77,9 +84,9 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
           name="preferredEducation"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Education Preference"
+              label={t("details.labels.qualification")}
               value={value}
-              placeholder="Select qualification"
+              placeholder={t("details.placeholders.prefEdu")}
               options={highestQualification}
               onSelect={onChange}
               icon={GraduationCap}
@@ -94,9 +101,9 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
           name="preferredProfession"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Profession Preference"
+              label={t("details.labels.occupation")}
               value={value}
-              placeholder="Select occupation"
+              placeholder={t("details.placeholders.prefProf")}
               options={occupationOptions}
               onSelect={onChange}
               icon={Briefcase}
@@ -111,9 +118,9 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
           name="preferredIncomeRange"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Income Preference"
+              label={t("details.labels.income")}
               value={value}
-              placeholder="Select range"
+              placeholder={t("details.placeholders.prefIncome")}
               options={incomeOptions}
               onSelect={onChange}
               icon={Banknote}
@@ -128,10 +135,10 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
           name="locationPreference"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Location Preference"
+              label={t("details.labels.locationPreference")}
               value={value || ""}
               onChangeText={onChange}
-              placeholder="e.g. Pune, Mumbai, etc."
+              placeholder={t("details.placeholders.prefLocation")}
               icon={MapPin}
               editable={true}
             />
@@ -144,9 +151,9 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
           name="livingWithParents"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Living with Parents"
+              label={t("details.labels.livingWithParents")}
               value={value}
-              placeholder="Select option"
+              placeholder={t("details.placeholders.parents")}
               options={livingWithParentsOptions}
               onSelect={onChange}
               icon={Home}

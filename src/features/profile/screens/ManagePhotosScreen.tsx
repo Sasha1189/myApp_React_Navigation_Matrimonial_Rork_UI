@@ -8,11 +8,12 @@ import { useAuth } from "../../../context/AuthContext";
 import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
+import { useTranslation } from "react-i18next";
 
 export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+  const { t } = useTranslation();
 
   const { profile } = useAuth();
 
@@ -29,6 +30,7 @@ export default function ManagePhotosScreen() {
     uploadPhotos,
   } = usePhotoManager(profile);
 
+  if (!theme) return null;
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
@@ -53,9 +55,7 @@ export default function ManagePhotosScreen() {
         {/* Tip */}
         <View style={styles.tipCard}>
           <Edit3 size={20} color={theme.colors.accent} />
-          <Text style={styles.tipText}>
-            Tap star to set primary. Tap X to delete.
-          </Text>
+          <Text style={styles.tipText}>{t("photos.tip")}</Text>
         </View>
       </View>
     </ScrollView>

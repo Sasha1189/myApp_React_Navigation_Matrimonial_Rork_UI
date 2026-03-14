@@ -10,7 +10,6 @@ import {
   getAuth,
   onAuthStateChanged,
   FirebaseAuthTypes,
-  getIdToken,
 } from "@react-native-firebase/auth";
 import { storage } from "../cache/cacheConfig";
 import { getDefaultProfile } from "../utils/getDefaultProfile";
@@ -25,6 +24,9 @@ interface AuthContextType {
   setUser: (user: FirebaseAuthTypes.User | null) => void;
   profile: Profile;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
+  tier: "none" | "trial" | "basic" | "premium";
+  setTier: (tier: any) => void;
+  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +36,9 @@ const PROFILE_CACHE_KEY = "self_profile_cache";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [tier, setTier] = useState<"none" | "trial" | "basic" | "premium">(
+    "none",
+  );
 
   const [profile, setProfile] = useState<Profile>(() => {
     const cached = storage.getString(PROFILE_CACHE_KEY);
@@ -42,26 +47,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   usePresence(user?.uid);
   const updateProfile = useUpdateProfile(user, profile, setProfile);
+
+  // New: Function to fetch subscription from your backend
+  const refreshSubscription = async () => {
+    if (!user) return;
+    try {
+      const token = await user.getIdToken(true);
+      // MOCK for now: replace with fetch('your-backend/status')
+      console.log("Checking subscription for:", user.uid);
+      // setTier(data.tier);
+    } catch (error) {
+      console.error("Sub check failed:", error);
+    }
+  };
+
   //first time fetch self profile-on login
   useEffect(() => {
-    const syncProfileIfEmpty = async () => {
-      const hasCache = storage.contains(PROFILE_CACHE_KEY);
-
-      if (user?.uid && !hasCache) {
-        try {
+    const syncProfileAndTier = async () => {
+      if (!user) return;
+      try {
+        // 1. Existing Profile Sync
+        const hasCache = storage.contains(PROFILE_CACHE_KEY);
+        if (!hasCache) {
           const remoteData = await getProfile(user?.uid, user?.displayName!);
-
           if (remoteData) {
             setProfile(remoteData);
             storage.set(PROFILE_CACHE_KEY, JSON.stringify(remoteData));
           }
-        } catch (error) {
-          console.error("Initial profile sync failed:", error);
         }
+        // 2. New: Tier Sync
+        await refreshSubscription();
+      } catch (error) {
+        console.error("Initial sync failed:", error);
       }
     };
-
-    syncProfileIfEmpty();
+    syncProfileAndTier();
   }, [user?.uid]);
 
   useEffect(() => {
@@ -74,8 +94,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ user, setUser, profile, authLoading, updateProfile }),
-    [user, profile, authLoading],
+    () => ({
+      user,
+      setUser,
+      profile,
+      authLoading,
+      updateProfile,
+      tier,
+      setTier,
+      refreshSubscription,
+    }),
+    [user, profile, authLoading, tier],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

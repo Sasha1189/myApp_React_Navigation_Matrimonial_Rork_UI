@@ -1,5 +1,12 @@
 import React from "react";
-import { ScrollView, View, StyleSheet, Text, Dimensions } from "react-native";
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  Text,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import {
   Users,
   UserCheck,
@@ -35,6 +42,7 @@ import {
   Heart,
 } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
+import { useAppNavigation } from "@/navigation/hooks";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { formatDOB } from "../../../utils/dateUtils";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
@@ -42,12 +50,16 @@ import {
   DetailSection,
   DetailRow,
 } from "../components/profileDetailView/ProfileInfoGrid";
+import { Lock } from "lucide-react-native";
 // import { useProfileActions } from "../hooks/useProfileActions";
 import { ProfileActionFooter } from "../components/profileDetailView/ProfileActionFooter";
+import { useTranslation } from "react-i18next";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function UserDetailsScreen({ route }: any) {
+  const { t } = useTranslation();
+  const navigation = useAppNavigation();
   const { theme } = useAppTheme();
   const { profile: myProfile } = useAuth();
   const profile = route.params?.profile;
@@ -57,6 +69,9 @@ export default function UserDetailsScreen({ route }: any) {
 
   if (!profile) return null;
   const isSelf = myProfile?.uid === profile?.uid;
+  const canViewContact =
+    isSelf ||
+    (myProfile?.subscription?.plan && myProfile.subscription.plan !== "basic");
 
   return (
     <ScrollView
@@ -74,39 +89,55 @@ export default function UserDetailsScreen({ route }: any) {
         </View>
 
         {/* 1. Personal Info - Parallel Grid */}
-        <DetailSection title="Personal Information" icon={Users}>
+        <DetailSection title={t("details.sections.personal")} icon={Users}>
           <DetailRow
-            label="Full Name"
+            label={t("details.labels.fullName")}
             value={profile.fullName}
             icon={UserCheck}
             fullWidth
           />
-          <DetailRow label="Gender" value={profile.gender} icon={User} />
           <DetailRow
-            label="Age"
+            label={t("details.labels.gender")}
+            value={profile.gender}
+            icon={User}
+          />
+          <DetailRow
+            label={t("details.labels.age")}
             value={formatDOB(profile?.dateOfBirth, "age")}
             icon={Calendar}
           />
-          <DetailRow label="Height" value={profile.height} icon={Ruler} />
-          <DetailRow label="Weight" value={profile.weight} icon={Scale} />
           <DetailRow
-            label="Marital Status"
+            label={t("details.labels.height")}
+            value={profile.height}
+            icon={Ruler}
+          />
+          <DetailRow
+            label={t("details.labels.weight")}
+            value={profile.weight}
+            icon={Scale}
+          />
+          <DetailRow
+            label={t("details.labels.maritalStatus")}
             value={profile.maritalStatus}
             icon={HeartHandshake}
           />
           <DetailRow
-            label="Blood Group"
+            label={t("details.labels.bloodGroup")}
             value={profile.bloodGroup}
             icon={Droplets}
           />
-          <DetailRow label="Rashi" value={profile.rashi} icon={Star} />
           <DetailRow
-            label="Manglik"
+            label={t("details.labels.rashi")}
+            value={profile.rashi}
+            icon={Star}
+          />
+          <DetailRow
+            label={t("details.labels.manglik")}
             value={profile.manglikStatus}
             icon={Sparkles}
           />
           <DetailRow
-            label="Birth Place"
+            label={t("details.labels.birthPlace")}
             value={profile.placeOfBirth}
             icon={MapPin}
             fullWidth
@@ -114,21 +145,21 @@ export default function UserDetailsScreen({ route }: any) {
         </DetailSection>
 
         {/* 2. About Me - Full Width Blocks */}
-        <DetailSection title="About Me" icon={Heart}>
+        <DetailSection title={t("details.sections.about")} icon={Heart}>
           <DetailRow
-            label="Bio"
+            label={t("details.labels.bio")}
             value={profile.shortBio}
             icon={MessageCircle}
             fullWidth
           />
           <DetailRow
-            label="Life Goals"
+            label={t("details.labels.goals")}
             value={profile?.aspirations}
             icon={Target}
             fullWidth
           />
           <DetailRow
-            label="Beliefs"
+            label={t("details.labels.beliefs")}
             value={profile?.beliefsValues}
             icon={Church}
             fullWidth
@@ -136,75 +167,82 @@ export default function UserDetailsScreen({ route }: any) {
         </DetailSection>
 
         {/* 3. Education & Career - Parallel Grid */}
-        <DetailSection title="Education & Career" icon={GraduationCap}>
+        <DetailSection
+          title={t("details.sections.education")}
+          icon={GraduationCap}
+        >
           <DetailRow
-            label="Qualification"
+            label={t("details.labels.qualification")}
             value={profile.highestQualification}
             icon={GraduationCap}
           />
           <DetailRow
-            label="Study Field"
+            label={t("details.labels.studyField")}
             value={profile.fieldOfStudy}
             icon={GraduationCap}
           />
           <DetailRow
-            label="Occupation"
+            label={t("details.labels.occupation")}
             value={profile.occupation}
             icon={Briefcase}
           />
           <DetailRow
-            label="Industry"
+            label={t("details.labels.industry")}
             value={profile.industry}
             icon={Building}
           />
           <DetailRow
-            label="Company"
+            label={t("details.labels.company")}
             value={profile.companyName}
             icon={Building}
             fullWidth
           />
           <DetailRow
-            label="Work City"
+            label={t("details.labels.workCity")}
             value={profile.workLocation}
             icon={MapPin}
           />
           <DetailRow
-            label="Income"
+            label={t("details.labels.income")}
             value={profile.annualIncome}
             icon={DollarSign}
           />
         </DetailSection>
 
         {/* 4. Family Details - Parallel Grid */}
-        <DetailSection title="Family Details" icon={Home}>
+        <DetailSection title={t("details.sections.family")} icon={Home}>
           <DetailRow
-            label="Family Type"
+            label={t("details.labels.familyType")}
             value={profile.familyType}
             icon={Home}
           />
-          <DetailRow label="Values" value={profile.familyValues} icon={Heart} />
           <DetailRow
-            label="Brothers"
+            label={t("details.labels.values")}
+            value={profile.familyValues}
+            icon={Heart}
+          />
+          <DetailRow
+            label={t("details.labels.brothers")}
             value={profile.numberOfBrothers}
             icon={User}
           />
           <DetailRow
-            label="Sisters"
+            label={t("details.labels.sisters")}
             value={profile.numberOfSisters}
             icon={User}
           />
           <DetailRow
-            label="Father Occ."
+            label={t("details.labels.fatherOcc")}
             value={profile.fatherOccupation}
             icon={User}
           />
           <DetailRow
-            label="Mother Occ."
+            label={t("details.labels.motherOcc")}
             value={profile.motherOccupation}
             icon={User}
           />
           <DetailRow
-            label="Siblings Info"
+            label={t("details.labels.siblingsInfo")}
             value={profile.siblingsDetails}
             icon={Users}
             fullWidth
@@ -212,65 +250,81 @@ export default function UserDetailsScreen({ route }: any) {
         </DetailSection>
 
         {/* 2. Contact Details - Parallel Grid */}
-        <DetailSection title="Contact Details" icon={Phone}>
-          <DetailRow
-            label="Current City"
-            value={profile.currentCity}
-            icon={MapPin}
-          />
-          <DetailRow
-            label="Native Place"
-            value={profile.nativePlace}
-            icon={Home}
-          />
-          <DetailRow label="Mobile" value={profile.mobileNumber} icon={Phone} />
-          <DetailRow
-            label="Email"
-            value={profile.emailAddress}
-            icon={Mail}
-            fullWidth
-          />
-          <DetailRow
-            label="Contact Preference"
-            value={profile.preferredContact}
-            icon={MessageCircle}
-          />
-          <DetailRow
-            label="Created By"
-            value={profile.profileCreatedBy}
-            icon={UserPlus}
-          />
-        </DetailSection>
+        {canViewContact ? (
+          <DetailSection title={t("details.sections.contact")} icon={Phone}>
+            <DetailRow
+              label={t("details.labels.currentCity")}
+              value={profile.currentCity}
+              icon={MapPin}
+            />
+            <DetailRow
+              label={t("details.labels.nativePlace")}
+              value={profile.nativePlace}
+              icon={Home}
+            />
+            <DetailRow
+              label={t("details.labels.mobile")}
+              value={profile.mobileNumber}
+              icon={Phone}
+            />
+            <DetailRow
+              label={t("details.labels.email")}
+              value={profile.emailAddress}
+              icon={Mail}
+              fullWidth
+            />
+            <DetailRow
+              label={t("details.labels.contactPref")}
+              value={profile.preferredContact}
+              icon={MessageCircle}
+            />
+            <DetailRow
+              label={t("details.labels.createdBy")}
+              value={profile.profileCreatedBy}
+              icon={UserPlus}
+            />
+          </DetailSection>
+        ) : (
+          <DetailSection title={t("details.sections.contact")} icon={Phone}>
+            <TouchableOpacity
+              style={styles.upgradeCard}
+              onPress={() => navigation.navigate("Subscription")}
+            >
+              <Lock size={24} color={theme.colors.primary} />
+              <Text style={styles.upgradeText}>{t("details.upgradeText")}</Text>
+            </TouchableOpacity>
+          </DetailSection>
+        )}
 
         {/* 5. Lifestyle - Parallel Grid */}
-        <DetailSection title="Lifestyle" icon={Activity}>
+        <DetailSection title={t("details.sections.lifestyle")} icon={Activity}>
           <DetailRow
-            label="Diet"
+            label={t("details.labels.diet")}
             value={profile.dietPreferences}
             icon={Utensils}
           />
           <DetailRow
-            label="Smoking"
+            label={t("details.labels.smoking")}
             value={profile.smokingHabit}
             icon={Cigarette}
           />
           <DetailRow
-            label="Drinking"
+            label={t("details.labels.drinking")}
             value={profile.drinkingHabit}
             icon={Wine}
           />
           <DetailRow
-            label="Exercise"
+            label={t("details.labels.exercise")}
             value={profile.exerciseRoutine}
             icon={Dumbbell}
           />
           <DetailRow
-            label="Fitness"
+            label={t("details.labels.fitness")}
             value={profile.fitnessLevel}
             icon={Activity}
           />
           <DetailRow
-            label="Personality"
+            label={t("details.labels.personality")}
             value={profile.personalityType}
             icon={Brain}
           />
@@ -278,7 +332,9 @@ export default function UserDetailsScreen({ route }: any) {
           {/* Hobbies - Custom Chip Layout */}
           {profile?.hobbies?.length > 0 && (
             <View style={styles.hobbiesBox}>
-              <Text style={styles.hobbyLabel}>Hobbies</Text>
+              <Text style={styles.hobbyLabel}>
+                {t("details.labels.hobbies")}
+              </Text>
               <View style={styles.hobbyList}>
                 {profile.hobbies.map((h: string, i: number) => (
                   <View key={i} style={styles.tag}>
@@ -290,34 +346,34 @@ export default function UserDetailsScreen({ route }: any) {
           )}
         </DetailSection>
         {/* 5. Partner Preferences - Parallel Grid */}
-        <DetailSection title="Partner Preferences" icon={Star}>
+        <DetailSection title={t("details.sections.preferences")} icon={Star}>
           <DetailRow
-            label="Marital Status"
+            label={t("details.labels.maritalStatus")}
             value={profile.preferredMaritalStatus}
             icon={HeartHandshake}
           />
           <DetailRow
-            label="Manglik"
+            label={t("details.labels.manglik")}
             value={profile.manglikPreference}
             icon={Sparkles}
           />
           <DetailRow
-            label="Education"
+            label={t("details.labels.education")}
             value={profile.preferredEducation}
             icon={GraduationCap}
           />
           <DetailRow
-            label="Profession"
+            label={t("details.labels.profession")}
             value={profile.preferredProfession}
             icon={Briefcase}
           />
           <DetailRow
-            label="Min. Income"
+            label={t("details.labels.minIncome")}
             value={profile.preferredIncomeRange}
             icon={DollarSign}
           />
           <DetailRow
-            label="Living with Parents"
+            label={t("details.labels.livingWithParents")}
             value={profile.livingWithParents}
             icon={Home}
             fullWidth
@@ -369,4 +425,19 @@ const styles = StyleSheet.create({
     borderColor: "#6B46C130",
   },
   tagText: { fontSize: 12, color: "#6B46C1", fontWeight: "700" },
+  upgradeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E9D8FD",
+    padding: 16,
+    borderRadius: 12,
+    width: "100%",
+    gap: 12,
+  },
+  upgradeText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6B46C1",
+  },
 });

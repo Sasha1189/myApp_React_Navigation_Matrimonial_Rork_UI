@@ -14,6 +14,7 @@ import { SECTION_CONFIG } from "../components/form/profileValidation";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { useAuth } from "@/context/AuthContext";
 import FormSection from "../components/form/FormSection";
+import { useTranslation } from "react-i18next";
 
 // Mapping icons to your sections
 const ICON_MAP: Record<string, any> = {
@@ -28,16 +29,17 @@ const ICON_MAP: Record<string, any> = {
 
 export default function EditProfileScreen() {
   const { profile } = useAuth();
+  const { t } = useTranslation();
   const navigation = useAppNavigation();
 
   return (
     <FlatList
       data={SECTION_CONFIG}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 20, paddingBottom:32 }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
       renderItem={({ item }) => (
         <FormSection
-          title={item.title}
+          title={t(`details.sections.${item.id}`)}
           icon={ICON_MAP[item.id]}
           data={profile}
           fields={item.fields}

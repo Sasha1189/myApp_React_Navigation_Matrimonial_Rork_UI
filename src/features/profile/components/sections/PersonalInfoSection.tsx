@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
@@ -23,6 +23,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
+import { useTranslation } from "react-i18next";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
@@ -42,6 +43,7 @@ import {
 export default function EditPersonalInfoScreen({ navigation }: any) {
   const { profile, updateProfile } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslation();
   const config = SECTION_CONFIG.find((s) => s.id === "personal")!;
 
   const { control } = useSectionEditor<Profile>(
@@ -53,6 +55,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
     config.title,
   );
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t("details.sections.personal"),
+    });
+  }, [navigation, t]);
+
   const getLockState = (name: keyof Profile) =>
     isFieldLocked(profile as Profile, name);
 
@@ -63,7 +71,6 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
         padding: theme.spacing.lg,
         paddingBottom: theme.spacing.xxl,
       }}
-      keyboardShouldPersistTaps="handled"
     >
       <View style={{ gap: theme.spacing.xs }}>
         {/* 1. Full Name */}
@@ -72,10 +79,10 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="fullName"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Full Name"
+              label={t("details.labels.fullName")}
+              placeholder={t("details.labels.fullName")}
               value={value}
               onChangeText={onChange}
-              placeholder="Enter full name"
               icon={UserCheck}
               required
               locked={getLockState("fullName")}
@@ -90,10 +97,10 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="dateOfBirth"
           render={({ field: { onChange, value } }) => (
             <DatePickerField
-              label="Date of Birth"
+              label={t("details.labels.age")}
+              placeholder="YYYY-MM-DD"
               value={value ? String(value) : ""}
               onChange={onChange}
-              placeholder="YYYY-MM-DD"
               icon={Calendar}
               required
               locked={getLockState("dateOfBirth")}
@@ -108,12 +115,11 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="timeOfBirth"
           render={({ field: { onChange, value } }) => (
             <TimePickerField
-              label="Time of Birth"
+              label={t("details.labels.timeOfBirth")}
+              placeholder="e.g. 06:30 AM"
               value={value ?? ""}
               onChange={onChange}
-              placeholder="e.g. 06:30 AM"
               icon={Timer}
-              editable={true}
             />
           )}
         />
@@ -124,12 +130,11 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="placeOfBirth"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Place of Birth"
+              label={t("details.labels.birthPlace")}
+              placeholder="City, State"
               value={value}
               onChangeText={onChange}
-              placeholder="City, State"
               icon={MapPin}
-              editable={true}
             />
           )}
         />
@@ -140,11 +145,11 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="gender"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Gender"
+              label={t("details.labels.gender")}
+              placeholder={t("details.labels.gender")}
               value={value}
               options={genderOptions}
               onSelect={onChange}
-              placeholder="Select Gender"
               icon={User}
               required
               locked={getLockState("gender")}
@@ -159,11 +164,11 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="maritalStatus"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Marital Status"
+              label={t("details.labels.maritalStatus")}
+              placeholder={t("details.labels.maritalStatus")}
               value={value}
               options={maritalStatusOptions}
               onSelect={onChange}
-              placeholder="Select Status"
               icon={HeartHandshake}
               required
               locked={getLockState("maritalStatus")}
@@ -178,12 +183,11 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="height"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Height"
+              label={t("details.labels.height")}
+              placeholder="e.g. 5'8\"
               value={value}
               onChangeText={onChange}
-              placeholder="e.g. 5'8\"
               icon={Ruler}
-              editable={true}
             />
           )}
         />
@@ -194,12 +198,11 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="weight"
           render={({ field: { onChange, value } }) => (
             <InputField
-              label="Weight"
+              label={t("details.labels.weight")}
+              placeholder="e.g. 70kg"
               value={value}
               onChangeText={onChange}
-              placeholder="e.g. 70kg"
               icon={Scale}
-              editable={true}
             />
           )}
         />
@@ -210,13 +213,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="bodyType"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Body Type"
+              label={t("details.labels.bodyType")}
+              placeholder="Slim/Athletic/Average"
               value={value}
               options={bodyTypeOptions}
               onSelect={onChange}
-              placeholder="Slim/Athletic/Average"
               icon={Activity}
-              editable={true}
             />
           )}
         />
@@ -227,13 +229,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="bloodGroup"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Blood Group"
+              label={t("details.labels.bloodGroup")}
+              placeholder={t("details.labels.bloodGroup")}
               value={value}
               options={bloodGroupOptions}
               onSelect={onChange}
-              placeholder="Select Blood Group"
               icon={Droplets}
-              editable={true}
             />
           )}
         />
@@ -244,13 +245,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="manglikStatus"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Manglik Status"
+              label={t("details.labels.manglik")}
+              placeholder="Yes/No/Partial"
               value={value}
               options={manglikOptions}
               onSelect={onChange}
-              placeholder="Yes/No/Partial"
               icon={Sparkles}
-              editable={true}
             />
           )}
         />
@@ -261,13 +261,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="rashi"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Rashi (Zodiac)"
+              label={t("details.labels.rashi")}
+              placeholder={t("details.labels.rashi")}
               value={value}
               options={rashiOptions}
               onSelect={onChange}
-              placeholder="Select Rashi"
               icon={Star}
-              editable={true}
             />
           )}
         />
@@ -278,13 +277,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="horoscopeRequired"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Horoscope Required?"
+              label={t("details.labels.horoscopeRequired")}
+              placeholder="Yes/No/Optional"
               value={value}
               options={horoscopeOptions}
               onSelect={onChange}
-              placeholder="Yes/No/Optional"
               icon={Zap}
-              editable={true}
             />
           )}
         />
@@ -295,13 +293,12 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           name="isReady"
           render={({ field: { onChange, value } }) => (
             <PickerField
-              label="Ready to marry soon?"
+              label={t("details.labels.isReady")}
+              placeholder="Yes / No still studying"
               value={value}
               options={isReadyOptions}
               onSelect={onChange}
-              placeholder="Yes / No still studying"
               icon={HeartIcon}
-              editable={true}
             />
           )}
         />

@@ -12,8 +12,13 @@ export interface Profile {
 
   // Profile Status
   isActive: boolean;
-  isVerified: boolean;
-  isPremium: boolean;
+  isVerified: boolean; // Admin verified
+  // isPremium: boolean; // Deprecated in favor of subscription object
+  subscription?: {
+    plan: "trial" | "basic" | "premium";
+    endsAt?: number; // Timestamp for trial/subscription expiry
+    startedAt: number;
+  };
   // Personal & Birth Information-13
   fullName: string;
   dateOfBirth: Date | null;
