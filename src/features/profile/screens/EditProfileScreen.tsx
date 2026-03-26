@@ -24,7 +24,7 @@ const ICON_MAP: Record<string, any> = {
   education: BookOpen,
   family: Users,
   lifestyle: Coffee,
-  partner: Settings,
+  preferences: Settings,
 };
 
 export default function EditProfileScreen() {
@@ -36,7 +36,7 @@ export default function EditProfileScreen() {
     <FlatList
       data={SECTION_CONFIG}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 52 }}
       renderItem={({ item }) => (
         <FormSection
           title={t(`details.sections.${item.id}`)}

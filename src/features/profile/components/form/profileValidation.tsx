@@ -17,8 +17,6 @@ export const isFieldLocked = (
   return value !== null && value !== undefined && String(value).trim() !== "";
 };
 
-// @/components/form/profileValidation.ts
-
 export const SECTION_CONFIG = [
   {
     id: "personal",
@@ -107,7 +105,7 @@ export const SECTION_CONFIG = [
     screen: "EditLifestyle",
   },
   {
-    id: "partner",
+    id: "preferences",
     title: "Partner Preferences",
     fields: [
       "preferredMaritalStatus",

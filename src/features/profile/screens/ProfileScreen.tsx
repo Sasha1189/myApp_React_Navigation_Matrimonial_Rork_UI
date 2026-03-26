@@ -187,8 +187,8 @@ export default function ProfileScreen({ navigation }: any) {
       {/* 4. PREMIUM BANNER */}
       <TouchableOpacity
         style={styles.premiumCard}
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate("Upgrade")}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate("Paywall")}
       >
         <LinearGradient
           colors={["#6B46C1", "#9F7AEA"]}

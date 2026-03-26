@@ -4,19 +4,21 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ImageBackground,
   Dimensions,
 } from "react-native";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthNavigation } from "../../../navigation/hooks";
 import { Heart, Sparkles, Users } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 export default function LandingScreen() {
+  const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   if (!theme) return null;
@@ -26,160 +28,162 @@ export default function LandingScreen() {
     navigation.navigate("PhoneSignIn");
   };
 
+  const features = [
+    { icon: Sparkles, text: t("welcome.features.match") },
+    { icon: Users, text: t("welcome.features.secure") },
+    { icon: Heart, text: t("welcome.features.connect") },
+  ];
+
   return (
-    <View style={styles.container}>
-      {/* <ImageBackground
-        source={{
-          uri: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&h=1200&fit=crop",
-        }}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      > */}
-      <View style={styles.overlay} />
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Heart
-                size={40}
-                color={theme.colors.accent}
-                fill={theme.colors.accent}
-              />
-              <Text style={styles.appName}>Lonari Yuva Connect</Text>
-            </View>
-            <Text style={styles.tagline}>Find Your Perfect Match</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.topBar}>
+        <LanguageSelector />
+      </View>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.logoWrapper}>
+            <Heart
+              size={40}
+              color={theme.colors.primary}
+              fill={theme.colors.primary}
+            />
           </View>
-
-          <View style={styles.featuresContainer}>
-            <View style={styles.feature}>
-              <Sparkles size={24} color="white" />
-              <Text style={styles.featureText}>Smart Matching</Text>
-            </View>
-            <View style={styles.feature}>
-              <Users size={24} color="white" />
-              <Text style={styles.featureText}>Verified Profiles</Text>
-            </View>
-            <View style={styles.feature}>
-              <Heart size={24} color="white" />
-              <Text style={styles.featureText}>Meaningful Connections</Text>
-            </View>
-          </View>
-
-          <View style={styles.bottomSection}>
-            <TouchableOpacity
-              style={styles.getStartedButton}
-              onPress={handleGetStarted}
-            >
-              <Text style={styles.getStartedText}>Get Started</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.termsText}>
-              By continuing, you agree to our Terms of Service and Privacy
-              Policy
-            </Text>
-          </View>
+          <Text style={styles.appName}>{t("welcome.appName")}</Text>
+          <Text style={styles.tagline}>{t("welcome.tagline")}</Text>
         </View>
-      </SafeAreaView>
-      {/* </ImageBackground> */}
-    </View>
+
+        <View style={styles.featuresContainer}>
+          {features.map((item, index) => (
+            <View key={index} style={styles.featureCard}>
+              <View style={styles.iconWrapper}>
+                <item.icon size={22} color={theme.colors.primary} />
+              </View>
+              <Text style={styles.featureText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={styles.getStartedButton}
+            onPress={handleGetStarted}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.getStartedText}>{t("welcome.getStarted")}</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.termsText}>{t("welcome.termsAgreement")}</Text>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    backgroundImage: {
-      flex: 1,
-      width: "100%",
-      height: "100%",
-    },
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.2)",
-    },
     safeArea: {
       flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    topBar: {
+      alignItems: "flex-end",
+      paddingHorizontal: theme.spacing.md,
     },
     content: {
       flex: 1,
       paddingHorizontal: theme.spacing.lg,
-      justifyContent: "space-between",
+      justifyContent: "space-evenly",
     },
     header: {
       alignItems: "center",
-      marginTop: height * 0.1,
+      marginTop: height * 0.02,
     },
-    logoContainer: {
-      flexDirection: "row",
+    logoWrapper: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: `${theme.colors.primary}15`,
       alignItems: "center",
-      marginBottom: theme.spacing.md,
+      justifyContent: "center",
+      marginBottom: theme.spacing.lg,
     },
     appName: {
-      fontSize: theme.fontSize.xxl + 8,
-      fontWeight: "bold",
-      color: "white",
-      marginLeft: theme.spacing.sm,
+      fontSize: 28,
+      fontWeight: "800",
+      color: theme.colors.text,
+      textAlign: "center",
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing.xs,
     },
     tagline: {
-      fontSize: theme.fontSize.lg,
-      color: "white",
+      fontSize: 16,
+      color: theme.colors.textLight,
       textAlign: "center",
-      opacity: 0.9,
+      fontWeight: "500",
+      letterSpacing: 0.3,
     },
     featuresContainer: {
-      alignItems: "center",
-      gap: theme.spacing.lg,
+      width: "100%",
+      gap: theme.spacing.md,
     },
-    feature: {
+    featureCard: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
+      backgroundColor: theme.colors.card,
+      padding: theme.spacing.md,
       borderRadius: theme.borderRadius.lg,
-      minWidth: width * 0.6,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      elevation: 2,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    iconWrapper: {
+      width: 48,
+      height: 48,
+      borderRadius: 16,
+      backgroundColor: `${theme.colors.primary}12`,
+      alignItems: "center",
       justifyContent: "center",
+      marginRight: theme.spacing.md,
     },
     featureText: {
-      color: "white",
-      fontSize: theme.fontSize.md,
-      fontWeight: "600",
-      marginLeft: theme.spacing.sm,
+      color: theme.colors.text,
+      fontSize: 16,
+      fontWeight: "700",
+      letterSpacing: 0.3,
     },
     bottomSection: {
       alignItems: "center",
-      paddingBottom: theme.spacing.xl,
+      paddingBottom: theme.spacing.lg,
+      width: "100%",
     },
     getStartedButton: {
-      backgroundColor: theme.colors.accent,
-      paddingHorizontal: theme.spacing.xxl,
-      paddingVertical: theme.spacing.md + 4,
+      backgroundColor: theme.colors.primary,
+      width: "100%",
+      paddingVertical: 18,
       borderRadius: theme.borderRadius.round,
       marginBottom: theme.spacing.lg,
-      minWidth: width * 0.7,
       alignItems: "center",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
+      elevation: 4,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
-      elevation: 8,
     },
     getStartedText: {
       color: "white",
-      fontSize: theme.fontSize.lg,
+      fontSize: 18,
       fontWeight: "bold",
+      letterSpacing: 0.5,
     },
     termsText: {
-      color: "white",
-      fontSize: theme.fontSize.sm,
+      color: theme.colors.textLight,
+      fontSize: 12,
       textAlign: "center",
-      opacity: 0.8,
-      lineHeight: 20,
+      lineHeight: 18,
       paddingHorizontal: theme.spacing.md,
     },
   });

@@ -14,8 +14,6 @@ export const useSubscription = () => {
     setIsProcessing(true);
 
     try {
-      // 1. CALL BACKEND: Tell your cloud server the user wants to subscribe
-      // We pass the UID and the Plan they chose.
       const result = await apiSubscribe({
         planId: selectedPlanId,
         method: "google_play_mock",
@@ -23,8 +21,6 @@ export const useSubscription = () => {
 
       await user.getIdToken(true);
 
-      // 2. UPDATE STATE: The backend confirmed the DB update.
-      // Once we update 'tier', RootNavigator triggers the screen swap.
       setTier(result.newTier);
 
       Alert.alert("Success", "Subscription activated!");

@@ -11,75 +11,132 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { useSubscription } from "../hooks/useSubscription";
 import { SUBSCRIPTION_PLANS } from "../constants/plans";
-import {
-  Crown,
-  Check,
-  Star,
-  Zap,
-  Eye,
-  Heart,
-  MessageCircle,
-} from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { SUPPORT_BENEFITS } from "../constants/supportBenefits"; // Import the new constants
+import { Crown, Heart } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlanCardComponent } from "../components/PlanCard";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "../../../components/LanguageSelector";
 
 export default function SubscriptionScreen() {
+  const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const { selectedPlanId, setSelectedPlanId, handlePay, isProcessing } =
     useSubscription();
 
   if (!theme) return null;
 
-  // Use your EXACT existing renderPlan logic here, just mapped to SUBSCRIPTION_PLANS
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <LinearGradient
-        colors={[theme.colors.primary + "20", "transparent"]}
-        style={styles.headerGradient}
-      />
-
-      <View style={styles.content}>
-        {/* Header UI - Same as your original */}
-        <View style={styles.headerCard}>
-          <Crown size={32} color={theme.colors.warning} />
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Upgrade Your Experience</Text>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          <View style={styles.topBar}>
+            <LanguageSelector />
           </View>
+          {/* Header with Community Focus */}
+          <View style={styles.header}>
+            <View style={styles.logoWrapper}>
+              <Crown size={40} color={theme.colors.warning} />
+              <Text style={styles.title}>{t("subscription.upgradeTitle")}</Text>
+            </View>
+            <Text style={styles.subtitle}>
+              {t("subscription.upgradeSubtitle")}
+            </Text>
+          </View>
+          {/* Support Card - Emotional Hook */}
+          <View style={styles.benefitsCard}>
+            <View style={styles.benefitsHeader}>
+              <Heart
+                size={20}
+                color={theme.colors.primary}
+                fill={theme.colors.primary}
+              />
+              <Text style={styles.benefitsTitle}>
+                {t("subscription.supportTitle")}
+              </Text>
+            </View>
+            <View style={styles.benefitsList}>
+              {SUPPORT_BENEFITS(theme).map((benefit) => (
+                <View key={benefit.id} style={styles.benefitItem}>
+                  <View style={styles.iconWrapper}>{benefit.icon}</View>
+                  <Text style={styles.benefitText}>
+                    {t(benefit.translationKey)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+          {/* Plans Section */}
+          <Text style={styles.sectionLabel}>
+            {t("subscription.choosePlan", "Choose a Plan")}
+          </Text>
+          {SUBSCRIPTION_PLANS.map((plan) => {
+            const displayPlan = {
+              ...plan,
+              name: t(`subscription.plans.${plan.id}.name`, plan.name),
+              price: t(`subscription.plans.${plan.id}.price`, plan.price),
+              originalPrice: plan.originalPrice
+                ? t(
+                    `subscription.plans.${plan.id}.originalPrice`,
+                    plan.originalPrice,
+                  )
+                : undefined,
+              period: t(`subscription.plans.${plan.id}.period`, plan.period),
+              discount: plan.discount
+                ? t(`subscription.plans.${plan.id}.discount`, plan.discount)
+                : undefined,
+              features: plan.features.map((f, index) => ({
+                ...f,
+                text: t(
+                  `subscription.plans.${plan.id}.features.${index}`,
+                  f.text,
+                ),
+              })),
+            };
+            return (
+              <PlanCardComponent
+                key={plan.id}
+                plan={displayPlan}
+                isSelected={selectedPlanId === plan.id}
+                onSelect={() => setSelectedPlanId(plan.id)}
+              />
+            );
+          })}
+          <View style={{ height: 120 }} /> {/* Extra padding for scroll */}
         </View>
+      </ScrollView>
 
-        {/* Benefits UI - Same as your original */}
-        <View style={styles.benefitsCard}>
-          {/* ... your benefit Zap/Eye/Heart icons ... */}
-        </View>
-
-        {/* Plans - Mapping from constants */}
-        {SUBSCRIPTION_PLANS.map((plan) => (
-          <PlanCardComponent
-            theme={theme}
-            styles={styles}
-            key={plan.id}
-            plan={plan}
-            isSelected={selectedPlanId === plan.id}
-            onSelect={() => setSelectedPlanId(plan.id)}
-          />
-        ))}
-
-        {/* Subscribe Button */}
-        <TouchableOpacity style={styles.subscribeButton} onPress={handlePay}>
+      {/* Fixed Sticky Footer Button */}
+      <View
+        style={[
+          styles.footerContainer,
+          { paddingBottom: Math.max(insets.bottom, 20) }, // Dynamic padding
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[
+            styles.subscribeButton,
+            selectedPlanId === "basic" && styles.disabledButton,
+          ]}
+          onPress={handlePay}
+          disabled={selectedPlanId === "basic" || isProcessing}
+        >
           {isProcessing ? (
             <ActivityIndicator color="white" />
           ) : (
             <Text style={styles.buttonText}>
-              {selectedPlanId === "trial"
-                ? "Start Trial"
-                : "Pay with Google Play"}
+              {selectedPlanId === "basic"
+                ? t("subscription.currentPlan")
+                : t("subscription.payGoogle")}
             </Text>
           )}
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -89,275 +146,116 @@ export const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    buttonText: {
-      color: "white",
-      fontSize: 18,
-      fontWeight: "700",
-      letterSpacing: 0.5,
-    },
-    subscribeButton: {
-      backgroundColor: theme.colors.primary,
-      paddingVertical: 16,
-      borderRadius: 12,
-      alignItems: "center",
-      marginTop: 20,
-      marginBottom: 40,
-      // Add shadow for premium feel
-      elevation: 4,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-    },
-    subscribeButtonText: {
-      color: "white",
-      fontSize: 18,
-      fontWeight: "700",
-      letterSpacing: 0.5,
-    },
-    selectedPlan: {
-      borderColor: theme.colors.primary,
-      borderWidth: 2,
-      backgroundColor: theme.colors.primary + "05", // Subtle highlight
-    },
-    popularPlan: {
-      borderColor: theme.colors.warning,
-      borderWidth: 2,
-    },
-    // Ensure feature text is readable
-    featureText: {
-      fontSize: 14,
-      color: theme.colors.text,
-      marginLeft: 8,
-    },
-    excludedText: {
-      color: theme.colors.textLight,
-      textDecorationLine: "none", // or 'line-through' if you prefer
-    },
-    headerGradient: {
-      height: 100,
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-    },
     content: {
       padding: theme.spacing.lg,
       paddingTop: theme.spacing.xl,
+      paddingBottom: 40, // Space for the fixed footer
     },
-    headerCard: {
-      backgroundColor: "white",
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      marginBottom: theme.spacing.lg,
-      flexDirection: "row",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+    topBar: {
+      alignItems: "flex-end",
+      paddingHorizontal: theme.spacing.md,
     },
-    headerContent: {
-      flex: 1,
-      marginLeft: theme.spacing.md,
+    header: {
+      alignItems: "center",
+      marginBottom: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.lg,
     },
-    headerTitle: {
-      fontSize: theme.fontSize.lg,
-      fontWeight: "bold",
+    logoWrapper: {
+      flexDirection: "row", // Aligns icon and text horizontally
+      alignItems: "center", // Centers them vertically relative to each other
+      gap: 12, // Spacing between crown and text
+      marginBottom: theme.spacing.md,
+    },
+    title: {
+      fontSize: 22, // Slightly reduced to fit better inline
+      fontWeight: "800",
       color: theme.colors.text,
-      marginBottom: theme.spacing.xs,
+      letterSpacing: 0.5,
     },
-    headerText: {
-      fontSize: theme.fontSize.sm,
+    subtitle: {
+      fontSize: 15,
       color: theme.colors.textLight,
-      lineHeight: 20,
+      textAlign: "center",
+      lineHeight: 22,
+      paddingHorizontal: theme.spacing.sm,
+    },
+    sectionLabel: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: theme.colors.textLight,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+      marginBottom: 12,
+      marginLeft: 4,
     },
     benefitsCard: {
-      backgroundColor: "white",
+      backgroundColor: theme.colors.card,
       borderRadius: theme.borderRadius.lg,
       padding: theme.spacing.lg,
-      marginBottom: theme.spacing.lg,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      marginBottom: theme.spacing.xl,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    benefitsHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 16,
     },
     benefitsTitle: {
-      fontSize: theme.fontSize.lg,
-      fontWeight: "bold",
+      fontSize: 18,
+      fontWeight: "700",
       color: theme.colors.text,
-      marginBottom: theme.spacing.md,
     },
     benefitsList: {
       gap: theme.spacing.md,
     },
     benefitItem: {
       flexDirection: "row",
-      alignItems: "center",
+      alignItems: "flex-start",
+    },
+    iconWrapper: {
+      width: 30,
+      marginTop: 2,
     },
     benefitText: {
-      fontSize: theme.fontSize.md,
-      color: theme.colors.text,
-      marginLeft: theme.spacing.md,
-      fontWeight: "500",
-    },
-    plansContainer: {
-      gap: theme.spacing.lg,
-      marginBottom: theme.spacing.xl,
-    },
-    planCard: {
-      backgroundColor: "white",
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      borderWidth: 2,
-      borderColor: theme.colors.border,
-      position: "relative",
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    // selectedPlan: {
-    //   borderColor: theme.colors.primary,
-    // },
-    // popularPlan: {
-    //   borderColor: theme.colors.warning,
-    // },
-    popularBadge: {
-      position: "absolute",
-      top: -10,
-      left: theme.spacing.lg,
-      backgroundColor: theme.colors.warning,
-      borderRadius: theme.borderRadius.round,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.xs,
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    popularText: {
-      color: "white",
-      fontSize: theme.fontSize.xs,
-      fontWeight: "bold",
-      marginLeft: theme.spacing.xs,
-    },
-    planHeader: {
-      marginBottom: theme.spacing.lg,
-    },
-    planTitleContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: theme.spacing.sm,
-    },
-    planName: {
-      fontSize: theme.fontSize.xl,
-      fontWeight: "bold",
-      color: theme.colors.text,
-    },
-    discountBadge: {
-      backgroundColor: theme.colors.success,
-      borderRadius: theme.borderRadius.sm,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
-      marginLeft: theme.spacing.md,
-    },
-    discountText: {
-      color: "white",
-      fontSize: theme.fontSize.xs,
-      fontWeight: "bold",
-    },
-    priceContainer: {
-      flexDirection: "row",
-      alignItems: "baseline",
-      flexWrap: "wrap",
-    },
-    price: {
-      fontSize: theme.fontSize.xxl,
-      fontWeight: "bold",
-      color: theme.colors.primary,
-    },
-    period: {
-      fontSize: theme.fontSize.md,
-      color: theme.colors.textLight,
-      marginLeft: theme.spacing.xs,
-    },
-    originalPrice: {
-      fontSize: theme.fontSize.md,
-      color: theme.colors.textLight,
-      textDecorationLine: "line-through",
-      marginLeft: theme.spacing.sm,
-    },
-    featuresContainer: {
-      gap: theme.spacing.sm,
-    },
-    featureRow: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    featureIcon: {
-      width: 24,
-      height: 24,
-      borderRadius: theme.borderRadius.round,
-      justifyContent: "center",
-      alignItems: "center",
-      marginRight: theme.spacing.md,
-    },
-    includedIcon: {
-      backgroundColor: theme.colors.success + "20",
-    },
-    excludedIcon: {
-      backgroundColor: theme.colors.textLight + "20",
-    },
-    // featureText: {
-    //   fontSize: theme.fontSize.sm,
-    //   color: theme.colors.text,
-    //   flex: 1,
-    // },
-    // excludedText: {
-    //   color: theme.colors.textLight,
-    //   textDecorationLine: "line-through",
-    // },
-    // subscribeButton: {
-    //   borderRadius: theme.borderRadius.lg,
-    //   marginBottom: theme.spacing.lg,
-    //   overflow: "hidden",
-    // },
-    // disabledButton: {
-    //   opacity: 0.6,
-    // },
-    // subscribeGradient: {
-    //   flexDirection: "row",
-    //   alignItems: "center",
-    //   justifyContent: "center",
-    //   paddingVertical: theme.spacing.lg,
-    //   paddingHorizontal: theme.spacing.xl,
-    // },
-    subscribeText: {
-      color: "white",
-      fontSize: theme.fontSize.lg,
-      fontWeight: "bold",
-      marginLeft: theme.spacing.sm,
-    },
-    guaranteeCard: {
-      backgroundColor: theme.colors.success + "10",
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      flexDirection: "row",
-    },
-    guaranteeContent: {
       flex: 1,
-      marginLeft: theme.spacing.md,
-    },
-    guaranteeTitle: {
-      fontSize: theme.fontSize.md,
-      fontWeight: "bold",
-      color: theme.colors.success,
-      marginBottom: theme.spacing.xs,
-    },
-    guaranteeText: {
-      fontSize: theme.fontSize.sm,
+      fontSize: 14,
       color: theme.colors.textLight,
       lineHeight: 20,
+      fontWeight: "500",
+    },
+    footerContainer: {
+      position: "absolute",
+      bottom: 0,
+      width: "100%",
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      backgroundColor: theme.colors.background,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+    },
+    subscribeButton: {
+      backgroundColor: theme.colors.primary,
+      height: 56,
+      borderRadius: theme.borderRadius.round,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 4,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+    },
+    disabledButton: {
+      backgroundColor: theme.colors.border,
+      elevation: 0,
+      shadowOpacity: 0,
+    },
+    buttonText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "700",
+      letterSpacing: 0.5,
     },
   });

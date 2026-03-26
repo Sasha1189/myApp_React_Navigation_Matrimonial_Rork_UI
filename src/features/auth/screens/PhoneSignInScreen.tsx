@@ -9,6 +9,8 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthNavigation } from "../../../navigation/hooks";
@@ -17,9 +19,7 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { getAuth, signInWithPhoneNumber } from "@react-native-firebase/auth";
-import { LanguageSelector } from "../../../components/LanguageSelector";
 import { useTranslation } from "react-i18next";
-import i18n from "../../../i18n/i18n";
 
 const { width, height } = Dimensions.get("window");
 
@@ -27,7 +27,6 @@ export default function PhoneSignInScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
-  if (!theme) return null;
 
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -71,74 +70,72 @@ export default function PhoneSignInScreen() {
     const formatted = formatPhoneNumber(text);
     setPhoneNumber(formatted);
   };
-
+  if (!theme) return null;
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.topBar}>
-          <LanguageSelector />
-        </View>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Heart
-                size={32}
-                color={theme.colors.accent}
-                fill={theme.colors.accent}
-              />
-              <Text style={styles.appName}>LoveConnect</Text>
-              <Text>{i18n.language}</Text>
-              <Text>{t("common.loading")}</Text>
-            </View>
-            <Text style={styles.title}>{t("auth.enterPhone")}</Text>
-            <Text style={styles.subtitle}>{t("auth.phoneSubtitle")}</Text>
-          </View>
-
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <Phone
-                size={20}
-                color={theme.colors.textLight}
-                style={styles.phoneIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="123-456-7890"
-                placeholderTextColor={theme.colors.textLight}
-                value={phoneNumber}
-                onChangeText={handlePhoneChange}
-                keyboardType="phone-pad"
-                maxLength={12}
-                autoFocus
-              />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <View style={styles.logoWrapper}>
+                <Heart
+                  size={32}
+                  color={theme.colors.primary}
+                  fill={theme.colors.primary}
+                />
+              </View>
+              <Text style={styles.title}>{t("auth.enterPhone")}</Text>
+              <Text style={styles.subtitle}>{t("auth.phoneSubtitle")}</Text>
             </View>
 
-            <TouchableOpacity
-              style={[
-                styles.continueButton,
-                !phoneNumber.trim() && styles.disabledButton,
-              ]}
-              onPress={handleContinue}
-              disabled={!phoneNumber.trim() || isLoading}
-            >
-              {isLoading ? (
-                <Text style={styles.continueText}>{t("auth.sending")}</Text>
-              ) : (
-                <>
-                  <Text style={styles.continueText}>{t("auth.continue")}</Text>
-                  <ArrowRight size={20} color="white" />
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+            <View style={styles.formContainer}>
+              <View style={styles.inputContainer}>
+                <View style={styles.iconWrapper}>
+                  <Phone size={20} color={theme.colors.primary} />
+                </View>
+                <Text style={styles.prefix}>+91</Text>
+                <View style={styles.divider} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="999 888 7777"
+                  placeholderTextColor={theme.colors.textLight}
+                  value={phoneNumber}
+                  onChangeText={handlePhoneChange}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  autoFocus
+                />
+              </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.termsText}>{t("auth.terms")}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.continueButton,
+                  !phoneNumber.trim() && styles.disabledButton,
+                ]}
+                onPress={handleContinue}
+                disabled={!phoneNumber.trim() || isLoading}
+              >
+                {isLoading ? (
+                  <Text style={styles.continueText}>{t("auth.sending")}</Text>
+                ) : (
+                  <>
+                    <Text style={styles.continueText}>
+                      {t("auth.continue")}
+                    </Text>
+                    <ArrowRight size={20} color="white" />
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.footer}>
+              <Text style={styles.termsText}>{t("auth.terms")}</Text>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -164,91 +161,115 @@ export const createStyles = (theme: AppTheme) =>
     },
     header: {
       alignItems: "center",
-      marginTop: height * 0.05,
+      marginTop: height * 0.08,
     },
-    logoContainer: {
-      flexDirection: "row",
+    logoWrapper: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: `${theme.colors.primary}15`,
       alignItems: "center",
-      marginBottom: theme.spacing.xl,
-    },
-    appName: {
-      fontSize: theme.fontSize.xl,
-      fontWeight: "bold",
-      color: theme.colors.text,
-      marginLeft: theme.spacing.sm,
+      justifyContent: "center",
+      marginBottom: theme.spacing.lg,
     },
     title: {
-      fontSize: theme.fontSize.xl,
-      fontWeight: "bold",
+      fontSize: 26,
+      fontWeight: "800",
       color: theme.colors.text,
       textAlign: "center",
-      marginBottom: theme.spacing.md,
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing.sm,
     },
     subtitle: {
-      fontSize: theme.fontSize.md,
+      fontSize: 15,
       color: theme.colors.textLight,
       textAlign: "center",
+      fontWeight: "500",
       lineHeight: 22,
+      letterSpacing: 0.3,
       paddingHorizontal: theme.spacing.md,
     },
     formContainer: {
       alignItems: "center",
-      gap: theme.spacing.xl,
+      width: "100%",
     },
     inputContainer: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.colors.card,
-      borderRadius: theme.borderRadius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.sm,
       borderWidth: 1,
       borderColor: theme.colors.border,
       width: "100%",
-      maxWidth: 300,
+      elevation: 2,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      marginBottom: theme.spacing.xl,
     },
-    phoneIcon: {
+    iconWrapper: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: `${theme.colors.primary}12`,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: theme.spacing.sm,
+    },
+    prefix: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.colors.text,
+      marginRight: theme.spacing.sm,
+      letterSpacing: 0.5,
+    },
+    divider: {
+      width: 1,
+      height: 24,
+      backgroundColor: theme.colors.border,
       marginRight: theme.spacing.sm,
     },
     input: {
       flex: 1,
-      fontSize: theme.fontSize.lg,
+      fontSize: 18,
+      fontWeight: "600",
       color: theme.colors.text,
-      textAlign: "center",
+      letterSpacing: 2,
     },
     continueButton: {
       backgroundColor: theme.colors.primary,
-      paddingHorizontal: theme.spacing.xl,
-      paddingVertical: theme.spacing.md + 4,
+      width: "100%",
+      paddingVertical: 18,
       borderRadius: theme.borderRadius.round,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       gap: theme.spacing.sm,
-      minWidth: width * 0.6,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
       elevation: 4,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     },
     disabledButton: {
-      backgroundColor: theme.colors.textLight,
-      opacity: 0.6,
+      backgroundColor: theme.colors.border,
+      shadowOpacity: 0,
+      elevation: 0,
     },
     continueText: {
       color: "white",
-      fontSize: theme.fontSize.md,
-      fontWeight: "600",
+      fontSize: 18,
+      fontWeight: "bold",
+      letterSpacing: 0.5,
     },
     footer: {
       paddingBottom: theme.spacing.xl,
+      width: "100%",
     },
     termsText: {
-      fontSize: theme.fontSize.sm,
+      fontSize: 12,
       color: theme.colors.textLight,
       textAlign: "center",
       lineHeight: 18,

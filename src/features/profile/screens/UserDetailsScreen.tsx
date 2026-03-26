@@ -41,6 +41,7 @@ import {
   Brain,
   Heart,
 } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useAppNavigation } from "@/navigation/hooks";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -51,7 +52,6 @@ import {
   DetailRow,
 } from "../components/profileDetailView/ProfileInfoGrid";
 import { Lock } from "lucide-react-native";
-// import { useProfileActions } from "../hooks/useProfileActions";
 import { ProfileActionFooter } from "../components/profileDetailView/ProfileActionFooter";
 import { useTranslation } from "react-i18next";
 
@@ -61,24 +61,24 @@ export default function UserDetailsScreen({ route }: any) {
   const { t } = useTranslation();
   const navigation = useAppNavigation();
   const { theme } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const { profile: myProfile } = useAuth();
   const profile = route.params?.profile;
 
   // Hook for Share/Block logic
   // const { generateAndSharePDF, handleBlock } = useProfileActions(profile);
 
-  if (!profile) return null;
   const isSelf = myProfile?.uid === profile?.uid;
   const canViewContact =
     isSelf ||
-    (myProfile?.subscription?.plan && myProfile.subscription.plan !== "basic");
-
+    (myProfile?.subscription?.plan && myProfile.subscription.plan !== "trial");
+  if (!profile) return null;
   return (
     <ScrollView
       style={{
         flex: 1,
         backgroundColor: theme.colors.background,
-        paddingBottom: 400,
+        paddingBottom: insets.bottom + 20,
       }}
       showsVerticalScrollIndicator={false}
     >
@@ -147,7 +147,7 @@ export default function UserDetailsScreen({ route }: any) {
         {/* 2. About Me - Full Width Blocks */}
         <DetailSection title={t("details.sections.about")} icon={Heart}>
           <DetailRow
-            label={t("details.labels.bio")}
+            label={t("details.labels.shortBio")}
             value={profile.shortBio}
             icon={MessageCircle}
             fullWidth
@@ -159,7 +159,7 @@ export default function UserDetailsScreen({ route }: any) {
             fullWidth
           />
           <DetailRow
-            label={t("details.labels.beliefs")}
+            label={t("details.labels.beliefsValues")}
             value={profile?.beliefsValues}
             icon={Church}
             fullWidth
@@ -288,7 +288,7 @@ export default function UserDetailsScreen({ route }: any) {
           <DetailSection title={t("details.sections.contact")} icon={Phone}>
             <TouchableOpacity
               style={styles.upgradeCard}
-              onPress={() => navigation.navigate("Subscription")}
+              onPress={() => navigation.navigate("Paywall")}
             >
               <Lock size={24} color={theme.colors.primary} />
               <Text style={styles.upgradeText}>{t("details.upgradeText")}</Text>

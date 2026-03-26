@@ -23,4 +23,7 @@ export default {
   privacyDesc: "How we handle your data",
   account: "Account",
   signOutDesc: "Sign out securely",
+  logoutTitle: "Logout",
+  logoutConfirm:
+    "Are you sure you want to logout from your Lonari account? We'll be waiting for your return!",
 };

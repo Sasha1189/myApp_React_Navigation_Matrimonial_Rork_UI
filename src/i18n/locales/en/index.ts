@@ -8,6 +8,8 @@ import chat from "./chat";
 import details from "./details";
 import photos from "./photos";
 import profile from "./profile";
+import welcome from "./welcome";
+import subscription from "./subscription";
 
 export default {
   auth,
@@ -19,6 +21,8 @@ export default {
   details,
   photos,
   profile,
+  welcome,
+  subscription,
   common,
   // add more as you create them
 };

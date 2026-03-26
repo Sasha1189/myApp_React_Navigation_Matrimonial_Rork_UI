@@ -15,6 +15,8 @@ import {
   Keyboard,
   ToastAndroid,
   BackHandler,
+  View,
+  KeyboardAvoidingView,
 } from "react-native";
 import {
   getAuth,
@@ -22,6 +24,8 @@ import {
   FirebaseAuthTypes,
 } from "@react-native-firebase/auth";
 import { useTranslation } from "react-i18next";
+import { ShieldCheck, ArrowLeft } from "lucide-react-native";
+
 type OTPVerifyProps = {
   route: {
     params: {
@@ -39,9 +43,9 @@ const CODE_LENGTH = 6;
 const RESEND_TIME = 60;
 
 const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
+  const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { t } = useTranslation();
   if (!theme) return null;
 
   const { confirmation: initialConfirmation, phone } = route.params;
@@ -169,51 +173,66 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text>{t("common.back")}</Text>
+          <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
       )}
 
-      <Text style={styles.timer}>{formatTime(timer)}</Text>
-      <Text style={styles.desc}>{t("auth.enterOtp", { phone })}</Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.logoWrapper}>
+            <ShieldCheck size={32} color={theme.colors.primary} />
+          </View>
+          <Text style={styles.title}>{t("auth.verify")}</Text>
+          <Text style={styles.subtitle}>{t("auth.enterOtp", { phone })}</Text>
+        </View>
 
-      {resendMessage ? (
-        <Text style={styles.feedbackText}>{resendMessage}</Text>
-      ) : null}
+        <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={inputRef}
+              style={styles.otpInput}
+              value={code}
+              onChangeText={handleCodeChange}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              maxLength={CODE_LENGTH}
+              placeholder="------"
+              placeholderTextColor={theme.colors.textLight}
+            />
+          </View>
 
-      <TextInput
-        ref={inputRef}
-        style={styles.otpInput}
-        value={code}
-        onChangeText={handleCodeChange}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        maxLength={CODE_LENGTH}
-        placeholder="------"
-      />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {resendMessage ? (
+            <Text style={styles.feedbackText}>{resendMessage}</Text>
+          ) : null}
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <View style={styles.resendContainer}>
+            <Text style={styles.resendPrompt}>Didn't receive the code? </Text>
+            {timer > 0 ? (
+              <Text style={styles.timerText}>{formatTime(timer)}</Text>
+            ) : (
+              <TouchableOpacity disabled={loading} onPress={handleResend}>
+                <Text style={styles.resendText}>{t("auth.resendOtp")}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <TouchableOpacity
-        disabled={timer > 0 || loading}
-        onPress={handleResend}
-        style={[styles.resendBtn, { opacity: timer > 0 ? 0.4 : 1 }]}
-      >
-        <Text style={styles.resendText}>{t("auth.resendOtp")}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.doneBtn,
-          { opacity: code.length === CODE_LENGTH && !loading ? 1 : 0.5 },
-        ]}
-        disabled={code.length !== CODE_LENGTH || loading}
-      >
-        {!loading ? (
-          <Text style={styles.doneText}>{t("auth.verifying")}</Text>
-        ) : (
-          <ActivityIndicator size="large" color="#fff" />
-        )}
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.verifyButton,
+              code.length !== CODE_LENGTH && styles.disabledButton,
+            ]}
+            disabled={code.length !== CODE_LENGTH || loading}
+            onPress={verifyCode}
+          >
+            {!loading ? (
+              <Text style={styles.verifyText}>{t("auth.verify")}</Text>
+            ) : (
+              <ActivityIndicator size="small" color="white" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -224,73 +243,146 @@ export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#fff",
-      justifyContent: "center",
-      padding: 24,
+      backgroundColor: theme.colors.background,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.lg,
     },
     backButton: {
       position: "absolute",
       top: 10,
-      left: 10,
+      left: theme.spacing.md,
       zIndex: 10,
-      backgroundColor: "#fff",
-      borderRadius: 20,
-      padding: 8,
-      elevation: 3,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: theme.colors.card,
+      alignItems: "center",
+      justifyContent: "center",
+      elevation: 2,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
-    timer: {
-      textAlign: "center",
-      fontSize: 16,
-      color: "#888",
-      marginBottom: 12,
+    header: {
+      alignItems: "center",
+      marginTop: 100,
+      marginBottom: theme.spacing.xl,
     },
-    desc: {
+    logoWrapper: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: `${theme.colors.primary}15`,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: theme.spacing.lg,
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: "800",
+      color: theme.colors.text,
       textAlign: "center",
-      fontSize: 18,
-      marginBottom: 24,
+      letterSpacing: 0.5,
+      marginBottom: theme.spacing.sm,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: theme.colors.textLight,
+      textAlign: "center",
       fontWeight: "500",
+      lineHeight: 22,
+      letterSpacing: 0.3,
+      paddingHorizontal: theme.spacing.md,
+    },
+    formContainer: {
+      alignItems: "center",
+      width: "100%",
+    },
+    inputContainer: {
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      width: "100%",
+      elevation: 2,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      marginBottom: theme.spacing.lg,
     },
     otpInput: {
       fontSize: 24,
-      letterSpacing: 16,
-      color: "#000",
+      letterSpacing: 12,
+      fontWeight: "700",
+      color: theme.colors.text,
       textAlign: "center",
-      borderWidth: 1,
-      borderColor: "#ffa500",
-      paddingVertical: 12,
-      marginBottom: 24,
+      paddingVertical: 16,
     },
     errorText: {
       color: "red",
       textAlign: "center",
-      marginBottom: 20,
+      marginBottom: theme.spacing.md,
       fontSize: 14,
+      fontWeight: "500",
     },
     feedbackText: {
       textAlign: "center",
-      color: "green",
-      fontSize: 16,
-      marginBottom: 10,
+      color: theme.colors.primary,
+      marginBottom: theme.spacing.md,
+      fontSize: 14,
+      fontWeight: "600",
     },
-    resendBtn: {
-      marginTop: 20,
-      marginBottom: 50,
+    resendContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: theme.spacing.xl,
+    },
+    resendPrompt: {
+      color: theme.colors.textLight,
+      fontSize: 14,
+    },
+    timerText: {
+      color: theme.colors.text,
+      fontSize: 14,
+      fontWeight: "700",
     },
     resendText: {
-      textAlign: "right",
-      color: "#ff9800",
-      fontSize: 16,
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: "700",
     },
-    doneBtn: {
-      height: 50,
-      backgroundColor: "#ffa500",
-      borderRadius: 10,
+    verifyButton: {
+      backgroundColor: theme.colors.primary,
+      width: "100%",
+      paddingVertical: 18,
+      borderRadius: theme.borderRadius.round,
+      flexDirection: "row",
+      alignItems: "center",
       justifyContent: "center",
+      elevation: 4,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     },
-    doneText: {
-      textAlign: "center",
-      fontSize: 20,
-      color: "#fff",
+    disabledButton: {
+      backgroundColor: theme.colors.border,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    verifyText: {
+      color: "white",
+      fontSize: 18,
       fontWeight: "bold",
+      letterSpacing: 0.5,
     },
   });

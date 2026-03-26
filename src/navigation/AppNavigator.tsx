@@ -1,5 +1,4 @@
 import React from "react";
-import { Platform } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ChatScreen from "../features/messages/screens/ChatScreen";
 import FilterScreen from "../features/home/screens/FilterScreen";
@@ -8,13 +7,14 @@ import EditProfileScreen from "../features/profile/screens/EditProfileScreen";
 import ManagePhotosScreen from "../features/profile/screens/ManagePhotosScreen";
 import UserDetailsScreen from "../features/profile/screens/UserDetailsScreen";
 import SettingsScreen from "../features/settings/screens/SettingsScreen";
-import UpgradeScreen from "../features/subscription/screens/UpgradeScreen";
 import EditAboutMeScreen from "@/features/profile/components/sections/EditAboutMeScreen";
 import EditPersonalInfoScreen from "@/features/profile/components/sections/PersonalInfoSection";
+import EditFamilyDetailsScreen from "@/features/profile/components/sections/EditFamilyDetailsScreen";
 import EditContactDetailsScreen from "@/features/profile/components/sections/ContactDetailsSection";
 import EditEducationCareerScreen from "@/features/profile/components/sections/EducationCareerSection";
 import EditLifestyleScreen from "@/features/profile/components/sections/LifestyleSection";
 import EditPartnerPreferencesScreen from "@/features/profile/components/sections/PartnerPreferencesSection";
+import PaywallScreen from "@/features/subscription/screens/PaywallScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
@@ -103,16 +103,6 @@ export default function AppNavigator() {
         }}
       />
       <Stack.Screen
-        name="Upgrade"
-        component={UpgradeScreen}
-        options={{
-          headerShown: true,
-          title: "Upgrade Plan",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
-        }}
-      />
-      <Stack.Screen
         name="EditAboutMe"
         component={EditAboutMeScreen}
         options={{
@@ -153,6 +143,17 @@ export default function AppNavigator() {
         }}
       />
       <Stack.Screen
+        name="EditFamily"
+        component={EditFamilyDetailsScreen}
+        options={{
+          headerShown: true,
+          title: "Edit Family Details",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+
+      <Stack.Screen
         name="EditLifestyle"
         component={EditLifestyleScreen}
         options={{
@@ -168,6 +169,16 @@ export default function AppNavigator() {
         options={{
           headerShown: true,
           title: "Edit Preferance Details",
+          headerStyle: { backgroundColor: theme.colors.primary },
+          headerTintColor: "white",
+        }}
+      />
+      <Stack.Screen
+        name="Paywall"
+        component={PaywallScreen}
+        options={{
+          headerShown: true,
+          // title: "Edit Preferance Details",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}

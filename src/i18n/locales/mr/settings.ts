@@ -23,4 +23,7 @@ export default {
   privacyDesc: "आम्ही तुमचा डेटा कसा हाताळतो",
   account: "खाते",
   signOutDesc: "सुरक्षितपणे साइन आउट करा",
+  logoutTitle: "लॉगआउट (Logout)",
+  logoutConfirm:
+    "तुम्ही खात्रीने लॉगआउट करू इच्छिता का? तुमच्या पुनरागमनाची आम्ही वाट पाहू!",
 };

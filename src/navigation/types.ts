@@ -48,6 +48,7 @@ export type AppStackParamList = {
   EditFamily: undefined;
   EditLifestyle: undefined;
   EditPartner: undefined;
+  Paywall: undefined;
 };
 
 export type TabParamList = {

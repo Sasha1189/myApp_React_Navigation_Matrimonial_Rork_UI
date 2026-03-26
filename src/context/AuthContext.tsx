@@ -26,12 +26,12 @@ interface AuthContextType {
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   tier: "none" | "trial" | "basic" | "premium";
   setTier: (tier: any) => void;
-  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const PROFILE_CACHE_KEY = "self_profile_cache";
+const TIER_CACHE_KEY = "self_tier_cache";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
@@ -47,26 +47,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   usePresence(user?.uid);
   const updateProfile = useUpdateProfile(user, profile, setProfile);
-
-  // New: Function to fetch subscription from your backend
-  const refreshSubscription = async () => {
-    if (!user) return;
-    try {
-      const token = await user.getIdToken(true);
-      // MOCK for now: replace with fetch('your-backend/status')
-      console.log("Checking subscription for:", user.uid);
-      // setTier(data.tier);
-    } catch (error) {
-      console.error("Sub check failed:", error);
-    }
-  };
-
-  //first time fetch self profile-on login
+  //profile
   useEffect(() => {
     const syncProfileAndTier = async () => {
       if (!user) return;
       try {
-        // 1. Existing Profile Sync
         const hasCache = storage.contains(PROFILE_CACHE_KEY);
         if (!hasCache) {
           const remoteData = await getProfile(user?.uid, user?.displayName!);
@@ -75,18 +60,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             storage.set(PROFILE_CACHE_KEY, JSON.stringify(remoteData));
           }
         }
-        // 2. New: Tier Sync
-        await refreshSubscription();
       } catch (error) {
         console.error("Initial sync failed:", error);
       }
     };
     syncProfileAndTier();
   }, [user?.uid]);
-
+  //auth
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const idTokenResult = await firebaseUser.getIdTokenResult(true);
+
+        const claims = idTokenResult.claims;
+
+        // 1. Decode Tier Map (t: 'p' -> 'premium')
+        const tierMapping: Record<
+          string,
+          "none" | "trial" | "basic" | "premium"
+        > = {
+          n: "none",
+          t: "trial",
+          b: "basic",
+          p: "premium",
+        };
+
+        const mappedTier = tierMapping[claims.t as string] || "none";
+        const expirySeconds = (claims.e as number) || 0;
+        const currentTimeSeconds = Math.floor(Date.now() / 1000);
+
+        // 2. Check Expiry
+        if (mappedTier !== "none" && currentTimeSeconds > expirySeconds) {
+          setTier("none");
+          storage.set(TIER_CACHE_KEY, "none");
+        } else {
+          setTier(mappedTier);
+          storage.set(TIER_CACHE_KEY, mappedTier);
+        }
+      } else {
+        setTier("none");
+      }
       setUser(firebaseUser);
       setAuthLoading(false);
     });
@@ -102,7 +116,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateProfile,
       tier,
       setTier,
-      refreshSubscription,
     }),
     [user, profile, authLoading, tier],
   );
