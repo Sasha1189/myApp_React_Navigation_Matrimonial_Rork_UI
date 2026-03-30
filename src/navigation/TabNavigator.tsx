@@ -44,8 +44,8 @@ export default function TabNavigator() {
         },
         headerTitleAlign: "center",
         headerTitleStyle: {
-          fontSize: theme.fontSize.sm,
-          fontWeight: "800",
+          fontSize: theme.fontSize.lg,
+          fontWeight: "700",
           color: theme.colors.text,
           textTransform: "uppercase", // RHF style
           letterSpacing: 1.5,

@@ -53,7 +53,6 @@ export type AppStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  Matches: undefined;
   Messages: undefined;
   Profile: undefined;
 };

@@ -30,7 +30,22 @@ export default function AppNavigator() {
   if (!theme) return null;
 
   return (
-    <Stack.Navigator initialRouteName="Tabs">
+    <Stack.Navigator
+      initialRouteName="Tabs"
+      screenOptions={{
+        headerShown: true,
+        headerTitleAlign: "center",
+        headerStyle: {
+          backgroundColor: theme.colors.card,
+        },
+        headerTitleStyle: {
+          fontSize: theme.fontSize.sm,
+          fontWeight: "700",
+          color: theme.colors.text,
+        },
+        headerTintColor: theme.colors.primary,
+      }}
+    >
       <Stack.Screen
         name="Tabs"
         component={TabNavigator}
@@ -40,51 +55,28 @@ export default function AppNavigator() {
         name="Chat"
         component={ChatScreen}
         options={{
-          headerShown: true,
-          title: t("navigation.chat"), // Uppercase for that RHF Pro look
-          headerStyle: {
-            backgroundColor: theme.colors.card,
-          },
-          headerTitleAlign: "center",
-          headerTintColor: theme.colors.primary, // Back button matches primary brand color
-          headerTitleStyle: {
-            fontSize: theme.fontSize.sm, // Slightly smaller/refined
-            fontWeight: "800",
-            color: theme.colors.text, // Dark text for high contrast on light card
-          },
+          title: t("navigation.chat"),
         }}
       />
       <Stack.Screen
         name="Details"
         component={UserDetailsScreen}
         options={{
-          headerShown: true,
           title: t("navigation.details"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditProfile"
         component={EditProfileScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editProfile"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="ManagePhotos"
         component={ManagePhotosScreen}
         options={{
-          headerShown: true,
           title: t("navigation.managePhotos"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
@@ -101,66 +93,42 @@ export default function AppNavigator() {
         name="Settings"
         component={SettingsScreen}
         options={{
-          headerShown: true,
           title: t("navigation.settings"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditAboutMe"
         component={EditAboutMeScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editAbout"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditPersonal"
         component={EditPersonalInfoScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editPersonal"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditContact"
         component={EditContactDetailsScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editContact"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditEducation"
         component={EditEducationCareerScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editEducation"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditFamily"
         component={EditFamilyDetailsScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editFamily"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
 
@@ -168,33 +136,21 @@ export default function AppNavigator() {
         name="EditLifestyle"
         component={EditLifestyleScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editLifeStyle"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="EditPartner"
         component={EditPartnerPreferencesScreen}
         options={{
-          headerShown: true,
           title: t("navigation.editPartnerPreferences"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
       <Stack.Screen
         name="Paywall"
         component={PaywallScreen}
         options={{
-          headerShown: true,
           title: t("navigation.paywall"),
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: theme.colors.primary },
-          headerTintColor: "white",
         }}
       />
     </Stack.Navigator>

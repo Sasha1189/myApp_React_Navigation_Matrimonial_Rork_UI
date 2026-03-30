@@ -315,7 +315,7 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: "center",
     },
     menuLabel: {
-      fontSize: theme.fontSize.md,
+      fontSize: theme.fontSize.sm,
       fontWeight: "600",
       color: theme.colors.text,
       letterSpacing: 0.5,
