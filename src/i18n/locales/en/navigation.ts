@@ -1,0 +1,18 @@
+export default {
+  home: "LONARI",
+  messages: "MESSAGES",
+  profile: "PROFILE",
+  chat: "CHAT",
+  details: "PROFILE DETAILS",
+  editProfile: "EDIT PROFILE",
+  managePhotos: "ADD PHOTOS",
+  settings: "SETTINGS",
+  editAbout: "Edit About Me",
+  editPersonal: "Personal Information",
+  editContact: "Contact Details",
+  editEducation: "Education & Career",
+  editFamily: "Family Details",
+  editLifeStyle: "Lifestyle Details",
+  editPartnerPreferences: "Partner Preferences",
+  paywall: "Contribution",
+};

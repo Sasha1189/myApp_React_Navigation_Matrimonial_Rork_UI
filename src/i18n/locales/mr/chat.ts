@@ -1,9 +1,10 @@
 export default {
   recentActivity: "अलीकडील क्रियाकलाप",
+  lastSeen: "शेवटचे पहिले",
   tabs: {
     chats: "चॅट्स",
-    sent: "पाठवलेले",
-    received: "मिळालेले",
+    sent: "पाठवलेले लाईक",
+    received: "मिळालेले लाईक",
   },
   empty: {
     chatsTitle: "अद्याप संदेश नाहीत",

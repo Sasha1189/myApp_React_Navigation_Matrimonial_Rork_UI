@@ -19,12 +19,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
 import { useAppTheme } from "@/theme/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppNavigator() {
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   if (!theme) return null;
 
   return (
@@ -39,7 +41,7 @@ export default function AppNavigator() {
         component={ChatScreen}
         options={{
           headerShown: true,
-          title: "CHAT", // Uppercase for that RHF Pro look
+          title: t("navigation.chat"), // Uppercase for that RHF Pro look
           headerStyle: {
             backgroundColor: theme.colors.card,
           },
@@ -57,7 +59,8 @@ export default function AppNavigator() {
         component={UserDetailsScreen}
         options={{
           headerShown: true,
-          title: "Profile Details",
+          title: t("navigation.details"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -67,7 +70,8 @@ export default function AppNavigator() {
         component={EditProfileScreen}
         options={{
           headerShown: true,
-          title: "Edit Profile",
+          title: t("navigation.editProfile"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -77,7 +81,8 @@ export default function AppNavigator() {
         component={ManagePhotosScreen}
         options={{
           headerShown: true,
-          title: "Add Photos",
+          title: t("navigation.managePhotos"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -97,7 +102,8 @@ export default function AppNavigator() {
         component={SettingsScreen}
         options={{
           headerShown: true,
-          title: "Settings",
+          title: t("navigation.settings"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -107,7 +113,8 @@ export default function AppNavigator() {
         component={EditAboutMeScreen}
         options={{
           headerShown: true,
-          title: "Edit About Me",
+          title: t("navigation.editAbout"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -117,7 +124,8 @@ export default function AppNavigator() {
         component={EditPersonalInfoScreen}
         options={{
           headerShown: true,
-          title: "Edit About Me",
+          title: t("navigation.editPersonal"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -127,7 +135,8 @@ export default function AppNavigator() {
         component={EditContactDetailsScreen}
         options={{
           headerShown: true,
-          title: "Edit Contact Details",
+          title: t("navigation.editContact"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -137,7 +146,8 @@ export default function AppNavigator() {
         component={EditEducationCareerScreen}
         options={{
           headerShown: true,
-          title: "Edit Education Details",
+          title: t("navigation.editEducation"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -147,7 +157,8 @@ export default function AppNavigator() {
         component={EditFamilyDetailsScreen}
         options={{
           headerShown: true,
-          title: "Edit Family Details",
+          title: t("navigation.editFamily"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -158,7 +169,8 @@ export default function AppNavigator() {
         component={EditLifestyleScreen}
         options={{
           headerShown: true,
-          title: "Edit Lifestyle Details",
+          title: t("navigation.editLifeStyle"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -168,7 +180,8 @@ export default function AppNavigator() {
         component={EditPartnerPreferencesScreen}
         options={{
           headerShown: true,
-          title: "Edit Preferance Details",
+          title: t("navigation.editPartnerPreferences"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}
@@ -178,7 +191,8 @@ export default function AppNavigator() {
         component={PaywallScreen}
         options={{
           headerShown: true,
-          // title: "Edit Preferance Details",
+          title: t("navigation.paywall"),
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: "white",
         }}

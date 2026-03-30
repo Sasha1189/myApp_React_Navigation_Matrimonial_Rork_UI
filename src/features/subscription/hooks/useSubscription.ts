@@ -1,4 +1,3 @@
-// src/features/subscription/hooks/useSubscription.ts
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +10,7 @@ export const useSubscription = () => {
 
   const handlePay = async () => {
     if (!user) return;
+
     setIsProcessing(true);
 
     try {

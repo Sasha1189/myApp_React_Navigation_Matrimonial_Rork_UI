@@ -1,12 +1,12 @@
 export default {
-  editProfile: "Edit Profile",
-  viewPreview: "View Preview",
-  managePhotos: "Manage Photos",
+  editProfile: "CREATE PROFILE",
+  viewPreview: "PREVIEW PROFILE",
+  managePhotos: "ADD PHOTOS",
   completion: "{{percent}}% Profile Completed",
   stats: {
     matches: "Matches",
-    sent: "Sent",
-    received: "Recv",
+    sent: "Like Sent",
+    received: "Like Recv",
   },
   premium: {
     upgrade: "Upgrade to Premium",

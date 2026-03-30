@@ -177,9 +177,11 @@ export default function ProfileScreen({ navigation }: any) {
               <View style={styles.iconWrapper}>
                 <item.icon size={18} color={theme.colors.primary} />
               </View>
-              <Text style={styles.menuLabel}>{item.label}</Text>
+              <View style={styles.titleContainer}>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+              </View>
             </View>
-            <ChevronRight size={16} color={theme.colors.textLight} />
+            <ChevronRight size={18} color={theme.colors.textLight} />
           </TouchableOpacity>
         ))}
       </View>
@@ -284,7 +286,6 @@ const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.8,
     },
     statDivider: { width: 1, height: 20, backgroundColor: theme.colors.border },
-
     menuContainer: {
       backgroundColor: theme.colors.card,
       marginHorizontal: 20,
@@ -296,26 +297,30 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      marginRight: theme.spacing.md,
       padding: 10,
     },
     menuLeft: { flexDirection: "row", alignItems: "center" },
     iconWrapper: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
-      backgroundColor: `${theme.colors.primary}15`,
+      width: 40,
+      height: 40,
+      borderRadius: theme.borderRadius.sm,
+      backgroundColor: `${theme.colors.primary}12`,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: 12,
+    },
+    titleContainer: {
+      flex: 1,
+      marginLeft: theme.spacing.md,
+      justifyContent: "center",
     },
     menuLabel: {
-      fontSize: 14,
+      fontSize: theme.fontSize.md,
       fontWeight: "600",
-      letterSpacing: 0.3,
       color: theme.colors.text,
+      letterSpacing: 0.5,
       opacity: 0.8,
     },
-
     premiumCard: {
       marginHorizontal: 20,
       marginTop: 20,

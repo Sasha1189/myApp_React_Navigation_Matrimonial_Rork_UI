@@ -69,3 +69,5 @@ export {
   orderBy,
   limit,
 } from "@react-native-firebase/firestore";
+
+export { updateProfile, reload } from "@react-native-firebase/auth";

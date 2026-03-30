@@ -1,9 +1,10 @@
 export default {
   recentActivity: "Recent Activity",
+  lastSeen: "Last seen",
   tabs: {
     chats: "Chats",
-    sent: "Sent",
-    received: "Received",
+    sent: "Sent Likes",
+    received: "Recev Likes",
   },
   empty: {
     chatsTitle: "No messages yet",

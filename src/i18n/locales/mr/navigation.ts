@@ -1,0 +1,18 @@
+export default {
+  home: "लोणारी",
+  messages: "मेसेजs",
+  profile: "प्रोफाइल",
+  chat: "चॅट",
+  details: "प्रोफाइल माहिती",
+  editProfile: "प्रोफाइल बदला",
+  managePhotos: "फोटो जोडा",
+  settings: "सेटिंग्ज",
+  editAbout: "माझ्याबद्दल माहिती",
+  editPersonal: "वैयक्तिक माहिती",
+  editContact: "संपर्क माहिती",
+  editEducation: "शिक्षण आणि करिअर",
+  editFamily: "कौटुंबिक माहिती",
+  editLifeStyle: "जीवनशैली माहिती",
+  editPartnerPreferences: "अपेक्षित जोडीदार माहिती",
+  paywall: "योगदान",
+};

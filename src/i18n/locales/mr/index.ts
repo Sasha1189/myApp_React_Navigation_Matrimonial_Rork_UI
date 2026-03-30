@@ -10,6 +10,7 @@ import photos from "./photos";
 import profile from "./profile";
 import welcome from "./welcome";
 import subscription from "./subscription";
+import navigation from "./navigation";
 
 export default {
   auth,
@@ -24,5 +25,6 @@ export default {
   welcome,
   subscription,
   common,
+  navigation,
   // add more as you create them
 };

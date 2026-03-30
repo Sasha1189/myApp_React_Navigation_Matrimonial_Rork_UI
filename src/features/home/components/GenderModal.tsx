@@ -1,4 +1,4 @@
-import { auth } from "../../../config/firebase";
+import { auth, updateProfile, reload } from "../../../config/firebase";
 import { useAuth } from "../../../context/AuthContext";
 import {
   View,
@@ -33,7 +33,7 @@ interface FirebaseUserLike {
 const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+
   const { setUser } = useAuth();
   const [gender, setGender] = useState<Gender>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -75,6 +75,7 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
 
   const updateFirebaseUser = async (): Promise<void> => {
     const currentUser = auth.currentUser;
+
     if (!gender) {
       Alert.alert(
         t("genderModal.selectGender"),
@@ -87,10 +88,11 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
 
     try {
       if (currentUser) {
-        await currentUser.updateProfile({
+        await updateProfile(currentUser, {
           displayName: gender,
         });
-        await currentUser.reload();
+
+        await reload(currentUser);
 
         const updatedUser = auth.currentUser;
 
@@ -108,7 +110,7 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
       setLoading(false);
     }
   };
-
+  if (!theme) return null;
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalBackdrop}>

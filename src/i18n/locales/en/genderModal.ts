@@ -4,4 +4,6 @@ export default {
   female: "Female",
   update: "Update Profile",
   retry: "Try Again",
+  done: "Success",
+  successMsg: "Your profile has been updated successfully!",
 };

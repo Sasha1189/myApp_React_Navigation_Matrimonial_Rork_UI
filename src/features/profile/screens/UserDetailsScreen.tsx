@@ -78,11 +78,11 @@ export default function UserDetailsScreen({ route }: any) {
       style={{
         flex: 1,
         backgroundColor: theme.colors.background,
-        paddingBottom: insets.bottom + 20,
+        paddingBottom: insets.bottom + 40,
       }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={{ padding: 12 }}>
+      <View style={{ padding: 12, marginBottom: 20 }}>
         {/* Profile Photos */}
         <View style={styles.carouselCard}>
           <ProfileCarousel profile={profile} />
@@ -249,7 +249,7 @@ export default function UserDetailsScreen({ route }: any) {
           />
         </DetailSection>
 
-        {/* 2. Contact Details - Parallel Grid */}
+        {/* 5. Contact Details - Parallel Grid */}
         {canViewContact ? (
           <DetailSection title={t("details.sections.contact")} icon={Phone}>
             <DetailRow
@@ -296,7 +296,7 @@ export default function UserDetailsScreen({ route }: any) {
           </DetailSection>
         )}
 
-        {/* 5. Lifestyle - Parallel Grid */}
+        {/* 6. Lifestyle - Parallel Grid */}
         <DetailSection title={t("details.sections.lifestyle")} icon={Activity}>
           <DetailRow
             label={t("details.labels.diet")}
@@ -345,7 +345,7 @@ export default function UserDetailsScreen({ route }: any) {
             </View>
           )}
         </DetailSection>
-        {/* 5. Partner Preferences - Parallel Grid */}
+        {/* 7. Partner Preferences - Parallel Grid */}
         <DetailSection title={t("details.sections.preferences")} icon={Star}>
           <DetailRow
             label={t("details.labels.maritalStatus")}

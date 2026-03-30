@@ -1,11 +1,14 @@
 {
   "build": {
-    "preview": {
+    "production": {
       "android": {
         "buildType": "apk"
       },
-      "channel": "preview",
-      "distribution": "internal"
+      "distribution": "store",
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://lonari-firebase-295491417988.asia-south1.run.app/api/v1"
+      }
     }
   }
 }

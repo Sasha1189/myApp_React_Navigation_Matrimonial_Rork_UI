@@ -1,12 +1,12 @@
 export default {
-  editProfile: "प्रोफाईल संपादित करा",
-  viewPreview: "प्रीव्ह्यू पहा",
-  managePhotos: "फोटो व्यवस्थापित करा",
+  editProfile: "तुमचे प्रोफाईल तयार करा",
+  viewPreview: "तुमचे प्रोफाईल पहा",
+  managePhotos: "तुमचे फोटो Add करा",
   completion: "{{percent}}% प्रोफाईल पूर्ण झाले",
   stats: {
     matches: "मॅचेस",
-    sent: "पाठवलेले",
-    received: "मिळालेले",
+    sent: "पाठवलेले लाईक",
+    received: "मिळालेले लाईक",
   },
   premium: {
     upgrade: "प्रीमियमवर अपग्रेड करा",

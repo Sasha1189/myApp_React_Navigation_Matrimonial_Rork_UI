@@ -16,21 +16,6 @@ export function useButtonActions(uid: string, profile: Profile | undefined) {
     if (!profile || !myProfile) return;
 
     if (action === "message") {
-      // A "match" is when both users have liked each other.
-      const isMatch = profile.liked && profile.likedMe;
-
-      // Premium users can message before a match.
-      const canMessageWithoutMatch =
-        myProfile.subscription?.plan === "premium" ||
-        myProfile.subscription?.plan === "trial";
-
-      // If it's not a match and the user doesn't have the feature, block them.
-      if (!isMatch && !canMessageWithoutMatch) {
-        // Guide the user to the subscription screen.
-        navigation.navigate("Subscription");
-        return;
-      }
-
       try {
         const roomId = [myProfile.uid, profile.uid].sort().join("_");
         // 2. Navigate to Chat with all necessary RTDB context
@@ -42,10 +27,6 @@ export function useButtonActions(uid: string, profile: Profile | undefined) {
             name: profile.fullName,
             photo: profile.thumbnail || "",
           },
-          // sender: {
-          //   name: myProfile.fullName,
-          //   photo: myProfile.thumbnail || "",
-          // },
         });
       } catch (err) {
         console.error("Failed to start chat:", err);

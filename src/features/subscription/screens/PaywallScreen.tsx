@@ -17,13 +17,14 @@ import { AppTheme } from "@/theme/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlanCardComponent } from "../components/PlanCard";
 import { useTranslation } from "react-i18next";
-import { LanguageSelector } from "../../../components/LanguageSelector";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SubscriptionScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
+  const { tier, hasUsedTrial } = useAuth();
   const { selectedPlanId, setSelectedPlanId, handlePay, isProcessing } =
     useSubscription();
 
@@ -33,9 +34,6 @@ export default function SubscriptionScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <View style={styles.topBar}>
-            <LanguageSelector />
-          </View>
           {/* Header with Community Focus */}
           <View style={styles.header}>
             <View style={styles.logoWrapper}>
@@ -73,7 +71,12 @@ export default function SubscriptionScreen() {
           <Text style={styles.sectionLabel}>
             {t("subscription.choosePlan", "Choose a Plan")}
           </Text>
-          {SUBSCRIPTION_PLANS.map((plan) => {
+          {SUBSCRIPTION_PLANS.filter((plan) => {
+            if (plan.id === "trial" && hasUsedTrial) {
+              return tier === "none"; //skip trial if plan is
+            }
+            return true; // Always show other plans (basic, premium)
+          }).map((plan) => {
             const displayPlan = {
               ...plan,
               name: t(`subscription.plans.${plan.id}.name`, plan.name),
@@ -113,26 +116,19 @@ export default function SubscriptionScreen() {
       <View
         style={[
           styles.footerContainer,
-          { paddingBottom: Math.max(insets.bottom, 20) }, // Dynamic padding
+          { paddingBottom: Math.max(insets.bottom, 20) },
         ]}
       >
         <TouchableOpacity
           activeOpacity={0.8}
-          style={[
-            styles.subscribeButton,
-            selectedPlanId === "basic" && styles.disabledButton,
-          ]}
+          style={styles.subscribeButton}
           onPress={handlePay}
-          disabled={selectedPlanId === "basic" || isProcessing}
+          disabled={isProcessing}
         >
           {isProcessing ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.buttonText}>
-              {selectedPlanId === "basic"
-                ? t("subscription.currentPlan")
-                : t("subscription.payGoogle")}
-            </Text>
+            <Text style={styles.buttonText}>{t("subscription.payGoogle")}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -151,24 +147,21 @@ export const createStyles = (theme: AppTheme) =>
       paddingTop: theme.spacing.xl,
       paddingBottom: 40, // Space for the fixed footer
     },
-    topBar: {
-      alignItems: "flex-end",
-      paddingHorizontal: theme.spacing.md,
-    },
     header: {
       alignItems: "center",
-      marginBottom: theme.spacing.xl,
+      marginBottom: theme.spacing.md,
       paddingHorizontal: theme.spacing.lg,
     },
     logoWrapper: {
-      flexDirection: "row", // Aligns icon and text horizontally
-      alignItems: "center", // Centers them vertically relative to each other
-      gap: 12, // Spacing between crown and text
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
       marginBottom: theme.spacing.md,
     },
     title: {
-      fontSize: 22, // Slightly reduced to fit better inline
+      fontSize: 22,
       fontWeight: "800",
+      textAlign: "center",
       color: theme.colors.text,
       letterSpacing: 0.5,
     },

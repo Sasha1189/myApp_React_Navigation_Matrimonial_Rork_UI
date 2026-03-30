@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Image } from "expo-image"; // Recommended for React Native 0.81
+import { Image } from "expo-image";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -55,9 +55,13 @@ export const ChatHeader = ({
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    headerContainer: { flexDirection: "row", alignItems: "center", gap: 15 },
+    headerContainer: { flexDirection: "row", alignItems: "center", gap: 10 },
     textContainer: { justifyContent: "center" },
     headerAvatar: { width: 36, height: 36, borderRadius: 18 },
-    headerName: { fontSize: 16, color: "white", fontWeight: "600" },
-    headerStatus: { fontSize: 12, color: "white" },
+    headerName: {
+      fontSize: 16,
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
+    headerStatus: { fontSize: 12, color: theme.colors.primary },
   });

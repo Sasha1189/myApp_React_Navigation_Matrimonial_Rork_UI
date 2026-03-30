@@ -9,6 +9,7 @@ import {
 import {
   getAuth,
   onAuthStateChanged,
+  getIdTokenResult,
   FirebaseAuthTypes,
 } from "@react-native-firebase/auth";
 import { storage } from "../cache/cacheConfig";
@@ -26,6 +27,7 @@ interface AuthContextType {
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   tier: "none" | "trial" | "basic" | "premium";
   setTier: (tier: any) => void;
+  hasUsedTrial: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [tier, setTier] = useState<"none" | "trial" | "basic" | "premium">(
     "none",
   );
+  const [hasUsedTrial, setHasUsedTrial] = useState(false);
 
   const [profile, setProfile] = useState<Profile>(() => {
     const cached = storage.getString(PROFILE_CACHE_KEY);
@@ -65,15 +68,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     syncProfileAndTier();
-  }, [user?.uid]);
+  }, [user?.uid, user?.displayName]);
   //auth
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const idTokenResult = await firebaseUser.getIdTokenResult(true);
+        const idTokenResult = await getIdTokenResult(firebaseUser, true);
 
         const claims = idTokenResult.claims;
+        setHasUsedTrial(!!claims.h);
 
         // 1. Decode Tier Map (t: 'p' -> 'premium')
         const tierMapping: Record<
@@ -93,9 +97,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // 2. Check Expiry
         if (mappedTier !== "none" && currentTimeSeconds > expirySeconds) {
           setTier("none");
+          setHasUsedTrial(true);
           storage.set(TIER_CACHE_KEY, "none");
         } else {
           setTier(mappedTier);
+          setHasUsedTrial(hasUsedTrial);
           storage.set(TIER_CACHE_KEY, mappedTier);
         }
       } else {
@@ -116,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateProfile,
       tier,
       setTier,
+      hasUsedTrial,
     }),
     [user, profile, authLoading, tier],
   );

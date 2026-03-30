@@ -176,9 +176,10 @@ export const createStyles = (theme: AppTheme) =>
     },
     tabsContainer: {
       flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-evenly",
       paddingHorizontal: theme.spacing.md,
       paddingBottom: theme.spacing.sm,
-      gap: theme.spacing.xs,
     },
     titleWrapper: {
       paddingHorizontal: theme.spacing.lg,
