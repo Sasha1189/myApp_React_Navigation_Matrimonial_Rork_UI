@@ -1,6 +1,6 @@
 export default {
   home: "लोणारी",
-  messages: "मेसेजs",
+  messages: "मेसेजस",
   profile: "प्रोफाइल",
   chat: "चॅट",
   details: "प्रोफाइल माहिती",

@@ -42,7 +42,7 @@ type OTPVerifyProps = {
 const CODE_LENGTH = 6;
 const RESEND_TIME = 60;
 
-const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
+export default function OTPVerify({ route, navigation }: OTPVerifyProps) {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -96,15 +96,14 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
   const verifyCode = async () => {
     if (verifying) return;
 
-    try {
-      setVerifying(true);
-      setLoading(true);
-      setError("");
+    setVerifying(true);
+    setLoading(true);
+    setError("");
 
+    try {
       await confirmation.confirm(code);
     } catch (err: any) {
       handleError(err);
-    } finally {
       setLoading(false);
       setVerifying(false);
     }
@@ -235,9 +234,7 @@ const OTPVerify: React.FC<OTPVerifyProps> = ({ route, navigation }) => {
       </View>
     </SafeAreaView>
   );
-};
-
-export default OTPVerify;
+}
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({

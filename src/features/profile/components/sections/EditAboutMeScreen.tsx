@@ -30,12 +30,6 @@ export default function EditAboutMeScreen({ navigation }: any) {
   const { t } = useTranslation();
   const config = SECTION_CONFIG.find((s) => s.id === "about")!;
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.about"),
-    });
-  }, [navigation, t]);
-
   const { control } = useSectionEditor(
     profile,
     config.fields,

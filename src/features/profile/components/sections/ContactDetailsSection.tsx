@@ -27,11 +27,6 @@ export default function EditContactDetailsScreen({ navigation }: any) {
 
   // Find config for "contact" section
   const config = SECTION_CONFIG.find((s) => s.id === "contact")!;
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.contact"),
-    });
-  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,

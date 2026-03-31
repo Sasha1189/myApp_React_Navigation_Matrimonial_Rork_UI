@@ -1,4 +1,5 @@
 import React from "react";
+import { Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ChatScreen from "../features/messages/screens/ChatScreen";
 import FilterScreen from "../features/home/screens/FilterScreen";
@@ -36,14 +37,22 @@ export default function AppNavigator() {
         headerShown: true,
         headerTitleAlign: "center",
         headerStyle: {
-          backgroundColor: theme.colors.card,
+          backgroundColor: theme.colors.background,
         },
-        headerTitleStyle: {
-          fontSize: theme.fontSize.sm,
-          fontWeight: "700",
-          color: theme.colors.text,
-        },
-        headerTintColor: theme.colors.primary,
+        headerTitle: ({ children }) => (
+          <Text
+            style={{
+              fontSize: theme.fontSize.md,
+              fontWeight: "700",
+              color: theme.colors.text,
+              textTransform: "uppercase", // Now this will work!
+              letterSpacing: 1.5, // Now this will work!
+              opacity: 0.8,
+            }}
+          >
+            {children}
+          </Text>
+        ),
       }}
     >
       <Stack.Screen
@@ -131,7 +140,6 @@ export default function AppNavigator() {
           title: t("navigation.editFamily"),
         }}
       />
-
       <Stack.Screen
         name="EditLifestyle"
         component={EditLifestyleScreen}

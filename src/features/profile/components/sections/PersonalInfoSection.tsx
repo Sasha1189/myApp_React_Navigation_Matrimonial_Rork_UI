@@ -55,12 +55,6 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
     config.title,
   );
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.personal"),
-    });
-  }, [navigation, t]);
-
   const getLockState = (name: keyof Profile) =>
     isFieldLocked(profile as Profile, name);
 

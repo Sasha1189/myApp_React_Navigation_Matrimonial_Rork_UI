@@ -17,13 +17,7 @@ export default function EditFamilyDetailsScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
-  // Find config for "family" section
   const config = SECTION_CONFIG.find((s) => s.id === "family")!;
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.family"),
-    });
-  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,

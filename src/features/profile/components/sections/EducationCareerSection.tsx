@@ -34,11 +34,6 @@ export default function EditEducationCareerScreen({ navigation }: any) {
 
   // Find config for "education" section
   const config = SECTION_CONFIG.find((s) => s.id === "education")!;
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.education"),
-    });
-  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,

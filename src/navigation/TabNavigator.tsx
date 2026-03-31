@@ -34,10 +34,9 @@ export default function TabNavigator() {
       initialRouteName="Home"
       screenOptions={{
         headerShown: true,
-        // RHF Aesthetic: White/Clean headers instead of solid colors
         headerStyle: {
-          backgroundColor: theme.colors.card,
-          elevation: 0, // Remove shadow for flat look
+          backgroundColor: theme.colors.background,
+          elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 1,
           borderBottomColor: theme.colors.border,
@@ -49,6 +48,7 @@ export default function TabNavigator() {
           color: theme.colors.text,
           textTransform: "uppercase", // RHF style
           letterSpacing: 1.5,
+          opacity: 0.8,
         },
         tabBarStyle: {
           backgroundColor: theme.colors.card,

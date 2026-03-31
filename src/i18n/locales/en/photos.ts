@@ -11,4 +11,6 @@ export default {
     saveChanges: "Save Photos",
     noChanges: "No Changes",
   },
+  upgradeToSave:
+    "Photo uploads are a premium feature. Upgrade to save your photos and build your profile.",
 };

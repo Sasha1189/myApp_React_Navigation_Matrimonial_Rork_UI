@@ -11,6 +11,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { isDeepEqual } from "@/utils/deepEqual";
 import { isFieldLocked } from "../components/form/profileValidation";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/context/AuthContext";
 
 export function useSectionEditor<T extends FieldValues>(
   profile: T | any,
@@ -20,8 +21,9 @@ export function useSectionEditor<T extends FieldValues>(
   theme: any,
   title: string,
 ) {
-  const [isSaving, setIsSaving] = useState(false);
+  const { tier } = useAuth();
   const { t } = useTranslation();
+  const [isSaving, setIsSaving] = useState(false);
 
   const {
     control,
@@ -61,6 +63,19 @@ export function useSectionEditor<T extends FieldValues>(
   );
 
   const onSave = handleSubmit(async (data) => {
+    const isRestricted = tier === "trial" || tier === "none";
+
+    if (isRestricted) {
+      Alert.alert(t("alerts.upgradeRequired"), t("editor.upgradeToSave"), [
+        { text: t("alerts.cancel"), style: "cancel" },
+        {
+          text: t("alerts.upgradeNow"),
+          onPress: () => navigation.navigate("Paywall"),
+        },
+      ]);
+      return;
+    }
+
     if (isSaving) return; // Prevent multiple clicks
     setIsSaving(true);
 
@@ -90,19 +105,19 @@ export function useSectionEditor<T extends FieldValues>(
   // 4. Header Injection (Demo Aesthetic)
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: title,
-      headerTitleStyle: {
-        fontSize: 16,
-        fontWeight: "600",
-        letterSpacing: 0.5,
-        color: theme.colors.card,
-      },
+      // headerTitle: title,
+      // headerTitleStyle: {
+      //   fontSize: 16,
+      //   fontWeight: "600",
+      //   letterSpacing: 0.5,
+      //   color: theme.colors.card,
+      // },
       headerLeft: () => (
         <TouchableOpacity
           onPress={handleBack}
           style={{ marginLeft: 16, marginRight: 16, padding: 4 }}
         >
-          <X size={22} color={theme.colors.card} />
+          <X size={22} color={theme.colors.primary} />
         </TouchableOpacity>
       ),
       headerRight: () => (
@@ -116,9 +131,9 @@ export function useSectionEditor<T extends FieldValues>(
           }}
         >
           {isSaving ? (
-            <ActivityIndicator size="small" color={theme.colors.card} />
+            <ActivityIndicator size="small" color={theme.colors.primary} />
           ) : (
-            <Save size={22} color={theme.colors.card} />
+            <Save size={22} color={theme.colors.primary} />
           )}
         </TouchableOpacity>
       ),

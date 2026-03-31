@@ -106,7 +106,7 @@ export const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       flexWrap: "wrap",
       justifyContent: "space-between",
-      marginBottom: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
     },
     photoContainer: {
       position: "relative",

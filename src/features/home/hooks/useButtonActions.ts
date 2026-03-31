@@ -1,19 +1,36 @@
 import React, { useState } from "react";
+import { Alert } from "react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
 import { toggleLike } from "./useToggleLike";
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export function useButtonActions(uid: string, profile: Profile | undefined) {
   const navigation = useAppNavigation();
+  const { t } = useTranslation();
+
   const [isLiking, setIsLiking] = useState(false);
 
-  const { profile: myProfile } = useAuth();
+  const { profile: myProfile, tier } = useAuth();
 
   const handleActionBtnTap = async (
     action: "like" | "message" | "profileDetails",
   ) => {
     if (!profile || !myProfile) return;
+
+    const isRestricted = tier === "trial" || tier === "none";
+
+    if ((action === "message" || action === "like") && isRestricted) {
+      Alert.alert(t("alerts.upgradeRequired"), t("alerts.featureRestricted"), [
+        { text: t("alerts.cancel"), style: "cancel" },
+        {
+          text: t("alerts.upgradeNow"),
+          onPress: () => navigation.navigate("Paywall"),
+        },
+      ]);
+      return;
+    }
 
     if (action === "message") {
       try {

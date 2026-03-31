@@ -36,11 +36,6 @@ export default function EditLifestyleScreen({ navigation }: any) {
   const { t } = useTranslation();
 
   const config = SECTION_CONFIG.find((s) => s.id === "lifestyle")!;
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.lifestyle"),
-    });
-  }, [navigation, t]);
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,

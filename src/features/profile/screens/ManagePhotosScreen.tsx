@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Alert } from "react-native";
 import { Edit3 } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
@@ -9,13 +9,15 @@ import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 import { useTranslation } from "react-i18next";
+import { useAppNavigation } from "../../../navigation/hooks";
 
 export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
+  const navigation = useAppNavigation();
 
-  const { profile } = useAuth();
+  const { profile, tier } = useAuth();
 
   const {
     photos,
@@ -29,6 +31,28 @@ export default function ManagePhotosScreen() {
     setPrimary,
     uploadPhotos,
   } = usePhotoManager(profile);
+
+  // 2. Create a Guarded Upload Function
+  const handleSavePress = () => {
+    const isRestricted = tier === "trial" || tier === "none";
+
+    if (isRestricted) {
+      Alert.alert(
+        t("alerts.upgradeRequired"),
+        t("photos.upgradeToSave"), // Key for "Upgrade to save photos"
+        [
+          { text: t("alerts.cancel"), style: "cancel" },
+          {
+            text: t("alerts.upgradeNow"),
+            onPress: () => navigation.navigate("Paywall"),
+          },
+        ],
+      );
+      return;
+    }
+
+    uploadPhotos(); // Proceed if they are Basic or Premium
+  };
 
   if (!theme) return null;
   return (
@@ -49,7 +73,7 @@ export default function ManagePhotosScreen() {
           progress={progress}
           success={success}
           isEditing={isEditing}
-          onPress={uploadPhotos}
+          onPress={handleSavePress}
         />
 
         {/* Tip */}
@@ -67,9 +91,8 @@ export const createStyles = (theme: AppTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      paddingBottom: 30,
     },
-    content: { padding: theme.spacing.lg, paddingTop: theme.spacing.lg },
+    content: { padding: theme.spacing.lg },
 
     tipCard: {
       backgroundColor: theme.colors.accent + "20",

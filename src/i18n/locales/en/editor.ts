@@ -1,4 +1,6 @@
 export default {
+  upgradeToSave:
+    "Please upgrade to a premium plan to save your changes and complete your profile.",
   discardTitle: "Discard Changes?",
   discardMsg:
     "You have unsaved changes. Are you sure you want to go back? Your progress will be lost.",

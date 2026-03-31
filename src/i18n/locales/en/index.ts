@@ -11,6 +11,8 @@ import profile from "./profile";
 import welcome from "./welcome";
 import subscription from "./subscription";
 import navigation from "./navigation";
+import editor from "./editor";
+import alerts from "./alerts";
 
 export default {
   auth,
@@ -25,6 +27,7 @@ export default {
   welcome,
   subscription,
   navigation,
+  editor,
+  alerts,
   common,
-  // add more as you create them
 };

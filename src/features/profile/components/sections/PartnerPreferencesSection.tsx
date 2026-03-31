@@ -35,12 +35,7 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
-  const config = SECTION_CONFIG.find((s) => s.id === "partner")!;
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: t("details.sections.partner"),
-    });
-  }, [navigation, t]);
+  const config = SECTION_CONFIG.find((s) => s.id === "preferences")!;
 
   const { control } = useSectionEditor<Profile>(
     profile as Profile,

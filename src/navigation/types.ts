@@ -1,10 +1,13 @@
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { NavigatorScreenParams } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack"; // Use NativeStack
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { Profile } from "src/types/profile";
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   App: NavigatorScreenParams<AppStackParamList>;
+  // Keep Paywall here for the "Expired" redirect logic
   Paywall: undefined;
 };
 
@@ -14,6 +17,8 @@ export type AuthStackParamList = {
   Splash: undefined;
   OTPVerify: {
     phone: string;
+    // NOTE: Passing the whole confirmation object can cause 'Non-serializable' warnings.
+    // If it causes issues, move the confirmation object to a Context/State.
     confirmation: FirebaseAuthTypes.ConfirmationResult;
   };
 };
@@ -29,10 +34,7 @@ export type AppStackParamList = {
       photo: string;
     };
   };
-  Details:
-    | { profile: Profile } // full profile preloaded
-    | { userId: string } // only id, fetch if missing
-    | { self: true }; // special case: show current user;
+  Details: { profile: Profile } | { userId: string } | { self: true };
   EditProfile: undefined;
   ManagePhotos: undefined;
   Filter: undefined;
@@ -49,6 +51,7 @@ export type AppStackParamList = {
   EditLifestyle: undefined;
   EditPartner: undefined;
   Paywall: undefined;
+  // Removed Paywall from here unless you want it as a Modal inside the app
 };
 
 export type TabParamList = {
@@ -57,8 +60,15 @@ export type TabParamList = {
   Profile: undefined;
 };
 
-export type RootStackScreenProps<T extends keyof RootStackParamList> =
-  import("@react-navigation/stack").StackScreenProps<RootStackParamList, T>;
+// --- CLEANER HELPER TYPES ---
 
-export type TabScreenProps<T extends keyof TabParamList> =
-  import("@react-navigation/bottom-tabs").BottomTabScreenProps<TabParamList, T>;
+export type RootStackScreenProps<T extends keyof RootStackParamList> =
+  NativeStackScreenProps<RootStackParamList, T>;
+
+export type AppStackScreenProps<T extends keyof AppStackParamList> =
+  NativeStackScreenProps<AppStackParamList, T>;
+
+export type TabScreenProps<T extends keyof TabParamList> = BottomTabScreenProps<
+  TabParamList,
+  T
+>;
