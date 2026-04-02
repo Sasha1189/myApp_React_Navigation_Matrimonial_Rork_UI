@@ -105,17 +105,18 @@ export function useSectionEditor<T extends FieldValues>(
   // 4. Header Injection (Demo Aesthetic)
   useEffect(() => {
     navigation.setOptions({
-      // headerTitle: title,
-      // headerTitleStyle: {
-      //   fontSize: 16,
-      //   fontWeight: "600",
-      //   letterSpacing: 0.5,
-      //   color: theme.colors.card,
-      // },
       headerLeft: () => (
         <TouchableOpacity
           onPress={handleBack}
-          style={{ marginLeft: 16, marginRight: 16, padding: 4 }}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: theme.borderRadius.sm,
+            backgroundColor: `${theme.colors.primary}12`,
+            alignItems: "center",
+            justifyContent: "center",
+            marginLeft: theme.spacing.md,
+          }}
         >
           <X size={22} color={theme.colors.primary} />
         </TouchableOpacity>
@@ -125,9 +126,14 @@ export function useSectionEditor<T extends FieldValues>(
           onPress={onSave}
           disabled={isSaving || !isDirty}
           style={{
-            marginRight: 16,
+            width: 40,
+            height: 40,
+            borderRadius: theme.borderRadius.sm,
+            backgroundColor: `${theme.colors.primary}12`,
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: theme.spacing.md,
             opacity: isSaving || !isDirty ? 0.3 : 1,
-            padding: 4,
           }}
         >
           {isSaving ? (

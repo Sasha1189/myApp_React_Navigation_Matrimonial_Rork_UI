@@ -11,7 +11,7 @@ import {
   Users,
   UserCheck,
   Calendar,
-  Timer,
+  ShieldAlert,
   MapPin,
   User,
   HeartHandshake,
@@ -21,8 +21,6 @@ import {
   Droplets,
   Sparkles,
   Star,
-  Zap,
-  HeartPulse,
   MessageCircle,
   Target,
   Church,
@@ -41,7 +39,6 @@ import {
   Brain,
   Heart,
 } from "lucide-react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useAppNavigation } from "@/navigation/hooks";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -54,35 +51,33 @@ import {
 import { Lock } from "lucide-react-native";
 import { ProfileActionFooter } from "../components/profileDetailView/ProfileActionFooter";
 import { useTranslation } from "react-i18next";
+import { useSocialActions } from "../hooks/useSocialActions";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const { height: screenHeight } = Dimensions.get("window");
 
 export default function UserDetailsScreen({ route }: any) {
   const { t } = useTranslation();
   const navigation = useAppNavigation();
   const { theme } = useAppTheme();
-  const insets = useSafeAreaInsets();
-  const { profile: myProfile } = useAuth();
+  const { profile: myProfile, tier } = useAuth();
   const profile = route.params?.profile;
 
-  // Hook for Share/Block logic
-  // const { generateAndSharePDF, handleBlock } = useProfileActions(profile);
-
   const isSelf = myProfile?.uid === profile?.uid;
-  const canViewContact =
-    isSelf ||
-    (myProfile?.subscription?.plan && myProfile.subscription.plan !== "trial");
+
+  const canViewContact = isSelf || tier === "basic" || tier === "premium";
+
+  const { handleShare, handleBlock } = useSocialActions(profile);
+
   if (!profile) return null;
   return (
     <ScrollView
       style={{
         flex: 1,
         backgroundColor: theme.colors.background,
-        paddingBottom: insets.bottom + 40,
       }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={{ padding: 12, marginBottom: 20 }}>
+      <View style={{ padding: 12, paddingBottom: 52 }}>
         {/* Profile Photos */}
         <View style={styles.carouselCard}>
           <ProfileCarousel profile={profile} />
@@ -379,15 +374,20 @@ export default function UserDetailsScreen({ route }: any) {
             fullWidth
           />
         </DetailSection>
+        {/* Block-Share  */}
+        {!isSelf && (
+          <DetailSection
+            title={t("details.actions.blockShare")}
+            icon={ShieldAlert}
+          >
+            <ProfileActionFooter
+              onShare={handleShare}
+              onBlock={handleBlock}
+              loading={false}
+            />
+          </DetailSection>
+        )}
       </View>
-      {/* Only show for feed profiles */}
-      {!isSelf && (
-        <ProfileActionFooter
-          onShare={() => {}}
-          onBlock={() => {}}
-          // loading={isProcessing}
-        />
-      )}
     </ScrollView>
   );
 }

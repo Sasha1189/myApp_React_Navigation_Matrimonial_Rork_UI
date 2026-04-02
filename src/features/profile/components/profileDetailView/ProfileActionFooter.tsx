@@ -17,7 +17,7 @@ export const ProfileActionFooter = ({ onShare, onBlock, loading }: any) => {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.footer}>
+    <>
       <TouchableOpacity
         style={[styles.btn, styles.shareBtn]}
         onPress={onShare}
@@ -37,23 +37,12 @@ export const ProfileActionFooter = ({ onShare, onBlock, loading }: any) => {
           {t("details.actions.block")}
         </Text>
       </TouchableOpacity>
-    </View>
+    </>
   );
 };
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    footer: {
-      position: "absolute",
-      bottom: 32,
-      flexDirection: "row",
-      width: "100%",
-      padding: 16,
-      backgroundColor: theme.colors.card,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
-      gap: 12,
-    },
     btn: {
       flex: 1,
       flexDirection: "row",
@@ -63,7 +52,7 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: "center",
       gap: 8,
     },
-    shareBtn: { backgroundColor: theme.colors.primary },
+    shareBtn: { backgroundColor: theme.colors.primary, marginRight: 8 },
     blockBtn: { borderWidth: 1, borderColor: theme.colors.danger },
     btnText: { fontWeight: "700", color: "white" },
   });

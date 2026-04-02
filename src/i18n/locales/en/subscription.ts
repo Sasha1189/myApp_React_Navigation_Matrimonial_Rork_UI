@@ -25,27 +25,24 @@ export default {
       discount: "50% Less",
       features: [
         "Verified Lonari Profile",
-        "Browse community members",
-        "Daily connections",
-        "Basic matching",
-        "See who you liked",
-        "Direct Messaging",
+        "Browse our community members",
+        "See your liked Profile",
+        "Message directly to find your soul partner",
       ],
     },
     premium: {
-      name: "Community Gold", // Prestige label
+      name: "Community Premium", // Prestige label
       period: "Once year, taxes extra",
       price: "₹1999/-",
-      originalPrice: "₹4999",
-      discount: "60% Less",
+      originalPrice: "₹3999",
+      discount: "50% Less",
       features: [
-        "Premium 'Verified' Gold Badge", // Adds prestige
-        "Express your unique lifestyle",
+        "'Premium' Badge on Profile", // Adds prestige
+        "Express your lifestyle as Premium",
         "High-quality photo uploads",
-        "See who is interested in you",
-        "Unlimited community likes",
-        "Priority Messaging",
-        "Advanced community filters",
+        "See who liked you",
+        "Advanced filters",
+        "Message directly to find your soul partner",
       ],
     },
   },
@@ -57,5 +54,10 @@ export default {
       "This isn't a corporate business; it's our own private Lonari home.",
     values: "Find a partner who truly understands our culture and traditions.",
     legacy: "Ensure this platform remains a gift for the next generation.",
+    usp: "Message directly to find your soul partner, without any barriers.",
   },
+  activated: "Subscription activated successfully!",
+  selectionRequired: "Selection Required",
+  selectPlanMsg: "Please select a subscription plan to continue.",
+  payError: "Could not process subscription. Please try again.",
 };

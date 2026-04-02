@@ -92,7 +92,7 @@ export const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    content: { padding: theme.spacing.lg },
+    content: { padding: 20, paddingBottom: 52 },
 
     tipCard: {
       backgroundColor: theme.colors.accent + "20",

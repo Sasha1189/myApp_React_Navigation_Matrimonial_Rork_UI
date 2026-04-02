@@ -232,7 +232,7 @@ const createStyles = (theme: AppTheme) =>
     price: {
       fontSize: 28,
       fontWeight: "800",
-      color: theme.colors.text,
+      color: theme.colors.primary,
     },
     period: {
       fontSize: 14,

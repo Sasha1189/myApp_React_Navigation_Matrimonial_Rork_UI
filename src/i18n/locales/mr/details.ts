@@ -68,6 +68,7 @@ export default {
   actions: {
     share: "प्रोफाईल शेअर करा",
     block: "ब्लॉक करा",
+    blockShare: "ब्लॉक / शेअर",
   },
   placeholders: {
     bio: "तुमच्याबद्दल सांगा...",

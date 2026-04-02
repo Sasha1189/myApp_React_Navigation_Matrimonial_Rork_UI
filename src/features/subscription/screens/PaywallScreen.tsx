@@ -25,8 +25,13 @@ export default function SubscriptionScreen() {
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
   const { tier, hasUsedTrial } = useAuth();
-  const { selectedPlanId, setSelectedPlanId, handlePay, isProcessing } =
-    useSubscription();
+  const {
+    selectedPlanId,
+    setSelectedPlanId,
+    handlePay,
+    isProcessing,
+    isSubmitDisabled,
+  } = useSubscription();
 
   if (!theme) return null;
 
@@ -38,33 +43,12 @@ export default function SubscriptionScreen() {
           <View style={styles.header}>
             <View style={styles.logoWrapper}>
               <Crown size={40} color={theme.colors.warning} />
+            </View>
+            <View style={{ flex: 1, justifyContent: "flex-start" }}>
               <Text style={styles.title}>{t("subscription.upgradeTitle")}</Text>
-            </View>
-            <Text style={styles.subtitle}>
-              {t("subscription.upgradeSubtitle")}
-            </Text>
-          </View>
-          {/* Support Card - Emotional Hook */}
-          <View style={styles.benefitsCard}>
-            <View style={styles.benefitsHeader}>
-              <Heart
-                size={20}
-                color={theme.colors.primary}
-                fill={theme.colors.primary}
-              />
-              <Text style={styles.benefitsTitle}>
-                {t("subscription.supportTitle")}
+              <Text style={styles.subtitle}>
+                {t("subscription.upgradeSubtitle")}
               </Text>
-            </View>
-            <View style={styles.benefitsList}>
-              {SUPPORT_BENEFITS(theme).map((benefit) => (
-                <View key={benefit.id} style={styles.benefitItem}>
-                  <View style={styles.iconWrapper}>{benefit.icon}</View>
-                  <Text style={styles.benefitText}>
-                    {t(benefit.translationKey)}
-                  </Text>
-                </View>
-              ))}
             </View>
           </View>
           {/* Plans Section */}
@@ -108,22 +92,46 @@ export default function SubscriptionScreen() {
               />
             );
           })}
-          <View style={{ height: 120 }} /> {/* Extra padding for scroll */}
+          {/* Support Card - Emotional Hook */}
+          <View style={styles.benefitsCard}>
+            <View style={styles.benefitsHeader}>
+              <Heart
+                size={20}
+                color={theme.colors.primary}
+                fill={theme.colors.primary}
+              />
+              <Text style={styles.benefitsTitle}>
+                {t("subscription.supportTitle")}
+              </Text>
+            </View>
+            <View style={styles.benefitsList}>
+              {SUPPORT_BENEFITS(theme).map((benefit) => (
+                <View key={benefit.id} style={styles.benefitItem}>
+                  <View style={styles.iconWrapper}>{benefit.icon}</View>
+                  <Text style={styles.benefitText}>
+                    {t(benefit.translationKey)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
         </View>
       </ScrollView>
 
-      {/* Fixed Sticky Footer Button */}
       <View
         style={[
           styles.footerContainer,
-          { paddingBottom: Math.max(insets.bottom, 20) },
+          { paddingBottom: Math.max(insets.bottom, 32) },
         ]}
       >
         <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.subscribeButton}
           onPress={handlePay}
-          disabled={isProcessing}
+          disabled={isSubmitDisabled}
+          activeOpacity={0.8}
+          style={[
+            styles.subscribeButton,
+            isSubmitDisabled && styles.disabledButton,
+          ]}
         >
           {isProcessing ? (
             <ActivityIndicator color="white" />
@@ -143,34 +151,33 @@ export const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.background,
     },
     content: {
-      padding: theme.spacing.lg,
-      paddingTop: theme.spacing.xl,
-      paddingBottom: 40, // Space for the fixed footer
+      padding: 12,
+      paddingBottom: 120,
     },
     header: {
-      alignItems: "center",
-      marginBottom: theme.spacing.md,
-      paddingHorizontal: theme.spacing.lg,
-    },
-    logoWrapper: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      justifyContent: "center",
+      gap: 8,
       marginBottom: theme.spacing.md,
     },
+    logoWrapper: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
     title: {
-      fontSize: 22,
-      fontWeight: "800",
+      fontSize: 20,
+      fontWeight: "700",
       textAlign: "center",
       color: theme.colors.text,
-      letterSpacing: 0.5,
+      letterSpacing: 1.5,
     },
     subtitle: {
-      fontSize: 15,
+      fontSize: 14,
       color: theme.colors.textLight,
       textAlign: "center",
       lineHeight: 22,
-      paddingHorizontal: theme.spacing.sm,
+      letterSpacing: 0.3,
     },
     sectionLabel: {
       fontSize: 14,
@@ -220,25 +227,24 @@ export const createStyles = (theme: AppTheme) =>
     },
     footerContainer: {
       position: "absolute",
-      bottom: 0,
+      bottom: 8,
       width: "100%",
-      paddingHorizontal: 20,
-      paddingTop: 16,
-      backgroundColor: theme.colors.background,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
+      paddingHorizontal: 24, // More horizontal padding makes it look more "floating"
+      paddingTop: 8,
+      backgroundColor: "transparent",
     },
     subscribeButton: {
       backgroundColor: theme.colors.primary,
-      height: 56,
-      borderRadius: theme.borderRadius.round,
+      height: 56, // Slightly taller for a premium feel
+      borderRadius: 14, // Perfectly round "Pill" shape
       alignItems: "center",
       justifyContent: "center",
-      elevation: 4,
+      // Stronger floating shadow
+      elevation: 8,
       shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
     },
     disabledButton: {
       backgroundColor: theme.colors.border,
@@ -248,7 +254,8 @@ export const createStyles = (theme: AppTheme) =>
     buttonText: {
       color: "white",
       fontSize: 18,
-      fontWeight: "700",
-      letterSpacing: 0.5,
+      fontWeight: "700", // Extra bold for emphasis
+      letterSpacing: 1,
+      textTransform: "uppercase",
     },
   });

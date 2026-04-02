@@ -68,6 +68,7 @@ export default {
   actions: {
     share: "Share Profile",
     block: "Block",
+    blockShare: "Block / Share",
   },
   placeholders: {
     bio: "Tell us about yourself...",
