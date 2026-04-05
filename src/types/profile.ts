@@ -170,11 +170,11 @@ export interface Photo {
   isPrimary: boolean;
 }
 
-export type BlockedUserDetail = {
-  uid: string; // blocked user's UID
+export interface BlockedUserMinimal {
+  uid: string;
   name: string;
-  avatar?: string | null;
-};
+  photo: string;
+}
 
 export interface DBPhoto {
   id: string;

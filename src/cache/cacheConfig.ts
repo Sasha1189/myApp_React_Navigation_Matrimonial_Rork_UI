@@ -120,6 +120,53 @@ export const LikesReceivedCache = {
   },
 };
 
+const BLOCKED_IDS_KEY = "blocked_ids_index";
+const BLOCKED_PROFILES_KEY = "blocked_profiles_cache";
+
+export interface BlockedUserMinimal {
+  uid: string;
+  name: string;
+  photo: string;
+}
+
+export const BlocksCache = {
+  // --- LAYER 1: GET JUST IDS (For Feed/Message Filtering) ---
+  getIds: (): string[] => {
+    const data = storage.getString(BLOCKED_IDS_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  // --- LAYER 2: GET FULL OBJECTS (For Blocked List UI) ---
+  getProfiles: (): BlockedUserMinimal[] => {
+    const data = storage.getString(BLOCKED_PROFILES_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  // --- LAYER 3: UPDATE (Used when pressing 'Block' or 'Unblock') ---
+  update: (user: BlockedUserMinimal, action: "add" | "remove") => {
+    let ids = BlocksCache.getIds();
+    let profiles = BlocksCache.getProfiles();
+
+    if (action === "add") {
+      ids = [...new Set([user.uid, ...ids])];
+      profiles = [user, ...profiles.filter((p) => p.uid !== user.uid)];
+    } else {
+      ids = ids.filter((id) => id !== user.uid);
+      profiles = profiles.filter((p) => p.uid !== user.uid);
+    }
+
+    storage.set(BLOCKED_IDS_KEY, JSON.stringify(ids));
+    storage.set(BLOCKED_PROFILES_KEY, JSON.stringify(profiles));
+  },
+
+  // --- LAYER 4: SYNC FROM FIRESTORE (Session Start) ---
+  syncFromFirestore: (serverProfiles: BlockedUserMinimal[]) => {
+    const serverIds = serverProfiles.map((p) => p.uid);
+    storage.set(BLOCKED_IDS_KEY, JSON.stringify(serverIds));
+    storage.set(BLOCKED_PROFILES_KEY, JSON.stringify(serverProfiles));
+  },
+};
+
 // 🔹 Clear persisted cache on logout
 export async function clearCacheOnLogout() {
   storage.clearAll();

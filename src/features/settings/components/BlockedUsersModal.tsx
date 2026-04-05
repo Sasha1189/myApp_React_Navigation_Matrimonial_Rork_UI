@@ -12,13 +12,14 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { X } from "lucide-react-native";
-import { BlockedUserDetail } from "../../../types/profile";
+import { BlockedUserMinimal } from "../../../types/profile";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  users: BlockedUserDetail[];
-  onUnblock: (id: string) => void;
+  users: BlockedUserMinimal[];
+  onUnblock: (user: BlockedUserMinimal) => void;
 }
 
 export default function BlockedUsersModal({
@@ -29,7 +30,7 @@ export default function BlockedUsersModal({
 }: Props) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+  const { t } = useTranslation();
 
   const renderInitials = (name: string) => {
     const parts = name.trim().split(/\s+/);
@@ -38,11 +39,11 @@ export default function BlockedUsersModal({
     return (first + second).toUpperCase();
   };
 
-  const Item = ({ item }: { item: BlockedUserDetail }) => (
+  const Item = ({ item }: { item: BlockedUserMinimal }) => (
     <View style={styles.row}>
       <View style={styles.left}>
-        {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatarImg} />
+        {item.photo ? (
+          <Image source={{ uri: item.photo }} style={styles.avatarImg} />
         ) : (
           <View style={styles.avatarFallback}>
             <Text style={styles.avatarFallbackText}>
@@ -58,17 +59,17 @@ export default function BlockedUsersModal({
       </View>
 
       <Pressable
-        onPress={() => onUnblock(item.uid)}
+        onPress={() => onUnblock(item)}
         style={({ pressed }) => [
           styles.unblockBtn,
           pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
         ]}
       >
-        <Text style={styles.unblockText}>Unblock</Text>
+        <Text style={styles.unblockText}>t("settings.unblock")</Text>
       </Pressable>
     </View>
   );
-
+  if (!theme) return null;
   return (
     <Modal
       visible={visible}
@@ -80,7 +81,7 @@ export default function BlockedUsersModal({
         <View style={styles.sheet}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Blocked Users</Text>
+            <Text style={styles.title}>t("settings.blockedTitle")</Text>
             <Pressable onPress={onClose} hitSlop={8} style={styles.closeBtn}>
               <X size={18} color={theme.colors.text} />
             </Pressable>
@@ -88,22 +89,15 @@ export default function BlockedUsersModal({
 
           {/* Banner like chat list */}
           <View style={styles.banner}>
-            <Text style={styles.bannerTitle}>
-              People you block can’t contact you
-            </Text>
-            <Text style={styles.bannerSub}>
-              They won’t be able to message or view your profile until you
-              unblock them.
-            </Text>
+            <Text style={styles.bannerTitle}>{t("settings.bannerTitle")}</Text>
+            <Text style={styles.bannerSub}>{t("settings.bannerSub")}</Text>
           </View>
 
           {/* List */}
           {users.length === 0 ? (
             <View style={styles.emptyWrap}>
-              <Text style={styles.emptyTitle}>No blocked users</Text>
-              <Text style={styles.emptySub}>
-                You haven’t blocked anyone yet.
-              </Text>
+              <Text style={styles.emptyTitle}>{t("settings.noBlocked")}</Text>
+              <Text style={styles.emptySub}>{t("settings.noBlockedSub")}</Text>
             </View>
           ) : (
             <FlatList

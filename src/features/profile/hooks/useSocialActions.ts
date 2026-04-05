@@ -3,9 +3,11 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppNavigation } from "@/navigation/hooks";
 import { useTranslation } from "react-i18next";
 import { formatProfileForShare } from "../components/profileDetailView/shareProfile";
+import { blockUser } from "../api/blockApi";
+import { BlocksCache } from "@/cache/cacheConfig";
 
 export function useSocialActions(profile: any) {
-  const { tier } = useAuth();
+  const { tier, profile: myProfile } = useAuth();
   const navigation = useAppNavigation();
   const { t } = useTranslation();
 
@@ -43,7 +45,31 @@ export function useSocialActions(profile: any) {
       {
         text: t("details.actions.block"),
         style: "destructive",
-        onPress: () => Alert.alert("Implement Block API call here"),
+        onPress: async () => {
+          try {
+            // 1. Database Write (Atomic Batch: A blocks B AND B blocks A)
+            await blockUser(myProfile, profile);
+
+            // Update local MMKV cache with the same object structure
+            BlocksCache.update(
+              {
+                uid: profile.uid,
+                name: profile.fullName,
+                photo: profile.thumbnail,
+              },
+              "add",
+            );
+
+            // 3. UI Feedback
+            Alert.alert(t("common.success"), t("alerts.blockSuccess"));
+
+            // 4. Navigation: Exit the profile since it is now hidden
+            navigation.goBack();
+          } catch (error) {
+            console.error("Block Error:", error);
+            Alert.alert(t("common.error"), t("alerts.blockError"));
+          }
+        },
       },
     ]);
   };

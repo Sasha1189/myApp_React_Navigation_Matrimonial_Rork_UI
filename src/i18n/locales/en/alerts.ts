@@ -8,4 +8,8 @@ export default {
     "Are you sure you want to block this user? This user will not be able to see your profile.",
   shareRestricted:
     "Sharing profile is premium features. Please upgrade your plan to continue.",
+  unblockConfirm: "Are you sure you want to unblock",
+  unblockSuccess: "User has been unblocked successfully.",
+  unblockError: "Error unblocking user. Please try again.",
+  blockSuccess: "User blocked successfully.",
 };

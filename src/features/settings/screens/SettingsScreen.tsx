@@ -11,29 +11,24 @@ import {
 } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
-import { useAuth } from "@/context/AuthContext";
 import { useSettingsActions } from "../hooks/useSettingsActions";
-import { useBlockUnblockUser } from "../hooks/useBlockUnblockUser";
-import { useBlockedUserDetails } from "../hooks/useBlockedUserDetails";
+import { useBlockedUsers } from "../hooks/useBlockedUsers";
 import SettingRow from "../components/SettingRow";
 import BlockedUsersModal from "../components/BlockedUsersModal";
 import { LanguageSelector } from "../../../components/LanguageSelector";
 import { useTranslation } from "react-i18next";
+import { BlockedUserMinimal } from "../../../types/profile";
 
 export default function SettingsScreen() {
-  const { profile } = useAuth();
-  const { theme, mode, toggleTheme } = useAppTheme();
+  const { mode, toggleTheme } = useAppTheme();
   const { t } = useTranslation();
   const styles = useStyles(createStyles);
   const [blockedOpen, setBlockedOpen] = useState(false);
   const isDark = mode === "dark";
 
   const { openLink, composeWhatsApp, handleLogout } = useSettingsActions();
-  const { unblockUser, isReady } = useBlockUnblockUser(
-    profile?.uid ?? "",
-    profile?.gender ?? "",
-  );
-  const { data: blockedUsers = [] } = useBlockedUserDetails(profile?.uid);
+
+  const { blockedList, handleUnblock } = useBlockedUsers();
 
   return (
     <>
@@ -98,14 +93,18 @@ export default function SettingsScreen() {
               icon={FileText}
               title={t("settings.terms")}
               subtitle={t("settings.termsDesc")}
-              onPress={() => openLink("https://sasha1189.github.io", "Terms")}
+              onPress={() =>
+                openLink("https://sasha1189.github.io/youva-Lonari/", "Terms")
+              }
             />
             <View style={styles.divider} />
             <SettingRow
               icon={FileText}
               title={t("settings.privacy")}
               subtitle={t("settings.privacyDesc")}
-              onPress={() => openLink("https://sasha1189.github.io", "Privacy")}
+              onPress={() =>
+                openLink("https://sasha1189.github.io/youva-Lonari/", "Privacy")
+              }
             />
           </View>
 
@@ -127,8 +126,10 @@ export default function SettingsScreen() {
       <BlockedUsersModal
         visible={blockedOpen}
         onClose={() => setBlockedOpen(false)}
-        users={blockedUsers}
-        onUnblock={unblockUser}
+        users={blockedList}
+        onUnblock={(user) => {
+          handleUnblock(user as BlockedUserMinimal);
+        }}
       />
     </>
   );

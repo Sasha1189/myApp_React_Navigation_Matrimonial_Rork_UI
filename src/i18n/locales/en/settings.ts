@@ -7,8 +7,6 @@ export default {
   darkActive: "Dark theme active",
   useDark: "Use dark theme",
   safety: "Safety & Support",
-  blocked: "Blocked Users",
-  manageBlocked: "Manage users you blocked",
   reportUser: "Report a User",
   reportUserDesc: "Report inappropriate behavior",
   feedback: "Feedback",
@@ -26,4 +24,14 @@ export default {
   logoutTitle: "Logout",
   logoutConfirm:
     "Are you sure you want to logout from your Lonari account? We'll be waiting for your return!",
+
+  blocked: "Blocked Users",
+  manageBlocked: "Manage people you've blocked",
+  blockedTitle: "Blocked Users",
+  bannerTitle: "People you block can’t contact you",
+  bannerSub:
+    "They won’t be able to message or view your profile until you unblock them.",
+  noBlocked: "No blocked users",
+  noBlockedSub: "You haven’t blocked anyone yet.",
+  unblock: "Unblock",
 };
