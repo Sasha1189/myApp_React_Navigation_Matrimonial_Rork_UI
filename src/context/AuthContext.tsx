@@ -18,6 +18,8 @@ import { Profile } from "../types/profile";
 import { usePresence } from "@/features/messages/hooks/usePresence";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";
 import { getProfile } from "@/features/profile/api/profileApi";
+import { doc, getDoc, firestore } from "../config/firebase";
+import { BlocksCache } from "../cache/cacheConfig";
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
@@ -39,7 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [tier, setTier] = useState<"none" | "trial" | "basic" | "premium">(
-    "none",
+    () => {
+      const cached = storage.getString(TIER_CACHE_KEY);
+      return (cached as any) || "none";
+    },
   );
   const [hasUsedTrial, setHasUsedTrial] = useState(false);
 
@@ -50,9 +55,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   usePresence(user?.uid);
   const updateProfile = useUpdateProfile(user, profile, setProfile);
+
   //profile
   useEffect(() => {
-    const syncProfileAndTier = async () => {
+    const syncProfile = async () => {
       if (!user) return;
       try {
         const hasCache = storage.contains(PROFILE_CACHE_KEY);
@@ -67,19 +73,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Initial sync failed:", error);
       }
     };
-    syncProfileAndTier();
+    syncProfile();
   }, [user?.uid, user?.displayName]);
+
   //auth
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+      // 1. CLEAR STATE ON LOGOUT
+      if (!firebaseUser) {
+        setUser(null);
+        setTier("none");
+        setAuthLoading(false);
+        return;
+      }
+      // 2. FAST TRACK: Show App immediately using Cache
+      setUser(firebaseUser);
+      setAuthLoading(false);
+
+      try {
+        // 3. BACKGROUND SYNC: Slow network stuff
+        // We use 'true' to force a fresh token from the server
         const idTokenResult = await getIdTokenResult(firebaseUser, true);
-
         const claims = idTokenResult.claims;
-        setHasUsedTrial(!!claims.h);
 
-        // 1. Decode Tier Map (t: 'p' -> 'premium')
+        // Use the actual claim value directly
+        const serverHasUsedTrial = !!claims.h;
+        setHasUsedTrial(serverHasUsedTrial);
+
         const tierMapping: Record<
           string,
           "none" | "trial" | "basic" | "premium"
@@ -94,21 +115,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const expirySeconds = (claims.e as number) || 0;
         const currentTimeSeconds = Math.floor(Date.now() / 1000);
 
-        // 2. Check Expiry
+        // 4. SYNC TIER & CACHE
         if (mappedTier !== "none" && currentTimeSeconds > expirySeconds) {
           setTier("none");
           setHasUsedTrial(true);
           storage.set(TIER_CACHE_KEY, "none");
         } else {
           setTier(mappedTier);
-          setHasUsedTrial(hasUsedTrial);
+          // Always cache the latest tier from the server
           storage.set(TIER_CACHE_KEY, mappedTier);
         }
-      } else {
-        setTier("none");
+
+        // 5. SYNC BLOCKED LIST (Background)
+        const blockDocRef = doc(firestore, "blockedIDs", firebaseUser.uid);
+        const blockSnap = await getDoc(blockDocRef);
+        if (blockSnap.exists()) {
+          const serverBlocks = blockSnap.data()?.blockedUsers || [];
+          BlocksCache.syncFromFirestore(serverBlocks);
+        }
+      } catch (error) {
+        console.error("Background sync failed:", error);
       }
-      setUser(firebaseUser);
-      setAuthLoading(false);
     });
     return unsubscribe;
   }, []);
