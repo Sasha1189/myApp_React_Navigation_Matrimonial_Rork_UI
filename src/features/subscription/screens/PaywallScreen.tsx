@@ -57,7 +57,7 @@ export default function SubscriptionScreen() {
           </Text>
           {SUBSCRIPTION_PLANS.filter((plan) => {
             if (plan.id === "trial" && hasUsedTrial) {
-              return tier === "none"; //skip trial if plan is
+              return false; //skip trial if plan is used
             }
             return true; // Always show other plans (basic, premium)
           }).map((plan) => {
