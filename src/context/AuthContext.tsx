@@ -130,8 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const blockDocRef = doc(firestore, "blockedIDs", firebaseUser.uid);
         const blockSnap = await getDoc(blockDocRef);
         if (blockSnap.exists()) {
-          const serverBlocks = blockSnap.data()?.blockedUsers || [];
-          BlocksCache.syncFromFirestore(serverBlocks);
+          // Pass the 'blockedUsers' object (Map)
+          const serverMap = blockSnap.data()?.blockedUsers || {};
+          BlocksCache.syncFromFirestore(serverMap);
         }
       } catch (error) {
         console.error("Background sync failed:", error);

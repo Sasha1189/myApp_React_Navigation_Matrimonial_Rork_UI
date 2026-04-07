@@ -120,8 +120,7 @@ export const LikesReceivedCache = {
   },
 };
 
-const BLOCKED_IDS_KEY = "blocked_ids_index";
-const BLOCKED_PROFILES_KEY = "blocked_profiles_cache";
+//.....block unblock Cache
 
 export interface BlockedUserMinimal {
   uid: string;
@@ -129,21 +128,22 @@ export interface BlockedUserMinimal {
   photo: string;
 }
 
+const BLOCKED_IDS_KEY = "blocked_ids_index";
+const BLOCKED_PROFILES_KEY = "blocked_profiles_cache";
+
 export const BlocksCache = {
-  // --- LAYER 1: GET JUST IDS (For Feed/Message Filtering) ---
   getIds: (): string[] => {
     const data = storage.getString(BLOCKED_IDS_KEY);
     return data ? JSON.parse(data) : [];
   },
 
-  // --- LAYER 2: GET FULL OBJECTS (For Blocked List UI) ---
-  getProfiles: (): BlockedUserMinimal[] => {
+  getProfiles: (): any[] => {
     const data = storage.getString(BLOCKED_PROFILES_KEY);
     return data ? JSON.parse(data) : [];
   },
 
-  // --- LAYER 3: UPDATE (Used when pressing 'Block' or 'Unblock') ---
-  update: (user: BlockedUserMinimal, action: "add" | "remove") => {
+  // Update MMKV Layer
+  update: (user: any, action: "add" | "remove") => {
     let ids = BlocksCache.getIds();
     let profiles = BlocksCache.getProfiles();
 
@@ -159,12 +159,29 @@ export const BlocksCache = {
     storage.set(BLOCKED_PROFILES_KEY, JSON.stringify(profiles));
   },
 
-  // --- LAYER 4: SYNC FROM FIRESTORE (Session Start) ---
-  syncFromFirestore: (serverProfiles: BlockedUserMinimal[]) => {
-    const serverIds = serverProfiles.map((p) => p.uid);
-    storage.set(BLOCKED_IDS_KEY, JSON.stringify(serverIds));
-    storage.set(BLOCKED_PROFILES_KEY, JSON.stringify(serverProfiles));
-  },
+  // SYNC FROM FIRESTORE MAP
+  syncFromFirestore: (serverMap: Record<string, any>) => {
+  // 1. If map is empty or undefined, reset everything
+  if (!serverMap || Object.keys(serverMap).length === 0) {
+    storage.set(BLOCKED_IDS_KEY, JSON.stringify([]));
+    storage.set(BLOCKED_PROFILES_KEY, JSON.stringify([]));
+    return;
+  }
+  
+  // 2. Extract IDs for the O(1) Feed Filter
+  const ids = Object.keys(serverMap);
+  
+  // 3. Convert Map entries into an Array of Objects for the Modal UI
+  const profiles = Object.entries(serverMap).map(([uid, data]: [string, any]) => ({
+    uid,
+    name: data.name || "",
+    photo: data.photo || "",
+  }));
+
+  // 4. Update MMKV
+  storage.set(BLOCKED_IDS_KEY, JSON.stringify(ids));
+  storage.set(BLOCKED_PROFILES_KEY, JSON.stringify(profiles));
+},
 };
 
 // 🔹 Clear persisted cache on logout

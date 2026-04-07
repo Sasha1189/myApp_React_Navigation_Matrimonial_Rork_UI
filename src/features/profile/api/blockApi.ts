@@ -1,43 +1,35 @@
-import {
-  firestore,
-  writeBatch,
-  doc,
-  arrayUnion,
-  arrayRemove,
-} from "@/config/firebase";
+import { firestore, writeBatch, doc, deleteField } from "@/config/firebase";
 
 export const blockUser = async (myProfile: any, targetProfile: any) => {
   const batch = writeBatch(firestore);
 
   // 1. Prepare Mini-Objects
   const targetData = {
-    uid: targetProfile.uid,
-    name: targetProfile.fullName || targetProfile.name,
-    photo: targetProfile.thumbnail || targetProfile.photo || "",
+    name: targetProfile.fullName || "",
+    photo: targetProfile.thumbnail || "",
   };
 
   const myData = {
-    uid: myProfile.uid,
-    name: myProfile.fullName || myProfile.name,
-    photo: myProfile.thumbnail || myProfile.photo || "",
+    name: myProfile.fullName || "",
+    photo: myProfile.thumbnail || "",
   };
 
-  // 2. Add B's info to A's blocked list
+  // Add B to A's Map
   const myBlockRef = doc(firestore, "blockedIDs", myProfile.uid);
   batch.set(
     myBlockRef,
     {
-      blockedUsers: arrayUnion(targetData),
+      [`blockedUsers.${targetProfile.uid}`]: targetData,
     },
     { merge: true },
   );
 
-  // 3. Add A's info to B's blocked list (Mutual Block)
+  // Add A to B's Map (Mutual)
   const targetBlockRef = doc(firestore, "blockedIDs", targetProfile.uid);
   batch.set(
     targetBlockRef,
     {
-      blockedUsers: arrayUnion(myData),
+      [`blockedUsers.${myProfile.uid}`]: myData,
     },
     { merge: true },
   );
@@ -47,18 +39,18 @@ export const blockUser = async (myProfile: any, targetProfile: any) => {
 
 export const unblockUser = async (myUid: string, targetUid: string) => {
   const batch = writeBatch(firestore);
+  console.log("Unblocking User:", { targetUid });
 
-  // 1. Delete A's block of B
+  // Remove B from A's Map
   const myBlockRef = doc(firestore, "blockedIDs", myUid);
-  // Based on your preference for the single doc per user:
   batch.update(myBlockRef, {
-    blockedUsers: arrayRemove({ uid: targetUid }),
+    [`blockedUsers.${targetUid}`]: deleteField(),
   });
 
-  // 2. Delete B's block of A (Mutual)
+  // Remove A from B's Map (Mutual)
   const targetBlockRef = doc(firestore, "blockedIDs", targetUid);
   batch.update(targetBlockRef, {
-    blockedUsers: arrayRemove({ uid: targetUid }),
+    [`blockedUsers.${myUid}`]: deleteField(),
   });
 
   await batch.commit();

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { BlocksCache, BlockedUserMinimal } from "@/cache/cacheConfig";
 import { unblockUser } from "@/features/profile/api/blockApi";
@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
 
 export const useBlockedUsers = () => {
-  const { user } = useAuth();
+  const { profile: myProfile } = useAuth();
   const { t } = useTranslation();
 
   // 1. Load initial list from MMKV Cache (Instant)
@@ -15,11 +15,15 @@ export const useBlockedUsers = () => {
   );
   const [isUpdating, setIsUpdating] = useState(false);
 
+  useEffect(() => {
+    setBlockedList(BlocksCache.getProfiles());
+  }, []);
+
   const handleUnblock = async (targetUser: BlockedUserMinimal) => {
-    if (!user || isUpdating) return;
+    if (isUpdating || !myProfile?.uid) return;
 
     Alert.alert(
-      t("details.actions.block"),
+      t("details.actions.unblock"),
       `${t("alerts.unblockConfirm", "Unblock")} ${targetUser.name}?`,
       [
         { text: t("alerts.cancel"), style: "cancel" },
@@ -30,7 +34,7 @@ export const useBlockedUsers = () => {
             setIsUpdating(true);
             try {
               // 2. Database Write (Atomic Batch for both A and B)
-              await unblockUser(user.uid, targetUser.uid);
+              await unblockUser(myProfile.uid, targetUser.uid);
 
               // 3. Update Local Cache (MMKV)
               BlocksCache.update(targetUser, "remove");

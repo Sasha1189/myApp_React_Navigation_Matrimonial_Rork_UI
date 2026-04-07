@@ -69,8 +69,7 @@ export {
   orderBy,
   limit,
   writeBatch,
-  arrayUnion,
-  arrayRemove,
+  deleteField,
 } from "@react-native-firebase/firestore";
 
 export { updateProfile, reload } from "@react-native-firebase/auth";

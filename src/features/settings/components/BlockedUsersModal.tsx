@@ -65,7 +65,7 @@ export default function BlockedUsersModal({
           pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
         ]}
       >
-        <Text style={styles.unblockText}>t("settings.unblock")</Text>
+        <Text style={styles.unblockText}>{t("settings.unblock")}</Text>
       </Pressable>
     </View>
   );
@@ -81,7 +81,7 @@ export default function BlockedUsersModal({
         <View style={styles.sheet}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>t("settings.blockedTitle")</Text>
+            <Text style={styles.title}>{t("settings.blockedTitle")}</Text>
             <Pressable onPress={onClose} hitSlop={8} style={styles.closeBtn}>
               <X size={18} color={theme.colors.text} />
             </Pressable>
@@ -115,7 +115,7 @@ export default function BlockedUsersModal({
   );
 }
 
-const AVATAR_SIZE = 44;
+const AVATAR_SIZE = 34;
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
@@ -123,6 +123,7 @@ export const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: "rgba(0,0,0,0.35)",
       justifyContent: "flex-end",
+      marginBottom: 52,
     },
     sheet: {
       backgroundColor: "#fff",
