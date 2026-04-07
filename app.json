@@ -37,7 +37,8 @@
     "plugins": [
       "expo-asset",
       "@react-native-firebase/app",
-      "@react-native-firebase/auth"
+      "@react-native-firebase/auth",
+      "react-native-iap"
     ],
     "runtimeVersion": {
       "policy": "appVersion"
