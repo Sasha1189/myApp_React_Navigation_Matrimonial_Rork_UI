@@ -1,7 +1,7 @@
-export { PersonalInfoSection } from "./PersonalInfoSection";
-export { EditAboutMeScreen } from "./EditAboutMeScreen";
-export { ContactDetailsSection } from "./ContactDetailsSection";
-export { EducationCareerSection } from "./EducationCareerSection";
-export { EditFamilyDetailsScreen } from "./EditFamilyDetailsScreen";
-export { LifestyleSection } from "./LifestyleSection";
-export { PartnerPreferencesSection } from "./PartnerPreferencesSection";
+export { default as EditAboutMeScreen } from "./EditAboutMeScreen";
+export { default as EditPersonalInfoScreen } from "./PersonalInfoSection";
+export { default as EditFamilyDetailsScreen } from "./EditFamilyDetailsScreen";
+export { default as EditContactDetailsScreen } from "./ContactDetailsSection";
+export { default as EditEducationCareerScreen } from "./EducationCareerSection";
+export { default as EditLifestyleScreen } from "./LifestyleSection";
+export { default as EditPartnerPreferencesScreen } from "./PartnerPreferencesSection";

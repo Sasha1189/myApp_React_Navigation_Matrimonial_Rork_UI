@@ -12,19 +12,17 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { clearCacheOnLogout } from "@/cache/cacheConfig";
 import { useTranslation } from "react-i18next";
+import { useAppNavigation } from "src/navigation/hooks";
 
 export const useSettingsActions = () => {
   const { setUser } = useAuth();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
-  const WHATSAPP_NUMBER = "919921794390";
+  const WHATSAPP_NUMBER = "919766757696";
+  const navigation = useAppNavigation();
 
-  const openLink = async (url: string, label: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch (e) {
-      Alert.alert(t("common.error"), t("settings.openLinkError", { label }));
-    }
+  const openLink = (url: string, title: string) => {
+    navigation.navigate("WebView", { url, title });
   };
 
   const composeWhatsApp = async (type: "bug" | "feature" | "report-user") => {
@@ -48,7 +46,7 @@ export const useSettingsActions = () => {
     try {
       await Linking.openURL(url);
     } catch {
-      Linking.openURL(`https://wa.me{WHATSAPP_NUMBER}?text=${text}`);
+      Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`);
     }
   };
 

@@ -19,11 +19,11 @@ import { useChatSession } from "../hooks/useChatSession";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInput } from "../components/ChatInput";
 import { useAppNavigation } from "src/navigation/hooks";
-import { ChatRouteProp } from "../type/chattype";
 import { ChatListHelper } from "../components/ChatListHelper";
 import { ChatHeader } from "../components/ChatHeader";
+import { AppStackScreenProps } from "src/navigation/types";
 
-export default function ChatScreen({ route }: { route: ChatRouteProp }) {
+export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 

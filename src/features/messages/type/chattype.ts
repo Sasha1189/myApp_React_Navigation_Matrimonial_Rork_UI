@@ -24,18 +24,6 @@ export interface IInboxItem {
   u?: Boolean;
 }
 
-export interface ChatRouteProp {
-  params: {
-    roomId: string;
-    uid: string;
-    otherUser: {
-      uid: string;
-      name: string;
-      photo?: string;
-    };
-  };
-}
-
 export interface UserBannerItem {
   id: string; // roomId for chats, uid for likes
   name: string;

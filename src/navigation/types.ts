@@ -40,6 +40,7 @@ export type AppStackParamList = {
   Filter: undefined;
   Search: undefined;
   Settings: undefined;
+  WebView: { url: string; title?: string };
   HelpSupport: undefined;
   SafetyPrivacy: undefined;
   Upgrade: undefined;

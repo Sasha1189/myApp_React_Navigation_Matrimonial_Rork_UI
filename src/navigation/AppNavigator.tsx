@@ -1,21 +1,24 @@
 import React from "react";
 import { Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { FilterScreen, SearchScreen } from "@/features/home/screens";
 import ChatScreen from "../features/messages/screens/ChatScreen";
-import FilterScreen from "../features/home/screens/FilterScreen";
-import SearchScreen from "../features/home/screens/SearchScreen";
-import EditProfileScreen from "../features/profile/screens/EditProfileScreen";
-import ManagePhotosScreen from "../features/profile/screens/ManagePhotosScreen";
-import UserDetailsScreen from "../features/profile/screens/UserDetailsScreen";
-import SettingsScreen from "../features/settings/screens/SettingsScreen";
-import EditAboutMeScreen from "@/features/profile/components/sections/EditAboutMeScreen";
-import EditPersonalInfoScreen from "@/features/profile/components/sections/PersonalInfoSection";
-import EditFamilyDetailsScreen from "@/features/profile/components/sections/EditFamilyDetailsScreen";
-import EditContactDetailsScreen from "@/features/profile/components/sections/ContactDetailsSection";
-import EditEducationCareerScreen from "@/features/profile/components/sections/EducationCareerSection";
-import EditLifestyleScreen from "@/features/profile/components/sections/LifestyleSection";
-import EditPartnerPreferencesScreen from "@/features/profile/components/sections/PartnerPreferencesSection";
 import PaywallScreen from "@/features/subscription/screens/PaywallScreen";
+import { SettingsScreen, WebViewScreen } from "@/features/settings/screens";
+import {
+  EditProfileScreen,
+  ManagePhotosScreen,
+  UserDetailsScreen,
+} from "@/features/profile/screens";
+import {
+  EditAboutMeScreen,
+  EditPersonalInfoScreen,
+  EditFamilyDetailsScreen,
+  EditContactDetailsScreen,
+  EditEducationCareerScreen,
+  EditLifestyleScreen,
+  EditPartnerPreferencesScreen,
+} from "@/features/profile/components/sections";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
@@ -104,6 +107,13 @@ export default function AppNavigator() {
         options={{
           title: t("navigation.settings"),
         }}
+      />
+      <Stack.Screen
+        name="WebView"
+        component={WebViewScreen}
+        options={({ route }) => ({
+          title: route.params.title ?? t("navigation.webView"),
+        })}
       />
       <Stack.Screen
         name="EditAboutMe"

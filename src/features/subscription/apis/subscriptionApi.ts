@@ -9,6 +9,8 @@ export interface SubscriptionResponse {
 
 export async function apiSubscribe(payload: {
   planId: string;
+  purchaseToken: string;
+  packageName: string;
   method: string;
 }): Promise<SubscriptionResponse> {
   // Matches your /api/v1/subscription/subscription route
