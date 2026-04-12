@@ -12,7 +12,7 @@ export const SUBSCRIPTION_PLANS = [
     id: "basic",
     name: "Basic",
     price: "₹999/-",
-    period: "Once a year, taxes extra",
+    period: "Once a year, taxes (18% + 15%)",
     originalPrice: "₹1999/-",
     discount: "50% OFF",
     features: [
@@ -26,7 +26,7 @@ export const SUBSCRIPTION_PLANS = [
     id: "premium",
     name: "Premium",
     price: "₹1999/-",
-    period: "Once a year, taxes extra",
+    period: "Once a year, taxes (18% + 15%)",
     originalPrice: "₹3999",
     discount: "50% OFF",
     popular: true,

@@ -1,9 +1,19 @@
 {
-  "compilerOptions": {"strict": true,
+  "compilerOptions": {
+    "strict": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     },
-    "skipLibCheck": true},
+    "skipLibCheck": true,
+    "types": [
+      "babel__generator",
+      "babel__template",
+      "hammerjs",
+      "istanbul-lib-report",
+      "node",
+      "yargs-parser"
+    ]
+  },
   "extends": "expo/tsconfig.base"
 }

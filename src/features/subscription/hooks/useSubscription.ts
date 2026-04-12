@@ -1,200 +1,136 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Alert, Platform } from "react-native";
-import {
-  initConnection,
-  endConnection,
-  // @ts-ignore
-  getSubscriptions,
-  // @ts-ignore
-  requestSubscription,
-  finishTransaction,
-  // @ts-ignore
-  flushFailedPurchasesCachedAsPendingAndroid,
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  Purchase,
-  PurchaseError,
-  Subscription,
-} from "react-native-iap";
+import { useIAP, ErrorCode, Purchase } from "react-native-iap";
+import { getIdToken } from "@/config/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { apiSubscribe } from "../apis/subscriptionApi";
 import { useTranslation } from "react-i18next";
 
-const PLAN_TO_SKU: Record<string, string> = {
-  trial: "trial_plan", // Add your trial SKU mapping here
-  basic: "basic_yearly",
-  premium: "premium_yearly",
-};
-
-const SKUS =
-  Platform.select({
-    ios: ["basic_yearly", "premium_yearly", "trial_plan"],
-    android: ["basic_yearly", "premium_yearly", "trial_plan"],
-  }) || [];
+const SKUS = ["basic_membership_1y", "premium_membership_1y"];
 
 export const useSubscription = () => {
   const { user, tier, setTier } = useAuth();
   const { t } = useTranslation();
 
-  const [availablePlans, setAvailablePlans] = useState<Subscription[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>(
     tier && tier !== "none" ? tier : "",
   );
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Keep references to prevent recreating IAP listeners and connections on context updates
-  const latestContext = useRef({ user, setTier, t });
-  useEffect(() => {
-    latestContext.current = { user, setTier, t };
-  }, [user, setTier, t]);
-
-  useEffect(() => {
-    // 1. Setup Listeners synchronously to avoid memory leaks if component unmounts early
-    // @ts-ignore
-    const purchaseUpdateSubscription = purchaseUpdatedListener(
-      async (purchase: Purchase) => {
-        // Explicit cast to 'any' since transactionReceipt might be omitted in current Purchase typings
-        const receipt =
-          (purchase as any).transactionReceipt || purchase.purchaseToken;
-
-        if (receipt) {
-          const {
-            user: currentUser,
-            setTier: currentSetTier,
-            t: currentT,
-          } = latestContext.current;
-          try {
-            // Verify with backend
-            const result = await apiSubscribe({
-              planId: purchase.productId,
-              purchaseToken: receipt, // Fix: Use 'receipt' to support iOS transactionReceipt
-              packageName: "com.yourapp.lonari",
-              method:
-                Platform.OS === "ios" ? "apple_app_store" : "google_play_real",
-            });
-
-            // Crucial: Finish transaction so Google/Apple doesn't refund
-            await finishTransaction({ purchase, isConsumable: false });
-
-            // Update state
-            if (currentUser) await currentUser.getIdToken(true);
-            currentSetTier(result.newTier);
-
-            Alert.alert(
-              currentT("common.success"),
-              currentT("subscription.activated"),
-            );
-          } catch (error) {
-            console.error("Backend Verification Error", error);
-            Alert.alert(
-              currentT("common.error"),
-              currentT(
-                "subscription.verifyError",
-                "Subscription verification failed",
-              ),
-            );
-          } finally {
-            setIsProcessing(false);
-          }
-        }
-      },
-    );
-    // 2. Setup Error Listener
-    // @ts-ignore
-    const purchaseErrorSubscription = purchaseErrorListener(
-      (error: PurchaseError) => {
-        setIsProcessing(false);
-        // Convert enum/code to string to fix "no overlap" TypeScript error
-        if (String(error.code) !== "E_USER_CANCELLED") {
-          Alert.alert(latestContext.current.t("common.error"), error.message);
-        }
-      },
-    );
-
-    const initIAP = async () => {
+  const {
+    connected,
+    products,
+    fetchProducts,
+    requestPurchase,
+    finishTransaction,
+  } = useIAP({
+    onPurchaseSuccess: async (purchase: Purchase) => {
       try {
-        await initConnection();
-        if (Platform.OS === "android") {
-          await flushFailedPurchasesCachedAsPendingAndroid();
-        }
+        const receipt = purchase.purchaseToken;
+        const result = await apiSubscribe({
+          planId: purchase.productId,
+          purchaseToken: receipt || "",
+          packageName: "com.sasha.lonariyouvaconnect",
+          method:
+            Platform.OS === "android" ? "google_play_real" : "apple_app_store",
+        });
 
-        // Fetch Products
-        if (SKUS.length > 0) {
-          const products = await getSubscriptions({ skus: SKUS });
-          setAvailablePlans(products);
-        }
-      } catch (err) {
-        console.error("IAP Init Error:", err);
+        // isConsumable: true allows buying it again after a year if needed
+        await finishTransaction({ purchase, isConsumable: true });
+
+        if (user) await getIdToken(user, true);
+        setTier(result.newTier);
+        Alert.alert(t("common.success"), t("subscription.activated"));
+      } catch (error) {
+        console.error("[IAP] Verification Error:", error);
+        Alert.alert(t("common.error"), t("subscription.verifyError"));
+      } finally {
+        setIsProcessing(false);
       }
-    };
+    },
+    onPurchaseError: (error) => {
+      setIsProcessing(false);
+      if (error.code !== ErrorCode.UserCancelled) {
+        Alert.alert(t("common.error"), error.message);
+      }
+    },
+  });
 
-    initIAP();
-
-    return () => {
-      purchaseUpdateSubscription.remove();
-      purchaseErrorSubscription.remove();
-      endConnection();
-    };
-  }, []); // Run only once on mount to prevent constant disconnect/reconnects
+  useEffect(() => {
+    if (connected) {
+      // Corrected to 'in-app' per official v14.7 docs
+      fetchProducts({ skus: SKUS, type: "in-app" });
+    }
+  }, [connected]);
 
   const isSubmitDisabled =
     !selectedPlanId || selectedPlanId === tier || isProcessing;
 
-  const handlePay = async (): Promise<void> => {
+  // handle pay......
+  const handlePay = async () => {
     if (isSubmitDisabled || !user) return;
     setIsProcessing(true);
 
-    try {
-      // Map internal UI plan ID ('basic') to Google Play/App Store SKU ('basic_yearly')
-      const targetSku = PLAN_TO_SKU[selectedPlanId] || selectedPlanId;
+    const PLAN_TO_SKU: Record<string, string> = {
+      basic: "basic_membership_1y",
+      premium: "premium_membership_1y",
+    };
 
-      const selectedPlan = availablePlans.find(
-        // @ts-ignore
-        (p) => p.productId === targetSku,
-      );
+    const planKey = selectedPlanId.toLowerCase();
 
-      if (!selectedPlan) {
-        throw new Error(
-          `Plan not found for SKU: ${targetSku}. Please check your Google Play console and SKUS list.`,
-        );
+    // --- CASE 1: FREE TRIAL (Internal Logic) ---
+    if (planKey === "trial") {
+      try {
+        // No Google Play involvement. Just tell the backend to grant the trial.
+        const result = await apiSubscribe({
+          planId: "trial",
+          purchaseToken: "",
+          packageName: "com.sasha.lonariyouvaconnect",
+          method: "internal_free",
+        });
+
+        await user.getIdToken(true);
+        setTier(result.newTier);
+        Alert.alert(t("common.success"), t("subscription.activated"));
+      } catch (error) {
+        Alert.alert(t("common.error"), "Could not activate trial.");
+      } finally {
+        setIsProcessing(false);
       }
+      return; // Exit here
+    }
 
-      // Requirement for Android Billing V5+ (Offers)
-      const offerToken =
-        Platform.OS === "android" &&
-        (selectedPlan as any)?.subscriptionOfferDetails?.length
-          ? (selectedPlan as any).subscriptionOfferDetails[0].offerToken
-          : undefined;
+    // --- CASE 2: PAID PLANS (Google Play Logic) ---
+    const targetSku = PLAN_TO_SKU[planKey];
+    const product = products.find((p) => p.id === targetSku);
 
-      // This call triggers the native sheet; the listener above handles the result
-      await requestSubscription({
-        sku: targetSku,
-        ...(offerToken && {
-          // @ts-ignore
-          subscriptionOffers: [{ sku: targetSku, offerToken }],
-          // @ts-ignore
-        }),
+    if (!product) {
+      Alert.alert(t("common.error"), "Product not currently available.");
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      await requestPurchase({
+        type: "in-app",
+        request: {
+          google: { skus: [targetSku] },
+          apple: { sku: targetSku },
+        },
       });
+      // Logic continues in onPurchaseSuccess listener
     } catch (error) {
       setIsProcessing(false);
-      const iapError = error as PurchaseError;
-      console.error("Request Subscription Error:", iapError.message);
-      if (String(iapError.code) !== "E_USER_CANCELLED") {
-        Alert.alert(
-          t("common.error"),
-          iapError.message || "Failed to initiate purchase",
-        );
-      }
+      console.error("[IAP] Request Error:", error);
     }
   };
 
   return {
-    // @ts-ignore
     selectedPlanId,
     setSelectedPlanId,
     handlePay,
     isProcessing,
     isSubmitDisabled,
-    availablePlans,
+    availablePlans: products,
   };
 };

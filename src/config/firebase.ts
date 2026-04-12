@@ -72,4 +72,4 @@ export {
   deleteField,
 } from "@react-native-firebase/firestore";
 
-export { updateProfile, reload } from "@react-native-firebase/auth";
+export { getIdToken, updateProfile, reload } from "@react-native-firebase/auth";
