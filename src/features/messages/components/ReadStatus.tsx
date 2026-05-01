@@ -21,6 +21,6 @@ export const ReadStatus = React.memo(
 
     // 🔹 STATE 3: Message is SENT but not yet read (Single/Double Gray)
     // Logic: In a basic setup, RTDB 'r: false' means it's on the server.
-    return <Check size={14} color="gray" />;
+    return <CheckCheck size={14} color="gray" />;
   },
 );

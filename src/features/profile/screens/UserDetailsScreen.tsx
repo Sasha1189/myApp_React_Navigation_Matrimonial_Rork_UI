@@ -66,6 +66,8 @@ export default function UserDetailsScreen({ route }: any) {
 
   const canViewContact = isSelf || tier === "basic" || tier === "premium";
 
+  const canBlock = tier === "basic" || tier === "premium";
+
   const { handleShare, handleBlock } = useSocialActions(profile);
 
   if (!profile) return null;
@@ -380,11 +382,23 @@ export default function UserDetailsScreen({ route }: any) {
             title={t("details.actions.blockShare")}
             icon={ShieldAlert}
           >
-            <ProfileActionFooter
-              onShare={handleShare}
-              onBlock={handleBlock}
-              loading={false}
-            />
+            {canBlock ? (
+              <ProfileActionFooter
+                onShare={handleShare}
+                onBlock={handleBlock}
+                loading={false}
+              />
+            ) : (
+              <TouchableOpacity
+                style={styles.upgradeCard}
+                onPress={() => navigation.navigate("Paywall")}
+              >
+                <Lock size={24} color={theme.colors.primary} />
+                <Text style={styles.upgradeText}>
+                  {t("details.upgradeText")}
+                </Text>
+              </TouchableOpacity>
+            )}
           </DetailSection>
         )}
       </View>

@@ -63,20 +63,7 @@ export function useSectionEditor<T extends FieldValues>(
   );
 
   const onSave = handleSubmit(async (data) => {
-    const isRestricted = tier === "trial" || tier === "none";
-
-    if (isRestricted) {
-      Alert.alert(t("alerts.upgradeRequired"), t("editor.upgradeToSave"), [
-        { text: t("alerts.cancel"), style: "cancel" },
-        {
-          text: t("alerts.upgradeNow"),
-          onPress: () => navigation.navigate("Paywall"),
-        },
-      ]);
-      return;
-    }
-
-    if (isSaving) return; // Prevent multiple clicks
+    if (isSaving) return;
     setIsSaving(true);
 
     try {

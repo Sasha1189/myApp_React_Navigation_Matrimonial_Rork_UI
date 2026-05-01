@@ -34,24 +34,8 @@ export default function ManagePhotosScreen() {
 
   // 2. Create a Guarded Upload Function
   const handleSavePress = () => {
-    const isRestricted = tier === "trial" || tier === "none";
 
-    if (isRestricted) {
-      Alert.alert(
-        t("alerts.upgradeRequired"),
-        t("photos.upgradeToSave"), // Key for "Upgrade to save photos"
-        [
-          { text: t("alerts.cancel"), style: "cancel" },
-          {
-            text: t("alerts.upgradeNow"),
-            onPress: () => navigation.navigate("Paywall"),
-          },
-        ],
-      );
-      return;
-    }
-
-    uploadPhotos(); // Proceed if they are Basic or Premium
+    uploadPhotos();
   };
 
   if (!theme) return null;

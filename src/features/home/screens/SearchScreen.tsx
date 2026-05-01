@@ -8,57 +8,79 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { X, Search, MapPin, GraduationCap, User } from "lucide-react-native";
+import {
+  X,
+  Search,
+  MapPin,
+  Calendar,
+  User,
+  Sparkles,
+  Clock,
+} from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
-
-interface SearchFilters {
-  name: string;
-  location: string;
-  education: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import { storage } from "../../../cache/cacheConfig";
+import PickerField from "@/features/profile/components/form/PickerField";
+import { useTranslation } from "react-i18next";
 
 export default function SearchScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const uid = user?.uid as string;
+
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+  const { t } = useTranslation();
 
-  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
-    name: "",
-    location: "",
-    education: "",
-  });
+  // 1. Search Configuration
+  const [searchField, setSearchField] = useState("name");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [recentSearches] = useState([
-    "Priya Mumbai",
-    "Software Engineer",
-    "Delhi Graduate",
-    "Bangalore MBA",
-  ]);
+  // 2. Icon map for the header display
+  const iconMap: Record<string, any> = {
+    name: User,
+    location: MapPin,
+    age: Calendar,
+  };
 
+  // 2. Actions
+  // const handleSearch = () => {
+  //   if (!searchQuery.trim()) return;
+
+  //   storage.set(`search_field_${uid}`, searchField);
+  //   storage.set(`search_query_${uid}`, searchQuery.trim());
+  //   storage.set(`active_mode_${uid}`, "search");
+  //   navigation.goBack();
+  // };
   const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+
+    // Write to storage - Hook will react to these instantly
+    storage.set(`search_field_${uid}`, searchField);
+    storage.set(`search_query_${uid}`, searchQuery.trim());
+    storage.set(`active_mode_${uid}`, "search");
+
+    navigation.goBack();
+  };
+
+  const handleLatest = () => {
+    storage.set(`active_mode_${uid}`, "latest");
     navigation.goBack();
   };
 
   const clearSearch = () => {
-    setSearchFilters({
-      name: "",
-      location: "",
-      education: "",
-    });
+    setSearchQuery("");
+    setSearchField("name");
+    storage.set(`active_mode_${uid}`, "default");
+    storage.remove(`search_field_${uid}`);
+    storage.remove(`search_query_${uid}`);
+    navigation.goBack();
   };
 
-  const handleRecentSearch = (search: string) => {
-    // Parse recent search and populate filters
-    setSearchFilters((prev) => ({
-      ...prev,
-      name: search,
-    }));
-  };
-
+  if (!theme) return null;
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -68,87 +90,59 @@ export default function SearchScreen() {
         >
           <X size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Search</Text>
+        <Text style={styles.headerTitle}>{t("search.title")}</Text>
         <TouchableOpacity onPress={clearSearch}>
-          <Text style={styles.clearText}>Clear</Text>
+          <Text style={styles.clearText}>{t("search.clear")}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Search Inputs */}
         <View style={styles.searchSection}>
-          <View style={styles.inputContainer}>
-            <User size={20} color={theme.colors.textLight} />
-            <TextInput
-              style={styles.input}
-              placeholder="Search by name..."
-              placeholderTextColor={theme.colors.textLight}
-              value={searchFilters.name}
-              onChangeText={(text) =>
-                setSearchFilters((prev) => ({ ...prev, name: text }))
-              }
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <MapPin size={20} color={theme.colors.textLight} />
-            <TextInput
-              style={styles.input}
-              placeholder="Search by location..."
-              placeholderTextColor={theme.colors.textLight}
-              value={searchFilters.location}
-              onChangeText={(text) =>
-                setSearchFilters((prev) => ({ ...prev, location: text }))
-              }
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <GraduationCap size={20} color={theme.colors.textLight} />
-            <TextInput
-              style={styles.input}
-              placeholder="Search by education..."
-              placeholderTextColor={theme.colors.textLight}
-              value={searchFilters.education}
-              onChangeText={(text) =>
-                setSearchFilters((prev) => ({ ...prev, education: text }))
-              }
-            />
-          </View>
-        </View>
-
-        {/* Recent Searches */}
-        <View style={styles.recentSection}>
-          <Text style={styles.sectionTitle}>Recent Searches</Text>
-          {recentSearches.map((search, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.recentItem}
-              onPress={() => handleRecentSearch(search)}
+          <TouchableOpacity
+            style={[styles.inputContainer, styles.latestButtonExtra]}
+            onPress={handleLatest}
+          >
+            <Clock size={20} color={theme.colors.primary} />
+            <Text
+              style={[
+                styles.recentText,
+                { color: theme.colors.primary, fontWeight: "600" },
+              ]}
             >
-              <Search size={16} color={theme.colors.textLight} />
-              <Text style={styles.recentText}>{search}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              {t("search.latestAction")}
+            </Text>
+            <Sparkles size={16} color={theme.colors.primary} />
+          </TouchableOpacity>
 
-        {/* Popular Searches */}
-        <View style={styles.popularSection}>
-          <Text style={styles.sectionTitle}>Popular Searches</Text>
-          <View style={styles.tagsContainer}>
-            {["Engineer", "Doctor", "Mumbai", "Delhi", "MBA", "CA"].map(
-              (tag) => (
-                <TouchableOpacity
-                  key={tag}
-                  style={styles.tag}
-                  onPress={() =>
-                    setSearchFilters((prev) => ({ ...prev, education: tag }))
-                  }
-                >
-                  <Text style={styles.tagText}>{tag}</Text>
-                </TouchableOpacity>
-              ),
-            )}
+          <Text style={styles.sectionTitle}>{t("search.criteriaTitle")}</Text>
+
+          {/* Field Selection (Picker) */}
+          <PickerField
+            label={t("search.searchBy")}
+            placeholder={t("search.placeholderSelect")}
+            value={searchField.charAt(0).toUpperCase() + searchField.slice(1)}
+            options={[
+              "fullName",
+              "currentCity",
+              "highestQualification",
+              "occupation",
+            ]}
+            onSelect={(val) => setSearchField(val.toLowerCase())}
+            icon={iconMap[searchField] || User}
+          />
+
+          {/* Single Query Input */}
+          <View style={styles.inputContainer}>
+            <Search size={20} color={theme.colors.textLight} />
+            <TextInput
+              style={styles.input}
+              placeholder={t(`search.placeholders.${searchField}`)}
+              placeholderTextColor={theme.colors.textLight}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              onSubmitEditing={handleSearch}
+            />
           </View>
         </View>
       </ScrollView>
@@ -156,7 +150,7 @@ export default function SearchScreen() {
       <View style={styles.footer}>
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
           <Search size={20} color="white" />
-          <Text style={styles.searchButtonText}>Search</Text>
+          <Text style={styles.searchButtonText}>{t("search.button")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -210,27 +204,24 @@ export const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
+    latestButtonExtra: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primary + "0A", // Very subtle primary tint
+      justifyContent: "center",
+      gap: theme.spacing.sm,
+      borderStyle: "dashed",
+    },
     input: {
       flex: 1,
       fontSize: theme.fontSize.md,
       color: theme.colors.text,
       marginLeft: theme.spacing.sm,
     },
-    recentSection: {
-      marginTop: theme.spacing.xl,
-    },
     sectionTitle: {
       fontSize: theme.fontSize.md,
       fontWeight: "600",
       color: theme.colors.text,
-      marginBottom: theme.spacing.md,
-    },
-    recentItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: theme.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+      marginTop: theme.spacing.md,
     },
     recentText: {
       fontSize: theme.fontSize.md,

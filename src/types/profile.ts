@@ -172,8 +172,8 @@ export interface Photo {
 
 export interface BlockedUserMinimal {
   uid: string;
-  name: string;
-  photo: string;
+  fullName: string;
+  thumbnail: string;
 }
 
 export interface DBPhoto {

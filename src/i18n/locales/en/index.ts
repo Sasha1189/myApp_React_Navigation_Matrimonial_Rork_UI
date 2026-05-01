@@ -13,6 +13,8 @@ import subscription from "./subscription";
 import navigation from "./navigation";
 import editor from "./editor";
 import alerts from "./alerts";
+import filters from "./filters";
+import search from "./search";
 
 export default {
   auth,
@@ -30,4 +32,6 @@ export default {
   editor,
   alerts,
   common,
+  filters,
+  search,
 };

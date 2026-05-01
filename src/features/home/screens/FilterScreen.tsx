@@ -2,116 +2,113 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  TextInput,
   TouchableOpacity,
   ScrollView,
+  StyleSheet,
+  Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   X,
-  MapPin,
   Calendar,
+  MapPin,
   GraduationCap,
-  DollarSign,
+  Briefcase,
+  HeartHandshake,
+  Heart,
+  Ruler,
 } from "lucide-react-native";
-import { AppTheme } from "@/theme/theme";
-import { useStyles } from "@/theme/useStyles";
-import { useAppTheme } from "@/theme/ThemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { AppTheme } from "@/theme/theme";
+import { useAppTheme } from "@/theme/ThemeContext";
+import { useStyles } from "@/theme/useStyles";
+import { storage } from "@/cache/cacheConfig";
+import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
+import PickerField from "../../profile/components/form/PickerField";
 
-interface FilterState {
-  ageRange: [number, number];
-  location: string[];
-  education: string[];
-  income: string[];
-}
+// Import your existing options
+import {
+  districtOptions,
+  annualIncomeOptions,
+  maritalStatusOptions,
+  isReady as isReadyOptions,
+} from "../../profile/components/form/profileOptions";
 
 export default function FilterScreen() {
-  const { theme, mode } = useAppTheme();
-  const styles = useStyles(createStyles);
-  if (!theme) return null;
-  const [filters, setFilters] = useState<FilterState>({
-    ageRange: [21, 35],
-    location: [],
-    education: [],
-    income: [],
-  });
   const navigation = useNavigation();
+  const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const uid = user?.uid as string;
 
-  const locations = [
-    "Mumbai",
-    "Delhi",
-    "Bangalore",
-    "Chennai",
-    "Kolkata",
-    "Pune",
-    "Hyderabad",
-  ];
-  const educationLevels = [
-    "Graduate",
-    "Post Graduate",
-    "PhD",
-    "Professional Degree",
-  ];
-  const incomeRanges = ["₹3L+", "₹5L+", "₹10L+", "₹15L+", "₹25L+", "₹50L+"];
-
-  const toggleSelection = (category: keyof FilterState, value: string) => {
-    if (category === "ageRange") return;
-
-    setFilters((prev) => ({
-      ...prev,
-      [category]: (prev[category] as string[]).includes(value)
-        ? (prev[category] as string[]).filter((item) => item !== value)
-        : [...(prev[category] as string[]), value],
-    }));
-  };
+  const [filters, setFilters] = useState({
+    maxAge: "",
+    maxHeight: "",
+    nativePlace: "",
+    minIncome: "",
+    maritalStatus: "",
+    isReady: "",
+  });
 
   const applyFilters = () => {
+    const age = parseInt(filters.maxAge);
+    if (filters.maxAge && (age < 18 || age > 60)) {
+      Alert.alert(
+        t("filters.title"), // Alert Header
+        t("filters.errors.invalidAge"), // Error Message
+        [{ text: "OK" }],
+      );
+      return;
+    }
+
+    const height = parseInt(filters.maxHeight);
+    if (filters.maxHeight && (height < 100 || height > 250)) {
+      Alert.alert(t("filters.title"), t("filters.errors.invalidHeight"), [
+        { text: "OK" },
+      ]);
+      return;
+    }
+
+    storage.set(`active_filter_params_${uid}`, JSON.stringify(filters));
+    storage.set(`active_mode_${uid}`, "filter");
     navigation.goBack();
   };
 
-  const clearFilters = () => {
+  const clearFilter = () => {
     setFilters({
-      ageRange: [21, 35],
-      location: [],
-      education: [],
-      income: [],
+      maxAge: "",
+      maxHeight: "",
+      nativePlace: "",
+      minIncome: "",
+      maritalStatus: "",
+      isReady: "",
     });
+
+    storage.set(`active_mode_${uid}`, "default");
+    storage.remove(`active_filter_params_${uid}`);
+    navigation.goBack();
   };
 
-  const renderFilterSection = (
-    title: string,
-    icon: React.ReactNode,
-    items: string[],
-    selectedItems: string[],
-    category: keyof FilterState,
-  ) => (
-    <View style={styles.section}>
-      <View style={styles.sectionHeader}>
-        <View>{icon}</View>
-        <Text style={styles.sectionTitle}>{title}</Text>
+  const handleNumericInput = (text: string, key: "maxAge" | "maxHeight") => {
+    const cleaned = text.replace(/[^0-9]/g, "");
+    const normalized = cleaned.startsWith("0")
+      ? cleaned.replace(/^0+/, "")
+      : cleaned;
+
+    const maxLength = key === "maxAge" ? 2 : 3;
+    setFilters((prev) => ({ ...prev, [key]: normalized.slice(0, maxLength) }));
+  };
+
+  const renderRow = (label: string, icon: any, component: React.ReactNode) => (
+    <View style={styles.filterRow}>
+      <View style={styles.labelGroup}>
+        {React.createElement(icon, { size: 20, color: theme.colors.primary })}
+        <Text style={styles.rowLabel}>{label}</Text>
       </View>
-      <View style={styles.optionsContainer}>
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item}
-            style={[
-              styles.option,
-              selectedItems.includes(item) && styles.selectedOption,
-            ]}
-            onPress={() => toggleSelection(category, item)}
-          >
-            <Text
-              style={[
-                styles.optionText,
-                selectedItems.includes(item) && styles.selectedOptionText,
-              ]}
-            >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <View style={styles.pickerContainer}>{component}</View>
     </View>
   );
 
@@ -124,63 +121,116 @@ export default function FilterScreen() {
         >
           <X size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Filters</Text>
-        <TouchableOpacity onPress={clearFilters}>
-          <Text style={styles.clearText}>Clear</Text>
+        <Text style={styles.headerTitle}>{t("filters.title")}</Text>
+        <TouchableOpacity onPress={clearFilter}>
+          <Text style={styles.clearText}>{t("filters.clear")}</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Age Range */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Calendar size={20} color={theme.colors.primary} />
-            <Text style={styles.sectionTitle}>Age Range</Text>
-          </View>
-          <View style={styles.ageRangeContainer}>
-            <Text style={styles.ageRangeText}>
-              {filters.ageRange[0]} - {filters.ageRange[1]} years
-            </Text>
-          </View>
+      <ScrollView
+        style={styles.scrollStyle}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View>
+          {renderRow(
+            t("filters.maxAge"),
+            Calendar,
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[
+                  styles.numericInput,
+                  styles.input,
+                  { color: theme.colors.text },
+                ]}
+                placeholder={t("filters.placeholders.age")}
+                placeholderTextColor={theme.colors.textLight}
+                keyboardType="number-pad"
+                value={filters.maxAge}
+                onChangeText={(text) => handleNumericInput(text, "maxAge")}
+                maxLength={2}
+              />
+            </View>,
+          )}
+
+          {renderRow(
+            t("filters.maxHeight"),
+            Ruler,
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={[
+                  styles.numericInput,
+                  styles.input,
+                  { color: theme.colors.text },
+                ]}
+                placeholder={t("filters.placeholders.height")}
+                placeholderTextColor={theme.colors.textLight}
+                keyboardType="number-pad"
+                value={filters.maxHeight}
+                onChangeText={(text) => handleNumericInput(text, "maxHeight")}
+                maxLength={3}
+              />
+            </View>,
+          )}
+
+          {renderRow(
+            t("filters.nativePlace"),
+            MapPin,
+            <PickerField
+              placeholder={t("filters.placeholders.district")}
+              value={filters.nativePlace}
+              options={districtOptions}
+              onSelect={(val) =>
+                setFilters((p) => ({ ...p, nativePlace: val }))
+              }
+            />,
+          )}
+
+          {renderRow(
+            t("filters.minIncome"),
+            Briefcase,
+            <PickerField
+              placeholder={t("filters.placeholders.income")}
+              value={filters.minIncome}
+              options={annualIncomeOptions}
+              onSelect={(val) => setFilters((p) => ({ ...p, minIncome: val }))}
+            />,
+          )}
+
+          {renderRow(
+            t("filters.status"),
+            HeartHandshake,
+            <PickerField
+              placeholder={t("filters.placeholders.status")}
+              value={filters.maritalStatus}
+              options={maritalStatusOptions}
+              onSelect={(val) =>
+                setFilters((p) => ({ ...p, maritalStatus: val }))
+              }
+            />,
+          )}
+
+          {renderRow(
+            t("filters.ready"),
+            Heart,
+            <PickerField
+              placeholder={t("filters.placeholders.ready")}
+              value={filters.isReady}
+              options={isReadyOptions}
+              onSelect={(val) => setFilters((p) => ({ ...p, isReady: val }))}
+            />,
+          )}
         </View>
-
-        {/* Location */}
-        {renderFilterSection(
-          "Location",
-          <MapPin size={20} color={theme.colors.primary} />,
-          locations,
-          filters.location,
-          "location",
-        )}
-
-        {/* Education */}
-        {renderFilterSection(
-          "Education",
-          <GraduationCap size={20} color={theme.colors.primary} />,
-          educationLevels,
-          filters.education,
-          "education",
-        )}
-
-        {/* Income */}
-        {renderFilterSection(
-          "Income",
-          <DollarSign size={20} color={theme.colors.primary} />,
-          incomeRanges,
-          filters.income,
-          "income",
-        )}
       </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-          <Text style={styles.applyButtonText}>Apply Filters</Text>
+          <Text style={styles.applyButtonText}>{t("filters.apply")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
@@ -197,72 +247,49 @@ export const createStyles = (theme: AppTheme) =>
       borderBottomColor: theme.colors.border,
       backgroundColor: theme.colors.card,
     },
-    closeButton: {
-      padding: theme.spacing.xs,
-    },
     headerTitle: {
       fontSize: theme.fontSize.lg,
       fontWeight: "bold",
       color: theme.colors.text,
+    },
+    closeButton: {
+      padding: theme.spacing.xs,
     },
     clearText: {
       fontSize: theme.fontSize.md,
       color: theme.colors.primary,
       fontWeight: "600",
     },
-    content: {
+    scrollStyle: {
       flex: 1,
-      paddingHorizontal: theme.spacing.lg,
+    },
+    scrollContent: {
+      padding: theme.spacing.md,
+      paddingBottom: theme.spacing.lg,
     },
     section: {
-      marginVertical: theme.spacing.lg,
+      gap: theme.spacing.xs,
     },
-    sectionHeader: {
+    filterRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: theme.spacing.md,
+      justifyContent: "space-between",
+      paddingHorizontal: theme.spacing.sm,
     },
-    sectionTitle: {
-      fontSize: theme.fontSize.md,
-      fontWeight: "600",
-      color: theme.colors.text,
-      marginLeft: theme.spacing.sm,
-    },
-    ageRangeContainer: {
-      backgroundColor: theme.colors.card,
-      padding: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    ageRangeText: {
-      fontSize: theme.fontSize.md,
-      color: theme.colors.text,
-      textAlign: "center",
-    },
-    optionsContainer: {
+    labelGroup: {
       flexDirection: "row",
-      flexWrap: "wrap",
+      alignItems: "center",
       gap: theme.spacing.sm,
+      flex: 1,
     },
-    option: {
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      borderRadius: theme.borderRadius.round,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.card,
-    },
-    selectedOption: {
-      backgroundColor: theme.colors.primary,
-      borderColor: theme.colors.primary,
-    },
-    optionText: {
-      fontSize: theme.fontSize.sm,
+    rowLabel: {
+      fontSize: theme.fontSize.md,
       color: theme.colors.text,
+      fontWeight: "500",
     },
-    selectedOptionText: {
-      color: "white",
+    pickerContainer: {
+      flex: 1,
+      maxWidth: "60%",
     },
     footer: {
       padding: theme.spacing.lg,
@@ -280,5 +307,26 @@ export const createStyles = (theme: AppTheme) =>
       color: "white",
       fontSize: theme.fontSize.md,
       fontWeight: "600",
+    },
+    numericInput: {
+      fontSize: theme.fontSize.md,
+      textAlign: "right",
+      fontWeight: "600",
+      minWidth: 60,
+      paddingVertical: 4,
+    },
+    inputWrapper: {
+      marginTop: 4,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.borderRadius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      fontSize: theme.fontSize.md,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.card,
+      minHeight: 45,
     },
   });

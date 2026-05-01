@@ -9,12 +9,23 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
     isLoading,
     isError,
     error,
-    feedDone,
     resetFeed,
     refetch,
     updateIndex,
+    mode = "default",
   } = feed;
   const { t } = useTranslation();
+
+  //new user
+  if (profiles?.length === 0 && !isLoading && !isError) {
+    return (
+      <FeedStatusCard
+        type="empty"
+        title={t("feed.newTitle")}
+        message={t("feed.newMessage")}
+      />
+    );
+  }
 
   // 1. Error Card
   if (isError) {
@@ -31,18 +42,21 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
 
   // 2. 🔹 CHECK END OF FEED FIRST
   // If we have profiles but swiped past the last one, OR we have 0 profiles and backend is done
-  if (
-    (profiles.length > 0 && currentIndex >= profiles.length) ||
-    (profiles.length === 0 && feedDone)
-  ) {
+  if (profiles.length === 0 || currentIndex >= profiles.length) {
     return (
       <>
         <FeedStatusCard
           type="empty"
-          title={t("feed.endTitle")}
-          message={t("feed.endMessage")}
+          title={t(`feed.endTitle_${mode}`, {
+            defaultValue: t("feed.endTitle"),
+          })}
+          message={t(`feed.endMessage_${mode}`, {
+            defaultValue: t("feed.endMessage"),
+          })}
           onAction={resetFeed}
-          actionText={t("feed.startOver")}
+          actionText={t(`feed.action_${mode}`, {
+            defaultValue: t("feed.startOver"),
+          })}
         />
         {currentIndex > 0 && (
           <FeedPreviousProfiles
@@ -51,17 +65,6 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
           />
         )}
       </>
-    );
-  }
-
-  // 3. Initial Loading state
-  if (isLoading && profiles.length === 0) {
-    return (
-      <FeedStatusCard
-        type="loading"
-        title={t("feed.loadingTitle")}
-        message={t("feed.loadingMessage")}
-      />
     );
   }
 

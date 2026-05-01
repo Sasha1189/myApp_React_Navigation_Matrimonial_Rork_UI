@@ -27,7 +27,7 @@ export const rashiOptions = [
   "Pisces",
 ];
 export const horoscopeOptions = ["Yes", "No", "Optional"];
-export const isReady = ["Yes - Ready", "No still studying - Not ready"];
+export const isReady = ["Ready", "Studying"];
 export const contactOptions = ["WhatsApp", "Phone", "Email", "Chat only"];
 export const createdByOptions = ["Self", "Father", "Mother", "Sibling"];
 export const highestQualification = [
@@ -64,10 +64,10 @@ export const industryOptions = [
   "Healthcare",
   "Other",
 ];
-export const incomeOptions = ["₹UPTO 5L", "₹5L+", "₹10L+", "₹20L+"];
+export const incomeOptions = ["5", "10", "15", "20"];
 export const familyTypeOptions = ["Joint", "Nuclear"];
 export const familyValuesOptions = ["Traditional", "Modern"];
-export const dietOptions = ["Vegetarian", "Eggetarian", "Non-Veg"];
+export const dietOptions = ["Vegetarian", "Eggetarian", "NonVeg"];
 export const habitOptions = ["No", "Occasionally", "Yes"];
 export const exerciseOptions = ["Regular", "Sometimes", "Rarely", "Never"];
 export const fitnessOptions = ["Fit", "Average", "Overweight", "Athletic"];
@@ -118,7 +118,7 @@ export const preferredContactOptions = [
   "Chat only",
 ];
 export const profileCreatedByOptions = ["Self", "Father", "Mother", "Sibling"];
-export const annualIncomeOptions = ["₹3L+", "₹5L+", "₹10L+", "No preference"];
+export const annualIncomeOptions = ["5", "10", "15", "20", "No preference"];
 export const hobbyOptions = [
   "Reading",
   "Traveling",

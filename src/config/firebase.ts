@@ -11,7 +11,13 @@ import {
 // 1. Core Instances
 export const app = getApp();
 export const auth = getAuth(app);
+
 export const firestore = getFirestore(app);
+firestore.settings({
+  persistence: true,
+  cacheSizeBytes: 100 * 1024 * 1024,
+});
+
 export const storage = getStorage(app);
 
 // 2. Realtime Database Setup
@@ -70,6 +76,11 @@ export {
   limit,
   writeBatch,
   deleteField,
+  getDocFromCache,
+  getDocsFromCache,
+  getDocsFromServer,
+  arrayUnion,
+  arrayRemove,
 } from "@react-native-firebase/firestore";
 
 export { getIdToken, updateProfile, reload } from "@react-native-firebase/auth";

@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, tier } = useAuth();
   const { t } = useTranslation();
   const uid = user?.uid;
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
@@ -26,6 +26,7 @@ export function usePhotoManager(profile: Profile | null) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
+  const isPaid = tier === "basic" || tier === "premium";
 
   // keep photos in sync with profile updates
   useEffect(() => {
@@ -157,6 +158,28 @@ export function usePhotoManager(profile: Profile | null) {
     const pending = photos.filter((p) => !p.downloadURL);
     if (!pending.length) {
       Alert.alert(t("photo.noChangesTitle"), t("photo.noChangesMsg"));
+      return;
+    }
+
+    // 🔹 CASE 1: TRIAL USER (Local Only)
+    if (!isPaid) {
+      setLoading(true);
+      try {
+        await updateProfile({
+          photos: photos,
+          thumbnail: photos.find((p) => p.isPrimary)?.localUrl || "",
+        });
+
+        setIsEditing(false);
+        Alert.alert(
+          t("photo.successTitle"),
+          t("photo.localSaveMsg", "Saved to your device!"),
+        );
+      } catch (err) {
+        Alert.alert(t("photo.errorTitle"), t("photo.saveError"));
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 

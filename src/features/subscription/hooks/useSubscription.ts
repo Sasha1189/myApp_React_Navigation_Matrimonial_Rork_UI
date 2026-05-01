@@ -89,7 +89,7 @@ export const useSubscription = () => {
           method: "internal_free",
         });
 
-        await user.getIdToken(true);
+        await getIdToken(user, true);
         setTier(result.newTier);
         Alert.alert(t("common.success"), t("subscription.activated"));
       } catch (error) {

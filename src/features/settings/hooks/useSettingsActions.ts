@@ -68,9 +68,13 @@ export const useSettingsActions = () => {
               });
               keepSynced(ref(rtdb, `inbox/${currentUser.uid}`), false);
             }
+
             await signOut(auth);
+
             await clearCacheOnLogout();
+
             setUser(null);
+
             goOffline(rtdb);
           } catch (error) {
             Alert.alert(t("common.error"), t("settings.logoutError"));

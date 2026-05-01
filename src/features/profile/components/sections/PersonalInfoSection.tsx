@@ -175,12 +175,22 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
         <Controller
           control={control}
           name="height"
+          rules={{
+            required: t("errors.required"),
+            minLength: { value: 3, message: t("errors.invalidHeight") },
+          }}
           render={({ field: { onChange, value } }) => (
             <InputField
               label={t("details.labels.height")}
-              placeholder="e.g. 5'8\"
+              placeholder="e.g. 170cm"
               value={value}
-              onChangeText={onChange}
+              keyboardType="numeric"
+              maxLength={3} // 🔹 Strict 3 digits
+              onChangeText={(text) => {
+                // 🔹 Allow only numbers
+                const cleaned = text.replace(/[^0-9]/g, "");
+                onChange(cleaned);
+              }}
               icon={Ruler}
             />
           )}

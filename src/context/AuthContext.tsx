@@ -19,6 +19,7 @@ import { usePresence } from "@/features/messages/hooks/usePresence";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";
 import { getProfile } from "@/features/profile/api/profileApi";
 import { doc, getDoc, firestore } from "../config/firebase";
+import { FeedSyncService } from "@/features/home/apis/feedApi";
 import { BlocksCache } from "../cache/cacheConfig";
 
 interface AuthContextType {
@@ -54,27 +55,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   usePresence(user?.uid);
-  const updateProfile = useUpdateProfile(user, profile, setProfile);
+  const updateProfile = useUpdateProfile(user, profile, setProfile, tier);
 
   //profile
   useEffect(() => {
     const syncProfile = async () => {
-      if (!user) return;
+      if (!user?.uid) return;
+      if (!user?.displayName) return;
       try {
         const hasCache = storage.contains(PROFILE_CACHE_KEY);
         if (!hasCache) {
-          const remoteData = await getProfile(user?.uid, user?.displayName!);
+          const remoteData = await getProfile(user?.uid, user?.displayName);
           if (remoteData) {
             setProfile(remoteData);
             storage.set(PROFILE_CACHE_KEY, JSON.stringify(remoteData));
           }
         }
       } catch (error) {
-        console.error("Initial sync failed:", error);
+        console.error("Initial self profilesync failed:", error);
       }
     };
     syncProfile();
   }, [user?.uid, user?.displayName]);
+
+  // 2. sync feed
+  useEffect(() => {
+    if (user?.displayName) {
+      const lastSync = storage.getNumber("profiles_last_sync_timestamp") || 0;
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      // 🔹 NO TIMER: Fire immediately when gender is ready or 24h passed
+      if (lastSync === 0 || Date.now() - lastSync > oneDay) {
+        FeedSyncService.syncFeeds(user?.displayName);
+      }
+    }
+  }, [user?.displayName]);
 
   //auth
   useEffect(() => {
@@ -92,8 +107,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAuthLoading(false);
 
       try {
-        // 3. BACKGROUND SYNC: Slow network stuff
-        // We use 'true' to force a fresh token from the server
         const idTokenResult = await getIdTokenResult(firebaseUser, true);
         const claims = idTokenResult.claims;
 
@@ -122,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           storage.set(TIER_CACHE_KEY, "none");
         } else {
           setTier(mappedTier);
-          // Always cache the latest tier from the server
           storage.set(TIER_CACHE_KEY, mappedTier);
         }
 
@@ -130,12 +142,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const blockDocRef = doc(firestore, "blockedIDs", firebaseUser.uid);
         const blockSnap = await getDoc(blockDocRef);
         if (blockSnap.exists()) {
-          // Pass the 'blockedUsers' object (Map)
-          const serverMap = blockSnap.data()?.blockedUsers || {};
-          BlocksCache.syncFromFirestore(serverMap);
+          const data = blockSnap.data();
+          const mine = data?.mine || [];
+          const theirs = data?.theirs || [];
+
+          // 🔹 Save both lists to MMKV immediately
+          BlocksCache.sync(mine, theirs);
+        } else {
+          // Ensure cache is cleared if no doc exists
+          BlocksCache.sync([], []);
         }
       } catch (error) {
-        console.error("Background sync failed:", error);
+        console.error("Auth/tier/block state check failed:", error);
       }
     });
     return unsubscribe;

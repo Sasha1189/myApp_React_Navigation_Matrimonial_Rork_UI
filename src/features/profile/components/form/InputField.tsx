@@ -16,6 +16,7 @@ interface InputFieldProps {
   editable?: boolean;
   required?: boolean;
   locked?: boolean;
+  maxLength?: number;
 }
 
 const InputField: React.FC<InputFieldProps> = ({

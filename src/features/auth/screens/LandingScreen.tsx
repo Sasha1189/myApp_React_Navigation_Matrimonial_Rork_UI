@@ -34,6 +34,8 @@ export default function LandingScreen() {
     { icon: Heart, text: t("welcome.features.connect") },
   ];
 
+  console.log("Rendering LandingScreen:114");
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>

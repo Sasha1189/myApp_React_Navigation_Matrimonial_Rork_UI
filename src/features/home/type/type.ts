@@ -7,16 +7,14 @@ export interface FetchFeedResult {
 }
 
 export interface FeedHookResult {
- profiles: Profile[];
+  profiles: Profile[];
   currentIndex: number;
   updateIndex: (val: number) => void;
-  feedDone: boolean;      
-  resetFeed: () => Promise<void>; 
+  feedDone: boolean;
   isLoading: boolean;
-  isError: boolean;      
-  error: Error | null;    
-  hasNextPage: boolean;
-  fetchNextPage: () => void;
-  isFetchingNextPage: boolean;
-  refetch: () => void;   
+  resetFeed?: () => void;
+  refetch?: () => void;
+  isError?: boolean;
+  error?: Error;
+  mode?: string;
 }

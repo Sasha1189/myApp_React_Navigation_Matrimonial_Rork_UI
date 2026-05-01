@@ -33,27 +33,28 @@ export default function BlockedUsersModal({
   const { t } = useTranslation();
 
   const renderInitials = (name: string) => {
-    const parts = name.trim().split(/\s+/);
+    const safeName = name || "";
+    const parts = safeName.trim().split(/\s+/);
     const first = parts[0]?.[0] ?? "";
     const second = parts[1]?.[0] ?? "";
-    return (first + second).toUpperCase();
+    return (first + second).toUpperCase() || "Username";
   };
 
   const Item = ({ item }: { item: BlockedUserMinimal }) => (
     <View style={styles.row}>
       <View style={styles.left}>
-        {item.photo ? (
-          <Image source={{ uri: item.photo }} style={styles.avatarImg} />
+        {item?.thumbnail ? (
+          <Image source={{ uri: item.thumbnail }} style={styles.avatarImg} />
         ) : (
           <View style={styles.avatarFallback}>
             <Text style={styles.avatarFallbackText}>
-              {renderInitials(item.name)}
+              {renderInitials(item?.fullName)}
             </Text>
           </View>
         )}
         <View style={styles.meta}>
           <Text style={styles.name} numberOfLines={1}>
-            {item.name}
+            {item?.fullName}
           </Text>
         </View>
       </View>
@@ -94,7 +95,7 @@ export default function BlockedUsersModal({
           </View>
 
           {/* List */}
-          {users.length === 0 ? (
+          {users?.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>{t("settings.noBlocked")}</Text>
               <Text style={styles.emptySub}>{t("settings.noBlockedSub")}</Text>

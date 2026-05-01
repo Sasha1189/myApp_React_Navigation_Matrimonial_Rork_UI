@@ -1,66 +1,112 @@
-import { useInfiniteQuery,useQueryClient } from "@tanstack/react-query";
-import { fetchDefaultFeed } from "../apis/feedApi";
-import { queryClient, storage } from "../../../cache/cacheConfig";
-import { useState, useCallback, useMemo } from "react";
-import { FeedHookResult, FetchFeedResult } from "../type/type";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { storage } from "../../../cache/cacheConfig";
+import { useAuth } from "../../../context/AuthContext";
+import {
+  firestore,
+  collection,
+  queryFs,
+  orderBy,
+  getDocsFromCache,
+} from "@/config/firebase";
+import { FeedSyncService } from "../apis/feedApi";
 
-export function useFeedDefault(uid: string, gender: string): FeedHookResult {
+export function useFeedDefault(uid: string, isActive: boolean) {
+  const { user } = useAuth();
   const indexKey = `index_${uid}_default`;
-  const queryKey = ["feed", "default", uid];
-  
-  const query = useInfiniteQuery<FetchFeedResult, Error>({
-    queryKey: ["feed", "default", uid],
-    queryFn: ({ pageParam }) => 
-      fetchDefaultFeed({ uid, gender, lastCreatedAt: pageParam as string }),
-    initialPageParam: undefined,
-    getNextPageParam: (lastPage) => (lastPage.done ? undefined : lastPage.lastCreatedAt),
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
-    enabled: !!uid && !!gender,
-  });
 
-  // 🔹 Extract profiles and status
-  const profiles = useMemo(() => 
-    query.data?.pages.flatMap((page) => page.profiles) ?? [], 
-    [query.data]
+  const [profiles, setProfiles] = useState<any[]>([]);
+
+  const [isLoading, setIsLoading] = useState(() => {
+    const g = user?.displayName?.toLowerCase().trim();
+    return g === "male" || g === "female";
+  });
+  const [error, setError] = useState<any>(null);
+  const [currentIndex, _setIndex] = useState(
+    () => storage.getNumber(indexKey) || 0,
   );
 
-  const lastPage = query.data?.pages?.[query.data.pages.length - 1];
-  const feedDone = !!lastPage?.done;
-  
-  const [currentIndex, _setIndex] = useState(() => storage.getNumber(indexKey) || 0);
+  const loadLocalProfiles = useCallback(async () => {
+    const rawGender = user?.displayName || "";
+    const gender = rawGender.toLowerCase().trim();
 
-  const updateIndex = useCallback((val: number) => {
-     const next = Math.max(0, Math.min(val, profiles.length)); 
-    _setIndex(next);
-    storage.set(indexKey, next);
-    // Auto-fetch logic: Fetch next page when 5 cards from the end
-    if (profiles.length - next < 5 && query.hasNextPage && !query.isFetchingNextPage) {
-      query.fetchNextPage();
+    if (gender !== "male" && gender !== "female") {
+      setProfiles([]);
+      setIsLoading(false);
+      return;
     }
-  }, [profiles.length, query.hasNextPage, query.isFetchingNextPage, indexKey]);
 
-// 🔹 Manual Reset Logic (Clears MMKV index too)
-  const resetFeed = useCallback(async () => {
-    storage.set(indexKey, 0); // Reset index to card 1
-    _setIndex(0);
-    // Optional: Pass 'true' to API if your backend needs a cursor reset
-    await queryClient.resetQueries({ queryKey });
-  }, [queryClient, indexKey]);
+    const targetCollection =
+      gender === "male" ? "femaleProfiles" : "maleProfiles";
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const colRef = collection(firestore, targetCollection);
+      const q = queryFs(colRef, orderBy("createdAt", "asc"));
+      const snapshot = await getDocsFromCache(q);
+
+      const data = snapshot.docs.map((doc: any) => ({
+        uid: doc.id,
+        ...doc.data(),
+      }));
+      setProfiles(data || []);
+    } catch (e: any) {
+      setError(e);
+      setProfiles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.displayName]);
+
+  useEffect(() => {
+    if (uid && isActive) {
+      loadLocalProfiles();
+    } else {
+      setIsLoading(false);
+    }
+  }, [uid, isActive, loadLocalProfiles]);
+
+  useEffect(() => {
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key === "profiles_last_sync_timestamp") {
+        loadLocalProfiles();
+      }
+    });
+    return () => listener.remove();
+  }, [loadLocalProfiles]);
+
+  const updateIndex = useCallback(
+    (val: number) => {
+      // Ensure index never exceeds array bounds
+      // const maxIdx = Math.max(0, profiles.length - 1);
+      const next = Math.max(0, Math.min(val, profiles?.length));
+      _setIndex(next);
+      storage.set(indexKey, next);
+    },
+    [profiles.length, indexKey],
+  );
+
+  const refetch = useCallback(async () => {
+    if (profiles.length > 0) {
+      updateIndex(0);
+      await loadLocalProfiles();
+      return;
+    }
+    setIsLoading(true);
+    const success = await FeedSyncService.syncFeeds(user?.displayName || "");
+    if (success) await loadLocalProfiles();
+    setIsLoading(false);
+  }, [profiles?.length, user?.displayName, loadLocalProfiles, updateIndex]);
 
   return {
     profiles,
     currentIndex,
     updateIndex,
-    feedDone,
-    resetFeed,
-// 🔹 Query status/Native TanStack flags
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    hasNextPage: !!query.hasNextPage,
-    fetchNextPage: query.fetchNextPage,
-    isFetchingNextPage: query.isFetchingNextPage,
-    refetch: query.refetch,
+    isLoading,
+    isError: !!error,
+    error,
+    feedDone: true,
+    resetFeed: () => updateIndex(0),
+    refetch,
   };
 }

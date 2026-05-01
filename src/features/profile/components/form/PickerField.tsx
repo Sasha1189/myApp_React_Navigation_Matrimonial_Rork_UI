@@ -13,7 +13,7 @@ import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 
 interface PickerFieldProps {
-  label: string;
+  label?: string;
   value: string;
   placeholder: string;
   options: readonly string[];

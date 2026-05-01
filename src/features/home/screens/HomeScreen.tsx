@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   StyleSheet,
+  Text,
+  Button,
   View,
   StatusBar,
   Alert,
@@ -18,11 +20,13 @@ import { useAppNavigation } from "../../../navigation/hooks";
 import { useActiveFeed } from "../hooks/useActiveFeed";
 import { SwipeCard } from "../components/SwipeCard";
 import { FeedStatusContent } from "../components/FeedStatusContent";
+import { useTranslation } from "react-i18next";
+import { FeedStatusCard } from "../components/FeedStatusCard";
 
 export default function HomeScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  if (!theme) return null;
+  const { t } = useTranslation();
 
   const { user } = useAuth();
   const uid = user?.uid as string;
@@ -48,16 +52,27 @@ export default function HomeScreen() {
     return unsubscribe;
   }, [navigation, showModal]);
 
-  const feed = useActiveFeed(user?.uid!, user?.displayName!);
+  const feed = useActiveFeed(uid!);
 
-  console.log("Current Indexx:", feed.currentIndex);
+  console.log("Current Index:", feed.currentIndex);
 
-  console.log("Profiles lengthx :", feed.profiles.length);
+  console.log("Profiles length:", feed.profiles.length);
 
-  const { profiles, currentIndex, updateIndex } = feed;
-  const currentProfile = profiles[currentIndex];
+  const { profiles, currentIndex, updateIndex, isLoading } = feed;
+
+  // const currentProfile = profiles[currentIndex];
   const nextProfile = profiles[currentIndex + 1];
   const nextImageUrl = nextProfile?.photos?.[0]?.downloadURL || null;
+
+  if (isLoading && profiles.length === 0) {
+    return (
+      <FeedStatusCard
+        type="loading"
+        title={t("feed.loadingTitle")}
+        message={t("feed.loadingMessage")}
+      />
+    );
+  }
 
   const handleSwipe = (direction: "up" | "down") => {
     if (direction === "up") {
@@ -75,7 +90,7 @@ export default function HomeScreen() {
       }
     }
   };
-
+  if (!theme) return null;
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.primary }}>
       <StatusBar
@@ -89,11 +104,11 @@ export default function HomeScreen() {
       >
         <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
         <View style={styles.cardsContainer}>
-          {currentProfile && currentIndex < profiles.length ? (
+          {profiles[currentIndex] && currentIndex < profiles.length ? (
             <SwipeCard
               uid={uid}
-              key={currentProfile.uid}
-              profile={currentProfile}
+              key={profiles[currentIndex].uid}
+              profile={profiles[currentIndex]}
               currentIndex={currentIndex}
               nextImageUrl={nextImageUrl}
               onSwipeUp={() => handleSwipe("up")}

@@ -48,34 +48,6 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
     };
   }, []);
 
-  // const handleTextChange = (val: string) => {
-  //   setText(val);
-
-  //   // 2. Clear any existing "Stop" timer because the user is actively typing
-  //   if (stopTypingTimeoutRef.current) {
-  //     clearTimeout(stopTypingTimeoutRef.current);
-  //   }
-
-  //   if (val.length > 0) {
-  //     // 3. Start Typing: Only signal "true" if we aren't already marked as typing
-  //     if (!isTypingRef.current) {
-  //       isTypingRef.current = true;
-  //       onType(true); // Signal to Hook -> RTDB
-  //     }
-
-  //     // 4. Set a timer to signal "Stop" after 2 seconds of silence
-  //     stopTypingTimeoutRef.current = setTimeout(() => {
-  //       isTypingRef.current = false;
-  //       onType(false); // Signal to Hook -> RTDB
-  //     }, 2000);
-  //   } else {
-  //     // 5. If they delete everything, stop typing status immediately
-  //     if (isTypingRef.current) {
-  //       isTypingRef.current = false;
-  //       onType(false);
-  //     }
-  //   }
-  // };
   useEffect(() => {
     return () => {
       if (stopTypingTimeoutRef.current)
@@ -107,21 +79,6 @@ export const ChatInput = React.memo(({ onSend, onType }: ChatInputProps) => {
     }, 2000); // 2 seconds of silence = stop typing
   };
 
-  // const handleSend = () => {
-  //   const cleanText = text.trim();
-  //   if (cleanText) {
-  //     // 6. Stop typing immediately on send
-  //     if (stopTypingTimeoutRef.current) {
-  //       clearTimeout(stopTypingTimeoutRef.current);
-  //     }
-  //     isTypingRef.current = false;
-  //     onType(false);
-
-  //     // 7. Send and Reset
-  //     onSend(cleanText);
-  //     setText("");
-  //   }
-  // };
   const handleSend = () => {
     const cleanText = text.trim();
     if (cleanText) {
