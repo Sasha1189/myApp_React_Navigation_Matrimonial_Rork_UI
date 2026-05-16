@@ -12,7 +12,11 @@ import {
   getIdTokenResult,
   FirebaseAuthTypes,
 } from "@react-native-firebase/auth";
-import { storage } from "../cache/cacheConfig";
+import {
+  storage,
+  getDBDeviceIdCache,
+  setDBDeviceIdCache,
+} from "../cache/cacheConfig";
 import { getDefaultProfile } from "../utils/getDefaultProfile";
 import { Profile } from "../types/profile";
 import { usePresence } from "@/features/messages/hooks/usePresence";
@@ -21,6 +25,12 @@ import { getProfile } from "@/features/profile/api/profileApi";
 import { doc, getDoc, firestore } from "../config/firebase";
 import { FeedSyncService } from "@/features/home/apis/feedApi";
 import { BlocksCache } from "../cache/cacheConfig";
+import { getUniqueId } from "react-native-device-info";
+import {
+  getUserDeviceId,
+  updateUserDeviceId,
+} from "@/features/home/apis/userApi";
+import { Alert } from "react-native";
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
@@ -90,6 +100,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   }, [user?.displayName]);
+
+  //check device id and lgoout if not match and ask admin to reset deviceid
+  const checkBinding = async () => {
+    if (!user?.uid) return;
+
+    try {
+      // 1. Always get current hardware ID (Fast local call)
+      const currentHardwareId = await getUniqueId();
+
+      // 2. FAST TRACK: Check Local MMKV Cache first
+      const cachedId = getDBDeviceIdCache(); // Get directly from MMKV
+
+      if (cachedId === currentHardwareId) {
+        // ✅ Perfect Match! Device is already verified.
+        // No need to call Firestore.
+        console.log("Device verified via Cache");
+        return;
+      }
+
+      // 3. SLOW TRACK: If cache is empty or mismatched, check the Database
+      console.log("Cache mismatch or missing, checking DB...");
+      const dbId = await getUserDeviceId(user.uid);
+
+      // Case: Admin Reset or New User (DB is empty)
+      if (!dbId || dbId === "") {
+        await updateUserDeviceId(user.uid, currentHardwareId);
+        setDBDeviceIdCache(currentHardwareId);
+        return;
+      }
+
+      // Case: Real Mismatch (User trying to use a different phone)
+      if (dbId !== currentHardwareId) {
+        Alert.alert(
+          "Device Mismatch",
+          "This account is registered on another device. Contact support.",
+          [
+            {
+              text: "Logout",
+              onPress: async () => await getAuth().signOut(),
+            },
+          ],
+        );
+      } else {
+        // Case: DB matches Hardware, but Cache was empty (e.g., cleared app data)
+        // Sync the cache back
+        setDBDeviceIdCache(dbId);
+      }
+    } catch (error) {
+      console.error("Device ID verification failed:", error);
+    }
+  };
+  useEffect(() => {
+    if (!user?.uid || !user?.displayName) return; // 🔹 Don't check until signup is done
+    checkBinding();
+  }, [user?.uid, user?.displayName]);
 
   //auth
   useEffect(() => {

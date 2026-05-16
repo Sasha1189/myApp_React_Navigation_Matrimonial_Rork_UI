@@ -17,10 +17,9 @@ export type AuthStackParamList = {
   Splash: undefined;
   OTPVerify: {
     phone: string;
-    // NOTE: Passing the whole confirmation object can cause 'Non-serializable' warnings.
-    // If it causes issues, move the confirmation object to a Context/State.
     confirmation: FirebaseAuthTypes.ConfirmationResult;
   };
+  WebView: { url: string; title?: string };
 };
 
 export type AppStackParamList = {

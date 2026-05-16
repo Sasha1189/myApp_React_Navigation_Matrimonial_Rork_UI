@@ -14,15 +14,15 @@ export const LanguageSelector = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => handleLanguageChange("en")}>
-        <Text style={[styles.text, currentLang === "en" && styles.active]}>
-          English
-        </Text>
-      </TouchableOpacity>
-      <Text style={styles.separator}>|</Text>
       <TouchableOpacity onPress={() => handleLanguageChange("mr")}>
         <Text style={[styles.text, currentLang === "mr" && styles.active]}>
           मराठी
+        </Text>
+      </TouchableOpacity>
+      <Text style={styles.separator}>|</Text>
+      <TouchableOpacity onPress={() => handleLanguageChange("en")}>
+        <Text style={[styles.text, currentLang === "en" && styles.active]}>
+          English
         </Text>
       </TouchableOpacity>
     </View>

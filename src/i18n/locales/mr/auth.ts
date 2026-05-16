@@ -1,19 +1,28 @@
 export default {
-  loginTitle: "फोन नंबरद्वारे लॉग इन करा",
-  enterPhone: "तुमचा फोन नंबर प्रविष्ट करा",
-  phoneSubtitle:
-    "तुमचा नंबर कन्फर्म करण्यासाठी आम्ही तुम्हाला व्हेरिफिकेशन कोड पाठवू",
-  sendOtp: "OTP पाठवा",
-  continue: "पुढे चालू ठेवा",
-  sending: "पाठवत आहे...",
-  enterOtp: "{{phone}} वर पाठवलेला 6-अंकी OTP प्रविष्ट करा",
-  verify: "OTP पडताळणी करा",
-  verifying: "OTP पडताळणी करत आहे...",
-  resendOtp: "पुन्हा OTP पाठवा",
-  otpSent: "कोड पुन्हा पाठवला!",
-  invalidOtp: "अवैध OTP. कृपया पुन्हा प्रयत्न करा.",
-  otpExpired: "OTP कालबाह्य झाला. कृपया कोड पुन्हा पाठवा.",
-  genericError: "काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
-  terms:
-    "पुढे चालू ठेवून, तुम्ही LoveConnect कडून SMS संदेश प्राप्त करण्यास सहमती दर्शवता. संदेश आणि डेटा दर लागू होऊ शकतात.",
+  helpAlertTitle: "अ‍ॅडमिनशी संपर्क साधा",
+  helpAlertMessage: "कृपया अ‍ॅडमिनच्या मोबाईल नंबरवर कॉल करा. 8554840100",
+  helpAlertCancel: "रद्द करा",
+  helpAlertCall: "कॉल करा",
+  help: "मदत",
+  welcome: "आपले स्वागत आहे",
+  brandName: "लोणारी युवा",
+  verifyTitlePhone: "मोबाईल नंबरने लॉगिन करा",
+  verifyTitleOtp: "मोबाईल नंबर सत्यापित करा",
+  phoneSubhead:
+    "तुमच्या वैयक्तिकृत लोणारी युवा अनुभवाचा आनंद घेण्यासाठी लॉगिन करा",
+  otpSubhead:
+    "कृपया *****{{lastFour}} या क्रमांकावर पाठवलेला ओटीपी (OTP) प्रविष्ट करा.",
+  fieldLabelPhone: "मोबाईल नंबर",
+  fieldLabelOtp: "६-अंकी ओटीपी (OTP) प्रविष्ट करा",
+  checkboxTerms:
+    "मी सहमत आहे की मी गोपनीयता धोरण (Privacy Policy) आणि नियम व अटी वाचल्या आणि स्वीकारल्या आहेत",
+  btnSendOtp: "ओटीपी पाठवा",
+  btnVerify: "सत्यापित करा",
+  didNotReceive: "ओटीपी मिळाला नाही का?",
+  resendIn: "पुन्हा पाठवा 0:{{seconds}} सेकंदात",
+  resendAvailable: "पुन्हा पाठवणे उपलब्ध",
+  errors: {
+    invalidPhone: "कृपया वैध १०-अंकी मोबाईल नंबर प्रविष्ट करा",
+    configMissing: "फायरबेस कन्सोलमध्ये SHA-1 फिंगरप्रिंट गहाळ आहे!",
+  },
 };

@@ -78,7 +78,7 @@ export default function TabNavigator() {
                   width: 50,
                   height: 50,
                   borderRadius: theme.borderRadius.sm,
-                  backgroundColor: theme.colors.primaryLight,
+                  backgroundColor: theme.colors.background,
                   borderWidth: 1,
                   borderColor: theme.colors.border,
                   overflow: "hidden",

@@ -18,6 +18,8 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../types/profile";
 import { createUserOnBackend } from "../apis/userApi";
 import { useTranslation } from "react-i18next";
+import { getUniqueId } from "react-native-device-info";
+import { setDBDeviceIdCache } from "../../../cache/cacheConfig";
 
 interface GenderModalProps {
   visible: boolean;
@@ -62,11 +64,16 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
   ): Promise<void> => {
     try {
       if (firebaseUser) {
+        const deviceId = await getUniqueId();
+
         await createUserOnBackend({
           uid: firebaseUser.uid,
           phoneNumber: firebaseUser?.phoneNumber!,
           displayName: firebaseUser?.displayName!,
+          activeDeviceId: deviceId || "",
         });
+
+        setDBDeviceIdCache(deviceId || "");
       }
     } catch (error) {
       console.error("Error creating user in backend:", error);

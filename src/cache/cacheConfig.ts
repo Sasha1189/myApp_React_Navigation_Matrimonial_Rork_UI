@@ -1,5 +1,5 @@
 import { createMMKV } from "react-native-mmkv";
-import { firestore } from "@/config/firebase";
+import { firestore, get } from "@/config/firebase";
 
 // 1. Core Storage (MMKV)
 export const storage = createMMKV({
@@ -140,3 +140,14 @@ export async function clearCacheOnLogout() {
     console.error("❌ Firestore cache clear failed:", e);
   }
 }
+
+// 6. Device ID Cache (for Single Device Enforcement)..get set functions here for better encapsulation
+const DEVICE_ID_KEY = "device_id";
+
+export const getDBDeviceIdCache = (): string => {
+  return storage.getString(DEVICE_ID_KEY) || "";
+};
+
+export const setDBDeviceIdCache = (deviceId: string) => {
+  storage.set(DEVICE_ID_KEY, deviceId);
+};

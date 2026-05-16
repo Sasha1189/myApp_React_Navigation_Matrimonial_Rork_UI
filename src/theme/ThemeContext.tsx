@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useMemo } from "react";
 import { useColorScheme } from "react-native";
 import { storage } from "@/cache/cacheConfig";
-import { theme, AppTheme } from "./theme";
+import { theme } from "./theme";
 
 const THEME_KEY = "user-theme-mode";
 
 type ThemeMode = "light" | "dark";
 
 type ThemeContextType = {
-  theme: AppTheme;
+  theme: (typeof theme)[ThemeMode];
   mode: ThemeMode;
   toggleTheme: () => void;
 };

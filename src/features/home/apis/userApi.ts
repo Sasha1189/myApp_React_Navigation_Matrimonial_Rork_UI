@@ -1,9 +1,12 @@
 import { api } from "../../../services/api";
+import { firestore, doc, setDoc, getDoc } from "@/config/firebase";
+import { storage } from "../../../cache/cacheConfig";
 
 export interface CreateUserPayload {
   uid: string;
   phoneNumber: string;
   displayName: string;
+  activeDeviceId: string;
 }
 
 export async function createUserOnBackend(payload: CreateUserPayload) {
@@ -12,6 +15,37 @@ export async function createUserOnBackend(payload: CreateUserPayload) {
     return res;
   } catch (error) {
     console.error("User creation failed:", error);
+    throw error;
+  }
+}
+
+export async function updateUserDeviceId(uid: string, activeDeviceId: string) {
+  try {
+    const collectionName = "users";
+
+    const docRef = doc(firestore, collectionName, uid);
+    await setDoc(
+      docRef,
+      {
+        activeDeviceId,
+        updatedAt: new Date(),
+      },
+      { merge: true },
+    );
+  } catch (error) {
+    console.error("User update failed:", error);
+    throw error;
+  }
+}
+
+export async function getUserDeviceId(uid: string) {
+  try {
+    const collectionName = "users";
+    const docRef = doc(firestore, collectionName, uid);
+    const snap = await getDoc(docRef);
+    return snap.data()?.activeDeviceId;
+  } catch (error) {
+    console.error("Get user device id failed:", error);
     throw error;
   }
 }
