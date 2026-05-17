@@ -19,7 +19,7 @@ export function useButtonActions(uid: string, profile: Profile | undefined) {
   ) => {
     if (!profile || !myProfile) return;
 
-    const isRestricted = tier === "trial" || tier === "none";
+    const isRestricted = tier === "none";
 
     if ((action === "message" || action === "like") && isRestricted) {
       Alert.alert(t("alerts.upgradeRequired"), t("alerts.featureRestricted"), [
@@ -53,8 +53,6 @@ export function useButtonActions(uid: string, profile: Profile | undefined) {
     if (action === "like") {
       if (isLiking) return;
       setIsLiking(true);
-      console.log("hit like on usefeedaction");
-
       try {
         await toggleLike(
           {

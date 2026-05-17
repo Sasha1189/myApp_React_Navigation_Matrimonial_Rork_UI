@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthNavigation } from "../../../navigation/hooks";
 
 export const CODE_LENGTH = 6;
-export const RESEND_TIME = 120;
+export const RESEND_TIME = 60;
 
 export function useLoginFlow() {
   const { t } = useTranslation();

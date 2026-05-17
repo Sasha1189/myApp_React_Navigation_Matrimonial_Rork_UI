@@ -79,26 +79,26 @@ export const useSubscription = () => {
     const planKey = selectedPlanId.toLowerCase();
 
     // --- CASE 1: FREE TRIAL (Internal Logic) ---
-    if (planKey === "trial") {
-      try {
-        // No Google Play involvement. Just tell the backend to grant the trial.
-        const result = await apiSubscribe({
-          planId: "trial",
-          purchaseToken: "",
-          packageName: "com.sasha.lonariyouvaconnect",
-          method: "internal_free",
-        });
+    // if (planKey === "trial") {
+    //   try {
+    //     // No Google Play involvement. Just tell the backend to grant the trial.
+    //     const result = await apiSubscribe({
+    //       planId: "trial",
+    //       purchaseToken: "",
+    //       packageName: "com.sasha.lonariyouvaconnect",
+    //       method: "internal_free",
+    //     });
 
-        await getIdToken(user, true);
-        setTier(result.newTier);
-        Alert.alert(t("common.success"), t("subscription.activated"));
-      } catch (error) {
-        Alert.alert(t("common.error"), "Could not activate trial.");
-      } finally {
-        setIsProcessing(false);
-      }
-      return; // Exit here
-    }
+    //     await getIdToken(user, true);
+    //     setTier(result.newTier);
+    //     Alert.alert(t("common.success"), t("subscription.activated"));
+    //   } catch (error) {
+    //     Alert.alert(t("common.error"), "Could not activate trial.");
+    //   } finally {
+    //     setIsProcessing(false);
+    //   }
+    //   return; // Exit here
+    // }
 
     // --- CASE 2: PAID PLANS (Google Play Logic) ---
     const targetSku = PLAN_TO_SKU[planKey];

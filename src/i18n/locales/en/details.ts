@@ -109,5 +109,5 @@ export default {
     prefLocation: "Pune, Mumbai, etc.",
     parents: "Select option",
   },
-  upgradeText: "Upgrade to Premium to view contact details",
+  upgradeText: "Upgrade needed",
 };

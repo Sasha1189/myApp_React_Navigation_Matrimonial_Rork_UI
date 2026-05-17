@@ -1,20 +1,11 @@
 export const SUBSCRIPTION_PLANS = [
   {
-    id: "trial",
-    name: "7-Day Trial",
-    price: "₹1",
-    period: "for 7 days",
-    originalPrice: "₹199",
-    discount: "Try Premium",
-    features: [{ text: "Experience the app, Share feedback", included: true }],
-  },
-  {
     id: "basic",
     name: "Basic",
-    price: "₹999/-",
+    price: "₹699/-",
     period: "Once a year, taxes (18% + 15%)",
-    originalPrice: "₹1999/-",
-    discount: "50% OFF",
+    originalPrice: "₹999/-",
+    discount: "30% OFF",
     features: [
       { text: "'Premium' Badge on Profile", included: true },
       { text: "Express your lifestyle as Premium", included: true },
@@ -25,10 +16,10 @@ export const SUBSCRIPTION_PLANS = [
   {
     id: "premium",
     name: "Premium",
-    price: "₹1999/-",
+    price: "₹1699/-",
     period: "Once a year, taxes (18% + 15%)",
-    originalPrice: "₹3999",
-    discount: "50% OFF",
+    originalPrice: "₹1999",
+    discount: "20% OFF",
     popular: true,
     features: [
       { text: "'Premium' Badge on Profile", included: true },

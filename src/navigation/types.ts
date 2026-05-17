@@ -7,18 +7,12 @@ import { Profile } from "src/types/profile";
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   App: NavigatorScreenParams<AppStackParamList>;
-  // Keep Paywall here for the "Expired" redirect logic
-  Paywall: undefined;
 };
 
 export type AuthStackParamList = {
   Landing: undefined;
   PhoneSignIn: undefined;
   Splash: undefined;
-  OTPVerify: {
-    phone: string;
-    confirmation: FirebaseAuthTypes.ConfirmationResult;
-  };
   WebView: { url: string; title?: string };
 };
 

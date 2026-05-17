@@ -24,7 +24,7 @@ export default function SubscriptionScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const { tier, hasUsedTrial } = useAuth();
+  const { tier } = useAuth();
   const {
     selectedPlanId,
     setSelectedPlanId,
@@ -55,12 +55,7 @@ export default function SubscriptionScreen() {
           <Text style={styles.sectionLabel}>
             {t("subscription.choosePlan", "Choose a Plan")}
           </Text>
-          {SUBSCRIPTION_PLANS.filter((plan) => {
-            if (plan.id === "trial" && hasUsedTrial) {
-              return false; //skip trial if plan is used
-            }
-            return true; // Always show other plans (basic, premium)
-          }).map((plan) => {
+          {SUBSCRIPTION_PLANS.map((plan) => {
             const displayPlan = {
               ...plan,
               name: t(`subscription.plans.${plan.id}.name`, plan.name),

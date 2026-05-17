@@ -72,9 +72,9 @@ export default function PhoneSignInScreen() {
         const formattedTime = `${mins}:${secs < 10 ? "0" + secs : secs}`;
 
         Alert.alert(
-          "सुरक्षितता चेतावणी",
-          `कृपया रीसेंड पर्याय मिळेपर्यंत थांबा. सुरक्षेसाठी तुम्ही पुढील ${formattedTime} मिनिटे मागे जाऊ शकत नाही.`,
-          [{ text: "ठीक आहे", style: "default" }],
+          t("auth.backLockAlertTitle"),
+          t("auth.backLockAlertMessage", { time: formattedTime }),
+          [{ text: t("auth.backLockAlertBtn"), style: "default" }],
         );
       },
     );
@@ -89,9 +89,9 @@ export default function PhoneSignInScreen() {
       const formattedTime = `${mins}:${secs < 10 ? "0" + secs : secs}`;
 
       Alert.alert(
-        "कृपया प्रतीक्षा करा",
-        `कृपया रीसेंड पर्याय मिळेपर्यंत थांबा. सुरक्षेसाठी तुम्ही पुढील ${formattedTime} मिनिटे मागे जाऊ शकत नाही.`,
-        [{ text: "ठीक आहे", style: "default" }],
+        t("auth.backLockAlertTitle"),
+        t("auth.backLockAlertMessage", { time: formattedTime }),
+        [{ text: t("auth.backLockAlertBtn"), style: "default" }],
       );
     } else {
       handleBackPress();
@@ -120,20 +120,17 @@ export default function PhoneSignInScreen() {
                 style={styles.helpButton}
                 activeOpacity={0.8}
                 onPress={() => {
-                  console.log("Help button clicked!");
                   Alert.alert(
-                    t("auth.helpAlertTitle") || "Help & Support", // 📌 Popup Title
-                    t("auth.helpAlertMessage") ||
-                      "Please call admin mobile number. 8554840100", // 💬 Message Text
+                    t("auth.helpAlertTitle"),
+                    t("auth.helpAlertMessage"),
                     [
                       {
-                        text: t("auth.helpAlertCancel") || "Cancel",
+                        text: t("auth.helpAlertCancel"),
                         style: "cancel",
                       },
                       {
-                        text: t("auth.helpAlertCall") || "Call Now",
+                        text: t("auth.helpAlertCall"),
                         style: "default",
-                        // 📞 Automatically opens the phone dialer with the number filled in
                         onPress: () => Linking.openURL("tel:8554840100"),
                       },
                     ],

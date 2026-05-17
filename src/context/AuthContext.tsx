@@ -38,9 +38,8 @@ interface AuthContextType {
   setUser: (user: FirebaseAuthTypes.User | null) => void;
   profile: Profile;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
-  tier: "none" | "trial" | "basic" | "premium";
-  setTier: (tier: any) => void;
-  hasUsedTrial: boolean;
+  tier: "none" | "basic" | "premium";
+  setTier: (tier: "none" | "basic" | "premium") => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,14 +50,10 @@ const TIER_CACHE_KEY = "self_tier_cache";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [tier, setTier] = useState<"none" | "trial" | "basic" | "premium">(
-    () => {
-      const cached = storage.getString(TIER_CACHE_KEY);
-      return (cached as any) || "none";
-    },
-  );
-  const [hasUsedTrial, setHasUsedTrial] = useState(false);
-
+  const [tier, setTier] = useState<"none" | "basic" | "premium">(() => {
+    const cached = storage.getString(TIER_CACHE_KEY);
+    return (cached as any) || "none";
+  });
   const [profile, setProfile] = useState<Profile>(() => {
     const cached = storage.getString(PROFILE_CACHE_KEY);
     return cached ? JSON.parse(cached) : getDefaultProfile();
@@ -101,58 +96,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user?.displayName]);
 
-  //check device id and lgoout if not match and ask admin to reset deviceid
-  const checkBinding = async () => {
-    if (!user?.uid) return;
-
-    try {
-      // 1. Always get current hardware ID (Fast local call)
-      const currentHardwareId = await getUniqueId();
-
-      // 2. FAST TRACK: Check Local MMKV Cache first
-      const cachedId = getDBDeviceIdCache(); // Get directly from MMKV
-
-      if (cachedId === currentHardwareId) {
-        // ✅ Perfect Match! Device is already verified.
-        // No need to call Firestore.
-        console.log("Device verified via Cache");
-        return;
-      }
-
-      // 3. SLOW TRACK: If cache is empty or mismatched, check the Database
-      console.log("Cache mismatch or missing, checking DB...");
-      const dbId = await getUserDeviceId(user.uid);
-
-      // Case: Admin Reset or New User (DB is empty)
-      if (!dbId || dbId === "") {
-        await updateUserDeviceId(user.uid, currentHardwareId);
-        setDBDeviceIdCache(currentHardwareId);
-        return;
-      }
-
-      // Case: Real Mismatch (User trying to use a different phone)
-      if (dbId !== currentHardwareId) {
-        Alert.alert(
-          "Device Mismatch",
-          "This account is registered on another device. Contact support.",
-          [
-            {
-              text: "Logout",
-              onPress: async () => await getAuth().signOut(),
-            },
-          ],
-        );
-      } else {
-        // Case: DB matches Hardware, but Cache was empty (e.g., cleared app data)
-        // Sync the cache back
-        setDBDeviceIdCache(dbId);
-      }
-    } catch (error) {
-      console.error("Device ID verification failed:", error);
-    }
-  };
+  // 3. Hardware Identity & Security Binding Control
   useEffect(() => {
-    if (!user?.uid || !user?.displayName) return; // 🔹 Don't check until signup is done
+    if (!user?.uid || !user?.displayName) return;
+
+    const checkBinding = async () => {
+      try {
+        const currentHardwareId = await getUniqueId();
+        const cachedId = getDBDeviceIdCache();
+
+        if (cachedId === currentHardwareId) {
+          console.log("Device verified via Cache");
+          return;
+        }
+
+        const dbId = await getUserDeviceId(user.uid);
+
+        if (!dbId || dbId === "") {
+          await updateUserDeviceId(user.uid, currentHardwareId);
+          setDBDeviceIdCache(currentHardwareId);
+          return;
+        }
+
+        if (dbId !== currentHardwareId) {
+          Alert.alert(
+            "Device Mismatch",
+            "This account is registered on another device. Contact support.",
+            [
+              {
+                text: "Logout",
+                onPress: async () => await getAuth().signOut(),
+              },
+            ],
+            { cancelable: false }, // 🛡️ Prevents tapping outside the alert layout box to bypass logout
+          );
+        } else {
+          setDBDeviceIdCache(dbId);
+        }
+      } catch (error) {
+        console.error("Device ID verification failed:", error);
+      }
+    };
+
     checkBinding();
   }, [user?.uid, user?.displayName]);
 
@@ -175,16 +160,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const idTokenResult = await getIdTokenResult(firebaseUser, true);
         const claims = idTokenResult.claims;
 
-        // Use the actual claim value directly
-        const serverHasUsedTrial = !!claims.h;
-        setHasUsedTrial(serverHasUsedTrial);
-
-        const tierMapping: Record<
-          string,
-          "none" | "trial" | "basic" | "premium"
-        > = {
+        const tierMapping: Record<string, "none" | "basic" | "premium"> = {
           n: "none",
-          t: "trial",
           b: "basic",
           p: "premium",
         };
@@ -196,7 +173,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // 4. SYNC TIER & CACHE
         if (mappedTier !== "none" && currentTimeSeconds > expirySeconds) {
           setTier("none");
-          setHasUsedTrial(true);
           storage.set(TIER_CACHE_KEY, "none");
         } else {
           setTier(mappedTier);
@@ -233,7 +209,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       updateProfile,
       tier,
       setTier,
-      hasUsedTrial,
     }),
     [user, profile, authLoading, tier],
   );

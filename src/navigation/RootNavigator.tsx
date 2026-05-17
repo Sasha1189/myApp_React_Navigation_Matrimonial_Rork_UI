@@ -6,19 +6,30 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { RootStackParamList } from "./types";
 import AppNavigator from "./AppNavigator";
 import AuthNavigator from "./AuthNavigator";
-import PaywallScreen from "@/features/subscription/screens/PaywallScreen";
 
 SplashScreen.preventAutoHideAsync();
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const { user, authLoading, tier } = useAuth();
+  const { user, authLoading } = useAuth();
 
   useEffect(() => {
+    // async function hide() {
+    //   if (!authLoading) {
+    //     SplashScreen.hideAsync().catch(() => {});
+    //   }
+    // }
+    // hide();
     async function hide() {
       if (!authLoading) {
-        SplashScreen.hideAsync().catch(() => {});
+        setTimeout(async () => {
+          try {
+            await SplashScreen.hideAsync();
+          } catch (e) {
+            console.warn("Splash hide error ignored:", e);
+          }
+        }, 100);
       }
     }
     hide();
@@ -31,8 +42,6 @@ export default function RootNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : tier === "none" ? (
-          <Stack.Screen name="Paywall" component={PaywallScreen} />
         ) : (
           <Stack.Screen name="App" component={AppNavigator} />
         )}

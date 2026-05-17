@@ -25,4 +25,8 @@ export default {
     invalidPhone: "कृपया वैध १०-अंकी मोबाईल नंबर प्रविष्ट करा",
     configMissing: "फायरबेस कन्सोलमध्ये SHA-1 फिंगरप्रिंट गहाळ आहे!",
   },
+  backLockAlertTitle: "सुरक्षितता चेतावणी",
+  backLockAlertMessage:
+    "कृपया रीसेंड पर्याय मिळेपर्यंत थांबा. सुरक्षेसाठी तुम्ही पुढील {{time}} मिनिटे मागे जाऊ शकत नाही.",
+  backLockAlertBtn: "ठीक आहे",
 };

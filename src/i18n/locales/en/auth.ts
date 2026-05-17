@@ -1,6 +1,6 @@
 export default {
   helpAlertTitle: "Contact Admin",
-  helpAlertMessage: "Please call admin mobile number. 9999990000",
+  helpAlertMessage: "Please call admin mobile number. 8554840100",
   helpAlertCancel: "Cancel",
   helpAlertCall: "Call Now",
   help: "Help",
@@ -24,4 +24,8 @@ export default {
     invalidPhone: "Please enter a valid 10-digit phone number",
     configMissing: "SHA-1 Fingerprint missing in Firebase Console!",
   },
+  backLockAlertTitle: "Security Warning",
+  backLockAlertMessage:
+    "Please wait until the resend option is available. For security reasons, you cannot go back for the next {{time}} minutes.",
+  backLockAlertBtn: "OK",
 };

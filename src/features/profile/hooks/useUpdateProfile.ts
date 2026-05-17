@@ -26,18 +26,13 @@ export const useUpdateProfile = (
           gender: gender,
           ...newData,
         });
-        console.log("✅ Profile synced to Firestore Server (Paid Tier)");
-      } else {
-        console.log("💾 Profile saved to MMKV only (Trial Tier)");
       }
       // 2. Sync Local State & MMKV
       setProfile(updatedProfile);
       storage.set(PROFILE_CACHE_KEY, JSON.stringify(updatedProfile));
-
-      console.log("✅ Profile updated locally and on Firestore");
     } catch (error) {
       console.error("❌ Update failed:", error);
-      throw error; // Let the UI handle the error (e.g., showing a toast)
+      throw error;
     }
   };
 };
