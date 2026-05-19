@@ -134,7 +134,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
         />
 
         {/* 5. Gender */}
-        <Controller
+        {/* <Controller
           control={control}
           name="gender"
           render={({ field: { onChange, value } }) => (
@@ -150,7 +150,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
               editable={!getLockState("gender")}
             />
           )}
-        />
+        /> */}
 
         {/* 6. Marital Status */}
         <Controller
@@ -176,24 +176,31 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           control={control}
           name="height"
           rules={{
-            required: t("errors.required"),
-            minLength: { value: 3, message: t("errors.invalidHeight") },
+            pattern: {
+              value: /^[0-9]{3}$/, // 2. Only checks format IF the user types something
+              message: t("errors.invalidHeight"),
+            },
           }}
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.height")}
-              placeholder="e.g. 170cm"
-              value={value}
-              keyboardType="numeric"
-              maxLength={3} // 🔹 Strict 3 digits
-              onChangeText={(text) => {
-                // 🔹 Allow only numbers
-                const cleaned = text.replace(/[^0-9]/g, "");
-                onChange(cleaned);
-              }}
-              icon={Ruler}
-            />
-          )}
+          render={({ field: { onChange, value } }) => {
+            const stringValue = value
+              ? String(value).replace(/[^0-9]/g, "")
+              : "";
+            return (
+              <InputField
+                label={t("details.labels.height")}
+                placeholder="e.g. 170cm"
+                value={stringValue}
+                keyboardType="numeric"
+                maxLength={3} // 🔹 Strict 3 digits
+                onChangeText={(text) => {
+                  // 🔹 Allow only numbers
+                  const cleaned = text.replace(/[^0-9]/g, "");
+                  onChange(cleaned);
+                }}
+                icon={Ruler}
+              />
+            );
+          }}
         />
 
         {/* 8. Weight */}

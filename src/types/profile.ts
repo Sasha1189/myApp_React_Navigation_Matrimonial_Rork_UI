@@ -19,6 +19,7 @@ export interface Profile {
     endsAt?: number; // Timestamp for trial/subscription expiry
     startedAt: number;
   };
+  tier: "" | "basic" | "premium"; // User-selected tier for display purposes
   // Personal & Birth Information-13
   fullName: string;
   dateOfBirth: Date | null;

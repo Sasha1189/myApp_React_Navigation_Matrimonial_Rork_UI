@@ -1,16 +1,9 @@
-import React, { useLayoutEffect } from "react";
-import {
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
+import React from "react";
+import { View, ScrollView } from "react-native";
 import { Controller } from "react-hook-form";
 import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import {
-  X,
-  Save,
   Target,
   Church,
   Zap,

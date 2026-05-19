@@ -32,7 +32,6 @@ export default function ProfileScreen({ navigation }: any) {
   const styles = useStyles(createStyles);
   const { profile } = useAuth();
   const { t } = useTranslation();
-  // const { refreshProfile } = useProfileActions(profile);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -120,7 +119,9 @@ export default function ProfileScreen({ navigation }: any) {
             source={
               profile?.photos?.[0]?.downloadURL
                 ? { uri: profile.photos[0].downloadURL }
-                : require("../../../../assets/images/profile.png")
+                : profile?.photos?.[0]?.localUrl
+                  ? { uri: profile.photos[0].localUrl }
+                  : require("../../../../assets/images/profile.png")
             }
             style={styles.profileImage}
             contentFit="cover"
@@ -193,7 +194,7 @@ export default function ProfileScreen({ navigation }: any) {
         onPress={() => navigation.navigate("Paywall")}
       >
         <LinearGradient
-          colors={["#6B46C1", "#9F7AEA"]}
+          colors={["#0A192F", "#1E3A8A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.premiumGrad}
@@ -335,10 +336,11 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: "space-between",
     },
     premTitle: {
-      color: "white",
       fontSize: 16,
-      fontWeight: "bold",
-      letterSpacing: 0.5,
+      color: "#FFFFFF",
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 1.2,
     },
     premSub: {
       color: "rgba(255,255,255,0.85)",

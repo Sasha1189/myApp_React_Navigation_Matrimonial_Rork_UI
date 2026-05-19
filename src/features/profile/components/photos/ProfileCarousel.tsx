@@ -84,9 +84,24 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
               />
             ))}
           </View>
-          <View style={styles.premiumBanner}>
-            <Text style={styles.premiumText}>Premium</Text>
-          </View>
+          {/* PREMIUM/BASIC BANNER */}
+          {(profile?.tier === "basic" || profile?.tier === "premium") && (
+            <View
+              style={[
+                styles.premiumBanner,
+                {
+                  backgroundColor:
+                    profile?.tier === "premium"
+                      ? theme.colors.primary
+                      : "rgba(128, 128, 128, 0.2)",
+                },
+              ]}
+            >
+              <Text style={styles.premiumText}>
+                {profile?.tier === "premium" ? "PREMIUM" : "BASIC"}
+              </Text>
+            </View>
+          )}
         </>
       ) : (
         <View
@@ -155,5 +170,6 @@ export const createStyles = (theme: AppTheme) =>
       color: "white",
       fontSize: theme.fontSize.xs,
       fontWeight: "bold",
+      letterSpacing: 1.5,
     },
   });

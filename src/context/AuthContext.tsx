@@ -99,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // 3. Hardware Identity & Security Binding Control
   useEffect(() => {
     if (!user?.uid || !user?.displayName) return;
-
     const checkBinding = async () => {
       try {
         const currentHardwareId = await getUniqueId();
@@ -137,7 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error("Device ID verification failed:", error);
       }
     };
-
     checkBinding();
   }, [user?.uid, user?.displayName]);
 
@@ -160,6 +158,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const idTokenResult = await getIdTokenResult(firebaseUser, true);
         const claims = idTokenResult.claims;
 
+        // If no subscription claim is found, they are a confirmed unpaid/new user
+        if (!claims.t) {
+          setTier((currentTier) => {
+            if (currentTier !== "none") {
+              storage.set(TIER_CACHE_KEY, "none");
+              return "none";
+            }
+            return currentTier;
+          });
+          return;
+        }
+
         const tierMapping: Record<string, "none" | "basic" | "premium"> = {
           n: "none",
           b: "basic",
@@ -172,11 +182,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // 4. SYNC TIER & CACHE
         if (mappedTier !== "none" && currentTimeSeconds > expirySeconds) {
-          setTier("none");
-          storage.set(TIER_CACHE_KEY, "none");
+          // Token says active, but it expired in real-time
+          setTier((currentTier) => {
+            if (currentTier !== "none") {
+              storage.set(TIER_CACHE_KEY, "none");
+              return "none";
+            }
+            return currentTier;
+          });
         } else {
-          setTier(mappedTier);
-          storage.set(TIER_CACHE_KEY, mappedTier);
+          setTier((currentTier) => {
+            if (currentTier !== mappedTier) {
+              storage.set(TIER_CACHE_KEY, mappedTier);
+              return mappedTier;
+            }
+            return currentTier;
+          });
         }
 
         // 5. SYNC BLOCKED LIST (Background)

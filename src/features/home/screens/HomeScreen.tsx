@@ -31,17 +31,19 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const uid = user?.uid as string;
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const navigation = useAppNavigation();
 
   useEffect(() => {
     if (
       user &&
       user?.displayName !== "Male" &&
-      user?.displayName !== "Female"
+      user?.displayName !== "Female" &&
+      !isUpdating
     ) {
       setShowModal(true);
     }
-  }, []);
+  }, [user, isUpdating]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
@@ -102,7 +104,11 @@ export default function HomeScreen() {
         colors={[theme.colors.background, "white"]}
         style={styles.container}
       >
-        <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
+        <GenderModal
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          setIsUpdating={setIsUpdating}
+        />
         <View style={styles.cardsContainer}>
           {profiles[currentIndex] && currentIndex < profiles.length ? (
             <SwipeCard

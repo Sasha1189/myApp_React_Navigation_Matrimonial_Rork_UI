@@ -16,7 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 export function useSectionEditor<T extends FieldValues>(
   profile: T | any,
   sectionFields: readonly (keyof T)[],
-  onSaveApi: (data: Partial<T>) => Promise<void>,
+  updateProfile: (data: Partial<T>) => Promise<void>,
   navigation: any,
   theme: any,
   title: string,
@@ -62,32 +62,45 @@ export function useSectionEditor<T extends FieldValues>(
     }, [handleBack]),
   );
 
-  const onSave = handleSubmit(async (data) => {
-    if (isSaving) return;
-    setIsSaving(true);
+  const onSave = handleSubmit(
+    async (data) => {
+      if (isSaving) return;
+      setIsSaving(true);
 
-    try {
-      const changedFields: Partial<T> = {};
-      sectionFields.forEach((key) => {
-        if (
-          !isDeepEqual(data[key], profile?.[key]) &&
-          !isFieldLocked(profile, key as any)
-        ) {
-          changedFields[key] = data[key];
+      try {
+        const changedFields: Partial<T> = {};
+        sectionFields.forEach((key) => {
+          if (
+            !isDeepEqual(data[key], profile?.[key]) &&
+            !isFieldLocked(profile, key as any)
+          ) {
+            changedFields[key] = data[key];
+          }
+        });
+
+        if (Object.keys(changedFields).length > 0) {
+          await updateProfile(changedFields);
+          reset(data);
         }
-      });
-
-      if (Object.keys(changedFields).length > 0) {
-        await onSaveApi(changedFields);
-        reset(data);
+        navigation.goBack();
+      } catch (err: any) {
+        Alert.alert(t("common.error"), err.message || t("editor.saveError"));
+      } finally {
+        setIsSaving(false);
       }
-      navigation.goBack();
-    } catch (err: any) {
-      Alert.alert(t("common.error"), err.message || t("editor.saveError"));
-    } finally {
-      setIsSaving(false);
-    }
-  });
+    },
+    (validationErrors) => {
+      // 🔍 This will instantly alert you if any field blocks the form submission!
+      console.log("❌ Form Validation Failed Fields:", validationErrors);
+
+      // Optional: Alert the user about invalid data
+      Alert.alert(
+        t("common.error"),
+        t("editor.validationErrorMsg") ||
+          "Please check your inputs for errors before saving.",
+      );
+    },
+  );
 
   // 4. Header Injection (Demo Aesthetic)
   useEffect(() => {

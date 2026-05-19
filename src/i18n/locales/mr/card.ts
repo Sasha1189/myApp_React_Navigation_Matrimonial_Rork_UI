@@ -1,6 +1,6 @@
 export default {
-  ready: "तयार आहे",
-  planning: "नियोजन करत आहे",
-  next: "पुढील",
-  previous: "मागील",
+  ready: "लग्नासाठी तयार आहे",
+  studying: "शिक्षण घेत आहे",
+  next: "पुढील प्रोफाईल",
+  previous: "मागील प्रोफाईल",
 };

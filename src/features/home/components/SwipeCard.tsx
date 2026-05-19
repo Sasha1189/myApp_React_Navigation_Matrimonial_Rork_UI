@@ -217,18 +217,15 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             style={[
               styles.readyPill,
               {
-                backgroundColor:
-                  profile?.isReady === "Yes"
-                    ? theme.colors.primary
-                    : `${theme.colors.primary}12`,
+                backgroundColor: `${theme.colors.primary}12`,
               },
             ]}
           >
             <Sparkles size={10} color="white" />
             <Text style={styles.readyPillText}>
-              {profile?.isReady === "Yes"
+              {profile?.isReady === "Ready"
                 ? t("card.ready")
-                : t("card.planning")}
+                : t("card.studying")}
             </Text>
           </View>
         </View>
@@ -294,6 +291,26 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       >
         <Text style={styles.statusLabelText}>{t("card.previous")}</Text>
       </Animated.View>
+
+      {/* PREMIUM BANNER */}
+      {/* PREMIUM/BASIC BANNER */}
+      {(profile?.tier === "basic" || profile?.tier === "premium") && (
+        <View
+          style={[
+            styles.premiumBanner,
+            {
+              backgroundColor:
+                profile?.tier === "premium"
+                  ? theme.colors.primary
+                  : "rgba(128, 128, 128, 0.2)",
+            },
+          ]}
+        >
+          <Text style={styles.premiumText}>
+            {profile?.tier === "premium" ? "PREMIUM" : "BASIC"}
+          </Text>
+        </View>
+      )}
     </Animated.View>
   );
 };
@@ -469,5 +486,25 @@ export const createStyles = (theme: AppTheme) =>
       fontSize: 13,
       marginLeft: 8,
       fontWeight: "500",
+    },
+    premiumBanner: {
+      position: "absolute",
+      top: theme.spacing.sm,
+      right: theme.spacing.sm,
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    premiumText: {
+      color: "white",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "bold",
+      letterSpacing: 1.5,
     },
   });

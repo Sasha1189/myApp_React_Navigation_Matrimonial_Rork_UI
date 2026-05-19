@@ -39,7 +39,7 @@ export function usePhotoManager(profile: Profile | null) {
   const addPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(t("photo.permissionTitle"), t("photo.permissionMsg"));
+      Alert.alert(t("photos.permissionTitle"), t("photos.permissionMsg"));
       return;
     }
 
@@ -66,7 +66,7 @@ export function usePhotoManager(profile: Profile | null) {
       setIsEditing(true);
     } catch (err) {
       console.error("Failed to add photo:", err);
-      Alert.alert(t("photo.errorTitle"), t("photo.addError"));
+      Alert.alert(t("photos.errorTitle"), t("photos.addError"));
     }
   };
 
@@ -111,10 +111,10 @@ export function usePhotoManager(profile: Profile | null) {
       });
 
       setPhotos(updated);
-      Alert.alert(t("photo.deleteTitle"), t("photo.deleteMsg"));
+      Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"));
     } catch (err) {
       console.error("Delete failed:", err);
-      Alert.alert(t("photo.errorTitle"), t("photo.deleteError"));
+      Alert.alert(t("photos.errorTitle"), t("photos.deleteError"));
     }
   };
 
@@ -145,7 +145,7 @@ export function usePhotoManager(profile: Profile | null) {
       });
       setPhotos(updatedPhotos);
       setIsEditing(false);
-      Alert.alert(t("photo.successTitle"), t("photo.updateMsg"));
+      Alert.alert(t("photos.successTitle"), t("photos.updateMsg"));
     } catch (err) {
       console.error("Set primary failed:", err);
     } finally {
@@ -157,7 +157,7 @@ export function usePhotoManager(profile: Profile | null) {
   const uploadPhotos = async () => {
     const pending = photos.filter((p) => !p.downloadURL);
     if (!pending.length) {
-      Alert.alert(t("photo.noChangesTitle"), t("photo.noChangesMsg"));
+      Alert.alert(t("photos.noChangesTitle"), t("photos.noChangesMsg"));
       return;
     }
 
@@ -172,11 +172,11 @@ export function usePhotoManager(profile: Profile | null) {
 
         setIsEditing(false);
         Alert.alert(
-          t("photo.successTitle"),
-          t("photo.localSaveMsg", "Saved to your device!"),
+          t("photos.successTitle"),
+          t("photos.localSaveMsg", "Saved to your device!"),
         );
       } catch (err) {
-        Alert.alert(t("photo.errorTitle"), t("photo.saveError"));
+        Alert.alert(t("photos.errorTitle"), t("photos.saveError"));
       } finally {
         setLoading(false);
       }
@@ -248,7 +248,7 @@ export function usePhotoManager(profile: Profile | null) {
         setTimeout(() => {
           setSuccess(false);
         }, 3000);
-        Alert.alert(t("photo.successTitle"), t("photo.updateMsg"));
+        Alert.alert(t("photos.successTitle"), t("photos.updateMsg"));
       } catch (dbErr) {
         console.error("Firestore Update Failed. Cleaning storage...", dbErr);
         await Promise.all(
@@ -261,7 +261,7 @@ export function usePhotoManager(profile: Profile | null) {
       setProgress(0);
       setSuccess(false);
       setPhotos(backupPhotos);
-      Alert.alert(t("photo.errorTitle"), t("photo.uploadError"));
+      Alert.alert(t("photos.errorTitle"), t("photos.uploadError"));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 export default {
   ready: "Ready",
-  planning: "Planning",
+  studying: "Studying",
   next: "NEXT",
   previous: "PREVIOUS",
 };

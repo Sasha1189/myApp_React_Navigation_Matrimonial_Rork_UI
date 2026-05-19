@@ -31,7 +31,7 @@ export const TabButton: React.FC<TabButtonProps> = ({
     >
       <Icon
         size={14} // Slightly smaller for a more refined look
-        color={isActive ? theme.colors.primary : theme.colors.textLight}
+        color={isActive ? theme.colors.background : theme.colors.textLight}
       />
       <Text style={[styles.tabText, isActive && styles.activeTabText]}>
         {label}
@@ -71,7 +71,7 @@ export const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.3,
     },
     activeTabText: {
-      color: theme.colors.primary,
+      color: theme.colors.background, // High contrast for active tab
       fontWeight: "700",
     },
   });

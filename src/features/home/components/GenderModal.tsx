@@ -24,6 +24,7 @@ import { setDBDeviceIdCache } from "../../../cache/cacheConfig";
 interface GenderModalProps {
   visible: boolean;
   onClose: () => void;
+  setIsUpdating: (updating: boolean) => void;
 }
 type Gender = Profile["gender"];
 interface FirebaseUserLike {
@@ -32,7 +33,11 @@ interface FirebaseUserLike {
   displayName?: string | null;
 }
 
-const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
+const GenderModal: React.FC<GenderModalProps> = ({
+  visible,
+  onClose,
+  setIsUpdating,
+}) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
@@ -90,9 +95,10 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
       );
       return;
     }
+
     setLoading(true);
     setRetry(false);
-
+    setIsUpdating(true);
     try {
       if (currentUser) {
         await updateProfile(currentUser, {
@@ -102,12 +108,12 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
         await reload(currentUser);
 
         const updatedUser = auth.currentUser;
-
         setUser(updatedUser);
         await createUser(updatedUser);
 
-        Alert.alert(t("genderModal.done"), t("genderModal.successMsg"));
         onClose();
+
+        Alert.alert(t("genderModal.done"), t("genderModal.successMsg"));
       }
     } catch (error) {
       console.error("Update failed:", error);
@@ -115,6 +121,7 @@ const GenderModal: React.FC<GenderModalProps> = ({ visible, onClose }) => {
       Alert.alert(t("common.error"), t("genderModal.updateError"));
     } finally {
       setLoading(false);
+      setIsUpdating(false);
     }
   };
   if (!theme) return null;

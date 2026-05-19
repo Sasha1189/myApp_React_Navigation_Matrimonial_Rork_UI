@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, Text, View, Alert } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Edit3 } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
@@ -15,9 +15,8 @@ export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
-  const navigation = useAppNavigation();
 
-  const { profile, tier } = useAuth();
+  const { profile } = useAuth();
 
   const {
     photos,
@@ -34,7 +33,6 @@ export default function ManagePhotosScreen() {
 
   // 2. Create a Guarded Upload Function
   const handleSavePress = () => {
-
     uploadPhotos();
   };
 
