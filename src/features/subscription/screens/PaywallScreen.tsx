@@ -50,6 +50,9 @@ export default function SubscriptionScreen() {
                 {t("subscription.upgradeSubtitle")}
               </Text>
             </View>
+            <View style={styles.logoWrapper}>
+              <Crown size={40} color={theme.colors.warning} />
+            </View>
           </View>
           {/* Plans Section */}
           <Text style={styles.sectionLabel}>

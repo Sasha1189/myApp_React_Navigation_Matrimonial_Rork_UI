@@ -53,6 +53,21 @@ export default function SettingsScreen() {
             />
           </View>
 
+          <Text style={styles.sectionLabel}>{t("settings.aboutUs")}</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon={FileText}
+              title={t("settings.aboutYuva")}
+              subtitle={t("settings.aboutYuvaDesc")}
+              onPress={() =>
+                openLink(
+                  "https://sasha1189.github.io/youva-Lonari/about",
+                  "About Lonari Yuva",
+                )
+              }
+            />
+          </View>
+
           <Text style={styles.sectionLabel}>{t("settings.safety")}</Text>
           <View style={styles.card}>
             <SettingRow

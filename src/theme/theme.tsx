@@ -50,6 +50,7 @@ const lightColors = {
   primaryDark: "#0F0F35", // 🔹 Darker variation of Nexa Blue for deep accents
   primaryLight: "#33337A", // 🔹 Lighter shade of Nexa Blue for highlights
   background: "#F8F8F8", // 🔹 Maruti Suzuki White as the main canvas
+  headerBackground: "rgba(255, 255, 255, 0.95)",
   card: "#FFFFFF",
   text: "#111122", // 🔹 Ultra-dark blue-black for crisp readability on white
   textLight: "#666680", // 🔹 Soft desaturated tone for subtitles
@@ -67,6 +68,7 @@ const darkColors = {
   primaryDark: "#1A1A4B",
   primaryLight: "#4D4D99",
   background: "#0A0A1F", // 🔹 Dark theme background using deep midnight Nexa base
+  headerBackground: "rgba(10, 10, 31, 0.95)",
   card: "#12122B", // 🔹 Card variant mixing Nexa Blue properties
   text: "#F8F8F8", // 🔹 Maruti Suzuki White used as the primary readable text
   textLight: "#9BA1A6",
@@ -74,6 +76,7 @@ const darkColors = {
   tint: "#FFFFFF",
   danger: "#F44336",
   success: "#4CAF50",
+  warning: "#FFC107",
   shadow: "#000000",
   accent: "#FF6B9D",
 };

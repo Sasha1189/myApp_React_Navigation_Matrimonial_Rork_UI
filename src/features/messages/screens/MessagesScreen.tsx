@@ -169,10 +169,10 @@ export const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.background,
     },
     headerWrapper: {
-      backgroundColor: theme.colors.card,
+      backgroundColor: theme.colors.headerBackground,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
-      paddingTop: theme.spacing.sm,
+      paddingTop: 0,
     },
     tabsContainer: {
       flexDirection: "row",

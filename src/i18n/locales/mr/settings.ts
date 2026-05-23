@@ -1,5 +1,9 @@
 export default {
   title: "सेटिंग्ज",
+  aboutUs: "आमच्याबद्दल",
+  aboutYuva: "युवा बद्दल",
+  aboutYuvaDesc:
+    "लोनारी समुदायाला जोडण्याचे आणि अर्थपूर्ण संबंध वाढवण्याचे आमचे मिशन.",
   language: "भाषा (Language)",
   logout: "लॉग आउट",
   appearance: "दिसणे (Appearance)",

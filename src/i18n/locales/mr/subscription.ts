@@ -9,20 +9,12 @@ export default {
   currentPlan: "सध्याचे योगदान",
   free: "पाहुणे", // "Guest"
   plans: {
-    trial: {
-      name: "७-दिवस (Trial)",
-      period: "७ दिवसांसाठी",
-      discount: "प्रीमियम वापरून पहा",
-      price: "₹१",
-      originalPrice: "₹१९९",
-      features: ["सर्व फीचर्सचा अनुभव घ्या, तुमचा अभिप्राय द्या"],
-    },
     basic: {
       name: "समर्थक (Basic)", // "Community Supporter"
       period: "वर्षातून एकदा, कर extra",
-      price: "₹९९९/-",
-      originalPrice: "₹१९९९/-",
-      discount: "५०% विशेष सवलत",
+      price: "₹६९९/-",
+      originalPrice: "₹१६९९/-",
+      discount: "~६०% विशेष सवलत",
       features: [
         "व्हेरिफाईड लोणारी प्रोफाईल",
         "समाजातील स्थळे पहा",
@@ -33,9 +25,9 @@ export default {
     premium: {
       name: "प्रीमियम (Premium)", // "Community Pride/Gold"
       period: "वर्षातून एकदा, कर extra",
-      price: "₹१९९९/-",
-      originalPrice: "₹3९९९/-",
-      discount: "५०% विशेष सवलत",
+      price: "₹१६९९/-",
+      originalPrice: "₹२६९९/-",
+      discount: "~४०% विशेष सवलत",
       features: [
         "प्रोफाईलवर 'प्रीमियम' बॅज",
         "तुमची जीवनशैली प्रीमियम आहे हे सादर करा",

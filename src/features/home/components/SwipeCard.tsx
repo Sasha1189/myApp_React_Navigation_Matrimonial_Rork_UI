@@ -1,17 +1,19 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Image } from "expo-image";
 import {
   FlatList,
-  Animated,
   Dimensions,
-  PanResponder,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
+  SharedValue,
+} from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   Briefcase,
@@ -28,131 +30,70 @@ import { ActionButtons } from "../components/ActionButtons";
 import { useButtonActions } from "../hooks/useButtonActions";
 import { useTranslation } from "react-i18next";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-const SWIPE_THRESHOLD = screenHeight * 0.2;
-
-const SWIPE_OUT_DURATION = 250;
+const { width: screenWidth } = Dimensions.get("window");
 
 interface SwipeCardProps {
-  uid: string;
   profile: Profile;
-  currentIndex: number;
-  nextImageUrl?: string | null;
-  onSwipeUp: () => void;
-  onSwipeDown: () => void;
-  isTopCard: boolean;
+  index: number;
+  scrollY: SharedValue<number>;
+  itemFullSize: number;
+  itemSize: number;
+  spacing: number;
 }
 
 export const SwipeCard: React.FC<SwipeCardProps> = ({
-  uid,
   profile,
-  currentIndex,
-  nextImageUrl,
-  onSwipeUp,
-  onSwipeDown,
-  isTopCard,
+  index,
+  scrollY,
+  itemSize,
+  spacing,
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const [activeIndex, setActiveIndex] = useState(0);
-  const translateY = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (nextImageUrl) {
-      Image.prefetch(nextImageUrl);
-    }
-  }, [nextImageUrl]);
+  const cardAnimatedStyle = useAnimatedStyle(() => {
+    const inputRange = [index - 1, index, index + 1];
+
+    const opacity = interpolate(
+      scrollY.value,
+      inputRange,
+      [0.5, 1, 0.5],
+      //   Extrapolation.CLAMP,
+    );
+
+    const scale = interpolate(
+      scrollY.value,
+      inputRange,
+      [0.92, 1, 0.92],
+      //   Extrapolation.CLAMP,
+    );
+
+    return {
+      transform: [{ scale }],
+      opacity,
+    };
+  });
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const cardWidth = screenWidth - 20;
-    const index = Math.round(event.nativeEvent.contentOffset.x / cardWidth);
-    setActiveIndex(index);
+    const cardWidth = screenWidth - spacing * 2; // Dynamically accounts for outer vertical list boundaries
+    const photoIndex = Math.round(
+      event.nativeEvent.contentOffset.x / cardWidth,
+    );
+    setActiveIndex(photoIndex);
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gesture) => {
-        if (!isTopCard) return false;
-        // Capture only if vertical pull is dominant
-        return (
-          Math.abs(gesture.dy) > Math.abs(gesture.dx) &&
-          Math.abs(gesture.dy) > 5
-        );
-      },
-      onPanResponderMove: (_, gesture) => {
-        translateY.setValue(gesture.dy);
-      },
-      onPanResponderRelease: (_, gesture) => {
-        const isFast = Math.abs(gesture.vy) > 0.5;
-        if (gesture.dy < -SWIPE_THRESHOLD || (gesture.dy < -50 && isFast)) {
-          forceSwipe("up");
-        } else if (
-          (gesture.dy > SWIPE_THRESHOLD || (gesture.dy > 50 && isFast)) &&
-          currentIndex > 0
-        ) {
-          forceSwipe("down");
-        } else {
-          resetPosition();
-        }
-      },
-    }),
-  ).current;
-
-  // 1. Update forceSwipe to ONLY trigger the parent update
-  const forceSwipe = (direction: "up" | "down") => {
-    const toValue = direction === "up" ? -screenHeight : screenHeight;
-
-    Animated.spring(translateY, {
-      toValue,
-      velocity: 3,
-      tension: 40,
-      friction: 8,
-      useNativeDriver: true,
-    }).start(() => {
-      // Call the parent update
-      if (direction === "up") {
-        onSwipeUp();
-      } else {
-        onSwipeDown();
-      }
-    });
-  };
-
-  const resetPosition = () => {
-    Animated.spring(translateY, {
-      toValue: 0,
-      friction: 4,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  useEffect(() => {
-    translateY.setValue(0);
-  }, [uid]);
-
-  const animatedCardStyle = { transform: [{ translateY: translateY }] };
-
-  const nextOpacity = translateY.interpolate({
-    inputRange: [-screenHeight / 6, 0],
-    outputRange: [1, 0],
-    extrapolate: "clamp",
-  });
-
-  const previousOpacity = translateY.interpolate({
-    inputRange: [0, screenHeight / 6],
-    outputRange: [0, 1],
-    extrapolate: "clamp",
-  });
-
-  const { handleActionBtnTap } = useButtonActions(uid, profile);
+  const { handleActionBtnTap } = useButtonActions(profile);
 
   if (!theme) return null;
   return (
     <Animated.View
-      style={[styles.card, animatedCardStyle]}
-      {...panResponder.panHandlers}
+      style={[
+        styles.card,
+        cardAnimatedStyle,
+        { height: itemSize, marginTop: index === 0 ? spacing : 0 },
+      ]}
     >
       <View style={styles.imageContainer}>
         <FlatList
@@ -160,7 +101,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          scrollEnabled={isTopCard}
           keyExtractor={(_, index) => index.toString()}
           onScroll={onScroll}
           scrollEventThrottle={16}
@@ -272,27 +212,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           liked={profile?.liked}
         />
       </View>
-      {/* NEXT LABEL (Swiping Up) */}
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.statusLabel, styles.nextLabel, { opacity: nextOpacity }]}
-      >
-        <Text style={styles.statusLabelText}>{t("card.next")}</Text>
-      </Animated.View>
-
-      {/* PREVIOUS LABEL (Swiping Down) */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.statusLabel,
-          styles.prevLabel,
-          { opacity: previousOpacity },
-        ]}
-      >
-        <Text style={styles.statusLabelText}>{t("card.previous")}</Text>
-      </Animated.View>
-
-      {/* PREMIUM BANNER */}
       {/* PREMIUM/BASIC BANNER */}
       {(profile?.tier === "basic" || profile?.tier === "premium") && (
         <View
@@ -302,7 +221,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
               backgroundColor:
                 profile?.tier === "premium"
                   ? theme.colors.primary
-                  : "rgba(128, 128, 128, 0.2)",
+                  : theme.colors.textLight, // Semi-transparent for basic users
             },
           ]}
         >
@@ -318,9 +237,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
-      position: "absolute",
       width: screenWidth - 12 * 2,
-      height: screenHeight * 0.73, // Slightly tighter height
       borderRadius: 20,
       backgroundColor: theme.colors.card,
       shadowColor: "#000",
@@ -329,6 +246,7 @@ export const createStyles = (theme: AppTheme) =>
       shadowRadius: 20,
       elevation: 10,
       overflow: "hidden",
+      alignSelf: "center",
     },
     imageContainer: { width: "100%", height: "100%" },
     slideFrame: { width: screenWidth - 12 * 2, height: "100%" },

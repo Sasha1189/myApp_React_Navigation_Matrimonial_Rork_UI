@@ -183,7 +183,7 @@ export const createStyles = (theme: AppTheme) =>
     },
     clearText: {
       fontSize: theme.fontSize.md,
-      color: theme.colors.primary,
+      color: theme.colors.text,
       fontWeight: "600",
     },
     content: {

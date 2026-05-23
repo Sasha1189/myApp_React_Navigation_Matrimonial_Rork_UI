@@ -9,20 +9,12 @@ export default {
   currentPlan: "Your Current Contribution",
   free: "Guest",
   plans: {
-    trial: {
-      name: "7-Day Trial",
-      period: "for 7 days",
-      discount: "Experience Premium",
-      price: "₹1",
-      originalPrice: "₹199",
-      features: ["Explore all features, Share your feedback"],
-    },
     basic: {
       name: "Community Supporter", // Emotional label
       period: "Once year, taxes extra",
-      price: "₹999/-",
-      originalPrice: "₹1999/-",
-      discount: "50% Less",
+      price: "₹699/-",
+      originalPrice: "₹1699/-",
+      discount: "~60% Less",
       features: [
         "Verified Lonari Profile",
         "Browse our community members",
@@ -33,9 +25,9 @@ export default {
     premium: {
       name: "Community Premium", // Prestige label
       period: "Once year, taxes extra",
-      price: "₹1999/-",
-      originalPrice: "₹3999",
-      discount: "50% Less",
+      price: "₹1699/-",
+      originalPrice: "₹2699",
+      discount: "~40% Less",
       features: [
         "'Premium' Badge on Profile", // Adds prestige
         "Express your lifestyle as Premium",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Alert } from "react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../../types/profile";
@@ -6,7 +6,7 @@ import { toggleLike } from "./useToggleLike";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
-export function useButtonActions(uid: string, profile: Profile | undefined) {
+export function useButtonActions(profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const { t } = useTranslation();
 

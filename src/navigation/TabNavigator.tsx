@@ -34,32 +34,56 @@ export default function TabNavigator() {
       initialRouteName="Home"
       screenOptions={{
         headerShown: true,
+        headerTransparent: true,
+        sceneStyle: { backgroundColor: "transparent" },
+        //header related styles
         headerStyle: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: theme.colors.headerBackground,
+          height: 60 + insets.top,
           elevation: 0,
           shadowOpacity: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.colors.border,
+
+          borderTopWidth: 0,
+          shadowColor: "transparent",
         },
+
+        headerStatusBarHeight: insets.top,
+
         headerTitleAlign: "center",
+
         headerTitleStyle: {
           fontSize: theme.fontSize.lg,
           fontWeight: "700",
           color: theme.colors.text,
           textTransform: "uppercase", // RHF style
-          letterSpacing: 1.5,
+          letterSpacing: 2,
           opacity: 0.8,
         },
+        // tab bar related styles
         tabBarStyle: {
-          backgroundColor: theme.colors.card,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.border,
-          height:
-            Platform.OS === "ios"
-              ? 60 + insets.bottom // iOS Home Indicator
-              : 64 + (insets.bottom > 0 ? insets.bottom : 0), // Android Buttons/Gestures
-          paddingBottom: insets.bottom > 0 ? insets.bottom : theme.spacing.sm,
+          backgroundColor: theme.colors.headerBackground,
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+
+          height: 50 + insets.bottom,
+          elevation: 0,
+
+          borderTopWidth: 0,
         },
+
+        tabBarIconStyle: {
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
+        },
+
         tabBarShowLabel: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textLight,
@@ -97,7 +121,11 @@ export default function TabNavigator() {
           ),
           headerRight: () => (
             <View
-              style={{ flexDirection: "row", marginRight: theme.spacing.md }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginRight: theme.spacing.md,
+              }}
             >
               <TouchableOpacity
                 onPress={() => navigation.navigate("Search")}
@@ -135,6 +163,7 @@ export default function TabNavigator() {
         name="Messages"
         component={MessagesScreen}
         options={{
+          headerTransparent: false,
           title: t("navigation.messages"),
           tabBarIcon: ({ color }) => <MessageCircle size={26} color={color} />,
         }}
@@ -144,6 +173,7 @@ export default function TabNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
+          headerTransparent: false,
           title: t("navigation.profile"),
           tabBarIcon: ({ color }) => <User size={26} color={color} />,
           headerRight: () => (

@@ -1,5 +1,9 @@
 export default {
   title: "Settings",
+  aboutUs: "About Us",
+  aboutYuva: "About Yova",
+  aboutYuvaDesc:
+    "Our mission to connect the Lonari community and foster meaningful relationships.",
   language: "Language",
   logout: "Logout",
   appearance: "Appearance",

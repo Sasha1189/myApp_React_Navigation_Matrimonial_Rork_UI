@@ -69,7 +69,16 @@ const GenderModal: React.FC<GenderModalProps> = ({
   ): Promise<void> => {
     try {
       if (firebaseUser) {
-        const deviceId = await getUniqueId();
+        let deviceId = await getUniqueId();
+
+        // 🛡️ GOOGLE REVIEWER BYPASS: Save a static string instead of actual dynamic device IDs
+        const googleTestNumbers = ["+919999991111", "+919999992222"];
+        if (
+          firebaseUser.phoneNumber &&
+          googleTestNumbers.includes(firebaseUser.phoneNumber)
+        ) {
+          deviceId = "GOOGLE_TEST_DEVICE_ID_STATIC";
+        }
 
         await createUserOnBackend({
           uid: firebaseUser.uid,

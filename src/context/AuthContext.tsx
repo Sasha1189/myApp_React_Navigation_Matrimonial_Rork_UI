@@ -101,6 +101,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user?.uid || !user?.displayName) return;
     const checkBinding = async () => {
       try {
+        // 🛡️ GOOGLE REVIEWER BYPASS: Prevents logout loop on Google's device farm
+        const googleTestNumbers = ["+919999991111", "+919999992222"];
+        if (user.phoneNumber && googleTestNumbers.includes(user.phoneNumber)) {
+          console.log(
+            "Google reviewer detected. Skipping hardware tracking binding loop completely.",
+          );
+          return;
+        }
+
         const currentHardwareId = await getUniqueId();
         const cachedId = getDBDeviceIdCache();
 

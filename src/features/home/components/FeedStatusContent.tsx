@@ -1,33 +1,31 @@
-import { FeedStatusCard, FeedPreviousProfiles } from "./FeedStatusCard";
+import React from "react";
+import { FeedStatusCard } from "./FeedStatusCard";
 import { FeedHookResult } from "../type/type";
 import { useTranslation } from "react-i18next";
 
-export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
+interface FeedStatusContentProps {
+  feed: FeedHookResult;
+  isFooter?: boolean;
+  itemSize: number;
+}
+
+export function FeedStatusContent({
+  feed,
+  isFooter = false,
+  itemSize,
+}: FeedStatusContentProps) {
   const {
     profiles,
-    currentIndex,
     isLoading,
     isError,
     error,
     resetFeed,
     refetch,
-    updateIndex,
     mode = "default",
   } = feed;
   const { t } = useTranslation();
 
-  //new user
-  if (profiles?.length === 0 && !isLoading && !isError) {
-    return (
-      <FeedStatusCard
-        type="empty"
-        title={t("feed.newTitle")}
-        message={t("feed.newMessage")}
-      />
-    );
-  }
-
-  // 1. Error Card
+  // 1. GLOBAL ERROR STATE (Network drops, Server failures)
   if (isError) {
     return (
       <FeedStatusCard
@@ -36,46 +34,49 @@ export function FeedStatusContent({ feed }: { feed: FeedHookResult }) {
         message={error?.message || t("feed.errorMessage")}
         onAction={refetch}
         actionText={t("feed.retry")}
+        itemSize={itemSize}
       />
     );
   }
 
-  // 2. 🔹 CHECK END OF FEED FIRST
-  // If we have profiles but swiped past the last one, OR we have 0 profiles and backend is done
-  if (profiles.length === 0 || currentIndex >= profiles.length) {
+  // 2. ZERO RESULTS STATE (Filters too strict, Search returned 0 rows)
+  if (profiles?.length === 0 && !isLoading) {
+    const isSearchMode = mode === "search" || mode === "filter";
+
     return (
-      <>
-        <FeedStatusCard
-          type="empty"
-          title={t(`feed.endTitle_${mode}`, {
-            defaultValue: t("feed.endTitle"),
-          })}
-          message={t(`feed.endMessage_${mode}`, {
-            defaultValue: t("feed.endMessage"),
-          })}
-          onAction={resetFeed}
-          actionText={t(`feed.action_${mode}`, {
-            defaultValue: t("feed.startOver"),
-          })}
-        />
-        {currentIndex > 0 && (
-          <FeedPreviousProfiles
-            currentIndex={currentIndex}
-            updateIndex={updateIndex}
-          />
-        )}
-      </>
+      <FeedStatusCard
+        type="empty"
+        title={isSearchMode ? t("feed.noResultsTitle") : t("feed.newTitle")}
+        message={
+          isSearchMode ? t("feed.noResultsMessage") : t("feed.newMessage")
+        }
+        onAction={resetFeed}
+        actionText={isSearchMode ? t("feed.clearFilters") : t("feed.reload")}
+        itemSize={itemSize}
+      />
     );
   }
 
-  // 4. Default Fallback (should not be reached if boundaries are tight)
-  return (
-    <FeedStatusCard
-      type="empty"
-      title={t("feed.emptyTitle")}
-      message={t("feed.emptyMessage")}
-      onAction={resetFeed}
-      actionText={t("feed.reload")}
-    />
-  );
+  // 3. SCROLLED TO END STATE (FlatList Footer mount block)
+  if (profiles && profiles.length > 0 && isFooter) {
+    return (
+      <FeedStatusCard
+        type="empty"
+        title={t(`feed.endTitle_${mode}`, {
+          defaultValue: t("feed.endTitle"),
+        })}
+        message={t(`feed.endMessage_${mode}`, {
+          defaultValue: t("feed.endMessage"),
+        })}
+        onAction={resetFeed}
+        actionText={t(`feed.action_${mode}`, {
+          defaultValue: t("feed.startOver"),
+        })}
+        itemSize={itemSize}
+      />
+    );
+  }
+
+  // 4. Fallback Default Guard (Hides footer when user is still swiping earlier cards)
+  return null;
 }

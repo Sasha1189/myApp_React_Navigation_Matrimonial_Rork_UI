@@ -149,26 +149,6 @@ export default function LandingScreen() {
           />
         )}
       </View>
-
-      {/* <View style={styles.paginationRow}>
-        <Text style={styles.fractionText}>
-          {activeIndex + 1}/{CAROUSEL_DATA.length}
-        </Text>
-        <View style={styles.dotsRow}>
-          {CAROUSEL_DATA.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor:
-                    i === activeIndex ? theme.colors.text : theme.colors.border,
-                },
-              ]}
-            />
-          ))}
-        </View>
-      </View> */}
       <View style={styles.paginationRow}>
         {activeIndex === 3 && (
           <TouchableOpacity

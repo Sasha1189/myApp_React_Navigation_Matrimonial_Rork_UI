@@ -33,10 +33,11 @@ export const createStyles = (theme: AppTheme) =>
     emptyText: {
       fontSize: 18,
       fontWeight: "bold",
+      color: theme.colors.text,
     },
     emptySubtext: {
       fontSize: 14,
-      color: "gray",
+      color: theme.colors.textLight,
       textAlign: "center",
     },
   });

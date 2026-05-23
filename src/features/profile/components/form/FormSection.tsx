@@ -59,7 +59,7 @@ const FormSection: React.FC<FormSectionProps> = ({
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     section: {
-      backgroundColor: theme.colors.card,
+      backgroundColor: theme.colors.background,
       borderRadius: theme.borderRadius.md,
       marginBottom: theme.spacing.md,
       padding: theme.spacing.md, // Balanced padding, not too tight
