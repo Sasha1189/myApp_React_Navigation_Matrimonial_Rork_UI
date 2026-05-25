@@ -29,8 +29,11 @@ export const ChatHeader = ({
         source={
           photo
             ? { uri: photo }
-            : require("../../../../assets/images/profile.png")
+            : require("../../../../assets/images/profile.webp")
         }
+        placeholder={require("../../../../assets/images/profile.webp")}
+        placeholderContentFit="cover"
+        contentFit="cover"
         style={styles.headerAvatar}
         cachePolicy="disk"
       />

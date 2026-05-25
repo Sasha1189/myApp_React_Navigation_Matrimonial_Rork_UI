@@ -3,13 +3,13 @@ import {
   View,
   Text,
   FlatList,
-  Image,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
   ViewToken,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { LanguageSelector } from "../../../components/LanguageSelector";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthNavigation } from "../../../navigation/hooks";
@@ -28,19 +28,19 @@ const CAROUSEL_DATA = [
     id: "1",
     titleKey: "welcome.slide1.title",
     subtitleKey: "welcome.slide1.subtitle",
-    image: require("../../../../assets/images/m1.png"),
+    image: require("../../../../assets/images/m1.webp"),
   },
   {
     id: "2",
     titleKey: "welcome.slide2.title",
     subtitleKey: "welcome.slide2.subtitle",
-    image: require("../../../../assets/images/m2.png"),
+    image: require("../../../../assets/images/m2.webp"),
   },
   {
     id: "3",
     titleKey: "welcome.slide3.title",
     subtitleKey: "welcome.slide3.subtitle",
-    image: require("../../../../assets/images/p1.png"),
+    image: require("../../../../assets/images/p1.webp"),
   },
   {
     id: "4",
@@ -135,7 +135,9 @@ export default function LandingScreen() {
                   <Image
                     source={item.image}
                     style={styles.heroImage}
-                    resizeMode="contain"
+                    contentFit="contain"
+                    transition={150}
+                    cachePolicy="disk"
                   />
                   <View style={styles.textGroup}>
                     <Text style={styles.slideTitle}>{t(item.titleKey)}</Text>

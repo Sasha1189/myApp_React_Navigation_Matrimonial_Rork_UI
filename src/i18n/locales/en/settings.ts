@@ -1,7 +1,7 @@
 export default {
   title: "Settings",
   aboutUs: "About Us",
-  aboutYuva: "About Yova",
+  aboutYuva: "About Yuva",
   aboutYuvaDesc:
     "Our mission to connect the Lonari community and foster meaningful relationships.",
   language: "Language",
@@ -38,4 +38,17 @@ export default {
   noBlocked: "No blocked users",
   noBlockedSub: "You haven’t blocked anyone yet.",
   unblock: "Unblock",
+
+  // Add these keys right inside your settings namespace object block:
+  waBug: "Bug Report",
+  waBugPreset:
+    "Describe the technical issue you encountered:\n1. What happened?\n2. Steps to reproduce:\n\n[Your message here]",
+
+  waFeature: "Feature Request",
+  waFeaturePreset:
+    "Share your idea with us:\n1. What feature would you like to see?\n2. How will it help the community?\n\n[Your message here]",
+
+  waReportUser: "Report User/Behavior",
+  waReportUserPreset:
+    "Report inappropriate behavior:\n1. Full name of the user:\n2. Reason for report:\n\n[Your message here]",
 };

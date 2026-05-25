@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return cached ? JSON.parse(cached) : getDefaultProfile();
   });
 
-  usePresence(user?.uid);
+  usePresence(user?.uid, tier, user?.displayName);
   const updateProfile = useUpdateProfile(user, profile, setProfile, tier);
 
   //profile
@@ -85,16 +85,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // 2. sync feed
   useEffect(() => {
-    if (user?.displayName) {
+    if (user?.displayName && tier) {
       const lastSync = storage.getNumber("profiles_last_sync_timestamp") || 0;
       const oneDay = 24 * 60 * 60 * 1000;
 
       // 🔹 NO TIMER: Fire immediately when gender is ready or 24h passed
-      if (lastSync === 0 || Date.now() - lastSync > oneDay) {
-        FeedSyncService.syncFeeds(user?.displayName);
+      if (lastSync === 0 || lastSync === 1 || Date.now() - lastSync > oneDay) {
+        FeedSyncService.syncFeeds(user?.displayName, tier);
       }
     }
-  }, [user?.displayName]);
+  }, [user?.displayName, tier]);
 
   // 3. Hardware Identity & Security Binding Control
   useEffect(() => {

@@ -27,9 +27,8 @@ import { useTranslation } from "react-i18next";
 export default function MessagesScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { user } = useAuth();
+  const { user, tier } = useAuth();
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets(); // Add this for safe spacing
 
   const uid = user?.uid;
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
@@ -49,6 +48,7 @@ export default function MessagesScreen() {
   const { data: likesSent, isLoading: sentLoading } = useLikeSent(uid || "");
   const { data: likesReceived, isLoading: recLoading } = useLikeReceived(
     uid || "",
+    tier,
   );
 
   const { panHandlers, triggerTabChange } = useTabSwipe(
@@ -57,23 +57,49 @@ export default function MessagesScreen() {
   );
   const flatListRef = useRef<FlatList>(null);
 
+  // const { currentData, isLoadingState } = useMemo(() => {
+  //   let data: any[] = [];
+  //   let loading = false;
+
+  //   if (activeTab === "chats") {
+  //     data = chatBanners;
+  //     loading = chatsLoading;
+  //   } else if (activeTab === "sent") {
+  //     data = likesSent;
+  //     loading = sentLoading;
+  //   } else {
+  //     data = likesReceived!;
+  //     loading = recLoading;
+  //   }
+
+  //   return { currentData: data, isLoadingState: loading };
+  // }, [activeTab, chatBanners, chatsLoading]);
+  // FIX 1: Add ALL conditional arrays and load states straight into the dependency track
   const { currentData, isLoadingState } = useMemo(() => {
     let data: any[] = [];
     let loading = false;
 
     if (activeTab === "chats") {
-      data = chatBanners;
+      data = chatBanners || [];
       loading = chatsLoading;
     } else if (activeTab === "sent") {
-      data = likesSent;
+      data = likesSent || [];
       loading = sentLoading;
-    } else {
-      data = likesReceived!;
+    } else if (activeTab === "received") {
+      data = likesReceived || [];
       loading = recLoading;
     }
 
     return { currentData: data, isLoadingState: loading };
-  }, [activeTab, chatBanners, chatsLoading]);
+  }, [
+    activeTab,
+    chatBanners,
+    chatsLoading,
+    likesSent,
+    sentLoading,
+    likesReceived,
+    recLoading,
+  ]);
 
   if (!theme) return null;
 

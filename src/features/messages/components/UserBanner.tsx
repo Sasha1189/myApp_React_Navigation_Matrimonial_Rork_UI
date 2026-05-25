@@ -63,7 +63,7 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
           source={
             item.photo
               ? { uri: item.photo }
-              : require("../../../../assets/images/profile.png")
+              : require("../../../../assets/images/profile.webp")
           }
           style={styles.image}
           contentFit="cover"

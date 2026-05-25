@@ -17,9 +17,36 @@ import {
 import { rtdb } from "../../../config/firebase";
 import { LikesCache, storage } from "../../../cache/cacheConfig";
 
-export const usePresence = (uid: string | undefined) => {
+export const usePresence = (
+  uid: string | undefined,
+  tier: "none" | "basic" | "premium",
+  gender: string | undefined | null,
+) => {
   useEffect(() => {
     if (!uid) return;
+
+    // 🛡️ STRICT EXCLUSIVITY LOCK:
+    // Execute ONLY if the tier string explicitly matches "basic" OR "premium"
+    if (tier !== "basic" && tier !== "premium") {
+      console.log(
+        `🛑 Access Denied: Tier "${tier}" is not authorized for presence tracking.`,
+      );
+      // Enforce disconnection right at the socket root for non-paying users
+      goOffline(rtdb);
+      return;
+    }
+
+    // 2. Validate that a clear profile gender configuration is established before syncing database caches
+    if (!gender) {
+      console.log(
+        "⏳ Sync paused: Waiting for user gender selection configurations.",
+      );
+      return;
+    }
+
+    console.log(
+      `⚡ Verified Tier [${tier.toUpperCase()}]: Initializing messaging caches and socket paths.`,
+    );
 
     // Local refs for cleanup
     let unsubConnection: (() => void) | undefined;
@@ -90,5 +117,5 @@ export const usePresence = (uid: string | undefined) => {
 
       onDisconnect(myStatusRef).cancel();
     };
-  }, [uid]);
+  }, [uid, tier, gender]);
 };

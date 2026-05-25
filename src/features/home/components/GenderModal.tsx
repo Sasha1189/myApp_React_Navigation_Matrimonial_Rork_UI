@@ -96,7 +96,6 @@ const GenderModal: React.FC<GenderModalProps> = ({
 
   const updateFirebaseUser = async (): Promise<void> => {
     const currentUser = auth.currentUser;
-
     if (!gender) {
       Alert.alert(
         t("genderModal.selectGender"),
@@ -118,6 +117,7 @@ const GenderModal: React.FC<GenderModalProps> = ({
 
         const updatedUser = auth.currentUser;
         setUser(updatedUser);
+
         await createUser(updatedUser);
 
         onClose();

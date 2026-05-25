@@ -14,7 +14,6 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { Photo } from "../../../../types/profile";
 
 const { width } = Dimensions.get("window");
-// const photoSize = (width - theme.spacing.lg * 3) / 2;
 
 interface Props {
   photos: Photo[];

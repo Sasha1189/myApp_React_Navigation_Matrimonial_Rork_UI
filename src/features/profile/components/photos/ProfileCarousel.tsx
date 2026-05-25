@@ -55,8 +55,10 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
                   source={
                     item?.downloadURL
                       ? { uri: item.downloadURL }
-                      : require("../../../../../assets/images/profile.png")
+                      : require("../../../../../assets/images/profile.webp")
                   }
+                  placeholder={require("../../../../../assets/images/profile.webp")}
+                  placeholderContentFit="cover"
                   style={styles.profileImage}
                   contentFit={item?.downloadURL ? "cover" : "contain"}
                   cachePolicy="disk"

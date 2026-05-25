@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
+// import { usePreventScreenCapture  } from "expo-screen-capture";
 import { View, StatusBar } from "react-native";
 import GenderModal from "../components/GenderModal";
 import { useAppTheme } from "@/theme/ThemeContext";
-
 import { useAuth } from "../../../context/AuthContext";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { useActiveFeed } from "../hooks/useActiveFeed";
@@ -10,12 +10,12 @@ import { VerticalSwipeList } from "../components/VerticalSwipeList";
 
 export default function HomeScreen() {
   const { theme } = useAppTheme();
-
   const { user } = useAuth();
   const uid = user?.uid as string;
   const [showModal, setShowModal] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const navigation = useAppNavigation();
+  //  usePreventScreenCapture();
 
   useEffect(() => {
     if (

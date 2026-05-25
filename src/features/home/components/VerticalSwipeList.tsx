@@ -1,11 +1,12 @@
-import React from "react";
-import { Dimensions, Platform, View } from "react-native";
+import React, { useRef } from "react";
+import { Dimensions, View, Platform } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
   runOnJS,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { Profile } from "../../../types/profile";
 import { SwipeCard } from "./SwipeCard";
 import { FeedStatusCard } from "./FeedStatusCard";
@@ -22,8 +23,11 @@ export function VerticalSwipeList({
   isLoading,
   feed,
 }: VerticalSwipeListProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
+
+  const flatListRef = useRef<Animated.FlatList<any>>(null);
 
   const { height: screenHeight } = Dimensions.get("screen");
 
@@ -39,8 +43,15 @@ export function VerticalSwipeList({
   const _itemFullSize = _itemSize + _spacing;
 
   const onScroll = useAnimatedScrollHandler({
-    onScroll: (event) => {
+    onScroll: (event: any) => {
       scrollY.value = event.contentOffset.y / _itemFullSize;
+    },
+    onMomentumEnd: (event: any) => {
+      const activeIndex = Math.round(event.contentOffset.y / _itemFullSize);
+
+      if (activeIndex !== feed.currentIndex && activeIndex < profiles.length) {
+        runOnJS(feed.updateIndex)(activeIndex);
+      }
     },
   });
 
@@ -57,8 +68,8 @@ export function VerticalSwipeList({
         <View style={{ height: _itemSize, width: "100%" }}>
           <FeedStatusCard
             type="loading"
-            title="Loading..."
-            message="Finding profiles near you"
+            title={t("feed.loadingTitle")}
+            message={t("feed.loadingMessage")}
             itemSize={_itemSize}
           />
         </View>
@@ -90,6 +101,7 @@ export function VerticalSwipeList({
 
   return (
     <Animated.FlatList
+      ref={flatListRef}
       data={profiles}
       contentContainerStyle={{
         paddingHorizontal: 0,
@@ -108,6 +120,22 @@ export function VerticalSwipeList({
       )}
       ItemSeparatorComponent={() => <View style={{ height: _spacing }} />}
       keyExtractor={(item) => item.uid}
+      initialScrollIndex={
+        profiles.length > 0 &&
+        feed.currentIndex > 0 &&
+        feed.currentIndex < profiles.length
+          ? feed.currentIndex
+          : undefined
+      }
+      getItemLayout={(_, index) => ({
+        length: _itemFullSize,
+        offset: _itemFullSize * index,
+        index,
+      })}
+      initialNumToRender={1} // Only paint 1 card on the initial screen boot mount
+      maxToRenderPerBatch={1} // Only compile 1 card per scrolling threshold step pass
+      windowSize={3} // Keeps exactly 3 cards active (1 current, 1 above, 1 below) and deletes the rest!
+      removeClippedSubviews={Platform.OS === "android"}
       snapToInterval={_itemFullSize}
       decelerationRate="fast"
       onScroll={onScroll}
@@ -118,6 +146,13 @@ export function VerticalSwipeList({
           <FeedStatusContent feed={feed} isFooter={true} itemSize={_itemSize} />
         </View>
       )}
+      onScrollToIndexFailed={(info) => {
+        // Safe guard fallback if layout pipelines glitch out during memory sweeps
+        flatListRef.current?.scrollToOffset({
+          offset: info.highestMeasuredFrameIndex * _itemFullSize,
+          animated: false,
+        });
+      }}
     />
   );
 }

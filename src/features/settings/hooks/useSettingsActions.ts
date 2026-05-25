@@ -18,7 +18,7 @@ export const useSettingsActions = () => {
   const { setUser } = useAuth();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
-  const WHATSAPP_NUMBER = "919766757696";
+  const WHATSAPP_NUMBER = "918554840100";
   const navigation = useAppNavigation();
 
   const openLink = (url: string, title: string) => {
@@ -31,22 +31,35 @@ export const useSettingsActions = () => {
         ? t("settings.waBug")
         : type === "feature"
           ? t("settings.waFeature")
-          : t("settings.waReport");
+          : t("settings.waReportUser");
+
     const preset =
       type === "bug"
         ? t("settings.waBugPreset")
         : type === "feature"
           ? t("settings.waFeaturePreset")
-          : t("settings.waReportPreset");
-    const text = encodeURIComponent(
-      `${heading} — Lonari Youva Connect\n\n${preset}`,
-    );
-    const url = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${text}`;
+          : t("settings.waReportUserPreset");
+
+    const messagePayload = `${heading} — Lonari Yuva Connect\n\n${preset}`;
+    const text = encodeURIComponent(messagePayload);
+
+    const cleanNumber = WHATSAPP_NUMBER.replace(/[^0-9]/g, "");
+    const url = `https://wa.me/${cleanNumber}?text=${text}`;
 
     try {
-      await Linking.openURL(url);
-    } catch {
-      Linking.openURL(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`);
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert(
+          t("alerts.error"),
+          t("alerts.whatsappMissing", {
+            defaultValue: "WhatsApp is not installed on this device.",
+          }),
+        );
+      }
+    } catch (error) {
+      console.error("WhatsApp redirection failed:", error);
     }
   };
 

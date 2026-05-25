@@ -12,7 +12,7 @@ export function useSocialActions(profile: any) {
   const { t } = useTranslation();
 
   const handleShare = async () => {
-    if (tier === "trial" || tier === "none") {
+    if (tier !== "premium") {
       Alert.alert(t("alerts.upgradeRequired"), t("alerts.shareRestricted"), [
         { text: t("alerts.cancel"), style: "cancel" },
         {

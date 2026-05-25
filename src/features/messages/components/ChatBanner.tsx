@@ -40,7 +40,7 @@ export const ChatBanner = React.memo(
             source={
               item?.otherUser?.photo
                 ? { uri: item.otherUser.photo }
-                : require("../../../../assets/images/profile.png")
+                : require("../../../../assets/images/profile.webp")
             }
             style={styles.activityImage}
             contentFit="cover"

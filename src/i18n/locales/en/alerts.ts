@@ -1,7 +1,7 @@
 export default {
   upgradeRequired: "Upgrade Required",
   featureRestricted:
-    "Messaging and Liking are premium features. Please upgrade your plan to continue.",
+    "Messaging and Liking are basic/premium features. Please upgrade your plan to continue.",
   upgradeNow: "Upgrade Now",
   cancel: "Cancel",
   blockConfirm:
@@ -12,4 +12,8 @@ export default {
   unblockSuccess: "User has been unblocked successfully.",
   unblockError: "Error unblocking user. Please try again.",
   blockSuccess: "User blocked successfully.",
+
+  error: "Something went wrong",
+  whatsappMissing:
+    "WhatsApp is not installed on this device. Please install it to continue.",
 };

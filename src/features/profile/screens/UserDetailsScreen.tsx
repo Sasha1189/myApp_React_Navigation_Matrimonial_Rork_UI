@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -52,6 +52,7 @@ import { Lock } from "lucide-react-native";
 import { ProfileActionFooter } from "../components/profileDetailView/ProfileActionFooter";
 import { useTranslation } from "react-i18next";
 import { useSocialActions } from "../hooks/useSocialActions";
+// import { usePreventScreenCapture  } from "expo-screen-capture";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -61,6 +62,7 @@ export default function UserDetailsScreen({ route }: any) {
   const { theme } = useAppTheme();
   const { profile: myProfile, tier } = useAuth();
   const profile = route.params?.profile;
+  // usePreventScreenCapture();
 
   const isSelf = myProfile?.uid === profile?.uid;
 

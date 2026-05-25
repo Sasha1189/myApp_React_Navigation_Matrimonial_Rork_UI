@@ -26,11 +26,12 @@ import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 import { formatDOB } from "../../../utils/dateUtils";
 import { useTranslation } from "react-i18next";
+import { useProfileStats } from "../hooks/useProfileStats";
 
 export default function ProfileScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useTranslation();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -73,6 +74,10 @@ export default function ProfileScreen({ navigation }: any) {
     }
   };
 
+  const { matchesCount, sentCount, receivedCount, isLoading } = useProfileStats(
+    user?.uid,
+  );
+
   // Calculate Progress for Circle
   const completionPercent = useMemo(() => {
     if (!profile) return 0;
@@ -82,7 +87,7 @@ export default function ProfileScreen({ navigation }: any) {
 
   const age = profile?.dateOfBirth
     ? formatDOB(profile.dateOfBirth, "age")
-    : "21";
+    : "18";
 
   return (
     <ScrollView
@@ -121,8 +126,10 @@ export default function ProfileScreen({ navigation }: any) {
                 ? { uri: profile.photos[0].downloadURL }
                 : profile?.photos?.[0]?.localUrl
                   ? { uri: profile.photos[0].localUrl }
-                  : require("../../../../assets/images/profile.png")
+                  : require("../../../../assets/images/profile.webp")
             }
+            placeholder={require("../../../../assets/images/profile.webp")}
+            placeholderContentFit="cover"
             style={styles.profileImage}
             contentFit="cover"
             cachePolicy="disk"
@@ -152,18 +159,75 @@ export default function ProfileScreen({ navigation }: any) {
       {/* 2. CONDENSED STATS BAR */}
       <View style={styles.statsBar}>
         {[
-          { l: t("profile.stats.matches"), v: "42" },
-          { l: t("profile.stats.sent"), v: "156" },
-          { l: t("profile.stats.received"), v: "89" },
-        ].map((s, i) => (
-          <React.Fragment key={i}>
-            <View style={styles.statItem}>
-              <Text style={styles.statVal}>{s.v}</Text>
-              <Text style={styles.statLab}>{s.l}</Text>
-            </View>
-            {i < 2 && <View style={styles.statDivider} />}
-          </React.Fragment>
-        ))}
+          {
+            l: t("profile.stats.sent"),
+            v: isLoading ? "—" : sentCount,
+            requiredTier: "BASIC",
+          },
+          {
+            l: t("profile.stats.received"),
+            v: isLoading ? "—" : receivedCount,
+            requiredTier: "PREMIUM",
+          },
+          {
+            l: t("profile.stats.matches"),
+            v: isLoading ? "—" : matchesCount,
+            requiredTier: "PREMIUM",
+          },
+        ].map((s, i) => {
+          const isLocked = s.v === "Upgrade to see";
+          return (
+            <React.Fragment key={i}>
+              <View style={styles.statItem}>
+                {isLocked ? (
+                  // Pure text-based layout wrapper block (No routing / No buttons)
+                  <View
+                    style={{ alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        fontWeight: "600",
+                        color: "rgba(255, 255, 255, 0.4)",
+                        textTransform: "lowercase",
+                        lineHeight: 6,
+                      }}
+                    >
+                      {t("profile.stats.upgradeTo", {
+                        defaultValue: "Upgrade to",
+                      })}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: "900",
+                        letterSpacing: 0.5,
+                        lineHeight: 11,
+                        color:
+                          s.requiredTier === "PREMIUM" ? "#FFD700" : "#3B82F6", // Gold for Premium, Blue for Basic
+                      }}
+                    >
+                      {s.requiredTier}
+                    </Text>
+                  </View>
+                ) : (
+                  // Renders authorized numeric text metrics cleanly
+                  <Text
+                    style={
+                      styles.nameText
+                        ? styles.statVal
+                        : { fontSize: 18, fontWeight: "700" }
+                    }
+                  >
+                    {s.v}
+                  </Text>
+                )}
+                <Text style={styles.statLab}>{s.l}</Text>
+              </View>
+              {i < 2 && <View style={styles.statDivider} />}
+            </React.Fragment>
+          );
+        })}
       </View>
 
       {/* 3. MENU SECTION */}
@@ -278,7 +342,7 @@ const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.5,
     },
     statLab: {
-      fontSize: 9,
+      fontSize: 12,
       color: theme.colors.text,
       opacity: 0.5,
       marginTop: 2,

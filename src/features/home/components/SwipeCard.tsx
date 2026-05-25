@@ -110,13 +110,14 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
                 source={
                   item?.downloadURL
                     ? { uri: item.downloadURL }
-                    : require("../../../../assets/images/profile.png")
+                    : require("../../../../assets/images/profile.webp")
                 }
+                placeholder={require("../../../../assets/images/profile.webp")}
+                placeholderContentFit="cover"
                 style={styles.image}
                 contentFit="cover"
                 cachePolicy="disk"
-                transition={400}
-                placeholderContentFit="cover"
+                transition={200}
               />
             </View>
           )}
@@ -284,21 +285,6 @@ export const createStyles = (theme: AppTheme) =>
       right: 60,
       padding: 20,
     },
-    verifiedPill: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      marginLeft: 10,
-    },
-    verifiedText: {
-      fontSize: 9,
-      fontWeight: "900",
-      color: "white",
-      marginLeft: 3,
-    },
 
     // GLASSMORPHISM BADGES
     bio: {
@@ -314,31 +300,6 @@ export const createStyles = (theme: AppTheme) =>
       bottom: 20,
       alignItems: "center",
       zIndex: 20,
-    },
-
-    statusLabel: {
-      position: "absolute",
-      alignSelf: "center",
-      paddingHorizontal: 25,
-      paddingVertical: 10,
-      borderRadius: 12,
-      borderWidth: 2,
-      zIndex: 100,
-      backgroundColor: "rgba(0,0,0,0.7)", // Premium dark glass feel
-    },
-    nextLabel: {
-      bottom: 120, // Positioned near the bottom for "Up" swipe feedback
-      borderColor: theme.colors.primary,
-    },
-    prevLabel: {
-      top: 120, // Positioned near the top for "Down" swipe feedback
-      borderColor: theme.colors.primary,
-    },
-    statusLabelText: {
-      fontSize: 18,
-      fontWeight: "900",
-      color: "white",
-      letterSpacing: 3, // Wide spacing for pro look
     },
     nameAgeRow: {
       flexDirection: "row",
@@ -392,18 +353,6 @@ export const createStyles = (theme: AppTheme) =>
       fontSize: 11,
       fontWeight: "600",
       marginLeft: 6,
-    },
-    infoRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 6,
-      opacity: 0.9,
-    },
-    infoText: {
-      color: "white",
-      fontSize: 13,
-      marginLeft: 8,
-      fontWeight: "500",
     },
     premiumBanner: {
       position: "absolute",
