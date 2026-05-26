@@ -22,9 +22,7 @@ import { Profile } from "../types/profile";
 import { usePresence } from "@/features/messages/hooks/usePresence";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";
 import { getProfile } from "@/features/profile/api/profileApi";
-import { doc, getDoc, firestore } from "../config/firebase";
 import { FeedSyncService } from "@/features/home/apis/feedApi";
-import { BlocksCache } from "../cache/cacheConfig";
 import { getUniqueId } from "react-native-device-info";
 import {
   getUserDeviceId,
@@ -214,34 +212,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
           return currentTier;
         });
-
-        // 4. 🛡️ THE SHIELD SAFETY GATE: Block unauthorized Firestore read pipelines
-        const userGender = firebaseUser.displayName;
-        const hasGender = userGender === "Male" || userGender === "Female";
-        const isPaidUser = activeTier === "basic" || activeTier === "premium";
-
-        // 🎯 If the user hasn't completed registration yet OR is on a free tier,
-        // bypass the Firestore query completely and reset local block states.
-        if (!hasGender || !isPaidUser) {
-          BlocksCache.sync([], []);
-          return;
-        }
-
-        // 5. SYNC BLOCKED LIST (Background)
-        // 🔐 SECURED READ: Fires only if the user has a valid gender AND an active paid subscription plan
-        const blockDocRef = doc(firestore, "blockedIDs", firebaseUser.uid);
-        const blockSnap = await getDoc(blockDocRef);
-        if (blockSnap.exists()) {
-          const data = blockSnap.data();
-          const mine = data?.mine || [];
-          const theirs = data?.theirs || [];
-
-          // Save both lists to MMKV immediately
-          BlocksCache.sync(mine, theirs);
-        } else {
-          // Ensure cache is cleared if no document exists
-          BlocksCache.sync([], []);
-        }
       } catch (error) {
         console.error("Auth/tier/block state check failed:", error);
       }

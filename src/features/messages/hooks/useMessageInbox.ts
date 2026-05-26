@@ -11,6 +11,7 @@ import {
   onChildRemoved,
   get,
   endAt,
+  goOnline,
 } from "@react-native-firebase/database";
 import { IInboxItem } from "../type/chattype";
 
@@ -115,10 +116,35 @@ export const useMessageInbox = (uid: string) => {
     };
   }, [uid, stopListeners]);
 
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     startLive();
+  //     return () => stopListeners();
+  //   }, [startLive, stopListeners]),
+  // );
+
+  // Inside your useMessageInbox hook body:
   useFocusEffect(
     useCallback(() => {
+      // 🎯 CRITICAL ACCURACY FIX: Wake up the global valve before initiating data streams.
+      // This safely fixes any background goOffline() commands issued by the usePresence hook.
+      try {
+        goOnline(rtdb);
+        console.log(
+          "📥 [Inbox Hook]: Screen focused. Ensuring RTDB socket is online.",
+        );
+      } catch (err) {
+        console.error("Failed to re-engage inbox socket layer:", err);
+      }
+
       startLive();
-      return () => stopListeners();
+
+      return () => {
+        console.log(
+          "📤 [Inbox Hook]: Screen blurred. Suspending live inbox tracking listeners.",
+        );
+        stopListeners();
+      };
     }, [startLive, stopListeners]),
   );
 

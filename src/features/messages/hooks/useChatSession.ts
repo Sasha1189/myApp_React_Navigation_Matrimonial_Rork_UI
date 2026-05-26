@@ -18,6 +18,7 @@ import {
   remove,
   set,
   onDisconnect,
+  goOnline,
 } from "@react-native-firebase/database";
 import { IMessage } from "../type/chattype";
 import { formatStatusTime } from "../../../utils/dateUtils";
@@ -58,46 +59,17 @@ export function useChatSession(
   }, []);
 
   const startLiveMessages = useCallback(() => {
+    try {
+      goOnline(rtdb);
+    } catch (err) {
+      console.error("Failed to re-engage active chat socket wrapper:", err);
+    }
     stopListeners();
     setIsLive(true);
     setHasNewAtBottom(false);
 
     // Modular Query: Passing rtdb instance as the first argument
     const msgQuery = query(ref(rtdb, `messages/${roomId}`), limitToLast(50));
-
-    // onValue returns the unsubscribe function directly in v22+
-    // msgUnsubscribe.current = onValue(msgQuery, (snap) => {
-    //   const data = snap.val() || {};
-    //   const list = (Object.values(data) as IMessage[]).sort(
-    //     (a, b) => b.ts - a.ts,
-    //   );
-
-    //   setMessages(list);
-
-    //   if (list.length > 0) {
-    //     const oldestInBatch = list[list.length - 1].ts;
-    //     if (!oldestLoadedTs.current || oldestInBatch < oldestLoadedTs.current) {
-    //       oldestLoadedTs.current = oldestInBatch;
-    //     }
-    //   }
-
-    //   setHasMore(list.length >= 50);
-    //   setIsLoading(false);
-
-    //   // Modular Update for Read Receipt
-    //   const unreadMessages = list.filter((m) => m.s !== myUid && !m.r);
-
-    //   if (unreadMessages.length > 0) {
-    //     const updates: Record<string, any> = {};
-    //     unreadMessages.forEach((msg) => {
-    //       updates[`messages/${roomId}/${msg.id}/r`] = true;
-    //     });
-    //     // Atomic multi-path update: fast and cost-efficient
-    //     update(ref(rtdb), updates);
-    //   }
-    // });
-
-    // code with onChildAdded/updated cost effective does not download everything repeat
     // 1. Initial Load (One-time cost)
     get(msgQuery).then((snap) => {
       const data = snap.val() || {};
@@ -120,7 +92,7 @@ export function useChatSession(
       if (unread.length > 0) {
         const updates: any = {};
         unread.forEach((m) => (updates[`messages/${roomId}/${m.id}/r`] = true));
-        update(ref(rtdb), updates);
+        update(ref(rtdb, "/"), updates);
       }
     });
 
@@ -288,7 +260,7 @@ export function useChatSession(
         u: true, // <--- The "Unread" flag
       };
 
-      return update(ref(rtdb), updates);
+      return update(ref(rtdb, "/"), updates);
     },
     [roomId, myUid, sender, otherUser],
   );
