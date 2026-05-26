@@ -45,7 +45,9 @@ export default function MessagesScreen() {
     reset,
     isLoading: chatsLoading,
   } = useMessageInbox(uid || "");
+
   const { data: likesSent, isLoading: sentLoading } = useLikeSent(uid || "");
+
   const { data: likesReceived, isLoading: recLoading } = useLikeReceived(
     uid || "",
     tier,
@@ -57,24 +59,6 @@ export default function MessagesScreen() {
   );
   const flatListRef = useRef<FlatList>(null);
 
-  // const { currentData, isLoadingState } = useMemo(() => {
-  //   let data: any[] = [];
-  //   let loading = false;
-
-  //   if (activeTab === "chats") {
-  //     data = chatBanners;
-  //     loading = chatsLoading;
-  //   } else if (activeTab === "sent") {
-  //     data = likesSent;
-  //     loading = sentLoading;
-  //   } else {
-  //     data = likesReceived!;
-  //     loading = recLoading;
-  //   }
-
-  //   return { currentData: data, isLoadingState: loading };
-  // }, [activeTab, chatBanners, chatsLoading]);
-  // FIX 1: Add ALL conditional arrays and load states straight into the dependency track
   const { currentData, isLoadingState } = useMemo(() => {
     let data: any[] = [];
     let loading = false;

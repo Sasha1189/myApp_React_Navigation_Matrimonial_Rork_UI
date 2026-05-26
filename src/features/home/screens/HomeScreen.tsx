@@ -13,20 +13,20 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const uid = user?.uid as string;
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const navigation = useAppNavigation();
   //  usePreventScreenCapture();
 
+  // 🎯 Check if the logged-in user possesses a structurally valid gender setting
+  const isGenderReady =
+    user?.displayName === "Male" || user?.displayName === "Female";
+
   useEffect(() => {
-    if (
-      user &&
-      user?.displayName !== "Male" &&
-      user?.displayName !== "Female" &&
-      !isUpdating
-    ) {
+    if (user && !isGenderReady) {
       setShowModal(true);
+    } else {
+      setShowModal(false);
     }
-  }, [user, isUpdating]);
+  }, [user, isGenderReady]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
@@ -37,11 +37,24 @@ export default function HomeScreen() {
     return unsubscribe;
   }, [navigation, showModal]);
 
-  const feed = useActiveFeed(uid!);
+  const feed = useActiveFeed(isGenderReady ? uid : "");
 
   const { profiles, isLoading } = feed;
 
-  if (!theme) return null;
+  if (!isGenderReady) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <StatusBar
+          translucent={false}
+          backgroundColor={theme.colors.background}
+          barStyle="light-content"
+        />
+        <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
+        {/* You can optionally add a clean logo or an background brand wallpaper component frame here */}
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <StatusBar
@@ -49,11 +62,7 @@ export default function HomeScreen() {
         backgroundColor={theme.colors.background}
         barStyle="light-content"
       />
-      <GenderModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        setIsUpdating={setIsUpdating}
-      />
+      <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
       <VerticalSwipeList
         profiles={profiles}
         isLoading={isLoading}

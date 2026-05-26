@@ -47,49 +47,73 @@ export const useSettingsActions = () => {
     const url = `https://wa.me/${cleanNumber}?text=${text}`;
 
     try {
-      const canOpen = await Linking.canOpenURL(url);
-      if (canOpen) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert(
-          t("alerts.error"),
-          t("alerts.whatsappMissing", {
-            defaultValue: "WhatsApp is not installed on this device.",
-          }),
-        );
-      }
+      await Linking.openURL(url);
     } catch (error) {
+      Alert.alert(
+        t("alerts.error"),
+        t("alerts.whatsappMissing", {
+          defaultValue: "WhatsApp is not installed on this device.",
+        }),
+      );
       console.error("WhatsApp redirection failed:", error);
     }
   };
 
   const handleLogout = () => {
+    console.log("Logout trigger initialized - Displaying Alert Box");
+
     Alert.alert(t("settings.logoutTitle"), t("settings.logoutConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
       {
         text: t("settings.logout"),
         style: "destructive",
         onPress: async () => {
+          console.log("User confirmed logout process execution");
           setIsProcessing(true);
           try {
             const currentUser = auth.currentUser;
-            if (currentUser) {
-              const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
-              await update(statusRef, {
-                state: "offline",
-                lastChanged: serverTimestamp(),
-              });
-              keepSynced(ref(rtdb, `inbox/${currentUser.uid}`), false);
+            // if (currentUser) {
+            //   console.log(
+            //     "Disconnecting status loop tracks for UID:",
+            //     currentUser.uid,
+            //   );
+            //   const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
+            //   await update(statusRef, {
+            //     state: "offline",
+            //     lastChanged: serverTimestamp(),
+            //   });
+            //   keepSynced(ref(rtdb, `inbox/${currentUser.uid}`), false);
+            // }
+
+            console.log("Purging MMKV Cache Containers");
+            try {
+              await clearCacheOnLogout();
+            } catch (cacheError) {
+              console.error(
+                "Cache purge failed but continuing logout anyway:",
+                cacheError,
+              );
             }
 
+            console.log("Invoking Native Firebase SignOut");
+            // 🎯 STEP 1: Process authentication signout first while connection is alive
             await signOut(auth);
 
-            await clearCacheOnLogout();
-
+            console.log("Resetting Auth Context State to Null");
+            // 🎯 STEP 2: Clear local application variables
             setUser(null);
 
-            goOffline(rtdb);
+            console.log("Shutting down RTDB listener socket threads");
+            // 🎯 STEP 3: Safe to cut database connections now that auth is settled
+            try {
+              goOffline(rtdb);
+            } catch (rtdbError) {
+              console.error("Socket shutdown warning:", rtdbError);
+            }
+
+            console.log("Logout routine finished successfully.");
           } catch (error) {
+            console.error("CRITICAL: Logout pipeline crashed:", error);
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {
             setIsProcessing(false);

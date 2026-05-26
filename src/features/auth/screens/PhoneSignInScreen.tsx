@@ -109,7 +109,7 @@ export default function PhoneSignInScreen() {
         {/* ================= SECTION 1: TOP IMAGE ================= */}
         <View style={styles.carouselWrapper}>
           <Image
-            source={require("../../../../assets/images/m1.png")}
+            source={require("../../../../assets/images/m1.webp")}
             style={styles.heroImage}
             contentFit="scale-down"
           />
@@ -149,7 +149,6 @@ export default function PhoneSignInScreen() {
         </View>
 
         {/* ================= SECTION 2: WHITE SHEET BLOCK ================= */}
-        {/* 🔹 Fixed Keyboard avoiding layout configuration wrapper */}
         <KeyboardAvoidingView style={styles.sheetContainer}>
           <View style={styles.sheetInnerContent}>
             <View style={styles.indicatorBarContainer}>
@@ -301,9 +300,9 @@ export default function PhoneSignInScreen() {
                       styles.checkboxLabel,
                       {
                         textDecorationLine: "underline",
-                        marginLeft: 12, // ↔️ Pushes label away from checkbox box
-                        includeFontPadding: false, // 🛠️ Prevents hidden font padding issues on Android
-                        textAlignVertical: "center", // 🎯 Aligns text baseline uniformly on Android
+                        marginLeft: 12,
+                        includeFontPadding: false,
+                        textAlignVertical: "center",
                       },
                     ]}
                     onPress={() =>

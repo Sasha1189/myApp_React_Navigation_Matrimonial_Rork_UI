@@ -6,7 +6,6 @@ export interface CreateUserPayload {
   uid: string;
   phoneNumber: string;
   displayName: string;
-  activeDeviceId: string;
 }
 
 export async function createUserOnBackend(payload: CreateUserPayload) {

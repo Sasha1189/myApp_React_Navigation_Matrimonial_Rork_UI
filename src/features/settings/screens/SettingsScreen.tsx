@@ -109,7 +109,10 @@ export default function SettingsScreen() {
               title={t("settings.terms")}
               subtitle={t("settings.termsDesc")}
               onPress={() =>
-                openLink("https://sasha1189.github.io/youva-Lonari/", "Terms")
+                openLink(
+                  "https://sasha1189.github.io/youva-Lonari/terms",
+                  "Terms",
+                )
               }
             />
             <View style={styles.divider} />
@@ -118,7 +121,10 @@ export default function SettingsScreen() {
               title={t("settings.privacy")}
               subtitle={t("settings.privacyDesc")}
               onPress={() =>
-                openLink("https://sasha1189.github.io/youva-Lonari/", "Privacy")
+                openLink(
+                  "https://sasha1189.github.io/youva-Lonari/privacy",
+                  "Privacy",
+                )
               }
             />
           </View>

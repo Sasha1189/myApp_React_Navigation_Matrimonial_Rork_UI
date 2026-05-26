@@ -24,7 +24,6 @@ import { setDBDeviceIdCache } from "../../../cache/cacheConfig";
 interface GenderModalProps {
   visible: boolean;
   onClose: () => void;
-  setIsUpdating: (updating: boolean) => void;
 }
 type Gender = Profile["gender"];
 interface FirebaseUserLike {
@@ -33,11 +32,7 @@ interface FirebaseUserLike {
   displayName?: string | null;
 }
 
-const GenderModal: React.FC<GenderModalProps> = ({
-  visible,
-  onClose,
-  setIsUpdating,
-}) => {
+export default function GenderModal({ visible, onClose }: GenderModalProps) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
@@ -48,16 +43,17 @@ const GenderModal: React.FC<GenderModalProps> = ({
   const { t } = useTranslation();
 
   const scaleValue = useRef(new Animated.Value(1)).current;
+
   const onPressIn = () => {
     Animated.spring(scaleValue, {
-      toValue: 0.95, // Shrink to 95%
+      toValue: 0.95,
       useNativeDriver: true,
     }).start();
   };
 
   const onPressOut = () => {
     Animated.spring(scaleValue, {
-      toValue: 1, // Back to 100%
+      toValue: 1,
       useNativeDriver: true,
     }).start();
   };
@@ -67,35 +63,17 @@ const GenderModal: React.FC<GenderModalProps> = ({
   const createUser = async (
     firebaseUser: FirebaseUserLike | null,
   ): Promise<void> => {
-    try {
-      if (firebaseUser) {
-        let deviceId = await getUniqueId();
-
-        // 🛡️ GOOGLE REVIEWER BYPASS: Save a static string instead of actual dynamic device IDs
-        const googleTestNumbers = ["+919999991111", "+919999992222"];
-        if (
-          firebaseUser.phoneNumber &&
-          googleTestNumbers.includes(firebaseUser.phoneNumber)
-        ) {
-          deviceId = "GOOGLE_TEST_DEVICE_ID_STATIC";
-        }
-
-        await createUserOnBackend({
-          uid: firebaseUser.uid,
-          phoneNumber: firebaseUser?.phoneNumber!,
-          displayName: firebaseUser?.displayName!,
-          activeDeviceId: deviceId || "",
-        });
-
-        setDBDeviceIdCache(deviceId || "");
-      }
-    } catch (error) {
-      console.error("Error creating user in backend:", error);
-    }
+    if (!firebaseUser) return;
+    await createUserOnBackend({
+      uid: firebaseUser.uid,
+      phoneNumber: firebaseUser?.phoneNumber || "",
+      displayName: firebaseUser?.displayName || "",
+    });
   };
 
   const updateFirebaseUser = async (): Promise<void> => {
     const currentUser = auth.currentUser;
+
     if (!gender) {
       Alert.alert(
         t("genderModal.selectGender"),
@@ -106,34 +84,41 @@ const GenderModal: React.FC<GenderModalProps> = ({
 
     setLoading(true);
     setRetry(false);
-    setIsUpdating(true);
+
     try {
       if (currentUser) {
+        // 1. Update gender locally in Firebase Authentication
         await updateProfile(currentUser, {
           displayName: gender,
         });
 
+        // 2. Refresh the native user token session parameters
         await reload(currentUser);
-
         const updatedUser = auth.currentUser;
-        setUser(updatedUser);
 
-        await createUser(updatedUser);
+        if (updatedUser) {
+          // 3. Await database registration backend response
+          await createUser(updatedUser);
 
-        onClose();
+          // 4. Update the Auth Context to broadcast completion state to the app
+          setUser(updatedUser);
 
-        Alert.alert(t("genderModal.done"), t("genderModal.successMsg"));
+          // 5. Safely close the modal now that everything is synchronized
+          onClose();
+          Alert.alert(t("genderModal.done"), t("genderModal.successMsg"));
+        }
       }
     } catch (error) {
-      console.error("Update failed:", error);
+      console.error("Synchronized registration workflow broke:", error);
       setRetry(true);
       Alert.alert(t("common.error"), t("genderModal.updateError"));
     } finally {
       setLoading(false);
-      setIsUpdating(false);
     }
   };
+
   if (!theme) return null;
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalBackdrop}>
@@ -188,9 +173,7 @@ const GenderModal: React.FC<GenderModalProps> = ({
       </View>
     </Modal>
   );
-};
-
-export default GenderModal;
+}
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({

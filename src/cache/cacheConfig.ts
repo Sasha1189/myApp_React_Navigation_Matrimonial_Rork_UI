@@ -130,18 +130,7 @@ export const BlocksCache = {
   },
 };
 
-// 5. Logout Utility
-export async function clearCacheOnLogout() {
-  storage.clearAll();
-  try {
-    await firestore.clearPersistence();
-    console.log("✅ Firestore local cache wiped.");
-  } catch (e) {
-    console.error("❌ Firestore cache clear failed:", e);
-  }
-}
-
-// 6. Device ID Cache (for Single Device Enforcement)..get set functions here for better encapsulation
+// 5. Device ID Cache (for Single Device Enforcement)..get set functions here for better encapsulation
 const DEVICE_ID_KEY = "device_id";
 
 export const getDBDeviceIdCache = (): string => {
@@ -151,3 +140,26 @@ export const getDBDeviceIdCache = (): string => {
 export const setDBDeviceIdCache = (deviceId: string) => {
   storage.set(DEVICE_ID_KEY, deviceId);
 };
+
+// 6. Logout Utility
+export async function clearCacheOnLogout() {
+  storage.clearAll();
+  try {
+    await firestore.terminate();
+    console.log("✅ Firestore connection terminated.");
+
+    await firestore.clearPersistence();
+    console.log("✅ Firestore local cache wiped.");
+  } catch (e) {
+    console.error("❌ Firestore cache clear failed, but proceeding", e);
+  }
+}
+
+// '❌ Firestore cache clear failed:', [Error: [firestore / failed - precondition] Operation was
+// rejected because the system is not in a state required for the operation's execution. Ensure
+// your query has been indexed via the Firebase console.]
+
+// This method is deprecated(as well as all React Native Firebase namespaced API) and will be removed
+//   in the next major release as part of move to match Firebase Web modular SDK API.Please see migration
+//   guide for more details: https://rnfirebase.io/migrating-to-v22. Method called was `clearPersistence`.
+//   Please use `clearIndexedDbPersistence()` instead.
