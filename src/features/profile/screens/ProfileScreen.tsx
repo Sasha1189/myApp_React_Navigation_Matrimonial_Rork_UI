@@ -31,7 +31,7 @@ import { useProfileStats } from "../hooks/useProfileStats";
 export default function ProfileScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { user, profile } = useAuth();
+  const { user, myProfile } = useAuth();
   const { t } = useTranslation();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -54,7 +54,9 @@ export default function ProfileScreen({ navigation }: any) {
       icon: Eye,
       label: t("profile.viewPreview"),
       onPress: () =>
-        profile ? navigation.navigate("Details", { profile }) : null,
+        myProfile
+          ? navigation.navigate("Details", { profile: myProfile })
+          : null,
     },
     {
       icon: Camera,
@@ -80,13 +82,13 @@ export default function ProfileScreen({ navigation }: any) {
 
   // Calculate Progress for Circle
   const completionPercent = useMemo(() => {
-    if (!profile) return 0;
-    const filled = ALL_PROFILE_FIELDS.filter((key) => !!profile[key]).length;
+    if (!myProfile) return 0;
+    const filled = ALL_PROFILE_FIELDS.filter((key) => !!myProfile[key]).length;
     return (filled / ALL_PROFILE_FIELDS.length) * 100;
-  }, [profile]);
+  }, [myProfile]);
 
-  const age = profile?.dateOfBirth
-    ? formatDOB(profile.dateOfBirth, "age")
+  const age = myProfile?.dateOfBirth
+    ? formatDOB(myProfile.dateOfBirth, "age")
     : "18";
 
   return (
@@ -122,10 +124,10 @@ export default function ProfileScreen({ navigation }: any) {
           </Svg>
           <Image
             source={
-              profile?.photos?.[0]?.downloadURL
-                ? { uri: profile.photos[0].downloadURL }
-                : profile?.photos?.[0]?.localUrl
-                  ? { uri: profile.photos[0].localUrl }
+              myProfile?.photos?.[0]?.downloadURL
+                ? { uri: myProfile.photos[0].downloadURL }
+                : myProfile?.photos?.[0]?.localUrl
+                  ? { uri: myProfile.photos[0].localUrl }
                   : require("../../../../assets/images/profile.webp")
             }
             placeholder={require("../../../../assets/images/profile.webp")}
@@ -149,7 +151,7 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
         <Text style={styles.nameText}>
-          {profile?.fullName || "My Name"}, {age}
+          {myProfile?.fullName || "My Name"}, {age}
         </Text>
         <Text style={styles.completionText}>
           {t("profile.completion", { percent: Math.round(completionPercent) })}

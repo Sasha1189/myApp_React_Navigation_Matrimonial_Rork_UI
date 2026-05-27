@@ -28,7 +28,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export default function EditProfileScreen() {
-  const { profile } = useAuth();
+  const { myProfile } = useAuth();
   const { t } = useTranslation();
   const navigation = useAppNavigation();
 
@@ -41,7 +41,7 @@ export default function EditProfileScreen() {
         <FormSection
           title={t(`details.sections.${item.id}`)}
           icon={ICON_MAP[item.id]}
-          data={profile}
+          data={myProfile}
           fields={item.fields}
           onPress={() => navigation.navigate(item.screen)}
         />

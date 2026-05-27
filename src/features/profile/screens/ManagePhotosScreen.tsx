@@ -16,7 +16,7 @@ export default function ManagePhotosScreen() {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
 
-  const { profile } = useAuth();
+  const { myProfile } = useAuth();
 
   const {
     photos,
@@ -29,7 +29,7 @@ export default function ManagePhotosScreen() {
     deletePhoto,
     setPrimary,
     uploadPhotos,
-  } = usePhotoManager(profile);
+  } = usePhotoManager(myProfile);
 
   // 2. Create a Guarded Upload Function
   const handleSavePress = () => {

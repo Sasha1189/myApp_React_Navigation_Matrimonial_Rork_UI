@@ -11,11 +11,17 @@ export const toggleLike = async (
   myProfile: { myUid: string; name: string; photo: string },
   otherUser: { uid: string; name: string; photo: string },
 ) => {
-  // 1. Check Layer 1 (IDs) first - 1000 item safety
+  console.log(
+    `Toggling like for myprofile uid: ${myProfile.myUid} and myname: ${myProfile.name} myphoto: ${myProfile.photo}`,
+  );
+  console.log("--------------------------------");
+  console.log(
+    `Toggling like for otherUser uid: ${otherUser.uid} and otherUser name: ${otherUser.name} otherUser photo: ${otherUser.photo}`,
+  );
+
   const likedIds = LikesCache.getIds();
   let isCurrentlyLiked = likedIds.includes(otherUser.uid);
 
-  // 2. Network Fallback (Only if not in 1000-item index)
   if (!isCurrentlyLiked) {
     const snap = await get(
       ref(rtdb, `likesSent/${myProfile.myUid}/${otherUser.uid}`),
@@ -54,7 +60,7 @@ export const toggleLike = async (
   }
 
   try {
-    return await update(ref(rtdb), updates);
+    return await update(ref(rtdb, "/"), updates);
   } catch (err) {
     console.log("error:", err);
     throw err;

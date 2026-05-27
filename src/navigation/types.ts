@@ -11,7 +11,8 @@ export type RootStackParamList = {
 
 export type AuthStackParamList = {
   Landing: undefined;
-  PhoneSignIn: undefined;
+  // PhoneSignIn: undefined;
+  EmailSignIn: undefined;
   Splash: undefined;
   WebView: { url: string; title?: string };
 };

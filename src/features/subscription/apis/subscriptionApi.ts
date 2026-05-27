@@ -4,7 +4,7 @@ import { api } from "../../../services/api"; // Adjust based on your actual path
 export interface SubscriptionResponse {
   success: boolean;
   message: string;
-  newTier: "trial" | "basic" | "premium";
+  newTier: "basic" | "premium";
 }
 
 export async function apiSubscribe(payload: {

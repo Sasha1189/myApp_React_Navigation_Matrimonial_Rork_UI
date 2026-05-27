@@ -12,12 +12,12 @@ export function useButtonActions(profile: Profile | undefined) {
 
   const [isLiking, setIsLiking] = useState(false);
 
-  const { profile: myProfile, tier } = useAuth();
+  const { user, myProfile, tier } = useAuth();
 
   const handleActionBtnTap = async (
     action: "like" | "message" | "profileDetails",
   ) => {
-    if (!profile || !myProfile) return;
+    if (!profile?.uid) return;
 
     const isRestricted = tier === "none";
 
@@ -33,24 +33,38 @@ export function useButtonActions(profile: Profile | undefined) {
     }
 
     if (action === "message") {
+      if (!myProfile?.uid) {
+        Alert.alert(
+          "Complete Your Profile",
+          "Please add your name and photo to use this feature.",
+        );
+        return;
+      }
       try {
-        const roomId = [myProfile.uid, profile.uid].sort().join("_");
-        // 2. Navigate to Chat with all necessary RTDB context
-        navigation.navigate("Chat", {
+        const roomId = [user?.uid, profile.uid].sort().join("_");
+        const navigationPayload = {
           roomId,
-          uid: myProfile.uid,
+          uid: user?.uid as string,
           otherUser: {
             uid: profile.uid,
-            name: profile.fullName,
+            name: profile.fullName || "User",
             photo: profile.thumbnail || "",
           },
-        });
+        };
+        navigation.navigate("Chat", navigationPayload);
       } catch (err) {
         console.error("Failed to start chat:", err);
       }
     }
 
     if (action === "like") {
+      if (!myProfile?.uid) {
+        Alert.alert(
+          "Complete Your Profile",
+          "Please add your name and photo to use this feature.",
+        );
+        return;
+      }
       if (isLiking) return;
       setIsLiking(true);
       try {
@@ -58,7 +72,7 @@ export function useButtonActions(profile: Profile | undefined) {
           {
             myUid: myProfile.uid,
             name: myProfile.fullName,
-            photo: myProfile.thumbnail!,
+            photo: myProfile.thumbnail as string,
           },
           {
             uid: profile.uid,

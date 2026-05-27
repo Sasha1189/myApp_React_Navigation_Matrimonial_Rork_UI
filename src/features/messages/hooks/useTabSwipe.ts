@@ -40,10 +40,6 @@ export function useTabSwipe(
         const active = currentTabRef.current;
         const currentIndex = tabs.indexOf(active);
 
-        // LOGIC CHECK:
-        // dx < -60 (Swipe Right to Left) -> Move Forward (Next Tab)
-        // dx > 60  (Swipe Left to Right) -> Move Backward (Prev Tab)
-
         if (dx < -60) {
           // USER SWIPED LEFT (Move to next tab)
           if (active === "chats") triggerTabChange("sent");

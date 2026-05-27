@@ -13,23 +13,23 @@ import { useTranslation } from "react-i18next";
 import InputField from "../form/InputField";
 
 export default function EditFamilyDetailsScreen({ navigation }: any) {
-  const { profile, updateProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useAuth();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
   const config = SECTION_CONFIG.find((s) => s.id === "family")!;
 
   const { control } = useSectionEditor<Profile>(
-    profile as Profile,
+    myProfile as Profile,
     config.fields,
-    updateProfile,
+    updateMyProfile,
     navigation,
     theme,
     config.title,
   );
 
   const getLockState = (name: keyof Profile) =>
-    isFieldLocked(profile as Profile, name);
+    isFieldLocked(myProfile as Profile, name);
 
   return (
     <ScrollView

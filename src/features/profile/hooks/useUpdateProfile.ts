@@ -1,23 +1,26 @@
 import { storage } from "../../../cache/cacheConfig";
 import { Profile } from "../../../types/profile";
 import { apiUpdateProfile } from "../api/profileApi";
-import { useAuth } from "../../../context/AuthContext";
 
 const PROFILE_CACHE_KEY = "self_profile_cache";
 
 export const useUpdateProfile = (
   user: any,
-  profile: Profile,
-  setProfile: (p: Profile) => void,
+  myProfile: Profile,
+  setMyProfile: (p: Profile) => void,
   tier: string,
 ) => {
   return async (newData: Partial<Profile>) => {
-    const gender = profile?.gender || user?.displayName;
+    const gender = myProfile?.gender || user?.displayName;
 
     if (!user?.uid || !gender) return;
 
     const isPaidUser = tier === "basic" || tier === "premium";
-    const updatedProfile = { ...profile, ...newData };
+    const updatedProfile: Profile = {
+      ...myProfile,
+      ...newData,
+      uid: user.uid,
+    };
 
     try {
       if (isPaidUser) {
@@ -28,7 +31,7 @@ export const useUpdateProfile = (
         });
       }
       // 2. Sync Local State & MMKV
-      setProfile(updatedProfile);
+      setMyProfile(updatedProfile);
       storage.set(PROFILE_CACHE_KEY, JSON.stringify(updatedProfile));
     } catch (error) {
       console.error("❌ Update failed:", error);

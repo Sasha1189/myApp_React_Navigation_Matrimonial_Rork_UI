@@ -5,17 +5,21 @@ import { getIdToken } from "@/config/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { apiSubscribe } from "../apis/subscriptionApi";
 import { useTranslation } from "react-i18next";
+import { storage } from "@/cache/cacheConfig";
+import { apiUpdateProfile } from "@/features/profile/api/profileApi";
+import { useAppNavigation } from "@/navigation/hooks";
 
 const SKUS = ["basic_membership_1y", "premium_membership_1y"];
+const PROFILE_CACHE_KEY = "self_profile_cache";
 
 export const useSubscription = () => {
   const { user, tier, setTier } = useAuth();
   const { t } = useTranslation();
-
   const [selectedPlanId, setSelectedPlanId] = useState<string>(
     tier && tier !== "none" ? tier : "",
   );
   const [isProcessing, setIsProcessing] = useState(false);
+  const navigation = useAppNavigation();
 
   const {
     connected,
@@ -25,6 +29,7 @@ export const useSubscription = () => {
     finishTransaction,
   } = useIAP({
     onPurchaseSuccess: async (purchase: Purchase) => {
+      setIsProcessing(true);
       try {
         const receipt = purchase.purchaseToken;
         const result = await apiSubscribe({
@@ -40,12 +45,45 @@ export const useSubscription = () => {
 
         if (user) await getIdToken(user, true);
         setTier(result.newTier);
+
+        // STEP 4: ISOLATED POST-PAYMENT CLOUD SYNC
+        if (user && result.newTier) {
+          try {
+            const cachedString = storage.getString(PROFILE_CACHE_KEY);
+            if (cachedString) {
+              const currentLocalProfile = JSON.parse(cachedString);
+
+              const completeCloudPayload = {
+                ...currentLocalProfile,
+                uid: user?.uid,
+                gender: user?.displayName,
+                tier: result.newTier,
+              };
+
+              await apiUpdateProfile(completeCloudPayload);
+              storage.set(
+                PROFILE_CACHE_KEY,
+                JSON.stringify(completeCloudPayload),
+              );
+              console.log(
+                "🚀 [POST-PAYMENT SYNC]: Profile committed to cloud database tables.",
+              );
+            }
+          } catch (syncErr) {
+            // 🟢 SHIELD CATCH: If profile sync drops out, we catch it here so it NEVER hangs the UI!
+            console.error(
+              "❌ [POST-PAYMENT SYNC ERROR]: Non-fatal profile upload error caught safely:",
+              syncErr,
+            );
+          }
+        }
         Alert.alert(t("common.success"), t("subscription.activated"));
       } catch (error) {
         console.error("[IAP] Verification Error:", error);
         Alert.alert(t("common.error"), t("subscription.verifyError"));
       } finally {
         setIsProcessing(false);
+        navigation.navigate("Tabs" as any);
       }
     },
     onPurchaseError: (error) => {
@@ -58,7 +96,6 @@ export const useSubscription = () => {
 
   useEffect(() => {
     if (connected) {
-      // Corrected to 'in-app' per official v14.7 docs
       fetchProducts({ skus: SKUS, type: "in-app" });
     }
   }, [connected]);
@@ -78,29 +115,6 @@ export const useSubscription = () => {
 
     const planKey = selectedPlanId.toLowerCase();
 
-    // --- CASE 1: FREE TRIAL (Internal Logic) ---
-    // if (planKey === "trial") {
-    //   try {
-    //     // No Google Play involvement. Just tell the backend to grant the trial.
-    //     const result = await apiSubscribe({
-    //       planId: "trial",
-    //       purchaseToken: "",
-    //       packageName: "com.sasha.lonariyouvaconnect",
-    //       method: "internal_free",
-    //     });
-
-    //     await getIdToken(user, true);
-    //     setTier(result.newTier);
-    //     Alert.alert(t("common.success"), t("subscription.activated"));
-    //   } catch (error) {
-    //     Alert.alert(t("common.error"), "Could not activate trial.");
-    //   } finally {
-    //     setIsProcessing(false);
-    //   }
-    //   return; // Exit here
-    // }
-
-    // --- CASE 2: PAID PLANS (Google Play Logic) ---
     const targetSku = PLAN_TO_SKU[planKey];
     const product = products.find((p) => p.id === targetSku);
 
@@ -118,7 +132,6 @@ export const useSubscription = () => {
           apple: { sku: targetSku },
         },
       });
-      // Logic continues in onPurchaseSuccess listener
     } catch (error) {
       setIsProcessing(false);
       console.error("[IAP] Request Error:", error);

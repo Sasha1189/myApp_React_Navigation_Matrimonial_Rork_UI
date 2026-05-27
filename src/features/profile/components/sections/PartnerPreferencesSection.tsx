@@ -31,16 +31,16 @@ import {
 } from "../form/profileOptions";
 
 export default function EditPartnerPreferencesScreen({ navigation }: any) {
-  const { profile, updateProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useAuth();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
   const config = SECTION_CONFIG.find((s) => s.id === "preferences")!;
 
   const { control } = useSectionEditor<Profile>(
-    profile as Profile,
+    myProfile as Profile,
     config.fields,
-    updateProfile,
+    updateMyProfile,
     navigation,
     theme,
     config.title,

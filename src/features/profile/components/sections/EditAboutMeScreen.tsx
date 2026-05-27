@@ -18,15 +18,15 @@ import { Profile } from "@/types/profile";
 import { useTranslation } from "react-i18next";
 
 export default function EditAboutMeScreen({ navigation }: any) {
-  const { profile, updateProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useAuth();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
   const config = SECTION_CONFIG.find((s) => s.id === "about")!;
 
   const { control } = useSectionEditor(
-    profile,
+    myProfile,
     config.fields,
-    updateProfile,
+    updateMyProfile,
     navigation,
     theme,
     config.title,
@@ -51,7 +51,7 @@ export default function EditAboutMeScreen({ navigation }: any) {
           control={control}
           name="shortBio"
           render={({ field: { onChange, value } }) => {
-            const isLocked = isFieldLocked(profile, "shortBio");
+            const isLocked = isFieldLocked(myProfile, "shortBio");
             return (
               <InputField
                 label={t("details.labels.shortBio")}
@@ -77,7 +77,7 @@ export default function EditAboutMeScreen({ navigation }: any) {
               onChangeText={onChange}
               placeholder={t("details.placeholders.aspirations")}
               multiline
-              editable={!isFieldLocked(profile as Profile, "aspirations")}
+              editable={!isFieldLocked(myProfile as Profile, "aspirations")}
               icon={Target}
             />
           )}
@@ -94,7 +94,7 @@ export default function EditAboutMeScreen({ navigation }: any) {
               onChangeText={onChange}
               placeholder={t("details.placeholders.beliefs")}
               multiline
-              editable={!isFieldLocked(profile as Profile, "beliefsValues")}
+              editable={!isFieldLocked(myProfile as Profile, "beliefsValues")}
               icon={Church}
             />
           )}
@@ -110,7 +110,7 @@ export default function EditAboutMeScreen({ navigation }: any) {
               value={value}
               onChangeText={onChange}
               placeholder={t("details.placeholders.strengths")}
-              editable={!isFieldLocked(profile as Profile, "strengths")}
+              editable={!isFieldLocked(myProfile as Profile, "strengths")}
               icon={Zap}
             />
           )}
@@ -126,7 +126,9 @@ export default function EditAboutMeScreen({ navigation }: any) {
               value={value}
               onChangeText={onChange}
               placeholder={t("details.placeholders.likes")}
-              editable={!isFieldLocked(profile as Profile, "likesDislikesText")}
+              editable={
+                !isFieldLocked(myProfile as Profile, "likesDislikesText")
+              }
               icon={Heart}
             />
           )}
@@ -142,7 +144,7 @@ export default function EditAboutMeScreen({ navigation }: any) {
               value={value}
               onChangeText={onChange}
               placeholder={t("details.placeholders.social")}
-              editable={!isFieldLocked(profile as Profile, "socialMedia")}
+              editable={!isFieldLocked(myProfile as Profile, "socialMedia")}
               icon={Link}
             />
           )}

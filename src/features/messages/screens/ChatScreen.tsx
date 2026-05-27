@@ -28,11 +28,11 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const styles = useStyles(createStyles);
 
   const { roomId, otherUser, uid } = route.params;
-  const { profile } = useAuth();
+  const { myProfile } = useAuth();
   const sender = {
     uid,
-    name: profile?.fullName || "User",
-    photo: profile?.thumbnail,
+    name: myProfile?.fullName || "User",
+    photo: myProfile?.thumbnail,
   };
   const flatListRef = useRef<FlatList>(null);
   const navigation = useAppNavigation();

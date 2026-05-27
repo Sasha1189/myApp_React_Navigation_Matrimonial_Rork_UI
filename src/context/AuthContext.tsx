@@ -34,8 +34,8 @@ interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
   authLoading: boolean;
   setUser: (user: FirebaseAuthTypes.User | null) => void;
-  profile: Profile;
-  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  myProfile: Profile;
+  updateMyProfile: (data: Partial<Profile>) => Promise<void>;
   tier: "none" | "basic" | "premium";
   setTier: (tier: "none" | "basic" | "premium") => void;
 }
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const cached = storage.getString(TIER_CACHE_KEY);
     return (cached as any) || "none";
   });
-  const [profile, setProfile] = useState<Profile>(() => {
+  const [myProfile, setMyProfile] = useState<Profile>(() => {
     const cached = storage.getString(PROFILE_CACHE_KEY);
     return cached ? JSON.parse(cached) : getDefaultProfile();
   });
@@ -62,31 +62,78 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   usePresence(user?.uid, tier, isGenderValid ? user?.displayName : undefined);
 
-  const updateProfile = useUpdateProfile(user, profile, setProfile, tier);
+  const updateMyProfile = useUpdateProfile(user, myProfile, setMyProfile, tier);
 
   //profile
   useEffect(() => {
     const syncProfile = async () => {
+      const userDisplayName = user?.displayName
+        ? user.displayName.toLowerCase()
+        : "";
+      const isGenderValid =
+        userDisplayName === "male" || userDisplayName === "female";
+
       if (!user?.uid || !isGenderValid) return;
 
       try {
+        // 🎯 STEP 1: Fast Track Cache Check
         const hasCache = storage.contains(PROFILE_CACHE_KEY);
-        if (!hasCache) {
-          const remoteData = await getProfile(
-            user?.uid,
-            user.displayName as string,
+
+        if (hasCache) {
+          console.log(
+            "📦 [Auth Context]: Profile loaded instantly from local disk cache. Skipping server fetch.",
           );
-          if (remoteData) {
-            setProfile(remoteData);
-            storage.set(PROFILE_CACHE_KEY, JSON.stringify(remoteData));
+          const cachedData = storage.getString(PROFILE_CACHE_KEY);
+          if (cachedData) {
+            setMyProfile(JSON.parse(cachedData));
           }
+          return; // 🛑 EXIT EARLY: Saves network reads on every single app boot!
+        }
+
+        // 🎯 STEP 2: Network Fetch (Only runs if local cache is completely empty)
+        console.log(
+          "🔄 [Auth Context]: Cache empty. Fetching initial profile data from server...",
+        );
+        const remoteData = await getProfile(
+          user.uid,
+          user.displayName as string,
+        );
+
+        if (remoteData) {
+          // A paid user profile was found on the server
+          const fullyInjectedProfile = { ...remoteData, uid: user.uid };
+          setMyProfile(fullyInjectedProfile);
+          storage.set(PROFILE_CACHE_KEY, JSON.stringify(fullyInjectedProfile));
+          console.log(
+            "✅ [Auth Context]: Initial paid profile fetched and cached successfully.",
+          );
+        } else {
+          console.log(
+            "🔒 [Auth Context]: No remote profile found. Seeding default local memory layout for free account.",
+          );
+
+          const freeProfileSeed = {
+            ...getDefaultProfile(),
+            uid: user.uid,
+            gender: user.displayName as any, // Syncs their chosen gender text directly
+          };
+
+          setMyProfile(freeProfileSeed);
+          storage.set(PROFILE_CACHE_KEY, JSON.stringify(freeProfileSeed));
+          console.log(
+            "✅ [Auth Context]: Local cache seeded. Remote server fetches are now locked down.",
+          );
         }
       } catch (error) {
-        console.error("Initial self profilesync failed:", error);
+        console.error(
+          "❌ [Auth Context]: Failed to fetch initial profile data:",
+          error,
+        );
       }
     };
+
     syncProfile();
-  }, [user?.uid, isGenderValid]);
+  }, [user?.uid, user?.displayName]);
 
   // 2. sync feed
   useEffect(() => {
@@ -224,13 +271,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       user,
       setUser,
-      profile,
+      myProfile,
       authLoading,
-      updateProfile,
+      updateMyProfile,
       tier,
       setTier,
     }),
-    [user, profile, authLoading, tier],
+    [user, myProfile, authLoading, tier],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

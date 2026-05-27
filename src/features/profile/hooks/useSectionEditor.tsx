@@ -11,7 +11,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { isDeepEqual } from "@/utils/deepEqual";
 import { isFieldLocked } from "../components/form/profileValidation";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/context/AuthContext";
 
 export function useSectionEditor<T extends FieldValues>(
   profile: T | any,
@@ -21,7 +20,6 @@ export function useSectionEditor<T extends FieldValues>(
   theme: any,
   title: string,
 ) {
-  const { tier } = useAuth();
   const { t } = useTranslation();
   const [isSaving, setIsSaving] = useState(false);
 

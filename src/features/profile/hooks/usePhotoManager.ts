@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
-  const { user, updateProfile, tier } = useAuth();
+  const { user, updateMyProfile, tier } = useAuth();
   const { t } = useTranslation();
   const uid = user?.uid;
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
@@ -105,7 +105,7 @@ export function usePhotoManager(profile: Profile | null) {
 
       // 4. Update Database (Firestore/RTDB)
       const cleanPhotosForDb = updated.map(({ localUrl, ...rest }) => rest);
-      await updateProfile({
+      await updateMyProfile({
         photos: cleanPhotosForDb,
         thumbnail: newRootThumbnail,
       });
@@ -139,7 +139,7 @@ export function usePhotoManager(profile: Profile | null) {
       const cleanPhotosForDb = updatedPhotos.map(
         ({ localUrl, ...rest }) => rest,
       );
-      await updateProfile({
+      await updateMyProfile({
         photos: cleanPhotosForDb,
         thumbnail: newThumbnail,
       });
@@ -165,7 +165,7 @@ export function usePhotoManager(profile: Profile | null) {
     if (!isPaid) {
       setLoading(true);
       try {
-        await updateProfile({
+        await updateMyProfile({
           photos: photos,
           thumbnail: photos.find((p) => p.isPrimary)?.localUrl || "",
         });
@@ -237,7 +237,7 @@ export function usePhotoManager(profile: Profile | null) {
         const cleanPhotosForDb = updatedPhotos.map(
           ({ localUrl, ...rest }) => rest,
         );
-        await updateProfile({
+        await updateMyProfile({
           photos: cleanPhotosForDb,
           thumbnail: rootThumbnail,
         });

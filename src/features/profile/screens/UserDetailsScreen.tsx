@@ -60,7 +60,7 @@ export default function UserDetailsScreen({ route }: any) {
   const { t } = useTranslation();
   const navigation = useAppNavigation();
   const { theme } = useAppTheme();
-  const { profile: myProfile, tier } = useAuth();
+  const { myProfile, tier } = useAuth();
   const profile = route.params?.profile;
   // usePreventScreenCapture();
 
