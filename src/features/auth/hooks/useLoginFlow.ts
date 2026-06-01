@@ -17,6 +17,8 @@ export function useLoginFlow() {
 
   const [step, setStep] = useState<"PHONE_INPUT" | "OTP_VERIFY">("PHONE_INPUT");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [otpArray, setOtpArray] = useState<string[]>(
     new Array(CODE_LENGTH).fill(""),
   );
@@ -127,6 +129,10 @@ export function useLoginFlow() {
     step,
     phoneNumber,
     setPhoneNumber,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
     otpArray,
     timer,
     isLoading,

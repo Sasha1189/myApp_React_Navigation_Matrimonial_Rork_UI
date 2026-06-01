@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Alert,
-  Linking,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   TextInput,
   Dimensions,
@@ -18,12 +17,9 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { HelpCircle, Check } from "lucide-react-native";
-import { Image } from "expo-image";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { Check, Eye, EyeOff, ArrowRight } from "lucide-react-native";
+import { AuthHeaderBanner } from "../components/AuthHeaderBanner";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLoginEmail } from "../hooks/useLoginEmail";
 import { useAuthNavigation } from "../../../navigation/hooks";
 
@@ -34,10 +30,9 @@ export default function PhoneSignInScreen() {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const [agreeTerms, setAgreeTerms] = useState(false);
   const navigation = useAuthNavigation();
+  const [securePassword, setSecurePassword] = useState(true);
 
-  // Destructure parameters directly from your simplified useLoginFlow hook
   const {
     phoneNumber,
     setPhoneNumber,
@@ -46,176 +41,163 @@ export default function PhoneSignInScreen() {
     isLoading,
     handleAuthSubmit,
     isButtonDisabled,
+    handleForgotPassword,
   } = useLoginEmail();
 
   const openLink = (url: string, title: string) => {
     navigation.navigate("WebView", { url, title });
   };
 
-  if (!theme) return null;
-
-  // Enforce both form completeness and terms agreement before enabling the submit button
-  const finalButtonDisabled = isButtonDisabled || !agreeTerms || isLoading;
+  const finalButtonDisabled = isButtonDisabled || isLoading;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        {/* ================= SECTION 1: TOP IMAGE ================= */}
-        <View style={styles.carouselWrapper}>
-          <Image
-            source={require("../../../../assets/images/m1.webp")}
-            style={styles.heroImage}
-            contentFit="scale-down"
-          />
-          <SafeAreaView style={styles.floatingHeaderContainer}>
-            <View style={styles.headerTopRow}>
-              <View style={{ width: 40 }} />
-              <TouchableOpacity
-                style={styles.helpButton}
-                activeOpacity={0.8}
-                onPress={() => {
-                  Alert.alert(
-                    t("auth.helpAlertTitle"),
-                    t("auth.helpAlertMessage"),
-                    [
-                      {
-                        text: t("auth.helpAlertCancel"),
-                        style: "cancel",
-                      },
-                      {
-                        text: t("auth.helpAlertCall"),
-                        style: "default",
-                        onPress: () => Linking.openURL("tel:8554840100"),
-                      },
-                    ],
-                  );
-                }}
-              >
-                <HelpCircle size={16} color="white" />
-                <Text style={styles.helpText}>{t("auth.help")}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.brandTitleBlock}>
-              <Text style={styles.welcomeText}>{t("auth.welcome")}</Text>
-              <Text style={styles.brandText}>{t("auth.brandName")}</Text>
-            </View>
-          </SafeAreaView>
-        </View>
+        {/* ================= SECTION 1: TOP IMAGE (Stays static at top) ================= */}
+        <AuthHeaderBanner />
 
-        {/* ================= SECTION 2: WHITE SHEET BLOCK ================= */}
+        {/* ================= SECTION 2: KEYBOARD AVOIDING WHITE SHEET BLOCK ================= */}
         <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.sheetContainer}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -40}
         >
-          <View style={styles.sheetInnerContent}>
-            {/* Unified Form Body Content */}
-            <View style={styles.bodySection}>
-              <View style={styles.formHeaderRow}>
-                <Text style={styles.formHeadline}>
-                  {t("auth.verifyTitlePhone")}
-                </Text>
-              </View>
-
-              <Text style={styles.formSubhead}>{t("auth.phoneSubhead")}</Text>
-
-              {/* 🎯 FIELD 1: MOBILE NUMBER INPUT */}
-              <View style={styles.inputFlexContainer}>
-                <Text style={styles.fieldLabel}>
-                  {t("auth.fieldLabelPhone")}
-                </Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.countryCode}>+91</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter Mobile Number"
-                    placeholderTextColor="#A8A8A8"
-                    keyboardType="number-pad"
-                    maxLength={10}
-                    value={phoneNumber}
-                    onChangeText={(val) =>
-                      setPhoneNumber(val.replace(/[^0-9]/g, ""))
-                    }
-                  />
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.sheetInnerContent}>
+              {/* Upper Content Shell */}
+              <View style={styles.bodySection}>
+                <View style={styles.formHeaderRow}>
+                  <Text style={styles.formHeadline}>
+                    {t("auth.verifyTitlePhone")}
+                  </Text>
                 </View>
-              </View>
 
-              {/* 🎯 FIELD 2: PASSWORD INPUT (Placed directly below phone number) */}
-              <View style={[styles.inputFlexContainer, { marginTop: 16 }]}>
-                <Text style={styles.fieldLabel}>
-                  {t("auth.fieldLabelPassword", "Password")}
-                </Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter Password (Min 6 characters)"
-                    placeholderTextColor="#A8A8A8"
-                    secureTextEntry={true} // Obfuscates typing for data security privacy standards
-                    value={password}
-                    onChangeText={setPassword}
-                  />
+                {/* 🎯 FIELD 1: MOBILE NUMBER INPUT */}
+                <View style={styles.inputFlexContainer}>
+                  <Text style={styles.fieldLabel}>
+                    {t("auth.verifyTitleLogin")}
+                  </Text>
+                  <View style={styles.inputWrapper}>
+                    <Text style={styles.countryCode}>+91</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Enter Mobile Number"
+                      placeholderTextColor="#A8A8A8"
+                      keyboardType="number-pad"
+                      maxLength={10}
+                      value={phoneNumber}
+                      onChangeText={(val) =>
+                        setPhoneNumber(val.replace(/[^0-9]/g, ""))
+                      }
+                    />
+                  </View>
                 </View>
-              </View>
-            </View>
 
-            {/* 🔹 Form Absolute Footer Area */}
-            <View
-              style={[
-                styles.footerSection,
-                {
-                  paddingBottom:
-                    Platform.OS === "android" ? Math.max(insets.bottom, 16) : 0,
-                },
-              ]}
-            >
-              <View style={styles.checkboxContainer}>
-                {/* Clickable Checkbox Box */}
+                {/* 🎯 FIELD 2: PASSWORD INPUT */}
+                <View style={[styles.inputFlexContainer, { marginTop: 16 }]}>
+                  <Text style={styles.fieldLabel}>
+                    {t("auth.fieldLabelPassword", "Password")}
+                  </Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={[
+                        styles.textInput,
+                        { letterSpacing: securePassword ? 4 : 0.5 },
+                      ]}
+                      placeholder="Enter Password (Min 6 characters)"
+                      placeholderTextColor="#A8A8A8"
+                      secureTextEntry={securePassword}
+                      value={password}
+                      onChangeText={setPassword}
+                    />
+                    {/* Eye Toggle Trigger Box */}
+                    <TouchableOpacity
+                      onPress={() => setSecurePassword(!securePassword)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      style={styles.eyeIconButton}
+                      activeOpacity={0.7}
+                    >
+                      {securePassword ? (
+                        <EyeOff size={20} color="#8A8A8A" />
+                      ) : (
+                        <Eye size={20} color="#1c7ed6" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {/* 🎯 LINK 3: FORGOT PASSWORD */}
                 <TouchableOpacity
-                  onPress={() => setAgreeTerms(!agreeTerms)}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.checkboxBox,
-                    agreeTerms && styles.checkboxActive,
-                  ]}
+                  onPress={() => handleForgotPassword()} // Define this function to handle recoveries
+                  activeOpacity={0.7}
+                  style={styles.forgotPasswordContainer}
                 >
-                  {agreeTerms && (
-                    <Check size={12} color="white" strokeWidth={3} />
+                  <Text style={styles.forgotPasswordText}>
+                    {t("auth.forgotPassword", "Forgot Password?")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 🔹 Lower Content Shell (Footer Button & Legal) */}
+              <View
+                style={[
+                  styles.footerSection,
+                  {
+                    paddingBottom:
+                      Platform.OS === "android"
+                        ? Math.max(insets.bottom, 16)
+                        : 16,
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.actionSubmitBtn,
+                    finalButtonDisabled && styles.actionDisabledBtn,
+                  ]}
+                  disabled={finalButtonDisabled}
+                  onPress={handleAuthSubmit}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.actionSubmitText,
+                        finalButtonDisabled && styles.actionDisabledText,
+                      ]}
+                    >
+                      {t("auth.submitLogin", "Login")}
+                    </Text>
                   )}
                 </TouchableOpacity>
-
-                {/* Direct Clickable Legal Link Text */}
-                <Text
-                  style={styles.checkboxLabel}
-                  onPress={() =>
-                    openLink("https://github.io", "Terms & Privacy")
-                  }
+                {/* 🎯 LINK 4: NEW HERE? CREATE ACCOUNT REDIRECTION */}
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("EmailSignUp")} // Swap with your active routing navigator
+                  activeOpacity={0.7}
+                  style={styles.switchAuthModeContainer}
                 >
-                  {t("auth.checkboxTerms")}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.actionSubmitBtn,
-                  finalButtonDisabled && styles.actionDisabledBtn,
-                ]}
-                disabled={finalButtonDisabled}
-                onPress={handleAuthSubmit}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text
+                  <Text style={styles.switchAuthModeText}>
+                    {t("auth.newHerePrefix")}
+                    <Text style={styles.switchAuthModeLink}>
+                      {t("auth.createAccountLink")}
+                    </Text>
+                  </Text>
+                  <View
                     style={[
-                      styles.actionSubmitText,
-                      finalButtonDisabled && styles.actionDisabledText,
+                      styles.inlineBackButton,
+                      { backgroundColor: theme.colors.primary || "#1A1A4B" },
                     ]}
                   >
-                    {t("auth.submitLogin", "Login / Sign Up")}
-                  </Text>
-                )}
-              </TouchableOpacity>
+                    <ArrowRight size={22} color="#F8F8F8" />
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
@@ -228,70 +210,31 @@ export const createStyles = (theme: AppTheme) =>
       flex: 1,
       backgroundColor: "#F2F4F7",
     },
-    carouselWrapper: {
-      width: width,
-      height: height * 0.3,
-      position: "relative",
-    },
-    heroImage: {
-      width: "100%",
-      height: "100%",
-    },
-    floatingHeaderContainer: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      paddingHorizontal: 24,
-      justifyContent: "space-between",
-      backgroundColor: "rgba(0,0,0,0.15)",
-    },
-    headerTopRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    helpButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "rgba(255,255,255,0.25)",
-      paddingHorizontal: 12,
-      paddingVertical: 5,
-      borderRadius: 14,
-      gap: 4,
-      zIndex: 999,
-    },
-    helpText: { color: "white", fontSize: 12, fontWeight: "600" },
-    brandTitleBlock: { marginBottom: 5 },
-    welcomeText: {
-      fontSize: 13,
-      color: "rgba(255,255,255,0.85)",
-      fontWeight: "500",
-    },
-    brandText: {
-      fontSize: 26,
-      fontWeight: "800",
-      color: "white",
-      marginTop: 2,
-    },
+    // 👑 FIX 1: Sheet now occupies the remaining flex space beneath the carousel safely
     sheetContainer: {
       flex: 1,
       backgroundColor: "white",
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       marginTop: -20,
+      overflow: "hidden",
     },
+
+    // 👑 FIX 2: Explicit scroll configuration to ensure proper scaling properties
+    scrollContainer: {
+      flexGrow: 1,
+    },
+
+    // 👑 FIX 3: Replaced hardcoded height restrictions with layout self-justification
     sheetInnerContent: {
       flex: 1,
       paddingHorizontal: 24,
       paddingTop: 24,
+      paddingBottom: 8,
       justifyContent: "space-between",
-      minHeight: height * 0.72,
     },
     bodySection: {
       width: "100%",
-      flex: 1,
       justifyContent: "flex-start",
     },
     formHeaderRow: {
@@ -329,11 +272,23 @@ export const createStyles = (theme: AppTheme) =>
       color: "#111",
       marginRight: 12,
     },
-    textInput: { flex: 1, fontSize: 15, fontWeight: "500", color: "#111" },
+    textInput: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: "500",
+      color: "#111",
+      letterSpacing: 2,
+    },
+    eyeIconButton: {
+      paddingLeft: 10,
+      justifyContent: "center",
+      alignItems: "center",
+    },
     footerSection: {
       justifyContent: "flex-end",
       width: "100%",
       backgroundColor: "white",
+      marginTop: 20,
     },
     checkboxContainer: {
       flexDirection: "row",
@@ -357,9 +312,9 @@ export const createStyles = (theme: AppTheme) =>
       color: "#555",
       lineHeight: 18,
       fontWeight: "500",
-      textDecorationLine: "underline",
       includeFontPadding: false,
       textAlignVertical: "center",
+      letterSpacing: 1.2,
     },
     actionSubmitBtn: {
       backgroundColor: "#1A1A4B",
@@ -371,4 +326,46 @@ export const createStyles = (theme: AppTheme) =>
     actionSubmitText: { color: "white", fontSize: 15, fontWeight: "700" },
     actionDisabledBtn: { backgroundColor: "#E4E7ED" },
     actionDisabledText: { color: "#A8ABB2" },
+    forgotPasswordContainer: {
+      alignSelf: "flex-end",
+      marginTop: 12,
+      paddingVertical: 4,
+    },
+    forgotPasswordText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: "#1c7ed6", // Highlights option text cleanly
+    },
+    switchAuthModeContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: "100%",
+      justifyContent: "center",
+      marginTop: 20,
+      marginBottom: 10,
+      paddingVertical: 8,
+    },
+    switchAuthModeText: {
+      fontSize: 14,
+      color: "#555",
+      fontWeight: "500",
+    },
+    switchAuthModeLink: {
+      color: "#1c7ed6",
+      fontWeight: "700",
+    },
+    inlineBackButton: {
+      left: 24,
+      width: 40,
+      height: 40,
+      borderRadius: 16,
+      justifyContent: "center",
+      alignItems: "center",
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 1.41,
+      zIndex: 10,
+    },
   });

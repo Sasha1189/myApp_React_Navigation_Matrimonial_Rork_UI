@@ -73,7 +73,7 @@ export default function LandingScreen() {
 
   const handleMainAction = () => {
     if (isLastSlide) {
-      navigation.navigate("PhoneSignIn");
+      navigation.navigate("EmailSignIn");
     } else {
       flatListRef.current?.scrollToIndex({
         index: activeIndex + 1,

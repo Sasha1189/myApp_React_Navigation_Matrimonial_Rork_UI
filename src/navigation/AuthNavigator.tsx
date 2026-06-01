@@ -1,8 +1,8 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import { AuthStackParamList } from "./types";
 import LandingScreen from "../features/auth/screens/LandingScreen";
-// import PhoneSignInScreen from "../features/auth/screens/PhoneSignInScreen";
 import EmailSignInScreen from "../features/auth/screens/EmailSignInScreen";
+import EmailSignUpScreen from "../features/auth/screens/EmailSignUpScreen";
 import WebViewScreen from "../features/settings/screens/WebViewScreen";
 import { useTranslation } from "react-i18next";
 
@@ -14,7 +14,7 @@ export default function AuthNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Landing" component={LandingScreen} />
       <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
-      {/* <Stack.Screen name="PhoneSignIn" component={EmailSignInScreen} /> */}
+      <Stack.Screen name="EmailSignUp" component={EmailSignUpScreen} />
       <Stack.Screen
         name="WebView"
         component={WebViewScreen}

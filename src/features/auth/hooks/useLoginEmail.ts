@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -110,6 +110,43 @@ export const useLoginEmail = () => {
     }
   };
 
+  const handleForgotPassword = () => {
+    const adminPhoneNumber = "8554840100";
+    // Generates a pre-filled WhatsApp chat string message
+    const whatsappMessage = encodeURIComponent(
+      t(
+        "auth.forgotPasswordSmsBody",
+        "Hello Admin, I forgot my password. Please help me reset it for my registered mobile number.",
+      ),
+    );
+
+    Alert.alert(
+      t("auth.forgotAlertTitle", "Reset Password"),
+      t(
+        "auth.forgotAlertMessage",
+        "Call / Whatsapp admin on 8554840100 from your registered mobile number to reset password.",
+      ),
+      [
+        {
+          text: t("auth.forgotAlertCancel", "Cancel"),
+          style: "cancel",
+        },
+        {
+          text: t("auth.forgotAlertCall", "Call"),
+          onPress: () => Linking.openURL(`tel:${adminPhoneNumber}`),
+        },
+        {
+          text: t("auth.forgotAlertWhatsapp", "WhatsApp"),
+          style: "default",
+          onPress: () =>
+            Linking.openURL(
+              `https://wa.me{adminPhoneNumber}?text=${whatsappMessage}`,
+            ),
+        },
+      ],
+      { cancelable: true },
+    );
+  };
   // Button disabled evaluation parameters
   const isButtonDisabled = phoneNumber.length !== 10 || password.length < 6;
 
@@ -122,5 +159,6 @@ export const useLoginEmail = () => {
     handleBackPress,
     handleAuthSubmit,
     isButtonDisabled,
+    handleForgotPassword,
   };
 };

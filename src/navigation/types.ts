@@ -7,12 +7,15 @@ import { Profile } from "src/types/profile";
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   App: NavigatorScreenParams<AppStackParamList>;
+  ForceOtpVerification: {
+    phoneNumber: string;
+  };
 };
 
 export type AuthStackParamList = {
   Landing: undefined;
-  // PhoneSignIn: undefined;
   EmailSignIn: undefined;
+  EmailSignUp: undefined;
   Splash: undefined;
   WebView: { url: string; title?: string };
 };

@@ -30,6 +30,7 @@ interface FirebaseUserLike {
   uid: string;
   phoneNumber?: string | null;
   displayName?: string | null;
+  email?: string | null;
 }
 
 export default function GenderModal({ visible, onClose }: GenderModalProps) {
@@ -64,6 +65,23 @@ export default function GenderModal({ visible, onClose }: GenderModalProps) {
     firebaseUser: FirebaseUserLike | null,
   ): Promise<void> => {
     if (!firebaseUser) return;
+
+    let extractedPhone = firebaseUser?.phoneNumber || "";
+
+    if (!extractedPhone && firebaseUser?.email) {
+      // Parses "+919766757697@lonariyouvaconnect.com" down to "+919766757697"
+      const emailPrefix = firebaseUser.email.split("@")[0];
+      if (emailPrefix.startsWith("+91")) {
+        extractedPhone = emailPrefix;
+      }
+    }
+
+    console.log("📝 [Gender Modal Sync]: Forwarding payload to backend:", {
+      uid: firebaseUser.uid,
+      phoneNumber: extractedPhone,
+      displayName: gender,
+    });
+
     await createUserOnBackend({
       uid: firebaseUser.uid,
       phoneNumber: firebaseUser?.phoneNumber || "",
