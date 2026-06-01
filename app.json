@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Lonari Yuva Connect",
-    "slug": "lonari-yuva-connect",
+    "slug": "myApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,7 +25,7 @@
         "com.android.vending.BILLING"
       ],
       "googleServicesFile": "./google-services.json",
-      "versionCode": 5,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F5F7FA"
@@ -62,7 +62,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "f8ae930e-8086-41e8-8634-a5fca7abb7b9"
+        "projectId": "152c286b-d86c-4710-9530-c9f34706d649"
       }
     }
   }
