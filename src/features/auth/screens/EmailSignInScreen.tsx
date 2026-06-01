@@ -17,13 +17,11 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { Check, Eye, EyeOff, ArrowRight } from "lucide-react-native";
+import { Eye, EyeOff, ArrowRight } from "lucide-react-native";
 import { AuthHeaderBanner } from "../components/AuthHeaderBanner";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLoginEmail } from "../hooks/useLoginEmail";
 import { useAuthNavigation } from "../../../navigation/hooks";
-
-const { width, height } = Dimensions.get("window");
 
 export default function PhoneSignInScreen() {
   const { theme } = useAppTheme();
