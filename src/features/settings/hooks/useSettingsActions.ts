@@ -6,6 +6,7 @@ import {
   ref,
   serverTimestamp,
   update,
+  off,
   goOffline,
   keepSynced,
 } from "@react-native-firebase/database";
@@ -70,49 +71,46 @@ export const useSettingsActions = () => {
         onPress: async () => {
           console.log("User confirmed logout process execution");
           setIsProcessing(true);
+
           try {
             const currentUser = auth.currentUser;
-            // if (currentUser) {
-            //   console.log(
-            //     "Disconnecting status loop tracks for UID:",
-            //     currentUser.uid,
-            //   );
-            //   const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
-            //   await update(statusRef, {
-            //     state: "offline",
-            //     lastChanged: serverTimestamp(),
-            //   });
-            //   keepSynced(ref(rtdb, `inbox/${currentUser.uid}`), false);
-            // }
 
-            console.log("Purging MMKV Cache Containers");
+            if (currentUser) {
+              console.log(
+                "Updating network status to offline for UID:",
+                currentUser.uid,
+              );
+              const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
+
+              // Fire-and-forget update prevents network thread hanging freezes
+              update(statusRef, {
+                state: "offline",
+                lastChanged: serverTimestamp(),
+              }).catch((err) =>
+                console.log("Background status sync skipped:", err.message),
+              );
+            }
+
+            // 👑 FIX 1: Purge application local caches and terminate DB first while session tokens are valid
+            console.log("Purging Local Application Caches safely");
             try {
               await clearCacheOnLogout();
             } catch (cacheError) {
               console.error(
-                "Cache purge failed but continuing logout anyway:",
+                "Cache purge failed but continuing cleanup chain:",
                 cacheError,
               );
             }
 
+            // 👑 FIX 2: Invoke Native Firebase SignOut second now that database links are closed safely
             console.log("Invoking Native Firebase SignOut");
-            // 🎯 STEP 1: Process authentication signout first while connection is alive
             await signOut(auth);
 
             console.log("Resetting Auth Context State to Null");
-            // 🎯 STEP 2: Clear local application variables
             setUser(null);
 
-            console.log("Shutting down RTDB listener socket threads");
-            // 🎯 STEP 3: Safe to cut database connections now that auth is settled
-            try {
-              goOffline(rtdb);
-            } catch (rtdbError) {
-              console.error("Socket shutdown warning:", rtdbError);
-            }
-
             console.log("Logout routine finished successfully.");
-          } catch (error) {
+          } catch (error: any) {
             console.error("CRITICAL: Logout pipeline crashed:", error);
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {

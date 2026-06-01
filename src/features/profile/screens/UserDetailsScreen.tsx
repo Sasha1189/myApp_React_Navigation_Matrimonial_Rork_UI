@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   ScrollView,
   View,
@@ -41,7 +41,11 @@ import {
 } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useAppNavigation } from "@/navigation/hooks";
+
+import { AppTheme } from "@/theme/theme";
+import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
+
 import { formatDOB } from "../../../utils/dateUtils";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
 import {
@@ -58,8 +62,10 @@ const { height: screenHeight } = Dimensions.get("window");
 
 export default function UserDetailsScreen({ route }: any) {
   const { t } = useTranslation();
-  const navigation = useAppNavigation();
   const { theme } = useAppTheme();
+  const styles = useStyles(createStyles);
+
+  const navigation = useAppNavigation();
   const { myProfile, tier } = useAuth();
   const profile = route.params?.profile;
   // usePreventScreenCapture();
@@ -403,57 +409,76 @@ export default function UserDetailsScreen({ route }: any) {
             )}
           </DetailSection>
         )}
+        {/* Disclaimer */}
+        <View style={styles.disclaimerCard}>
+          <ShieldAlert size={20} color={theme.colors.accent} />
+          <Text style={styles.disclaimerText}>{t("details.disclaimer")}</Text>
+        </View>
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  carouselCard: {
-    borderRadius: 20,
-    overflow: "hidden",
-    elevation: 8,
-    marginBottom: 20,
-    backgroundColor: "#fff",
-    height: screenHeight * 0.73,
-  },
-  card: {
-    borderRadius: 20,
-    overflow: "hidden",
-    elevation: 5,
-    marginBottom: 16,
-  },
-  hobbiesBox: { width: "100%", padding: 4, marginTop: 8 },
-  hobbyLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#7F8C8D",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  hobbyList: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
-  tag: {
-    backgroundColor: "#6B46C115",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 0.5,
-    borderColor: "#6B46C130",
-  },
-  tagText: { fontSize: 12, color: "#6B46C1", fontWeight: "700" },
-  upgradeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E9D8FD",
-    padding: 16,
-    borderRadius: 12,
-    width: "100%",
-    gap: 12,
-  },
-  upgradeText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6B46C1",
-  },
-});
+export const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    carouselCard: {
+      borderRadius: 20,
+      overflow: "hidden",
+      elevation: 8,
+      marginBottom: 20,
+      backgroundColor: "#fff",
+      height: screenHeight * 0.73,
+    },
+    card: {
+      borderRadius: 20,
+      overflow: "hidden",
+      elevation: 5,
+      marginBottom: 16,
+    },
+    hobbiesBox: { width: "100%", padding: 4, marginTop: 8 },
+    hobbyLabel: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: "#7F8C8D",
+      textTransform: "uppercase",
+      letterSpacing: 1,
+    },
+    hobbyList: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
+    tag: {
+      backgroundColor: "#6B46C115",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 0.5,
+      borderColor: "#6B46C130",
+    },
+    tagText: { fontSize: 12, color: "#6B46C1", fontWeight: "700" },
+    upgradeCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#E9D8FD",
+      padding: 16,
+      borderRadius: 12,
+      width: "100%",
+      gap: 12,
+    },
+    upgradeText: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#6B46C1",
+    },
+    disclaimerCard: {
+      backgroundColor: theme.colors.accent + "20",
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.lg,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    disclaimerText: {
+      flex: 1,
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.text,
+      marginLeft: theme.spacing.md,
+    },
+  });

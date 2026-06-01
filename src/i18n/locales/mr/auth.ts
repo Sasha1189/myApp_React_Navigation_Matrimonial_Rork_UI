@@ -6,6 +6,7 @@ export default {
   help: "मदत",
   welcome: "वेलकम टू",
   brandName: "लोणारी युवा कनेक्ट",
+  signUpTitlePhone: "खाते उघडा",
   verifyTitleLogin: "मोबाईल नंबरने लॉगिन करा",
   verifyTitleSignUp: "मोबाईल नंबरने SignUp करा",
   verifyTitleOtp: "मोबाईल नंबर सत्यापित करा",
@@ -37,8 +38,9 @@ export default {
   submitLogin: "लॉगिन",
   submitNext: "पुढे जा",
   submitVerifyOtp: "ओटीपी सत्यापित करा",
-  submitRegister: "नोंदवा आणि मोबाईल नंबर सत्यापित करा",
+  submitRegister: "नोंदवा",
 
   setupPass: "पासवर्ड",
   confirmPass: "पासवर्ड कन्फर्म करा",
+  accountDoesNotExist: "हे खाते अस्तित्वात नाही. कृपया प्रथम साइन अप करा.",
 };

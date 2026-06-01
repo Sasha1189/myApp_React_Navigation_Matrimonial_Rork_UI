@@ -84,8 +84,8 @@ export default function GenderModal({ visible, onClose }: GenderModalProps) {
 
     await createUserOnBackend({
       uid: firebaseUser.uid,
-      phoneNumber: firebaseUser?.phoneNumber || "",
-      displayName: firebaseUser?.displayName || "",
+      phoneNumber: extractedPhone,
+      displayName: gender,
     });
   };
 

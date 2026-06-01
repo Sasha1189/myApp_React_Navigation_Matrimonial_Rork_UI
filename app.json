@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Lonari Yuva Connect",
-    "slug": "myApp",
+    "slug": "lonari-yuva-connect",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -35,11 +35,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "152c286b-d86c-4710-9530-c9f34706d649"
-      }
-    },
     "owner": "sgherade",
     "plugins": [
       "expo-asset",
@@ -64,6 +59,11 @@
     },
     "updates": {
       "url": "https://u.expo.dev/152c286b-d86c-4710-9530-c9f34706d649"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f8ae930e-8086-41e8-8634-a5fca7abb7b9"
+      }
     }
   }
 }

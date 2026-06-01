@@ -6,6 +6,7 @@ export default {
   help: "Help",
   welcome: "Welcome to",
   brandName: "Lonari Yuva Connect",
+  signUpTitlePhone: "Create Account",
   verifyTitleLogin: "Login with Mobile Number",
   verifyTitleSignUp: "SignUp with Mobile Number",
   verifyTitleOtp: "Verify Mobile Number",
@@ -41,5 +42,6 @@ export default {
   signUpSubmit: "Sign Up",
   submitNext: "Next",
   submitVerifyOtp: "Verify & Proceed",
-  submitRegister: "Sign Up & Verify Mobile Number",
+  submitRegister: "Sign Up",
+  accountDoesNotExist: "This account does not exist. Please Sign Up first.",
 };

@@ -19,7 +19,7 @@ interface FeedStatusCardProps {
   message: string;
   onAction?: () => void;
   actionText?: string;
-  itemSize: number; // 👈 Now required so it scales perfectly with your available flatlist height
+  itemSize: number;
 }
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -48,8 +48,6 @@ export function FeedStatusCard({
           cachePolicy="disk"
           transition={200}
         />
-        {/* Matches the premium dark tint look used behind swipe texts */}
-        <View style={styles.darkOverlay} />
       </View>
 
       {/* Styled and aligned exactly like cardContent inside SwipeCard */}
@@ -66,9 +64,10 @@ export function FeedStatusCard({
               <Info size={44} color={theme.colors.primary} />
             )}
           </View>
-
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <View>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.message}>{message}</Text>
+          </View>
         </View>
 
         {onAction && (
@@ -90,6 +89,7 @@ export const createStyles = (theme: AppTheme) =>
     card: {
       // 🎯 EXACT match to SwipeCard layout skeleton boundaries
       width: screenWidth - 12 * 2,
+      height: "100%", // 👑 Ensure card fills its layout context to map percentage metrics accurately
       borderRadius: 20,
       backgroundColor: theme.colors.card,
       shadowColor: "#000",
@@ -99,6 +99,7 @@ export const createStyles = (theme: AppTheme) =>
       elevation: 10,
       overflow: "hidden",
       alignSelf: "center",
+      position: "relative",
     },
     imageContainer: {
       ...StyleSheet.absoluteFillObject,
@@ -107,44 +108,48 @@ export const createStyles = (theme: AppTheme) =>
       width: "100%",
       height: "100%",
     },
-    darkOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.55)", // Slightly deeper mask to ensure error/loading headers stand out sharp
-    },
     cardContent: {
-      // 🎯 EXACT padding and positioning matching your SwipeCard layout content bounding box
       position: "absolute",
-      bottom: 10,
+      bottom: 0, // 👑 Sit directly flush against the base edge
       left: 0,
-      right: 60, // Matches your right-hand floating actions layout padding
+      right: 0, // 👑 Open to full width for symmetrical horizontal centering alignments
+      height: "40%", // 👑 Forces content container layout to strictly consume the bottom 40% of space
       padding: 20,
+      justifyContent: "center", // 👑 Centers content blocks vertically within that 40% window pane
+      alignItems: "center", // 👑 Centers row and button blocks completely horizontally
+      backgroundColor: "rgba(0,0,0,0.4)", // Optional: soft shadow overlay layer to make text pop over background images
     },
     statusInfoWrapper: {
-      alignItems: "flex-start", // Matches your text block alignments
-      marginBottom: 15,
+      flexDirection: "row",
+      alignItems: "center", // 👑 Snaps the icon and text block to align seamlessly on a single horizontal row axis
+      justifyContent: "center", // 👑 Centers the entire combined row container horizontally
+      marginBottom: 20,
+      width: "100%",
+      gap: 12, // 👑 Unified modern flex spacing separator replacing old margin offsets
     },
     iconFit: {
-      marginBottom: 12,
+      // 👑 Removed old bottom padding bounds to maintain perfect row geometry alignment
     },
     title: {
-      fontSize: 22,
-      fontWeight: "800", // Matches your SwipeCard name styling
+      fontSize: 21,
+      fontWeight: "800",
       color: "white",
-      letterSpacing: 0.5,
-      marginBottom: 6,
+      letterSpacing: 1.5,
+      marginBottom: 3,
+      textAlign: "left", // Keep text readable inside the row profile alignment blocks
     },
     message: {
-      color: "rgba(255,255,255,0.8)", // Matches your exact swipe bio coloring
-      fontSize: 14,
-      lineHeight: 20,
-      letterSpacing: 0.3,
+      color: "rgba(255,255,255,0.9)",
+      fontSize: 13,
+      lineHeight: 18,
+      letterSpacing: 1.2,
+      textAlign: "left",
     },
     button: {
       paddingVertical: 12,
-      paddingHorizontal: 24,
-      borderRadius: 10,
-      marginTop: 5,
-      alignSelf: "flex-start",
+      paddingHorizontal: 32, // Expanded pad parameters for cleaner button presentation balances
+      borderRadius: 12,
+      alignSelf: "center", // 👑 Centers the action button horizontally inside your layout view matrix
     },
     buttonText: {
       color: "white",

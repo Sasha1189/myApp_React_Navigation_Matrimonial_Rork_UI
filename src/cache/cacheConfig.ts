@@ -1,5 +1,10 @@
 import { createMMKV } from "react-native-mmkv";
-import { firestore, get } from "@/config/firebase";
+import {
+  firestore,
+  getFirestore,
+  terminate,
+  clearIndexedDbPersistence,
+} from "@/config/firebase";
 
 // 1. Core Storage (MMKV)
 export const storage = createMMKV({
@@ -141,25 +146,31 @@ export const setDBDeviceIdCache = (deviceId: string) => {
   storage.set(DEVICE_ID_KEY, deviceId);
 };
 
-// 6. Logout Utility
 export async function clearCacheOnLogout() {
-  storage.clearAll();
   try {
-    await firestore.terminate();
-    console.log("✅ Firestore connection terminated.");
+    storage.clearAll();
+    console.log("✅ Local MMKV profile caches purged.");
+  } catch (storageError) {
+    console.error("⚠️ MMKV purge error:", storageError);
+  }
 
-    await firestore.clearPersistence();
-    console.log("✅ Firestore local cache wiped.");
+  try {
+    const firestoreInstance = getFirestore();
+
+    // 👑 FIX 3: Terminate the cache engine cleanly
+    await terminate(firestoreInstance);
+    console.log("✅ Firestore connection terminated safely.");
+
+    // 👑 OPTIONAL EXTRA PROTECTION: Clears any lingering database query files off phone disk storage
+    // to match modular guidelines and prevent layout memory leaks on next logins
+    try {
+      await clearIndexedDbPersistence(firestoreInstance);
+      console.log("✅ Firestore offline disk persistence database cleared.");
+    } catch (persistenceError) {
+      console.log("Skipping internal persistence cleanup:", persistenceError);
+    }
   } catch (e) {
     console.error("❌ Firestore cache clear failed, but proceeding", e);
+    throw e; // Pass up to the handler routine safely
   }
 }
-
-// '❌ Firestore cache clear failed:', [Error: [firestore / failed - precondition] Operation was
-// rejected because the system is not in a state required for the operation's execution. Ensure
-// your query has been indexed via the Firebase console.]
-
-// This method is deprecated(as well as all React Native Firebase namespaced API) and will be removed
-//   in the next major release as part of move to match Firebase Web modular SDK API.Please see migration
-//   guide for more details: https://rnfirebase.io/migrating-to-v22. Method called was `clearPersistence`.
-//   Please use `clearIndexedDbPersistence()` instead.

@@ -81,6 +81,9 @@ export {
   getDocsFromServer,
   arrayUnion,
   arrayRemove,
+  getFirestore,
+  terminate,
+  clearIndexedDbPersistence,
 } from "@react-native-firebase/firestore";
 
 export { getIdToken, updateProfile, reload } from "@react-native-firebase/auth";

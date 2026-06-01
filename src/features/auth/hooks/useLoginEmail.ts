@@ -3,13 +3,10 @@ import { Alert, Linking } from "react-native";
 import {
   getAuth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
 } from "@react-native-firebase/auth";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/context/AuthContext";
 
 export const useLoginEmail = () => {
-  const { setUser } = useAuth();
   const { t } = useTranslation();
   const authInstance = getAuth();
 
@@ -17,7 +14,6 @@ export const useLoginEmail = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Clear inputs and drop back to the number selection view window state
   const handleBackPress = () => {
     setPhoneNumber("");
     setPassword("");
@@ -39,68 +35,43 @@ export const useLoginEmail = () => {
     }
 
     setIsLoading(true);
-
-    // Generate our secure hidden mock email string layout format out from the telephone entry number
     const formattedEmail = `+91${phoneNumber}@lonariyuvaconnect.com`;
 
     try {
       console.log(
-        "🔄 [Auth Flow]: Running unified authentication login check...",
+        "🔄 [Auth Flow]: Running clean authentication login check...",
       );
 
-      // 1. Try a standard login profile match check first
-      const loginCredential = await signInWithEmailAndPassword(
-        authInstance,
-        formattedEmail,
-        password,
-      );
+      // 1. Straightforward login attempt using modern modular API
+      await signInWithEmailAndPassword(authInstance, formattedEmail, password);
 
-      console.log("✅ [Auth Flow]: Existing user verified. Login successful.");
-      setUser(loginCredential.user);
+      console.log("✅ [Auth Flow]: User verified. Login successful.");
     } catch (error: any) {
-      console.log(
-        "ℹ️ [Auth Flow]: SignIn rejected. Analyzing exception code:",
-        error.code,
-      );
+      console.log("ℹ️ [Auth Flow]: SignIn rejected. Code:", error.code);
 
-      // 2. If the user account does not exist yet on the server, auto-trigger registration instantly
+      // 2. Clear, distinct error routing loops
       if (
         error.code === "auth/user-not-found" ||
-        error.code === "auth/invalid-credential" ||
-        error.code === "auth/user-disabled"
+        error.code === "auth/invalid-credential"
       ) {
-        try {
-          console.log(
-            "📝 [Auth Flow]: No profile found. Creating a brand-new user record...",
-          );
-
-          const signupCredential = await createUserWithEmailAndPassword(
-            authInstance,
-            formattedEmail,
-            password,
-          );
-
-          console.log(
-            "✅ [Auth Flow]: Auto-Registration complete. Handing off to onboarding stack.",
-          );
-          setUser(signupCredential.user);
-        } catch (signupError: any) {
-          console.error(
-            "❌ [Auth Flow]: Auto-signup sequence rejected:",
-            signupError,
-          );
-          Alert.alert(
-            t("common.error"),
-            signupError.message || t("auth.signupFailed"),
-          );
-        }
-      } else if (error.code === "auth/wrong-password") {
-        // Explicitly catch incorrect passwords so active accounts are shielded from overwrites
+        // Account does not exist in Firebase Console
         Alert.alert(
           t("common.error"),
-          t("auth.incorrectPassword", {
-            defaultValue: "Incorrect password. Please try again.",
-          }),
+          t(
+            "auth.accountDoesNotExist",
+            "This account does not exist. Please Sign Up first.",
+          ),
+        );
+      } else if (error.code === "auth/wrong-password") {
+        // Password mismatch protection check
+        Alert.alert(
+          t("common.error"),
+          t("auth.incorrectPassword", "Incorrect password. Please try again."),
+        );
+      } else if (error.code === "auth/user-disabled") {
+        Alert.alert(
+          t("common.error"),
+          t("auth.userDisabled", "This account has been disabled."),
         );
       } else {
         Alert.alert(t("common.error"), error.message || t("auth.failed"));
@@ -112,7 +83,6 @@ export const useLoginEmail = () => {
 
   const handleForgotPassword = () => {
     const adminPhoneNumber = "8554840100";
-    // Generates a pre-filled WhatsApp chat string message
     const whatsappMessage = encodeURIComponent(
       t(
         "auth.forgotPasswordSmsBody",
@@ -147,7 +117,7 @@ export const useLoginEmail = () => {
       { cancelable: true },
     );
   };
-  // Button disabled evaluation parameters
+
   const isButtonDisabled = phoneNumber.length !== 10 || password.length < 6;
 
   return {

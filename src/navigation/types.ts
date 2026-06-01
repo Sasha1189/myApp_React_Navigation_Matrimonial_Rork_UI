@@ -7,9 +7,6 @@ import { Profile } from "src/types/profile";
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   App: NavigatorScreenParams<AppStackParamList>;
-  ForceOtpVerification: {
-    phoneNumber: string;
-  };
 };
 
 export type AuthStackParamList = {

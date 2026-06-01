@@ -42,10 +42,6 @@ export default function PhoneSignInScreen() {
     handleForgotPassword,
   } = useLoginEmail();
 
-  const openLink = (url: string, title: string) => {
-    navigation.navigate("WebView", { url, title });
-  };
-
   const finalButtonDisabled = isButtonDisabled || isLoading;
 
   return (
@@ -70,14 +66,14 @@ export default function PhoneSignInScreen() {
               <View style={styles.bodySection}>
                 <View style={styles.formHeaderRow}>
                   <Text style={styles.formHeadline}>
-                    {t("auth.verifyTitlePhone")}
+                    {t("auth.verifyTitleLogin")}
                   </Text>
                 </View>
 
                 {/* 🎯 FIELD 1: MOBILE NUMBER INPUT */}
                 <View style={styles.inputFlexContainer}>
                   <Text style={styles.fieldLabel}>
-                    {t("auth.verifyTitleLogin")}
+                    {t("auth.fieldLabelPhone")}
                   </Text>
                   <View style={styles.inputWrapper}>
                     <Text style={styles.countryCode}>+91</Text>

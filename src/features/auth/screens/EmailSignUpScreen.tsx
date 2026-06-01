@@ -1,24 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   Keyboard,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
   StyleSheet,
-  Dimensions,
 } from "react-native";
-import { useRoute, RouteProp } from "@react-navigation/native";
-import { RootStackParamList } from "../../../navigation/types";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft } from "lucide-react-native";
 
 // Import your subcomponents
 import { useSignUpFlow } from "../hooks/useSignUpFlow";
@@ -26,8 +21,6 @@ import { useAuthNavigation } from "../../../navigation/hooks";
 import { AuthHeaderBanner } from "../components/AuthHeaderBanner";
 import { AuthFooterActions } from "../components/AuthFooterActions";
 import { PhoneInputStep } from "../components/PhoneInputStep";
-import { OtpVerifyStep } from "../components/OtpVerifyStep";
-import { StepIndicatorBar } from "../components/StepIndicatorBar";
 
 export default function EmailSignUpScreen() {
   const styles = useStyles(createStyles);
@@ -37,92 +30,32 @@ export default function EmailSignUpScreen() {
 
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const route =
-    useRoute<RouteProp<RootStackParamList, "ForceOtpVerification">>();
-  const initialPhone = route.params?.phoneNumber || "";
-
-  // Destructuring updated 2-step flow properties cleanly
+  // 👑 UPDATE 1: Destructured the streamlined single-step signature hooks parameters cleanly
   const {
-    step,
     phoneNumber,
     setPhoneNumber,
     password,
     setPassword,
     confirmPassword,
     setConfirmPassword,
-    otpArray,
-    timer,
     isLoading,
-    inputRefs,
-    handleSendOtp,
-    handleVerifyAndLink,
-    handleOtpChange,
-    handleOtpKeyPress,
+    handleSignUpSubmit,
     handleBackPress,
     isButtonDisabled,
-    handleInitialSignUp,
-  } = useSignUpFlow(initialPhone);
+  } = useSignUpFlow();
 
   const openLink = (url: string, title: string) => {
     navigation.navigate("WebView", { url, title });
   };
 
-  const isBackActionLocked = step === "OTP_VERIFY" && timer > 0;
-
-  // Handles hardware or swipe-back gestures locks during active OTP timers
-  useEffect(() => {
-    const unregisterBeforeRemoveListener = navigation.addListener(
-      "beforeRemove",
-      (e) => {
-        if (!isBackActionLocked) return;
-
-        e.preventDefault();
-
-        const mins = Math.floor(timer / 60);
-        const secs = timer % 60;
-        const formattedTime = `${mins}:${secs < 10 ? "0" + secs : secs}`;
-
-        Alert.alert(
-          t("auth.backLockAlertTitle"),
-          t("auth.backLockAlertMessage", { time: formattedTime }),
-          [{ text: t("auth.backLockAlertBtn"), style: "default" }],
-        );
-      },
-    );
-
-    return unregisterBeforeRemoveListener;
-  }, [navigation, isBackActionLocked, timer]);
-
-  // Handles manual top-row arrow header navigation click checks
-  const onArrowBackClick = () => {
-    if (isBackActionLocked) {
-      const mins = Math.floor(timer / 60);
-      const secs = timer % 60;
-      const formattedTime = `${mins}:${secs < 10 ? "0" + secs : secs}`;
-
-      Alert.alert(
-        t("auth.backLockAlertTitle"),
-        t("auth.backLockAlertMessage", { time: formattedTime }),
-        [{ text: t("auth.backLockAlertBtn"), style: "default" }],
-      );
-    } else {
-      handleBackPress();
-    }
-  };
-
-  // Central Router submission: Direct flow pipeline matching your two primary views
+  // 👑 UPDATE 2: Submission button state triggers your direct registration thread execution loop
   const handleAuthSubmit = () => {
-    if (step === "PHONE_INPUT") {
-      handleInitialSignUp();
-    } else if (step === "OTP_VERIFY") {
-      handleVerifyAndLink();
-    }
+    handleSignUpSubmit();
   };
 
-  const finalButtonDisabled =
-    step === "PHONE_INPUT" ? isButtonDisabled || !agreeTerms : isButtonDisabled;
+  const finalButtonDisabled = isButtonDisabled || !agreeTerms || isLoading;
 
-  // Packed properties mapping profile parameters safely down into child components
+  // Unified prop payload payload mapping cleanly down to your input layouts component
   const phoneProps = {
     phoneNumber,
     setPhoneNumber,
@@ -130,17 +63,6 @@ export default function EmailSignUpScreen() {
     setPassword,
     confirmPassword,
     setConfirmPassword,
-  };
-
-  const otpProps = {
-    phoneNumber,
-    otpArray,
-    inputRefs,
-    handleOtpChange,
-    handleOtpKeyPress,
-    handleSendOtp,
-    timer,
-    isLoading,
   };
 
   return (
@@ -164,30 +86,22 @@ export default function EmailSignUpScreen() {
               <View style={styles.bodySection}>
                 <View style={styles.formHeaderRow}>
                   <TouchableOpacity
-                    onPress={onArrowBackClick}
+                    onPress={handleBackPress}
                     style={styles.backTouchArea}
                   >
-                    {step !== "PHONE_INPUT" && (
-                      <ChevronLeft size={20} color="#111" />
-                    )}
                     <Text style={styles.formHeadline}>
-                      {step === "PHONE_INPUT" && t("auth.verifyTitleSignUp")}
-                      {step === "OTP_VERIFY" && t("auth.verifyTitleOtp")}
+                      {t("auth.signUpTitlePhone")}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* Progress bar tracking layout matches your active step context */}
-                <StepIndicatorBar step={step} />
-
-                {/* Render corresponding form components dynamically */}
-                {step === "PHONE_INPUT" && <PhoneInputStep {...phoneProps} />}
-                {step === "OTP_VERIFY" && <OtpVerifyStep {...otpProps} />}
+                {/* 👑 UPDATE 3: Displays input wrappers directly as a cohesive single screen step */}
+                <PhoneInputStep {...phoneProps} />
               </View>
 
               {/* 🔹 Form Absolute Footer Control Area */}
               <AuthFooterActions
-                step={step}
+                step="PHONE_INPUT" // Static identifier fallback mapping for structural compatibility
                 isLoading={isLoading}
                 finalButtonDisabled={finalButtonDisabled}
                 handleAuthSubmit={handleAuthSubmit}

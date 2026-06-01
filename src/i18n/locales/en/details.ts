@@ -110,4 +110,6 @@ export default {
     parents: "Select option",
   },
   upgradeText: "Upgrade needed",
+  disclaimer:
+    "Disclaimer: Profiles are based on user input and the verification of only one legal ID document. We do not perform physical background checks",
 };
