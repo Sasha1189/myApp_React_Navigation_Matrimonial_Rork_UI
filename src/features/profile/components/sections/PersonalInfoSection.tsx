@@ -24,10 +24,11 @@ import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 import { useTranslation } from "react-i18next";
+import { formatDOB } from "@/utils/dateUtils";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
-import DatePickerField, { TimePickerField } from "../form/DateTimePickers";
+import { DatePickerField, TimePickerField } from "../form/DateTimePickers";
 
 import {
   genderOptions,
@@ -57,7 +58,6 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
 
   const getLockState = (name: keyof Profile) =>
     isFieldLocked(myProfile as Profile, name);
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -71,6 +71,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
         <Controller
           control={control}
           name="fullName"
+          rules={{ required: true }}
           render={({ field: { onChange, value } }) => (
             <InputField
               label={t("details.labels.fullName")}
@@ -85,38 +86,50 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           )}
         />
 
-        {/* 2. Date of Birth */}
-        <Controller
-          control={control}
-          name="dateOfBirth"
-          render={({ field: { onChange, value } }) => (
-            <DatePickerField
-              label={t("details.labels.age")}
-              placeholder="YYYY-MM-DD"
-              value={value ? String(value) : ""}
-              onChange={onChange}
-              icon={Calendar}
-              required
-              locked={getLockState("dateOfBirth")}
-              editable={!getLockState("dateOfBirth")}
+        {/* ROW 1: DOB & Time of Birth */}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="dateOfBirth"
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <DatePickerField
+                  label={t("details.labels.age")}
+                  placeholder="YYYY-MM-DD"
+                  value={formatDOB(value, "form")}
+                  onChange={(selectedDate) => {
+                    const dateString =
+                      selectedDate instanceof Date
+                        ? selectedDate.toISOString().split("T")[0]
+                        : selectedDate;
+                    onChange(dateString);
+                  }}
+                  icon={Calendar}
+                  required
+                  locked={getLockState("dateOfBirth")}
+                  editable={!getLockState("dateOfBirth")}
+                />
+              )}
             />
-          )}
-        />
+          </View>
 
-        {/* 3. Time of Birth */}
-        <Controller
-          control={control}
-          name="timeOfBirth"
-          render={({ field: { onChange, value } }) => (
-            <TimePickerField
-              label={t("details.labels.timeOfBirth")}
-              placeholder="e.g. 06:30 AM"
-              value={value ?? ""}
-              onChange={onChange}
-              icon={Timer}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="timeOfBirth"
+              render={({ field: { onChange, value } }) => (
+                <TimePickerField
+                  label={t("details.labels.timeOfBirth")}
+                  placeholder="e.g. 06:30 AM"
+                  value={value ?? ""}
+                  onChange={onChange}
+                  icon={Timer}
+                />
+              )}
             />
-          )}
-        />
+          </View>
+        </View>
 
         {/* 4. Place of Birth */}
         <Controller
@@ -133,154 +146,146 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           )}
         />
 
-        {/* 5. Gender */}
-        {/* <Controller
-          control={control}
-          name="gender"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.gender")}
-              placeholder={t("details.labels.gender")}
-              value={value}
-              options={genderOptions}
-              onSelect={onChange}
-              icon={User}
-              required
-              locked={getLockState("gender")}
-              editable={!getLockState("gender")}
+        {/* ROW 2: Height & Weight */}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="height"
+              rules={{
+                pattern: {
+                  value: /^[0-9]{3}$/,
+                  message: t("errors.invalidHeight"),
+                },
+              }}
+              render={({ field: { onChange, value } }) => {
+                const stringValue = value
+                  ? String(value).replace(/[^0-9]/g, "")
+                  : "";
+                return (
+                  <InputField
+                    label={t("details.labels.height")}
+                    placeholder="e.g. 170cm"
+                    value={stringValue}
+                    keyboardType="numeric"
+                    maxLength={3}
+                    onChangeText={(text) => {
+                      const cleaned = text.replace(/[^0-9]/g, "");
+                      onChange(cleaned);
+                    }}
+                    icon={Ruler}
+                  />
+                );
+              }}
             />
-          )}
-        /> */}
+          </View>
 
-        {/* 6. Marital Status */}
-        <Controller
-          control={control}
-          name="maritalStatus"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.maritalStatus")}
-              placeholder={t("details.labels.maritalStatus")}
-              value={value}
-              options={maritalStatusOptions}
-              onSelect={onChange}
-              icon={HeartHandshake}
-              required
-              locked={getLockState("maritalStatus")}
-              editable={!getLockState("maritalStatus")}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="weight"
+              rules={{
+                pattern: {
+                  value: /^[0-9]{3}$/,
+                  message: t("errors.invalidHeight"),
+                },
+              }}
+              render={({ field: { onChange, value } }) => {
+                const stringValue = value
+                  ? String(value).replace(/[^0-9]/g, "")
+                  : "";
+                return (
+                  <InputField
+                    label={t("details.labels.weight")}
+                    placeholder="e.g. 70kg"
+                    value={stringValue}
+                    keyboardType="numeric"
+                    maxLength={3}
+                    onChangeText={(text) => {
+                      const cleaned = text.replace(/[^0-9]/g, "");
+                      onChange(cleaned);
+                    }}
+                    icon={Scale}
+                  />
+                );
+              }}
             />
-          )}
-        />
+          </View>
+        </View>
 
-        {/* 7. Height */}
-        <Controller
-          control={control}
-          name="height"
-          rules={{
-            pattern: {
-              value: /^[0-9]{3}$/, // 2. Only checks format IF the user types something
-              message: t("errors.invalidHeight"),
-            },
-          }}
-          render={({ field: { onChange, value } }) => {
-            const stringValue = value
-              ? String(value).replace(/[^0-9]/g, "")
-              : "";
-            return (
-              <InputField
-                label={t("details.labels.height")}
-                placeholder="e.g. 170cm"
-                value={stringValue}
-                keyboardType="numeric"
-                maxLength={3} // 🔹 Strict 3 digits
-                onChangeText={(text) => {
-                  // 🔹 Allow only numbers
-                  const cleaned = text.replace(/[^0-9]/g, "");
-                  onChange(cleaned);
-                }}
-                icon={Ruler}
-              />
-            );
-          }}
-        />
-
-        {/* 8. Weight */}
-        <Controller
-          control={control}
-          name="weight"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.weight")}
-              placeholder="e.g. 70kg"
-              value={value}
-              onChangeText={onChange}
-              icon={Scale}
+        {/* ROW 3: Body Type & Blood Group */}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="bodyType"
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.bodyType")}
+                  placeholder="Slim/Athletic..."
+                  value={value}
+                  options={bodyTypeOptions}
+                  onSelect={onChange}
+                  icon={Activity}
+                />
+              )}
             />
-          )}
-        />
+          </View>
 
-        {/* 9. Body Type */}
-        <Controller
-          control={control}
-          name="bodyType"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.bodyType")}
-              placeholder="Slim/Athletic/Average"
-              value={value}
-              options={bodyTypeOptions}
-              onSelect={onChange}
-              icon={Activity}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="bloodGroup"
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.bloodGroup")}
+                  placeholder={t("details.labels.bloodGroup")}
+                  value={value}
+                  options={bloodGroupOptions}
+                  onSelect={onChange}
+                  icon={Droplets}
+                />
+              )}
             />
-          )}
-        />
+          </View>
+        </View>
 
-        {/* 10. Blood Group */}
-        <Controller
-          control={control}
-          name="bloodGroup"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.bloodGroup")}
-              placeholder={t("details.labels.bloodGroup")}
-              value={value}
-              options={bloodGroupOptions}
-              onSelect={onChange}
-              icon={Droplets}
+        {/* ROW 4: Manglik Status & Rashi */}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="manglikStatus"
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.manglik")}
+                  placeholder="Yes/No/Partial"
+                  value={value}
+                  options={manglikOptions}
+                  onSelect={onChange}
+                  icon={Sparkles}
+                />
+              )}
             />
-          )}
-        />
+          </View>
 
-        {/* 11. Manglik Status */}
-        <Controller
-          control={control}
-          name="manglikStatus"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.manglik")}
-              placeholder="Yes/No/Partial"
-              value={value}
-              options={manglikOptions}
-              onSelect={onChange}
-              icon={Sparkles}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="rashi"
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.rashi")}
+                  placeholder={t("details.labels.rashi")}
+                  value={value}
+                  options={rashiOptions}
+                  onSelect={onChange}
+                  icon={Star}
+                />
+              )}
             />
-          )}
-        />
-
-        {/* 12. Rashi */}
-        <Controller
-          control={control}
-          name="rashi"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.rashi")}
-              placeholder={t("details.labels.rashi")}
-              value={value}
-              options={rashiOptions}
-              onSelect={onChange}
-              icon={Star}
-            />
-          )}
-        />
+          </View>
+        </View>
 
         {/* 13. Horoscope Required */}
         <Controller
@@ -294,6 +299,26 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
               options={horoscopeOptions}
               onSelect={onChange}
               icon={Zap}
+            />
+          )}
+        />
+
+        {/* 6. Marital Status */}
+        <Controller
+          control={control}
+          name="maritalStatus"
+          rules={{ required: true }}
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label={t("details.labels.maritalStatus")}
+              placeholder={t("details.labels.maritalStatus")}
+              value={value}
+              options={maritalStatusOptions}
+              onSelect={onChange}
+              icon={HeartHandshake}
+              required
+              locked={getLockState("maritalStatus")}
+              editable={!getLockState("maritalStatus")}
             />
           )}
         />

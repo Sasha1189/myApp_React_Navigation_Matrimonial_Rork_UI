@@ -11,7 +11,7 @@ export default {
   labels: {
     fullName: "Full Name",
     gender: "Gender",
-    age: "Age",
+    age: "Date of birth/Age",
     height: "Height",
     weight: "Weight",
     maritalStatus: "Marital Status",
@@ -41,7 +41,7 @@ export default {
     siblingsInfo: "Siblings Info",
     currentCity: "Current City",
     nativePlace: "Native Place",
-    mobile: "Mobile",
+    mobile: "Parent Mobile No.",
     email: "Email",
     contactPref: "Contact Preference",
     createdBy: "Created By",
@@ -109,6 +109,7 @@ export default {
     prefLocation: "Pune, Mumbai, etc.",
     parents: "Select option",
   },
+  phototip: "Tip: If photos are not visible, upload again.",
   upgradeText: "Upgrade needed",
   disclaimer:
     "Disclaimer: Profiles are based on user input and the verification of only one legal ID document. We do not perform physical background checks",

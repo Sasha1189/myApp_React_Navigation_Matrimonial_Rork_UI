@@ -36,14 +36,15 @@ export default function SearchScreen() {
   const { t } = useTranslation();
 
   // 1. Search Configuration
-  const [searchField, setSearchField] = useState("name");
+  const [searchField, setSearchField] = useState<"fullName" | "currentCity">(
+    "fullName",
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   // 2. Icon map for the header display
   const iconMap: Record<string, any> = {
-    name: User,
-    location: MapPin,
-    age: Calendar,
+    fullName: User,
+    currentCity: MapPin,
   };
 
   // 2. Actions
@@ -73,7 +74,7 @@ export default function SearchScreen() {
 
   const clearSearch = () => {
     setSearchQuery("");
-    setSearchField("name");
+    setSearchField("fullName");
     storage.set(`active_mode_${uid}`, "default");
     storage.remove(`search_field_${uid}`);
     storage.remove(`search_query_${uid}`);
@@ -121,13 +122,10 @@ export default function SearchScreen() {
             label={t("search.searchBy")}
             placeholder={t("search.placeholderSelect")}
             value={searchField.charAt(0).toUpperCase() + searchField.slice(1)}
-            options={[
-              "fullName",
-              "currentCity",
-              "highestQualification",
-              "occupation",
-            ]}
-            onSelect={(val) => setSearchField(val.toLowerCase())}
+            options={["fullName", "currentCity"]}
+            onSelect={(val) =>
+              setSearchField(val as "fullName" | "currentCity")
+            }
             icon={iconMap[searchField] || User}
           />
 

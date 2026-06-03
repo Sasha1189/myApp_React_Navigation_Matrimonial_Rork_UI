@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-// import { usePreventScreenCapture  } from "expo-screen-capture";
+import { usePreventScreenCapture } from "expo-screen-capture";
 import { View, StatusBar } from "react-native";
 import GenderModal from "../components/GenderModal";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -14,7 +14,7 @@ export default function HomeScreen() {
   const uid = user?.uid as string;
   const [showModal, setShowModal] = useState<boolean>(false);
   const navigation = useAppNavigation();
-  //  usePreventScreenCapture();
+  usePreventScreenCapture();
 
   // 🎯 Check if the logged-in user possesses a structurally valid gender setting
   const isGenderReady =

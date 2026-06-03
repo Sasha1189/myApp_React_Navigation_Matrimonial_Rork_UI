@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { Controller } from "react-hook-form";
 import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -33,123 +33,128 @@ export default function EditAboutMeScreen({ navigation }: any) {
   );
 
   return (
-    <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.background,
-        paddingBottom: theme.spacing.xxl,
-      }}
-      contentContainerStyle={{
-        padding: theme.spacing.lg,
-        paddingBottom: theme.spacing.xxl,
-      }}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0} // Accounts for default native navigation header heights
     >
-      <View style={{ padding: 20, gap: 16 }}>
-        {/* Short Bio */}
-        <Controller
-          control={control}
-          name="shortBio"
-          render={({ field: { onChange, value } }) => {
-            const isLocked = isFieldLocked(myProfile, "shortBio");
-            return (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          padding: theme.spacing.lg,
+          paddingBottom: 120, // 🌟 Extra explicit spacing so deep multiline fields easily clear the keyboard view frame
+        }}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true} // 🌟 Smooth dynamic adjustments natively supported on modern engines
+        showsVerticalScrollIndicator={true}
+      >
+        <View style={{ gap: 16 }}>
+          {/* Short Bio */}
+          <Controller
+            control={control}
+            name="shortBio"
+            render={({ field: { onChange, value } }) => {
+              const isLocked = isFieldLocked(myProfile, "shortBio");
+              return (
+                <InputField
+                  label={t("details.labels.shortBio")}
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder={t("details.placeholders.bio")}
+                  multiline
+                  editable={!isLocked}
+                  locked={isLocked}
+                  icon={MessageCircle}
+                />
+              );
+            }}
+          />
+
+          {/* Aspirations */}
+          <Controller
+            control={control}
+            name="aspirations"
+            render={({ field: { onChange, value } }) => (
               <InputField
-                label={t("details.labels.shortBio")}
+                label={t("details.labels.aspirations")}
+                value={value ?? ""}
+                onChangeText={onChange}
+                placeholder={t("details.placeholders.aspirations")}
+                multiline
+                editable={!isFieldLocked(myProfile as Profile, "aspirations")}
+                icon={Target}
+              />
+            )}
+          />
+
+          {/* Beliefs & Values */}
+          <Controller
+            control={control}
+            name="beliefsValues"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label={t("details.labels.beliefsValues")}
                 value={value}
                 onChangeText={onChange}
-                placeholder={t("details.placeholders.bio")}
+                placeholder={t("details.placeholders.beliefs")}
                 multiline
-                editable={!isLocked}
-                locked={isLocked}
-                icon={MessageCircle}
+                editable={!isFieldLocked(myProfile as Profile, "beliefsValues")}
+                icon={Church}
               />
-            );
-          }}
-        />
-        {/* Aspirations */}
-        <Controller
-          control={control}
-          name="aspirations"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.aspirations")}
-              value={value ?? ""}
-              onChangeText={onChange}
-              placeholder={t("details.placeholders.aspirations")}
-              multiline
-              editable={!isFieldLocked(myProfile as Profile, "aspirations")}
-              icon={Target}
-            />
-          )}
-        />
+            )}
+          />
 
-        {/* Beliefs & Values */}
-        <Controller
-          control={control}
-          name="beliefsValues"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.beliefsValues")}
-              value={value}
-              onChangeText={onChange}
-              placeholder={t("details.placeholders.beliefs")}
-              multiline
-              editable={!isFieldLocked(myProfile as Profile, "beliefsValues")}
-              icon={Church}
-            />
-          )}
-        />
+          {/* Strengths */}
+          <Controller
+            control={control}
+            name="strengths"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label={t("details.labels.strengths")}
+                value={value}
+                onChangeText={onChange}
+                placeholder={t("details.placeholders.strengths")}
+                editable={!isFieldLocked(myProfile as Profile, "strengths")}
+                icon={Zap}
+              />
+            )}
+          />
 
-        {/* Strengths */}
-        <Controller
-          control={control}
-          name="strengths"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.strengths")}
-              value={value}
-              onChangeText={onChange}
-              placeholder={t("details.placeholders.strengths")}
-              editable={!isFieldLocked(myProfile as Profile, "strengths")}
-              icon={Zap}
-            />
-          )}
-        />
+          {/* Likes & Dislikes */}
+          <Controller
+            control={control}
+            name="likesDislikesText"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label={t("details.labels.likesDislikesText")}
+                value={value}
+                onChangeText={onChange}
+                placeholder={t("details.placeholders.likes")}
+                editable={
+                  !isFieldLocked(myProfile as Profile, "likesDislikesText")
+                }
+                icon={Heart}
+              />
+            )}
+          />
 
-        {/* Likes & Dislikes */}
-        <Controller
-          control={control}
-          name="likesDislikesText"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.likesDislikesText")}
-              value={value}
-              onChangeText={onChange}
-              placeholder={t("details.placeholders.likes")}
-              editable={
-                !isFieldLocked(myProfile as Profile, "likesDislikesText")
-              }
-              icon={Heart}
-            />
-          )}
-        />
-
-        {/* Social Media */}
-        <Controller
-          control={control}
-          name="socialMedia"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.socialMedia")}
-              value={value}
-              onChangeText={onChange}
-              placeholder={t("details.placeholders.social")}
-              editable={!isFieldLocked(myProfile as Profile, "socialMedia")}
-              icon={Link}
-            />
-          )}
-        />
-      </View>
-    </ScrollView>
+          {/* Social Media */}
+          <Controller
+            control={control}
+            name="socialMedia"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label={t("details.labels.socialMedia")}
+                value={value}
+                onChangeText={onChange}
+                placeholder={t("details.placeholders.social")}
+                editable={!isFieldLocked(myProfile as Profile, "socialMedia")}
+                icon={Link}
+              />
+            )}
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

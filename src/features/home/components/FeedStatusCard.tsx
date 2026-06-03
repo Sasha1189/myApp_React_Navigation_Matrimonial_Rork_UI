@@ -117,7 +117,6 @@ export const createStyles = (theme: AppTheme) =>
       padding: 20,
       justifyContent: "center", // 👑 Centers content blocks vertically within that 40% window pane
       alignItems: "center", // 👑 Centers row and button blocks completely horizontally
-      backgroundColor: "rgba(0,0,0,0.4)", // Optional: soft shadow overlay layer to make text pop over background images
     },
     statusInfoWrapper: {
       flexDirection: "row",

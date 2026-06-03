@@ -30,6 +30,7 @@ const InputField: React.FC<InputFieldProps> = ({
   editable,
   required,
   locked,
+  maxLength,
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
@@ -72,14 +73,9 @@ const InputField: React.FC<InputFieldProps> = ({
           multiline={multiline}
           keyboardType={keyboardType}
           editable={editable && !locked}
+          maxLength={maxLength}
         />
       </View>
-
-      {locked && (
-        <Text style={styles.lockNote}>
-          This field is verified and cannot be changed.
-        </Text>
-      )}
     </View>
   );
 };

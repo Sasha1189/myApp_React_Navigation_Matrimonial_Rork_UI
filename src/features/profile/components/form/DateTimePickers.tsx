@@ -70,12 +70,6 @@ export const DatePickerField: React.FC<DateTimeProps> = ({
             {required && <Text style={styles.requiredStar}> *</Text>}
           </Text>
         </View>
-        {locked && (
-          <View style={styles.lockBadge}>
-            <Lock size={10} color={theme.colors.success} />
-            <Text style={styles.lockBadgeText}>Verified</Text>
-          </View>
-        )}
       </View>
 
       <TouchableOpacity
@@ -250,5 +244,3 @@ const createStyles = (theme: AppTheme) =>
       fontStyle: "italic",
     },
   });
-
-export default DatePickerField;

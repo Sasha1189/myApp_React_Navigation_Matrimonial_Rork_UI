@@ -1,29 +1,64 @@
 export function isDeepEqual(a: any, b: any): boolean {
-  if (a === b) return true;
+  // Normalize empty strings, null, and undefined to match your sanitization rules
+  const valA = a === "" ? null : a;
+  const valB = b === "" ? null : b;
 
-  // handle null/undefined
-  if (a == null || b == null) return a === b;
+  if (valA === valB) return true;
 
-  // handle Date
-  if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime();
+  // Handle null/undefined after normalization
+  if (valA == null || valB == null) return valA === valB;
+
+  // Handle Date instances
+  if (valA instanceof Date && valB instanceof Date) {
+    return valA.getTime() === valB.getTime();
   }
 
-  // handle Array
-  if (Array.isArray(a) && Array.isArray(b)) {
+  // Handle Arrays
+  if (Array.isArray(valA) && Array.isArray(valB)) {
     return (
-      a.length === b.length && a.every((val, i) => isDeepEqual(val, b[i]))
+      valA.length === valB.length &&
+      valA.every((val, i) => isDeepEqual(val, valB[i]))
     );
   }
 
-  // handle Object
-  if (typeof a === "object" && typeof b === "object") {
-    const aKeys = Object.keys(a);
-    const bKeys = Object.keys(b);
+  // Handle Objects
+  if (typeof valA === "object" && typeof valB === "object") {
+    const aKeys = Object.keys(valA);
+    const bKeys = Object.keys(valB);
     if (aKeys.length !== bKeys.length) return false;
 
-    return aKeys.every((key) => isDeepEqual(a[key], b[key]));
+    return aKeys.every((key) => isDeepEqual(valA[key], valB[key]));
   }
 
   return false;
 }
+
+// export function isDeepEqual(a: any, b: any): boolean {
+//   if (a === b) return true;
+
+//   // handle null/undefined
+//   if (a == null || b == null) return a === b;
+
+//   // handle Date
+//   if (a instanceof Date && b instanceof Date) {
+//     return a.getTime() === b.getTime();
+//   }
+
+//   // handle Array
+//   if (Array.isArray(a) && Array.isArray(b)) {
+//     return (
+//       a.length === b.length && a.every((val, i) => isDeepEqual(val, b[i]))
+//     );
+//   }
+
+//   // handle Object
+//   if (typeof a === "object" && typeof b === "object") {
+//     const aKeys = Object.keys(a);
+//     const bKeys = Object.keys(b);
+//     if (aKeys.length !== bKeys.length) return false;
+
+//     return aKeys.every((key) => isDeepEqual(a[key], b[key]));
+//   }
+
+//   return false;
+// }

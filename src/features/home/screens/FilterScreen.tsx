@@ -172,7 +172,7 @@ export default function FilterScreen() {
               />
             </View>,
           )}
-
+          {/* 
           {renderRow(
             t("filters.nativePlace"),
             MapPin,
@@ -219,7 +219,7 @@ export default function FilterScreen() {
               options={isReadyOptions}
               onSelect={(val) => setFilters((p) => ({ ...p, isReady: val }))}
             />,
-          )}
+          )} */}
         </View>
       </ScrollView>
 
@@ -275,6 +275,10 @@ export const createStyles = (theme: AppTheme) =>
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
+      backgroundColor: theme.colors.card,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing.sm,
     },
     labelGroup: {
       flexDirection: "row",

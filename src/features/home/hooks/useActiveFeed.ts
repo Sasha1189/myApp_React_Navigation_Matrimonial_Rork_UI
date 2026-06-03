@@ -90,6 +90,8 @@ export function useActiveFeed(uid: string): FeedHookResult {
   return {
     ...activeFeed,
     profiles: finalProfiles,
+    resetFeed: activeFeed.resetFeed,
+    refetch: activeFeed.refetch,
     updateIndex,
     isLoading: activeFeed.isLoading,
     mode,

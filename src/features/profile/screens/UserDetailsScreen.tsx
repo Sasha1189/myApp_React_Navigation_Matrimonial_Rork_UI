@@ -56,7 +56,7 @@ import { Lock } from "lucide-react-native";
 import { ProfileActionFooter } from "../components/profileDetailView/ProfileActionFooter";
 import { useTranslation } from "react-i18next";
 import { useSocialActions } from "../hooks/useSocialActions";
-// import { usePreventScreenCapture  } from "expo-screen-capture";
+import { usePreventScreenCapture } from "expo-screen-capture";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -68,7 +68,7 @@ export default function UserDetailsScreen({ route }: any) {
   const navigation = useAppNavigation();
   const { myProfile, tier } = useAuth();
   const profile = route.params?.profile;
-  // usePreventScreenCapture();
+  usePreventScreenCapture();
 
   const isSelf = myProfile?.uid === profile?.uid;
 
@@ -92,7 +92,10 @@ export default function UserDetailsScreen({ route }: any) {
         <View style={styles.carouselCard}>
           <ProfileCarousel profile={profile} />
         </View>
-
+        <View style={styles.disclaimerCard}>
+          <ShieldAlert size={20} color={theme.colors.accent} />
+          <Text style={styles.disclaimerText}>{t("details.phototip")}</Text>
+        </View>
         {/* 1. Personal Info - Parallel Grid */}
         <DetailSection title={t("details.sections.personal")} icon={Users}>
           <DetailRow

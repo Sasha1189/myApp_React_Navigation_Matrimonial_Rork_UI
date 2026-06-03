@@ -11,7 +11,7 @@ export default {
   labels: {
     fullName: "पूर्ण नाव",
     gender: "स्त्री / पुरुष",
-    age: "वय",
+    age: "जन्म / वय",
     height: "उंची",
     weight: "वजन",
     maritalStatus: "वैवाहिक स्थिती",
@@ -41,7 +41,7 @@ export default {
     siblingsInfo: "भावंडांची माहिती",
     currentCity: "सध्याचे शहर",
     nativePlace: "मूळ गाव",
-    mobile: "मोबाईल",
+    mobile: "पालकांचा मोबाईल",
     email: "ईमेल",
     contactPref: "संपर्क पसंती",
     createdBy: "प्रोफाईल बनवणारे",
@@ -109,6 +109,7 @@ export default {
     prefLocation: "उदा. पुणे, मुंबई, इ.",
     parents: "पर्याय निवडा",
   },
+  phototip: "सूचना: जर फोटो दिसत नसेल, तर कृपया पुन्हा अपलोड करा.",
   upgradeText: "तपशील पाहण्यासाठी अपग्रेड करा",
   disclaimer:
     " सूचना: ही माहिती युजर्सनी दिलेली आहे. आम्ही केवळ कोणतेही एक कायदेशीर ओळखपत्र (ID Proof) तपासतो, प्रत्यक्ष पार्श्वभूमी (Background Check) तपासत नाही.",

@@ -1,14 +1,14 @@
-type DOBDisplayMode = "age" | "dob" | "both";
+type DOBDisplayMode = "age" | "dob" | "both" | "form"; // 🌟 Added "form" mode variant
 type DOBInput = string | Date | null | undefined;
 
 export const formatDOB = (
   dobStr: DOBInput,
   mode: DOBDisplayMode = "both",
 ): string => {
-  if (!dobStr) return "Not available";
+  if (!dobStr || String(dobStr).trim() === "") return "";
 
   const dob = new Date(dobStr);
-  if (isNaN(dob.getTime())) return "Not available";
+  if (isNaN(dob.getTime())) return "";
 
   // Calculate age
   const today = new Date();
@@ -20,6 +20,12 @@ export const formatDOB = (
 
   if (!hasBirthdayPassedThisYear) age--;
 
+  // Standard string parts extraction
+  const yyyy = dob.getFullYear();
+  const mm = String(dob.getMonth() + 1).padStart(2, "0");
+  const dd = String(dob.getDate()).padStart(2, "0");
+  const rawFormSafeDate = `${yyyy}-${mm}-${dd}`; // 🌟 "2026-06-03"
+
   const formattedDOB = dob.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -27,9 +33,10 @@ export const formatDOB = (
   });
 
   switch (mode) {
+    case "form": // 🌟 ALWAYS pass this to your text inputs and controllers!
+      return rawFormSafeDate;
     case "age":
-      return age >= 0 ? `${age}` : "Not available";
-    // return age >= 0 ? `${age} years` : "Not available";
+      return age >= 0 ? `${age}` : "";
     case "dob":
       return formattedDOB;
     case "both":

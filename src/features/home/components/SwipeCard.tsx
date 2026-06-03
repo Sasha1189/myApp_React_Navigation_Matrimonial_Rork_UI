@@ -195,13 +195,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             </View>
           )}
         </View>
-
-        {/* OCCUPATION & BIO */}
-        {profile?.shortBio && (
-          <Text style={styles.bio} numberOfLines={1}>
-            {profile?.shortBio}
-          </Text>
-        )}
       </View>
 
       {/* 4. FLOATING ACTION BUTTONS */}

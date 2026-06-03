@@ -67,15 +67,31 @@ export function useSectionEditor<T extends FieldValues>(
 
       try {
         const changedFields: Partial<T> = {};
+
         sectionFields.forEach((key) => {
+          const newValue = data[key];
+          const oldValue = profile?.[key];
+
+          // 1. Skip if value hasn't changed at all
+          if (isDeepEqual(newValue, oldValue)) return;
+
+          // 2. Skip if field is immutable and already locked down on server
+          if (isFieldLocked(profile, key as any)) return;
+
+          // 3. Skip if the value is blank garbage (empty string, whitespace, null, or undefined)
           if (
-            !isDeepEqual(data[key], profile?.[key]) &&
-            !isFieldLocked(profile, key as any)
+            newValue === null ||
+            newValue === undefined ||
+            (typeof newValue === "string" && newValue.trim() === "")
           ) {
-            changedFields[key] = data[key];
+            return;
           }
+
+          // 4. Safe & Optimized: Capture ONLY the actual modified payload changes
+          changedFields[key] = newValue;
         });
 
+        // Only ping your endpoint if real updates occurred
         if (Object.keys(changedFields).length > 0) {
           await updateProfile(changedFields);
           reset(data);
@@ -88,14 +104,11 @@ export function useSectionEditor<T extends FieldValues>(
       }
     },
     (validationErrors) => {
-      // 🔍 This will instantly alert you if any field blocks the form submission!
       console.log("❌ Form Validation Failed Fields:", validationErrors);
-
-      // Optional: Alert the user about invalid data
       Alert.alert(
         t("common.error"),
         t("editor.validationErrorMsg") ||
-          "Please check your inputs for errors before saving.",
+          "Please fulfill all required fields before saving.",
       );
     },
   );

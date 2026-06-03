@@ -58,13 +58,6 @@ const PickerField: React.FC<PickerFieldProps> = ({
             {required && <Text style={styles.requiredStar}> *</Text>}
           </Text>
         </View>
-
-        {locked && (
-          <View style={styles.lockBadge}>
-            <Lock size={10} color={theme.colors.success} />
-            <Text style={styles.lockBadgeText}>Verified</Text>
-          </View>
-        )}
       </View>
 
       {/* 2. Selection Trigger */}

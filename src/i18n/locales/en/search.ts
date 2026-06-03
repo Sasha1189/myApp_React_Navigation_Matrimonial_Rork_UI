@@ -9,13 +9,9 @@ export default {
   fields: {
     fullName: "Name",
     currentCity: "City",
-    highestQualification: "Education",
-    occupation: "Occupation",
   },
   placeholders: {
     fullName: "Type name...",
     currentCity: "Type city...",
-    highestQualification: "Type education...",
-    occupation: "Type occupation...",
   },
 };

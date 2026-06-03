@@ -97,8 +97,18 @@ export const useSubscription = () => {
   useEffect(() => {
     if (connected) {
       fetchProducts({ skus: SKUS, type: "in-app" });
+      console.log("[IAP] Connected to store, products fetched:", products);
     }
   }, [connected]);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      console.log(
+        "🚀 [IAP] Products successfully fetched from Play Store:",
+        products,
+      );
+    }
+  }, [products]);
 
   const isSubmitDisabled =
     !selectedPlanId || selectedPlanId === tier || isProcessing;

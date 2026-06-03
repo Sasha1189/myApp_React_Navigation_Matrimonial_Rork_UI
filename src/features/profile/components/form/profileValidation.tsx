@@ -6,6 +6,7 @@ export const requiredFields: (keyof Profile)[] = [
   "gender",
   "maritalStatus",
 ];
+
 export const immutableFields: (keyof Profile)[] = [...requiredFields];
 
 export const isFieldLocked = (
