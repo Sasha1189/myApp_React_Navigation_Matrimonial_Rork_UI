@@ -1,125 +1,87 @@
 import React from "react";
 import {
   ScrollView,
-  StyleSheet,
   View,
   Text,
+  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { Crown } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { useSubscription } from "../hooks/useSubscription";
-import { SUBSCRIPTION_PLANS } from "../constants/plans";
-import { SUPPORT_BENEFITS } from "../constants/supportBenefits"; // Import the new constants
-import { Crown, Heart } from "lucide-react-native";
-import { AppTheme } from "@/theme/theme";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PlanCardComponent } from "../components/PlanCard";
+import { SubscriptionCard } from "../components/SubscriptionCard";
+import { AppBenefitsList } from "../components/AppBenefitsList"; // 🌟 Our new separate benefits module
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/context/AuthContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppTheme } from "@/theme/theme";
 
 export default function SubscriptionScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const { tier } = useAuth();
+
   const {
     selectedPlanId,
     setSelectedPlanId,
     handlePay,
     isProcessing,
     isSubmitDisabled,
+    availablePlans,
   } = useSubscription();
-
-  if (!theme) return null;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Header with Community Focus */}
+          {/* Header Section */}
           <View style={styles.header}>
-            <View style={styles.logoWrapper}>
-              <Crown size={40} color={theme.colors.warning} />
-            </View>
-            <View style={{ flex: 1, justifyContent: "flex-start" }}>
+            <Crown size={40} color={theme.colors.warning} />
+            <View style={{ flex: 1 }}>
               <Text style={styles.title}>{t("subscription.upgradeTitle")}</Text>
               <Text style={styles.subtitle}>
                 {t("subscription.upgradeSubtitle")}
               </Text>
             </View>
-            <View style={styles.logoWrapper}>
-              <Crown size={40} color={theme.colors.warning} />
-            </View>
           </View>
-          {/* Plans Section */}
+
+          {/* Section Indicator */}
           <Text style={styles.sectionLabel}>
             {t("subscription.choosePlan", "Choose a Plan")}
           </Text>
-          {SUBSCRIPTION_PLANS.map((plan) => {
-            const displayPlan = {
-              ...plan,
-              name: t(`subscription.plans.${plan.id}.name`, plan.name),
-              price: t(`subscription.plans.${plan.id}.price`, plan.price),
-              originalPrice: plan.originalPrice
-                ? t(
-                    `subscription.plans.${plan.id}.originalPrice`,
-                    plan.originalPrice,
-                  )
-                : undefined,
-              period: t(`subscription.plans.${plan.id}.period`, plan.period),
-              discount: plan.discount
-                ? t(`subscription.plans.${plan.id}.discount`, plan.discount)
-                : undefined,
-              features: plan.features.map((f, index) => ({
-                ...f,
-                text: t(
-                  `subscription.plans.${plan.id}.features.${index}`,
-                  f.text,
-                ),
-              })),
-            };
-            return (
-              <PlanCardComponent
-                key={plan.id}
-                plan={displayPlan}
-                isSelected={selectedPlanId === plan.id}
-                onSelect={() => setSelectedPlanId(plan.id)}
-              />
-            );
-          })}
-          {/* Support Card - Emotional Hook */}
-          <View style={styles.benefitsCard}>
-            <View style={styles.benefitsHeader}>
-              <Heart
-                size={20}
-                color={theme.colors.primary}
-                fill={theme.colors.primary}
-              />
-              <Text style={styles.benefitsTitle}>
-                {t("subscription.supportTitle")}
-              </Text>
-            </View>
-            <View style={styles.benefitsList}>
-              {SUPPORT_BENEFITS(theme).map((benefit) => (
-                <View key={benefit.id} style={styles.benefitItem}>
-                  <View style={styles.iconWrapper}>{benefit.icon}</View>
-                  <Text style={styles.benefitText}>
-                    {t(benefit.translationKey)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
+
+          {/* Plan Card 1 */}
+          <SubscriptionCard
+            planId="basic"
+            skuId="basic_membership_1y"
+            fallbackPrice="₹699/-"
+            availablePlans={availablePlans}
+            isSelected={selectedPlanId === "basic"}
+            onSelect={() => setSelectedPlanId("basic")}
+          />
+
+          {/* Plan Card 2 */}
+          <SubscriptionCard
+            planId="premium"
+            skuId="premium_membership_1y"
+            fallbackPrice="₹1699/-"
+            availablePlans={availablePlans}
+            isSelected={selectedPlanId === "premium"}
+            onSelect={() => setSelectedPlanId("premium")}
+          />
+
+          {/* 🌟 SEPARATE CLEAN BENEFITS LIST COMPONENT */}
+          <AppBenefitsList />
         </View>
       </ScrollView>
 
+      {/* Floating Checkout Footer Container */}
       <View
         style={[
           styles.footerContainer,
-          { paddingBottom: Math.max(insets.bottom, 32) },
+          { paddingBottom: Math.max(insets.bottom, 24) },
         ]}
       >
         <TouchableOpacity
@@ -141,7 +103,7 @@ export default function SubscriptionScreen() {
     </View>
   );
 }
-
+// Keep your existing createStyles configuration exactly as it is...
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {

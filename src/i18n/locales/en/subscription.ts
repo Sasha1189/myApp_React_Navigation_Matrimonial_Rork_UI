@@ -1,7 +1,7 @@
 export default {
   upgradeTitle: "Our Community, Our Responsibility", // Pride-based
   upgradeSubtitle:
-    "We built this space specifically for the Lonari family. Your support keeps us independent and ad-free.",
+    "We built this space specifically for the our Lonari family.",
   supportTitle: "Why Your Support Matters", // More personal
   mostPopular: "Most Loved", // Warmer than "Popular"
   startTrial: "Experience Premium for ₹1",

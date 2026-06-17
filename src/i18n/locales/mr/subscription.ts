@@ -1,7 +1,7 @@
 export default {
   upgradeTitle: "आपला समाज, आपली जबाबदारी", // "Our community, our responsibility"
   upgradeSubtitle:
-    "लोणारी समाजाला एकत्र आणण्यासाठी आणि आपल्या हक्काचे व्यासपीठ टिकवण्यासाठी आपले सहकार्य मोलाचे आहे.",
+    "लोणारी समाजाचे हक्काचे व्यासपीठ टिकवण्यासाठी आपले सहकार्य मोलाचे आहे.",
   supportTitle: "आपल्या लोणारी ॲपला साथ का द्यावी?",
   mostPopular: "सर्वाधिक पसंती", // "Most Loved" instead of "Popular"
   startTrial: "₹१ मध्ये प्रीमियम अनुभव घ्या",

@@ -77,13 +77,21 @@ export const useSubscription = () => {
             );
           }
         }
-        Alert.alert(t("common.success"), t("subscription.activated"));
+        Alert.alert(t("common.success"), t("subscription.activated"), [
+          { text: "OK", onPress: () => navigation.navigate("Tabs" as any) },
+        ]);
       } catch (error) {
         console.error("[IAP] Verification Error:", error);
-        Alert.alert(t("common.error"), t("subscription.verifyError"));
+        Alert.alert(
+          t("common.error", "Error"),
+          t(
+            "subscription.verifyError",
+            "Could not process subscription. Please try again.",
+          ),
+          [{ text: "OK", onPress: () => navigation.navigate("Tabs" as any) }],
+        );
       } finally {
         setIsProcessing(false);
-        navigation.navigate("Tabs" as any);
       }
     },
     onPurchaseError: (error) => {
@@ -124,7 +132,6 @@ export const useSubscription = () => {
     };
 
     const planKey = selectedPlanId.toLowerCase();
-
     const targetSku = PLAN_TO_SKU[planKey];
     const product = products.find((p) => p.id === targetSku);
 
@@ -134,11 +141,23 @@ export const useSubscription = () => {
       return;
     }
 
+    // 🌟 TYPE SAFEGUARD: Confirms platform is Android to unlock properties
+    let activeOfferToken = undefined;
+    if (product.platform === "android" && product.discountOffers) {
+      const promoOffer = product.discountOffers.find((offer: any) => offer.id);
+      if (promoOffer) {
+        activeOfferToken = promoOffer.offerTokenAndroid;
+      }
+    }
+
     try {
       await requestPurchase({
         type: "in-app",
         request: {
-          google: { skus: [targetSku] },
+          google: {
+            skus: [targetSku],
+            ...(activeOfferToken && { offerToken: activeOfferToken }),
+          },
           apple: { sku: targetSku },
         },
       });
