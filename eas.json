@@ -5,7 +5,7 @@
         "buildType": "app-bundle",
         "autoIncrement": true
       },
-      "channel": "production-aab",
+      "channel": "production-aac",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://lonari-firebase-v2-295491417988.asia-south1.run.app"
       }
