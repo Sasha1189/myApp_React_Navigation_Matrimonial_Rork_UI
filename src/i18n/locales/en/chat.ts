@@ -1,6 +1,8 @@
 export default {
   recentActivity: "Recent Activity",
-  lastSeen: "Last seen",
+  lastSeen: "Last seen {{time}}",
+  typing: "Typing...",
+  online: "Online",
   tabs: {
     chats: "Chats",
     sent: "Sent Likes",
