@@ -265,6 +265,69 @@ export function useChatSession(
     [roomId, myUid, sender, otherUser],
   );
 
+  const deleteMessage = useCallback(
+    async (messageItem: IMessage) => {
+      if (!roomId || !myUid || !messageItem?.id || !otherUser?.uid) return;
+
+      try {
+        const deletionTime = Date.now();
+        const updates: Record<string, any> = {};
+
+        // 1. Compliance Archive Path: Stores data for audits with a separate deletion time
+        const archivePath = `archive/${roomId}/${messageItem.s}/${messageItem.id}`;
+        updates[archivePath] = {
+          ...messageItem,
+          deletedAt: deletionTime, // Distinct compliance timestamp anchor
+        };
+
+        // 2. Production Removal Path: Deletes the active bubble node instance
+        const liveMessagePath = `messages/${roomId}/${messageItem.id}`;
+        updates[liveMessagePath] = null; // Removing the node completely in RTB
+
+        // 3. Inbox Patch Update: Evaluate if the deleted item was the latest message
+        const isLatestMessage = messages[0]?.id === messageItem.id;
+
+        if (isLatestMessage) {
+          const fallbackMsg = messages[1]; // Get the next newest available message
+
+          if (fallbackMsg) {
+            // Rollback inbox preview to the previous message content
+            const fallbackText = fallbackMsg.t || "";
+            const fallbackTs =
+              typeof fallbackMsg.ts === "number"
+                ? fallbackMsg.ts
+                : deletionTime;
+
+            updates[`inbox/${myUid}/${roomId}/lastMessage`] = fallbackText;
+            updates[`inbox/${myUid}/${roomId}/updatedAt`] = fallbackTs;
+
+            updates[`inbox/${otherUser.uid}/${roomId}/lastMessage`] =
+              fallbackText;
+            updates[`inbox/${otherUser.uid}/${roomId}/updatedAt`] = fallbackTs;
+          } else {
+            // No other messages left in the chat room. Clear out the previews cleanly.
+            updates[`inbox/${myUid}/${roomId}/lastMessage`] = "";
+            updates[`inbox/${myUid}/${roomId}/updatedAt`] = deletionTime;
+
+            updates[`inbox/${otherUser.uid}/${roomId}/lastMessage`] = "";
+            updates[`inbox/${otherUser.uid}/${roomId}/updatedAt`] =
+              deletionTime;
+          }
+        }
+
+        // 4. Atomic Multi-Path Execution
+        await update(ref(rtdb, "/"), updates);
+      } catch (err) {
+        console.error(
+          "Critical failure during message deletion transaction:",
+          err,
+        );
+        throw err; // Re-throw to handle UI alerting fallbacks gracefully
+      }
+    },
+    [roomId, myUid, messages, otherUser?.uid], // Added messages and otherUser.uid to dependencies
+  );
+
   const setMyTyping = useCallback(
     (isTyping: boolean) => {
       // Guard: Prevents spamming the DB with the same state
@@ -314,6 +377,7 @@ export function useChatSession(
     hasNewAtBottom,
     loadEarlier,
     sendMessage,
+    deleteMessage,
     setMyTyping,
     getStatusLabel,
     resetToLive: startLiveMessages,

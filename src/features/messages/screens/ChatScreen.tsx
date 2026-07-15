@@ -6,7 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +22,7 @@ import { useAppNavigation } from "src/navigation/hooks";
 import { ChatListHelper } from "../components/ChatListHelper";
 import { ChatHeader } from "../components/ChatHeader";
 import { AppStackScreenProps } from "src/navigation/types";
+import { IMessage } from "../type/chattype";
 
 export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const { theme } = useAppTheme();
@@ -64,6 +65,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     loadEarlier,
     setMyTyping,
     sendMessage,
+    deleteMessage,
     getStatusLabel,
     resetToLive,
   } = useChatSession(roomId, uid, sender, otherUser);
@@ -104,7 +106,32 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     getStatusLabel,
     theme,
   ]);
+
+  // 2. Define the pop-up menu trigger function:
+  const handleMessageLongPress = (messageItem: IMessage) => {
+    Alert.alert(
+      "Delete message?",
+      "This message will be permanently removed from this chat room.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete for Everyone",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMessage(messageItem);
+            } catch (err) {
+              Alert.alert("Error", "Could not delete this message. Try again.");
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
   if (!theme) return null;
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "padding"}
@@ -119,12 +146,47 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
         ) : (
           <FlatList
             ref={flatListRef}
-            data={messages}
+            data={getGroupedMessages(messages)}
             inverted
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <MessageBubble message={item} isMe={item.s === uid} />
-            )}
+            renderItem={({ item }) => {
+              if (item.isDateBanner) {
+                return (
+                  <View
+                    style={{
+                      alignItems: "center",
+                      marginVertical: 14,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor: "#EAEAEA",
+                        paddingHorizontal: 12,
+                        paddingVertical: 4,
+                        borderRadius: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#666",
+                          fontSize: 11,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {item.dateText}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              }
+              return (
+                <MessageBubble
+                  message={item}
+                  isMe={item.s === uid}
+                  onLongPress={handleMessageLongPress}
+                />
+              );
+            }}
             contentContainerStyle={styles.listContent}
             initialNumToRender={15}
             maxToRenderPerBatch={10}
@@ -193,3 +255,49 @@ export const createStyles = (theme: AppTheme) =>
       borderColor: theme.colors.primary,
     },
   });
+
+// Helper function for inverted lists to inject date banner items
+const getGroupedMessages = (messages: any[]) => {
+  const items: any[] = [];
+
+  for (let i = 0; i < messages.length; i++) {
+    const currentMsg = messages[i];
+    items.push(currentMsg);
+
+    const currentDateStr = new Date(currentMsg.ts).toDateString();
+
+    // In an inverted list, the next index (i + 1) is older. We look at the item before (i - 1) which is newer chronologically.
+    const olderMsg = messages[i + 1];
+    const olderDateStr = olderMsg ? new Date(olderMsg.ts).toDateString() : null;
+
+    // If there is no older message, or the date changes between currentMsg and olderMsg, insert a banner
+    if (!olderDateStr || currentDateStr !== olderDateStr) {
+      const msgDate = new Date(currentMsg.ts);
+      const todayStr = new Date().toDateString();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+
+      let dateText = "";
+      if (currentDateStr === todayStr) {
+        dateText = "Today";
+      } else if (currentDateStr === yesterdayStr) {
+        dateText = "Yesterday";
+      } else {
+        dateText = msgDate.toLocaleDateString([], {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+
+      items.push({
+        id: `date-banner-${currentMsg.id}`,
+        isDateBanner: true,
+        dateText,
+      });
+    }
+  }
+
+  return items;
+};

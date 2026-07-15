@@ -58,6 +58,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
 
   const getLockState = (name: keyof Profile) =>
     isFieldLocked(myProfile as Profile, name);
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -95,7 +96,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
               rules={{ required: true }}
               render={({ field: { onChange, value } }) => (
                 <DatePickerField
-                  label={t("details.labels.age")}
+                  label={t("details.labels.dateOfBirth")}
                   placeholder="YYYY-MM-DD"
                   value={formatDOB(value, "form")}
                   onChange={(selectedDate) => {
@@ -131,23 +132,24 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* 4. Place of Birth */}
-        <Controller
-          control={control}
-          name="placeOfBirth"
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.birthPlace")}
-              placeholder="City, State"
-              value={value}
-              onChangeText={onChange}
-              icon={MapPin}
-            />
-          )}
-        />
-
-        {/* ROW 2: Height & Weight */}
+        {/* ROW 2: Place of Birth & Height */}
         <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            {/*  Place of Birth */}
+            <Controller
+              control={control}
+              name="placeOfBirth"
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label={t("details.labels.birthPlace")}
+                  placeholder="City, State"
+                  value={value}
+                  onChangeText={onChange}
+                  icon={MapPin}
+                />
+              )}
+            />
+          </View>
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
@@ -174,38 +176,6 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
                       onChange(cleaned);
                     }}
                     icon={Ruler}
-                  />
-                );
-              }}
-            />
-          </View>
-
-          <View style={{ flex: 1 }}>
-            <Controller
-              control={control}
-              name="weight"
-              rules={{
-                pattern: {
-                  value: /^[0-9]{3}$/,
-                  message: t("errors.invalidHeight"),
-                },
-              }}
-              render={({ field: { onChange, value } }) => {
-                const stringValue = value
-                  ? String(value).replace(/[^0-9]/g, "")
-                  : "";
-                return (
-                  <InputField
-                    label={t("details.labels.weight")}
-                    placeholder="e.g. 70kg"
-                    value={stringValue}
-                    keyboardType="numeric"
-                    maxLength={3}
-                    onChangeText={(text) => {
-                      const cleaned = text.replace(/[^0-9]/g, "");
-                      onChange(cleaned);
-                    }}
-                    icon={Scale}
                   />
                 );
               }}
@@ -303,41 +273,45 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           )}
         />
 
-        {/* 6. Marital Status */}
-        <Controller
-          control={control}
-          name="maritalStatus"
-          rules={{ required: true }}
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.maritalStatus")}
-              placeholder={t("details.labels.maritalStatus")}
-              value={value}
-              options={maritalStatusOptions}
-              onSelect={onChange}
-              icon={HeartHandshake}
-              required
-              locked={getLockState("maritalStatus")}
-              editable={!getLockState("maritalStatus")}
+        {/* Marital Status & Marriage Ready */}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="maritalStatus"
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.maritalStatus")}
+                  placeholder={t("details.labels.maritalStatus")}
+                  value={value}
+                  options={maritalStatusOptions}
+                  onSelect={onChange}
+                  icon={HeartHandshake}
+                  required
+                  locked={getLockState("maritalStatus")}
+                  editable={!getLockState("maritalStatus")}
+                />
+              )}
             />
-          )}
-        />
-
-        {/* 14. Marriage Ready */}
-        <Controller
-          control={control}
-          name="isReady"
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.isReady")}
-              placeholder="Yes / No still studying"
-              value={value}
-              options={isReadyOptions}
-              onSelect={onChange}
-              icon={HeartIcon}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="isReady"
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.isReady")}
+                  placeholder="Yes / No still studying"
+                  value={value}
+                  options={isReadyOptions}
+                  onSelect={onChange}
+                  icon={HeartIcon}
+                />
+              )}
             />
-          )}
-        />
+          </View>
+        </View>
       </View>
     </ScrollView>
   );

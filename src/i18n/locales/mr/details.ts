@@ -11,7 +11,8 @@ export default {
   labels: {
     fullName: "पूर्ण नाव",
     gender: "स्त्री / पुरुष",
-    age: "जन्म / वय",
+    dateOfBirth: "जन्मतारीख",
+    age: "वय",
     height: "उंची",
     weight: "वजन",
     maritalStatus: "वैवाहिक स्थिती",

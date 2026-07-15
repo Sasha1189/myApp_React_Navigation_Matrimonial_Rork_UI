@@ -42,12 +42,7 @@ export const ChatHeader = ({
           {name || "Chat"}
         </Text>
         {statusLabel ? (
-          <Text
-            style={[
-              styles.headerStatus,
-              (isTyping || isOnline) && { color: theme.colors.primary },
-            ]}
-          >
+          <Text style={styles.headerStatus}>
             {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
           </Text>
         ) : null}

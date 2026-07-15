@@ -2,10 +2,10 @@
   "build": {
     "production": {
       "android": {
-        "buildType": "app-bundle",
+        "buildType": "apk",
         "autoIncrement": true
       },
-      "channel": "production-aac",
+      "channel": "production-aab",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://lonari-firebase-v2-295491417988.asia-south1.run.app"
       }

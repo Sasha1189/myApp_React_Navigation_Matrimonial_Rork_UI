@@ -6,7 +6,7 @@ import { Phone, MapPin, UserPlus } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
-import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
+import { SECTION_CONFIG } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 import { useTranslation } from "react-i18next";
 
@@ -37,9 +37,6 @@ export default function EditContactDetailsScreen({ navigation }: any) {
     config.title,
   );
 
-  const getLockState = (name: keyof Profile) =>
-    isFieldLocked(myProfile as Profile, name);
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -62,9 +59,6 @@ export default function EditContactDetailsScreen({ navigation }: any) {
               placeholder={t("details.placeholders.mobile")}
               keyboardType="phone-pad"
               icon={Phone}
-              required
-              locked={getLockState("mobileNumber")}
-              editable={!getLockState("mobileNumber")}
             />
           )}
         />
