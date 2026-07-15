@@ -108,5 +108,15 @@ export const formatStatusTime = (timestamp: number | any): string => {
     return `today at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
   }
 
+  // --- ADDED YESTERDAY LOGIC HERE ---
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = yesterday.toDateString() === date.toDateString();
+
+  if (isYesterday) {
+    return `yesterday at ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  }
+  // ----------------------------------
+
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 };

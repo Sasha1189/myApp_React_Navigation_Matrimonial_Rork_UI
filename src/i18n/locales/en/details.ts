@@ -11,7 +11,8 @@ export default {
   labels: {
     fullName: "Full Name",
     gender: "Gender",
-    age: "Date of birth/Age",
+    dateOfBirth: "Date of birth",
+    age: "Age",
     height: "Height",
     weight: "Weight",
     maritalStatus: "Marital Status",
