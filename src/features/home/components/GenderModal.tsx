@@ -76,12 +76,6 @@ export default function GenderModal({ visible, onClose }: GenderModalProps) {
       }
     }
 
-    console.log("📝 [Gender Modal Sync]: Forwarding payload to backend:", {
-      uid: firebaseUser.uid,
-      phoneNumber: extractedPhone,
-      displayName: gender,
-    });
-
     await createUserOnBackend({
       uid: firebaseUser.uid,
       phoneNumber: extractedPhone,
@@ -127,7 +121,6 @@ export default function GenderModal({ visible, onClose }: GenderModalProps) {
         }
       }
     } catch (error) {
-      console.error("Synchronized registration workflow broke:", error);
       setRetry(true);
       Alert.alert(t("common.error"), t("genderModal.updateError"));
     } finally {

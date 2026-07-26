@@ -30,10 +30,6 @@ export const usePresence = (
     const isPaidUser = tier === "basic" || tier === "premium";
 
     if (!isPaidUser) {
-      console.log(
-        `🛑 [RTDB/Firestore]: Access Denied. Tier "${tier}" is restricted.`,
-      );
-
       // 🎯 FORCE CLEANUP: Wipe both message cache and blocked lists for free users
       BlocksCache.sync([], []);
       goOffline(rtdb);
@@ -42,16 +38,12 @@ export const usePresence = (
 
     // 2. Validate that registration setup gender details are present
     if (!gender) {
-      console.log("⏳ [RTDB]: Sync paused. Waiting for user gender selection.");
       return;
     }
 
     // Wake up the database socket layer immediately for premium users
     try {
       goOnline(rtdb);
-      console.log(
-        `⚡ [RTDB]: Verified Tier [${tier.toUpperCase()}]. Booting socket layers...`,
-      );
     } catch (err) {
       console.error("Failed to execute goOnline socket activation:", err);
     }
@@ -70,18 +62,13 @@ export const usePresence = (
     const initializePremiumCaches = async () => {
       try {
         // A. Synchronize Premium Blocked List from Firestore [1]
-        console.log(
-          "🔄 [Presence Hook]: Fetching active Firestore blocked list metrics...",
-        );
+
         const blockDocRef = doc(firestore, "blockedIDs", uid);
         const blockSnap = await getDoc(blockDocRef);
 
         if (blockSnap.exists()) {
           const data = blockSnap.data();
           BlocksCache.sync(data?.mine || [], data?.theirs || []);
-          console.log(
-            "🔒 [Presence Hook]: Blocked list cache successfully synchronized.",
-          );
         } else {
           BlocksCache.sync([], []);
         }
@@ -97,9 +84,6 @@ export const usePresence = (
             storage.set(
               "likes_ids_index",
               JSON.stringify(Object.keys(snap.val())),
-            );
-            console.log(
-              "📥 [Presence Hook]: Historical likes successfully indexed.",
             );
           }
         }
@@ -118,11 +102,6 @@ export const usePresence = (
       const isConnected = snap.val() === true;
 
       if (isConnected) {
-        console.log("==================================================");
-        console.log("🟢 ⚡ [RTDB STATUS LOG]: CONNECTED & RESPONDING!");
-        console.log(`• Session Authenticated for Premium UID: ${uid}`);
-        console.log("==================================================");
-
         onDisconnect(myStatusRef)
           .set({ state: "offline", lastChanged: serverTimestamp() })
           .then(() => {
@@ -135,9 +114,6 @@ export const usePresence = (
             console.error("Presence execution tracking failed:", err),
           );
       } else {
-        console.warn(
-          "🔴 ⚠️ [RTDB STATUS LOG]: SOCKET IS CURRENTLY DISCONNECTED / OFFLINE",
-        );
       }
     });
 

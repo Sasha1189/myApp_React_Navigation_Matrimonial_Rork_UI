@@ -9,7 +9,6 @@ import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 import { useTranslation } from "react-i18next";
-import { useAppNavigation } from "../../../navigation/hooks";
 
 export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();

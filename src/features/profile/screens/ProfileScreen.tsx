@@ -190,14 +190,13 @@ export default function ProfileScreen({ navigation }: any) {
                       style={{
                         fontSize: 8,
                         fontWeight: "600",
-                        color: "rgba(255, 255, 255, 0.4)",
+                        color:
+                          s.requiredTier === "PREMIUM" ? "#FFD700" : "#3B82F6",
                         textTransform: "lowercase",
                         lineHeight: 6,
                       }}
                     >
-                      {t("profile.stats.upgradeTo", {
-                        defaultValue: "Upgrade to",
-                      })}
+                      Upgrade to
                     </Text>
                     <Text
                       style={{
@@ -399,7 +398,7 @@ const createStyles = (theme: AppTheme) =>
     premiumContent: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      justifyContent: "space-around",
     },
     premTitle: {
       fontSize: 16,

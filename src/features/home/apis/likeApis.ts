@@ -9,17 +9,9 @@ interface FeedResponse {
 
 //gemini code.....................
 export async function syncLikesBatch(uid: string, likedIds: string[]) {
-  console.log("📤 Sending Batch Sync to:", "/likes/batch-sync", "Body:", {
-    uid,
-    likedIds,
-  });
-
   if (likedIds.length === 0) return;
-  // This endpoint should use db.batch() on the backend
-  // return await api.post("/likes/batch-sync", { uid, likedIds });
   try {
     const res: any = await api.post("/likes/batch-sync", { uid, likedIds });
-    console.log("✅ API Response:", res.data); // See if backend returns 200
     return res;
   } catch (error: any) {
     // 🔹 This will tell you if it's a 404, 500, or Network Error

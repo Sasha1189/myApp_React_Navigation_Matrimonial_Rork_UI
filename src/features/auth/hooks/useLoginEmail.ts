@@ -38,14 +38,8 @@ export const useLoginEmail = () => {
     const formattedEmail = `+91${phoneNumber}@lonariyuvaconnect.com`;
 
     try {
-      console.log(
-        "🔄 [Auth Flow]: Running clean authentication login check...",
-      );
-
       // 1. Straightforward login attempt using modern modular API
       await signInWithEmailAndPassword(authInstance, formattedEmail, password);
-
-      console.log("✅ [Auth Flow]: User verified. Login successful.");
     } catch (error: any) {
       console.log("ℹ️ [Auth Flow]: SignIn rejected. Code:", error.code);
 

@@ -55,7 +55,6 @@ export function useSocialActions(profile: any) {
             // 4. Navigation
             navigation.goBack();
           } catch (error) {
-            console.error("Block Error:", error);
             Alert.alert(t("common.error"), t("alerts.blockError"));
           }
         },

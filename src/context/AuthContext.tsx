@@ -35,6 +35,7 @@ interface AuthContextType {
   authLoading: boolean;
   setUser: (user: FirebaseAuthTypes.User | null) => void;
   myProfile: Profile;
+  setMyProfile: (profile: Profile) => void;
   updateMyProfile: (data: Partial<Profile>) => Promise<void>;
   tier: "none" | "basic" | "premium";
   setTier: (tier: "none" | "basic" | "premium") => void;
@@ -80,20 +81,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const hasCache = storage.contains(PROFILE_CACHE_KEY);
 
         if (hasCache) {
-          console.log(
-            "📦 [Auth Context]: Profile loaded instantly from local disk cache. Skipping server fetch.",
-          );
           const cachedData = storage.getString(PROFILE_CACHE_KEY);
           if (cachedData) {
             setMyProfile(JSON.parse(cachedData));
           }
-          return; // 🛑 EXIT EARLY: Saves network reads on every single app boot!
+          return;
         }
-
-        // 🎯 STEP 2: Network Fetch (Only runs if local cache is completely empty)
-        console.log(
-          "🔄 [Auth Context]: Cache empty. Fetching initial profile data from server...",
-        );
         const remoteData = await getProfile(
           user.uid,
           user.displayName as string,
@@ -104,14 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const fullyInjectedProfile = { ...remoteData, uid: user.uid };
           setMyProfile(fullyInjectedProfile);
           storage.set(PROFILE_CACHE_KEY, JSON.stringify(fullyInjectedProfile));
-          console.log(
-            "✅ [Auth Context]: Initial paid profile fetched and cached successfully.",
-          );
         } else {
-          console.log(
-            "🔒 [Auth Context]: No remote profile found. Seeding default local memory layout for free account.",
-          );
-
           const freeProfileSeed = {
             ...getDefaultProfile(),
             uid: user.uid,
@@ -120,9 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           setMyProfile(freeProfileSeed);
           storage.set(PROFILE_CACHE_KEY, JSON.stringify(freeProfileSeed));
-          console.log(
-            "✅ [Auth Context]: Local cache seeded. Remote server fetches are now locked down.",
-          );
         }
       } catch (error) {
         console.error(
@@ -149,29 +132,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // 3. Hardware Identity & Security Binding Control (PAID USERS ONLY)
   useEffect(() => {
-    // 🎯 FIX 1: Add the paid user gate to protect your database from free user traffic
+    if (!user?.uid) return;
+
+    const GOOGLE_REVIEWER_UIDS = [
+      "ZtyLW424djVC38KNB819khGSp4n2",
+      "YFRi0id1LIV8qkR5VYmEFlGAJ4O2",
+    ];
+
+    if (GOOGLE_REVIEWER_UIDS.includes(user.uid)) {
+      return;
+    }
+
     const isPaidUser = tier === "basic" || tier === "premium";
-    if (!user?.uid || !isGenderValid || !isPaidUser) return;
+    if (!isGenderValid || !isPaidUser) return;
 
     const checkBinding = async () => {
       try {
-        // Initialize dynamic device identity parameters
         let currentHardwareId = await getUniqueId();
-
-        // 🎯 FIX 2: Override instead of early return. This allows Google to save
-        // to the cache normally and avoids infinite loop background execution.
-        const googleTestNumbers = ["+919999991111", "+919999992222"];
-        if (user.phoneNumber && googleTestNumbers.includes(user.phoneNumber)) {
-          console.log(
-            "Google reviewer validation detected. Overriding with static test identity.",
-          );
-          currentHardwareId = "GOOGLE_TEST_DEVICE_ID_STATIC";
-        }
 
         const cachedId = getDBDeviceIdCache();
 
         if (cachedId === currentHardwareId) {
-          console.log("Device verified via Cache");
           return;
         }
 
@@ -179,7 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (!dbId || dbId.trim() === "") {
           await updateUserDeviceId(user.uid, currentHardwareId);
-          setDBDeviceIdCache(currentHardwareId); // Saves correctly (even for Google's mock ID)
+          setDBDeviceIdCache(currentHardwareId);
           return;
         }
 
@@ -272,6 +253,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user,
       setUser,
       myProfile,
+      setMyProfile,
       authLoading,
       updateMyProfile,
       tier,

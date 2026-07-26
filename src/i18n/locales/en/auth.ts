@@ -34,7 +34,7 @@ export default {
   agreeSuffix: ".",
   submitLogin: "Login",
   forgotPassword: "Forgot Password?",
-  newHerePrefix: "New here? ",
+  newHerePrefix: "First time? ",
   createAccountLink: "Create an account.",
 
   setupPass: "Password",

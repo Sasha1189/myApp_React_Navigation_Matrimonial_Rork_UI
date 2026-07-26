@@ -43,8 +43,6 @@ export function useActiveFeed(uid: string): FeedHookResult {
     return () => listener.remove();
   }, [uid]);
 
-  console.log("useActivefeed:", mode, searchField, searchQuery, filterParams);
-
   // 3. Initialize Shards (Clean & Reactive)
   const defaultFeed = useFeedDefault(uid, mode === "default");
   const latestFeed = useFeedLatest(uid, mode === "latest");

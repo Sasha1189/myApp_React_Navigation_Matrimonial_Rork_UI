@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -6,22 +6,25 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  BackHandler,
 } from "react-native";
 import { Crown } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { useSubscription } from "../hooks/useSubscription";
 import { SubscriptionCard } from "../components/SubscriptionCard";
-import { AppBenefitsList } from "../components/AppBenefitsList"; // 🌟 Our new separate benefits module
+import { AppBenefitsList } from "../components/AppBenefitsList";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTheme } from "@/theme/theme";
+import { useNavigation } from "@react-navigation/native";
 
 export default function SubscriptionScreen() {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const {
     selectedPlanId,
@@ -32,9 +35,44 @@ export default function SubscriptionScreen() {
     availablePlans,
   } = useSubscription();
 
+  // 🟢 FIXED SYSTEM LOCKOUT: Modern TypeScript compliant pattern
+  useEffect(() => {
+    // 1. Assign the native event subscription to a variable reference
+    const backHandlerSubscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (isProcessing) {
+          return true; // Swallows the native hardware tap (does nothing)
+        }
+        return false; // Executes default pop navigation behavior
+      },
+    );
+
+    // 2. Intercept React Navigation actions (Gestures / Header Buttons)
+    const navigationUnsubscribe = navigation.addListener(
+      "beforeRemove",
+      (e) => {
+        if (!isProcessing) {
+          return; // Safe to exit screen
+        }
+        e.preventDefault(); // Stop swipe/tap animations from rendering
+      },
+    );
+
+    // 3. Clean up events cleanly by calling .remove() on the subscription object
+    return () => {
+      backHandlerSubscription.remove(); // 🟢 Fixed: No more missing property error
+      navigationUnsubscribe();
+    };
+  }, [isProcessing, navigation]);
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        pointerEvents={isProcessing ? "none" : "auto"}
+      >
         <View style={styles.content}>
           {/* Header Section */}
           <View style={styles.header}>
@@ -83,6 +121,7 @@ export default function SubscriptionScreen() {
           styles.footerContainer,
           { paddingBottom: Math.max(insets.bottom, 24) },
         ]}
+        pointerEvents={isProcessing ? "none" : "auto"}
       >
         <TouchableOpacity
           onPress={handlePay}
@@ -90,13 +129,47 @@ export default function SubscriptionScreen() {
           activeOpacity={0.8}
           style={[
             styles.subscribeButton,
-            isSubmitDisabled && styles.disabledButton,
+            !selectedPlanId && !isProcessing && styles.disabledButton,
+            isProcessing && { opacity: 0.9 },
           ]}
         >
           {isProcessing ? (
-            <ActivityIndicator color="white" />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                width: "100%",
+                paddingHorizontal: 12,
+              }}
+            >
+              <ActivityIndicator color="white" size="small" animating={true} />
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: "white",
+                    flexShrink: 1,
+                    textAlign: "center",
+                    fontSize: 15,
+                  },
+                ]}
+              >
+                {t("subscription.processingPayment")}
+              </Text>
+            </View>
           ) : (
-            <Text style={styles.buttonText}>{t("subscription.payGoogle")}</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                {
+                  color: !selectedPlanId ? theme.colors.textLight : "white",
+                },
+              ]}
+            >
+              {t("subscription.payGoogle")}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -148,43 +221,6 @@ export const createStyles = (theme: AppTheme) =>
       marginBottom: 12,
       marginLeft: 4,
     },
-    benefitsCard: {
-      backgroundColor: theme.colors.card,
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      marginBottom: theme.spacing.xl,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    benefitsHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 16,
-    },
-    benefitsTitle: {
-      fontSize: 18,
-      fontWeight: "700",
-      color: theme.colors.text,
-    },
-    benefitsList: {
-      gap: theme.spacing.md,
-    },
-    benefitItem: {
-      flexDirection: "row",
-      alignItems: "flex-start",
-    },
-    iconWrapper: {
-      width: 30,
-      marginTop: 2,
-    },
-    benefitText: {
-      flex: 1,
-      fontSize: 14,
-      color: theme.colors.textLight,
-      lineHeight: 20,
-      fontWeight: "500",
-    },
     footerContainer: {
       position: "absolute",
       bottom: 8,
@@ -212,7 +248,6 @@ export const createStyles = (theme: AppTheme) =>
       shadowOpacity: 0,
     },
     buttonText: {
-      color: "white",
       fontSize: 18,
       fontWeight: "700", // Extra bold for emphasis
       letterSpacing: 1,

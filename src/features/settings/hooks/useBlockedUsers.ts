@@ -52,9 +52,7 @@ export const useBlockedUsers = () => {
                 thumbnail: data?.thumbnail || data?.photo || "",
               };
             }
-          } catch (e) {
-            console.log("Profile hydration skipped for:", id);
-          }
+          } catch (e) {}
           return {
             uid: id,
             fullName: t("common.blockedUser"),

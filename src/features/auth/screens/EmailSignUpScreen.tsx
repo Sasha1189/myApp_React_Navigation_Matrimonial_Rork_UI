@@ -151,5 +151,10 @@ export const createStyles = (theme: AppTheme) =>
       marginBottom: 16,
     },
     backTouchArea: { flexDirection: "row", alignItems: "center", gap: 12 },
-    formHeadline: { fontSize: 18, fontWeight: "700", color: "#111" },
+    formHeadline: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: "#111",
+      letterSpacing: 0.5,
+    },
   });

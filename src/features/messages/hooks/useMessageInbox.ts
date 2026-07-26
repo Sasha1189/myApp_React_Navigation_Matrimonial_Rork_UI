@@ -130,9 +130,6 @@ export const useMessageInbox = (uid: string) => {
       // This safely fixes any background goOffline() commands issued by the usePresence hook.
       try {
         goOnline(rtdb);
-        console.log(
-          "📥 [Inbox Hook]: Screen focused. Ensuring RTDB socket is online.",
-        );
       } catch (err) {
         console.error("Failed to re-engage inbox socket layer:", err);
       }
@@ -140,9 +137,6 @@ export const useMessageInbox = (uid: string) => {
       startLive();
 
       return () => {
-        console.log(
-          "📤 [Inbox Hook]: Screen blurred. Suspending live inbox tracking listeners.",
-        );
         stopListeners();
       };
     }, [startLive, stopListeners]),

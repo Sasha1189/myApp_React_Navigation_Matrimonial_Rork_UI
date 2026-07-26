@@ -318,10 +318,6 @@ export function useChatSession(
         // 4. Atomic Multi-Path Execution
         await update(ref(rtdb, "/"), updates);
       } catch (err) {
-        console.error(
-          "Critical failure during message deletion transaction:",
-          err,
-        );
         throw err; // Re-throw to handle UI alerting fallbacks gracefully
       }
     },

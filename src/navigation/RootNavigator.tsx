@@ -20,9 +20,7 @@ export default function RootNavigator() {
         setTimeout(async () => {
           try {
             await SplashScreen.hideAsync();
-          } catch (e) {
-            console.warn("Splash hide error ignored:", e);
-          }
+          } catch (e) {}
         }, 100);
       }
     }

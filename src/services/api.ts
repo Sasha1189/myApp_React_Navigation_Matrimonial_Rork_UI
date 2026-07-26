@@ -28,7 +28,6 @@ async function getAuthToken(): Promise<string | null> {
   try {
     return await getIdToken(user, false);
   } catch (error) {
-    console.error("Failed to get ID token:", error);
     return null;
   }
 }

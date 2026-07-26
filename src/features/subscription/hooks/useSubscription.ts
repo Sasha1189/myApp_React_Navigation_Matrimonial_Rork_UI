@@ -13,7 +13,7 @@ const SKUS = ["basic_membership_1y", "premium_membership_1y"];
 const PROFILE_CACHE_KEY = "self_profile_cache";
 
 export const useSubscription = () => {
-  const { user, tier, setTier } = useAuth();
+  const { user, tier, setTier, setMyProfile } = useAuth();
   const { t } = useTranslation();
   const [selectedPlanId, setSelectedPlanId] = useState<string>(
     tier && tier !== "none" ? tier : "",
@@ -53,21 +53,26 @@ export const useSubscription = () => {
             if (cachedString) {
               const currentLocalProfile = JSON.parse(cachedString);
 
+              delete currentLocalProfile.photos;
+              delete currentLocalProfile.thumbnail;
+
               const completeCloudPayload = {
                 ...currentLocalProfile,
                 uid: user?.uid,
                 gender: user?.displayName,
                 tier: result.newTier,
+                photos: [],
+                thumbnail: "",
               };
 
               await apiUpdateProfile(completeCloudPayload);
+
               storage.set(
                 PROFILE_CACHE_KEY,
                 JSON.stringify(completeCloudPayload),
               );
-              console.log(
-                "🚀 [POST-PAYMENT SYNC]: Profile committed to cloud database tables.",
-              );
+
+              setMyProfile(completeCloudPayload);
             }
           } catch (syncErr) {
             // 🟢 SHIELD CATCH: If profile sync drops out, we catch it here so it NEVER hangs the UI!
@@ -78,10 +83,12 @@ export const useSubscription = () => {
           }
         }
         Alert.alert(t("common.success"), t("subscription.activated"), [
-          { text: "OK", onPress: () => navigation.navigate("Tabs" as any) },
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("ManagePhotos"),
+          },
         ]);
       } catch (error) {
-        console.error("[IAP] Verification Error:", error);
         Alert.alert(
           t("common.error", "Error"),
           t(
@@ -105,18 +112,8 @@ export const useSubscription = () => {
   useEffect(() => {
     if (connected) {
       fetchProducts({ skus: SKUS, type: "in-app" });
-      console.log("[IAP] Connected to store, products fetched:", products);
     }
   }, [connected]);
-
-  useEffect(() => {
-    if (products && products.length > 0) {
-      console.log(
-        "🚀 [IAP] Products successfully fetched from Play Store:",
-        products,
-      );
-    }
-  }, [products]);
 
   const isSubmitDisabled =
     !selectedPlanId || selectedPlanId === tier || isProcessing;

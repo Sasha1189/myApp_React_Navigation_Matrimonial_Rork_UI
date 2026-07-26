@@ -13,7 +13,6 @@ export interface Profile {
   // Profile Status
   isActive: boolean;
   isVerified: boolean; // Admin verified
-  // isPremium: boolean; // Deprecated in favor of subscription object
   subscription?: {
     plan: "trial" | "basic" | "premium";
     endsAt?: number; // Timestamp for trial/subscription expiry

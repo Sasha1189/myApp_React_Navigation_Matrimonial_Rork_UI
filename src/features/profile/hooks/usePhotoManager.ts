@@ -65,7 +65,6 @@ export function usePhotoManager(profile: Profile | null) {
       setPhotos((prev) => [...prev, newItem].slice(0, MAX_PHOTOS));
       setIsEditing(true);
     } catch (err) {
-      console.error("Failed to add photo:", err);
       Alert.alert(t("photos.errorTitle"), t("photos.addError"));
     }
   };
@@ -113,7 +112,6 @@ export function usePhotoManager(profile: Profile | null) {
       setPhotos(updated);
       Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"));
     } catch (err) {
-      console.error("Delete failed:", err);
       Alert.alert(t("photos.errorTitle"), t("photos.deleteError"));
     }
   };
@@ -225,9 +223,6 @@ export function usePhotoManager(profile: Profile | null) {
         if (idx !== -1) {
           updatedPhotos[idx].downloadURL = downloadURL;
           if (idx === 0) {
-            console.log(
-              "📸 Syncing root thumbnail because Index 0 was updated...",
-            );
             rootThumbnail = await syncPrimaryThumbnail(updatedPhotos[0], uid!);
           }
         }

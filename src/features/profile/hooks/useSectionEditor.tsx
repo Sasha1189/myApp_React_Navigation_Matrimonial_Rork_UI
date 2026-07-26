@@ -104,12 +104,7 @@ export function useSectionEditor<T extends FieldValues>(
       }
     },
     (validationErrors) => {
-      console.log("❌ Form Validation Failed Fields:", validationErrors);
-      Alert.alert(
-        t("common.error"),
-        t("editor.validationErrorMsg") ||
-          "Please fulfill all required fields before saving.",
-      );
+      Alert.alert(t("common.error"), t("editor.validationErrorMsg"));
     },
   );
 

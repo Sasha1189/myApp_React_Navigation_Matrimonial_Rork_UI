@@ -100,9 +100,9 @@ export default function PhoneSignInScreen() {
                     <TextInput
                       style={[
                         styles.textInput,
-                        { letterSpacing: securePassword ? 4 : 0.5 },
+                        { letterSpacing: securePassword ? 2 : 0.5 },
                       ]}
-                      placeholder="Enter Password (Min 6 characters)"
+                      placeholder="Enter Password (Min 6 Char)"
                       placeholderTextColor="#A8A8A8"
                       secureTextEntry={securePassword}
                       value={password}
@@ -236,7 +236,12 @@ export const createStyles = (theme: AppTheme) =>
       alignItems: "center",
       marginBottom: 16,
     },
-    formHeadline: { fontSize: 18, fontWeight: "700", color: "#111" },
+    formHeadline: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: "#111",
+      letterSpacing: 0.5,
+    },
     formSubhead: {
       fontSize: 13,
       color: "#666",
@@ -249,6 +254,7 @@ export const createStyles = (theme: AppTheme) =>
       fontWeight: "600",
       color: "#666",
       marginBottom: 10,
+      letterSpacing: 0.5,
     },
     inputWrapper: {
       flexDirection: "row",
@@ -265,6 +271,7 @@ export const createStyles = (theme: AppTheme) =>
       fontWeight: "600",
       color: "#111",
       marginRight: 12,
+      letterSpacing: 0.5,
     },
     textInput: {
       flex: 1,
@@ -329,6 +336,7 @@ export const createStyles = (theme: AppTheme) =>
       fontSize: 13,
       fontWeight: "600",
       color: "#1c7ed6", // Highlights option text cleanly
+      letterSpacing: 0.5,
     },
     switchAuthModeContainer: {
       flexDirection: "row",
@@ -343,10 +351,13 @@ export const createStyles = (theme: AppTheme) =>
       fontSize: 14,
       color: "#555",
       fontWeight: "500",
+      letterSpacing: 0.5,
     },
     switchAuthModeLink: {
       color: "#1c7ed6",
       fontWeight: "700",
+      letterSpacing: 0.5,
+      textDecorationLine: "underline",
     },
     inlineBackButton: {
       left: 24,

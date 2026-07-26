@@ -132,9 +132,9 @@ export function VerticalSwipeList({
         offset: _itemFullSize * index,
         index,
       })}
-      initialNumToRender={1} // Only paint 1 card on the initial screen boot mount
-      maxToRenderPerBatch={1} // Only compile 1 card per scrolling threshold step pass
-      windowSize={3} // Keeps exactly 3 cards active (1 current, 1 above, 1 below) and deletes the rest!
+      initialNumToRender={5}
+      maxToRenderPerBatch={3}
+      windowSize={7}
       removeClippedSubviews={Platform.OS === "android"}
       snapToInterval={_itemFullSize}
       decelerationRate="fast"
@@ -148,8 +148,9 @@ export function VerticalSwipeList({
       )}
       onScrollToIndexFailed={(info) => {
         // Safe guard fallback if layout pipelines glitch out during memory sweeps
+        const targetOffset = info.index * _itemFullSize;
         flatListRef.current?.scrollToOffset({
-          offset: info.highestMeasuredFrameIndex * _itemFullSize,
+          offset: targetOffset,
           animated: false,
         });
       }}

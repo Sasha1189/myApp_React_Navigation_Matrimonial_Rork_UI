@@ -149,7 +149,6 @@ export const setDBDeviceIdCache = (deviceId: string) => {
 export async function clearCacheOnLogout() {
   try {
     storage.clearAll();
-    console.log("✅ Local MMKV profile caches purged.");
   } catch (storageError) {
     console.error("⚠️ MMKV purge error:", storageError);
   }
@@ -159,13 +158,8 @@ export async function clearCacheOnLogout() {
 
     // 👑 FIX 3: Terminate the cache engine cleanly
     await terminate(firestoreInstance);
-    console.log("✅ Firestore connection terminated safely.");
-
-    // 👑 OPTIONAL EXTRA PROTECTION: Clears any lingering database query files off phone disk storage
-    // to match modular guidelines and prevent layout memory leaks on next logins
     try {
       await clearIndexedDbPersistence(firestoreInstance);
-      console.log("✅ Firestore offline disk persistence database cleared.");
     } catch (persistenceError) {
       console.log("Skipping internal persistence cleanup:", persistenceError);
     }

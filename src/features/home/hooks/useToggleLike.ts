@@ -11,14 +11,6 @@ export const toggleLike = async (
   myProfile: { myUid: string; name: string; photo: string },
   otherUser: { uid: string; name: string; photo: string },
 ) => {
-  console.log(
-    `Toggling like for myprofile uid: ${myProfile.myUid} and myname: ${myProfile.name} myphoto: ${myProfile.photo}`,
-  );
-  console.log("--------------------------------");
-  console.log(
-    `Toggling like for otherUser uid: ${otherUser.uid} and otherUser name: ${otherUser.name} otherUser photo: ${otherUser.photo}`,
-  );
-
   const likedIds = LikesCache.getIds();
   let isCurrentlyLiked = likedIds.includes(otherUser.uid);
 
@@ -62,7 +54,6 @@ export const toggleLike = async (
   try {
     return await update(ref(rtdb, "/"), updates);
   } catch (err) {
-    console.log("error:", err);
     throw err;
   }
 };

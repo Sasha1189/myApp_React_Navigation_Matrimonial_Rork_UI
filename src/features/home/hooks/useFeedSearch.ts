@@ -64,7 +64,6 @@ export function useFeedSearch(
 
       setProfiles(data);
     } catch (e: any) {
-      console.error("Search Error:", e);
       setError(e);
     } finally {
       setIsLoading(false);

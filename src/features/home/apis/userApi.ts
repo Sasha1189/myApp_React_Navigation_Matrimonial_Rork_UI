@@ -13,7 +13,6 @@ export async function createUserOnBackend(payload: CreateUserPayload) {
     const res = await api.post(`/user/create-user`, payload);
     return res;
   } catch (error) {
-    console.error("User creation failed:", error);
     throw error;
   }
 }
@@ -32,7 +31,6 @@ export async function updateUserDeviceId(uid: string, activeDeviceId: string) {
       { merge: true },
     );
   } catch (error) {
-    console.error("User update failed:", error);
     throw error;
   }
 }
@@ -44,7 +42,6 @@ export async function getUserDeviceId(uid: string) {
     const snap = await getDoc(docRef);
     return snap.data()?.activeDeviceId;
   } catch (error) {
-    console.error("Get user device id failed:", error);
     throw error;
   }
 }

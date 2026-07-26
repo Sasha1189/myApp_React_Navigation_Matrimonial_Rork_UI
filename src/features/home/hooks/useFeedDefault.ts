@@ -77,9 +77,8 @@ export function useFeedDefault(uid: string, isActive: boolean) {
 
   const updateIndex = useCallback(
     (val: number) => {
-      // Ensure index never exceeds array bounds
-      // const maxIdx = Math.max(0, profiles.length - 1);
-      const next = Math.max(0, Math.min(val, profiles?.length));
+      const maxLimit = profiles?.length || 0;
+      const next = Math.max(0, Math.min(val, maxLimit));
       _setIndex(next);
       storage.set(indexKey, next);
     },

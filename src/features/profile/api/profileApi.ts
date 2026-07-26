@@ -1,4 +1,10 @@
-import { firestore, doc, setDoc, getDoc } from "../../../config/firebase";
+import {
+  firestore,
+  doc,
+  setDoc,
+  getDoc,
+  firestoreServerTimestamp,
+} from "../../../config/firebase";
 import { Profile } from "../../../types/profile";
 
 export async function getProfile(
@@ -30,18 +36,23 @@ export async function apiUpdateProfile(
 
   const docRef = doc(firestore, collectionName, uid);
 
+  const docSnap = await getDoc(docRef);
+  const existingData = docSnap.exists() ? docSnap.data() : null;
+  const svts = firestoreServerTimestamp();
+
   await setDoc(
     docRef,
     {
       ...data,
       uid,
       gender,
-      updatedAt: new Date(),
+      createdAt: existingData?.createdAt || svts,
+      updatedAt: svts,
     },
     { merge: true },
   );
 
-  // Fetch the latest version back (from cache)
+  // Fetch the latest version back (for cache)
   const snap = await getDoc(docRef);
   return snap.data() as Profile;
 }

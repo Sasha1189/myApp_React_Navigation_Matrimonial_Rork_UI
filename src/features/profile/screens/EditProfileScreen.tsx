@@ -32,8 +32,6 @@ export default function EditProfileScreen() {
   const { t } = useTranslation();
   const navigation = useAppNavigation();
 
-  console.log("My Profile Data:", myProfile);
-
   return (
     <FlatList
       data={SECTION_CONFIG}

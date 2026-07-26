@@ -57,7 +57,7 @@ export const PhoneInputStep: React.FC<PhoneInputStepProps> = ({
       <View style={styles.inputWrapper}>
         <TextInput
           style={[styles.textInput, { letterSpacing: securePass ? 2 : 0.5 }]}
-          placeholder="Setup password (Min. 6 characters)"
+          placeholder="Setup password (Min. 6 Char)"
           placeholderTextColor="#A8A8A8"
           secureTextEntry={securePass}
           value={password}
@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#666",
     marginBottom: 10,
+    letterSpacing: 0.5,
   },
   inputWrapper: {
     flexDirection: "row",
@@ -130,6 +131,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#111",
     marginRight: 12,
+    letterSpacing: 0.5,
   },
   textInput: {
     flex: 1,

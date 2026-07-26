@@ -1,6 +1,6 @@
 export default {
-  editProfile: "CREATE PROFILE",
-  viewPreview: "PREVIEW PROFILE",
+  editProfile: "CREATE MY PROFILE",
+  viewPreview: "PREVIEW MY PROFILE",
   managePhotos: "ADD PHOTOS",
   completion: "{{percent}}% Profile Completed",
   stats: {
@@ -9,8 +9,8 @@ export default {
     received: "Like Recv",
   },
   premium: {
-    upgrade: "Upgrade to Premium",
-    benefits: "See who likes you & Unlimited Swipes",
+    upgrade: "Upgrade to Support Us!",
+    benefits: "See who likes you & Unlimited profile views..",
   },
   defaultName: "My Name",
 };

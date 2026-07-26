@@ -13,8 +13,6 @@ export async function apiSubscribe(payload: {
   packageName: string;
   method: string;
 }): Promise<SubscriptionResponse> {
-  console.log("[API] Verifying subscription with backend...", payload);
-
   const res = await api.post<SubscriptionResponse>(
     `/subscription/update-subscription`,
     payload,

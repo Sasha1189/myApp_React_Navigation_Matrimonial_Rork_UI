@@ -33,15 +33,8 @@ export const FeedSyncService = {
       // --- 1. FAIL-SAFE FREE TRIAL USER BLOCK ---
       if (userTier === "none") {
         if (lastSync > 0) {
-          console.log(
-            "🛑 Free user already has 5 profiles stored. Server request BLOCKED.",
-          );
           return true;
         }
-
-        console.log(
-          "⚠️ Fresh free user session. Attempting to download 5 profiles from the server.",
-        );
 
         const freeQuery = queryFs(
           collection(firestore, targetCollection),
@@ -53,15 +46,8 @@ export const FeedSyncService = {
 
         if (snapshot && snapshot.size > 0) {
           storage.set(SYNC_KEY, 1);
-          console.log(
-            `✅ Success: Downloaded ${snapshot.size} profiles. Sync token LOCKED to 1.`,
-          );
           return true;
         } else {
-          // If the server returned 0 profiles or failed silently, do NOT lock the token
-          console.log(
-            "⚠️ Server returned an empty batch. Leaving sync token at 0 to retry later.",
-          );
           return false;
         }
       }
@@ -76,7 +62,6 @@ export const FeedSyncService = {
           ),
         );
         storage.set(SYNC_KEY, Date.now());
-        console.log(`✅ Initial paid ${firstBatch.size} profiles injected.`);
       }
 
       // 2. Full/Delta Sync
@@ -89,7 +74,6 @@ export const FeedSyncService = {
 
       if (!snapshot.metadata.fromCache) {
         storage.set(SYNC_KEY, Date.now());
-        console.log(`✅ Phase 2: Full sync complete (+${snapshot.size}).`);
       }
 
       return true;

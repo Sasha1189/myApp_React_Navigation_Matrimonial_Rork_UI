@@ -56,30 +56,22 @@ export const useSettingsActions = () => {
           defaultValue: "WhatsApp is not installed on this device.",
         }),
       );
-      console.error("WhatsApp redirection failed:", error);
     }
   };
 
   const handleLogout = () => {
-    console.log("Logout trigger initialized - Displaying Alert Box");
-
     Alert.alert(t("settings.logoutTitle"), t("settings.logoutConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
       {
         text: t("settings.logout"),
         style: "destructive",
         onPress: async () => {
-          console.log("User confirmed logout process execution");
           setIsProcessing(true);
 
           try {
             const currentUser = auth.currentUser;
 
             if (currentUser) {
-              console.log(
-                "Updating network status to offline for UID:",
-                currentUser.uid,
-              );
               const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
 
               // Fire-and-forget update prevents network thread hanging freezes
@@ -91,8 +83,6 @@ export const useSettingsActions = () => {
               );
             }
 
-            // 👑 FIX 1: Purge application local caches and terminate DB first while session tokens are valid
-            console.log("Purging Local Application Caches safely");
             try {
               await clearCacheOnLogout();
             } catch (cacheError) {
@@ -101,17 +91,9 @@ export const useSettingsActions = () => {
                 cacheError,
               );
             }
-
-            // 👑 FIX 2: Invoke Native Firebase SignOut second now that database links are closed safely
-            console.log("Invoking Native Firebase SignOut");
             await signOut(auth);
-
-            console.log("Resetting Auth Context State to Null");
             setUser(null);
-
-            console.log("Logout routine finished successfully.");
           } catch (error: any) {
-            console.error("CRITICAL: Logout pipeline crashed:", error);
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {
             setIsProcessing(false);
