@@ -2,7 +2,7 @@ import auth from "./auth";
 import common from "./common";
 import settings from "./settings";
 import card from "./card";
-import genderModal from "./genderModal";
+import userInfo from "./userInfo";
 import feed from "./feed";
 import chat from "./chat";
 import details from "./details";
@@ -20,7 +20,7 @@ export default {
   auth,
   settings,
   card,
-  genderModal,
+  userInfo,
   feed,
   chat,
   details,

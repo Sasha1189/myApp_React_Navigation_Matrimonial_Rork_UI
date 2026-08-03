@@ -92,12 +92,7 @@ export default function UserDetailsScreen({ route }: any) {
         <View style={styles.carouselCard}>
           <ProfileCarousel profile={profile} />
         </View>
-        {isSelf && (
-          <View style={styles.disclaimerCard}>
-            <ShieldAlert size={20} color={theme.colors.accent} />
-            <Text style={styles.disclaimerText}>{t("details.phototip")}</Text>
-          </View>
-        )}
+
         {/* 1. Personal Info - Parallel Grid */}
         <DetailSection title={t("details.sections.personal")} icon={Users}>
           <DetailRow

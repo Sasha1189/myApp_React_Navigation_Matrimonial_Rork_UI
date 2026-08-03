@@ -10,68 +10,61 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
+import { useForm } from "react-hook-form";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
-// Import your subcomponents
 import { useSignUpFlow } from "../hooks/useSignUpFlow";
 import { useAuthNavigation } from "../../../navigation/hooks";
 import { AuthHeaderBanner } from "../components/AuthHeaderBanner";
 import { AuthFooterActions } from "../components/AuthFooterActions";
-import { PhoneInputStep } from "../components/PhoneInputStep";
+import {
+  EmailInputField,
+  PasswordInputField,
+} from "../components/AuthInputFields";
 
 export default function EmailSignUpScreen() {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useAuthNavigation();
-
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  // 👑 UPDATE 1: Destructured the streamlined single-step signature hooks parameters cleanly
+  const { isLoading, executeRegistration, handleBackPress } = useSignUpFlow();
+
   const {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-    isLoading,
-    handleSignUpSubmit,
-    handleBackPress,
-    isButtonDisabled,
-  } = useSignUpFlow();
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const passwordValue = watch("password");
 
   const openLink = (url: string, title: string) => {
     navigation.navigate("WebView", { url, title });
   };
 
-  // 👑 UPDATE 2: Submission button state triggers your direct registration thread execution loop
-  const handleAuthSubmit = () => {
-    handleSignUpSubmit();
-  };
+  const handleAuthSubmit = handleSubmit((data) => {
+    executeRegistration(data);
+  });
 
-  const finalButtonDisabled = isButtonDisabled || !agreeTerms || isLoading;
-
-  // Unified prop payload payload mapping cleanly down to your input layouts component
-  const phoneProps = {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-  };
+  const finalButtonDisabled = !isValid || !agreeTerms || isLoading;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        {/* ================= SECTION 1: TOP IMAGE BANNER ================= */}
         <AuthHeaderBanner />
 
-        {/* ================= SECTION 2: WHITE SHEET BLOCK ================= */}
         <KeyboardAvoidingView
           style={styles.sheetContainer}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -90,18 +83,37 @@ export default function EmailSignUpScreen() {
                     style={styles.backTouchArea}
                   >
                     <Text style={styles.formHeadline}>
-                      {t("auth.signUpTitlePhone")}
+                      {t("auth.signUpTitleEmail")}
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {/* 1. Standard Email field */}
+                <EmailInputField control={control} errors={errors} />
 
-                {/* 👑 UPDATE 3: Displays input wrappers directly as a cohesive single screen step */}
-                <PhoneInputStep {...phoneProps} />
+                {/* 2. Standard Password field */}
+                <PasswordInputField
+                  control={control}
+                  errors={errors}
+                  name="password"
+                  labelKey="auth.fieldLabelPassword"
+                  placeholderKey="auth.placeholderPassword"
+                />
+
+                {/* 3. Reused Confirm Password field with dynamic mismatch rule validation */}
+                <PasswordInputField
+                  control={control}
+                  errors={errors}
+                  name="confirmPassword"
+                  labelKey="auth.fieldLabelConfirmPassword"
+                  placeholderKey="auth.placeholderConfirmPassword"
+                  validateRule={(val) =>
+                    val === passwordValue ||
+                    t("auth.passwordMismatch", "Passwords do not match")
+                  }
+                />
               </View>
 
-              {/* 🔹 Form Absolute Footer Control Area */}
               <AuthFooterActions
-                step="PHONE_INPUT" // Static identifier fallback mapping for structural compatibility
                 isLoading={isLoading}
                 finalButtonDisabled={finalButtonDisabled}
                 handleAuthSubmit={handleAuthSubmit}
@@ -109,6 +121,7 @@ export default function EmailSignUpScreen() {
                 insets={insets}
                 agreeTerms={agreeTerms}
                 setAgreeTerms={setAgreeTerms}
+                showCheckbox={true}
               />
             </View>
           </ScrollView>
@@ -122,13 +135,13 @@ export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#F2F4F7",
+      backgroundColor: theme.colors.background, // Adaptive brand background token
     },
     sheetContainer: {
       flex: 1,
-      backgroundColor: "white",
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      backgroundColor: theme.colors.card, // Adaptive dark/light card background
+      borderTopLeftRadius: theme.borderRadius.lg, // 16px standard token
+      borderTopRightRadius: theme.borderRadius.lg,
       marginTop: -20,
       overflow: "hidden",
     },
@@ -137,8 +150,8 @@ export const createStyles = (theme: AppTheme) =>
     },
     sheetInnerContent: {
       flexGrow: 1,
-      paddingHorizontal: 24,
-      paddingTop: 16,
+      paddingHorizontal: theme.spacing.lg, // 24px core grid padding
+      paddingTop: theme.spacing.md, // 16px vertical padding
       justifyContent: "space-between",
     },
     bodySection: {
@@ -148,13 +161,17 @@ export const createStyles = (theme: AppTheme) =>
     formHeaderRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md, // 16px row space
     },
-    backTouchArea: { flexDirection: "row", alignItems: "center", gap: 12 },
+    backTouchArea: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.sm, // 8px horizontal layout spacing
+    },
     formHeadline: {
-      fontSize: 18,
+      fontSize: theme.fontSize.lg, // 18px text standard
       fontWeight: "700",
-      color: "#111",
+      color: theme.colors.text, // Adaptive high-contrast brand text
       letterSpacing: 0.5,
     },
   });

@@ -2,14 +2,15 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "./types";
 import AppNavigator from "./AppNavigator";
 import AuthNavigator from "./AuthNavigator";
+import UserInfoScreen from "../features/auth/screens/UserInfoScreen";
 
 SplashScreen.preventAutoHideAsync();
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { user, authLoading } = useAuth();
@@ -29,11 +30,16 @@ export default function RootNavigator() {
 
   if (authLoading) return null;
 
+  const isProfileIncomplete = user && !user.displayName;
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
+        ) : isProfileIncomplete ? (
+          // 2. 🌟 Authenticated but missing gender/displayName token metadata forces UserInfo landing
+          <Stack.Screen name="UserInfo" component={UserInfoScreen} />
         ) : (
           <Stack.Screen name="App" component={AppNavigator} />
         )}

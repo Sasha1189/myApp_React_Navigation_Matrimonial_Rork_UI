@@ -89,14 +89,9 @@ export const useSubscription = () => {
           },
         ]);
       } catch (error) {
-        Alert.alert(
-          t("common.error", "Error"),
-          t(
-            "subscription.verifyError",
-            "Could not process subscription. Please try again.",
-          ),
-          [{ text: "OK", onPress: () => navigation.navigate("Tabs" as any) }],
-        );
+        Alert.alert(t("common.error"), t("subscription.verifyError"), [
+          { text: "OK", onPress: () => navigation.navigate("Tabs" as any) },
+        ]);
       } finally {
         setIsProcessing(false);
       }
@@ -164,6 +159,9 @@ export const useSubscription = () => {
     }
   };
 
+  const isLoadingPlans = connected && (!products || products.length === 0);
+  const hasError = connected && !isLoadingPlans && products.length === 0;
+
   return {
     selectedPlanId,
     setSelectedPlanId,
@@ -171,5 +169,8 @@ export const useSubscription = () => {
     isProcessing,
     isSubmitDisabled,
     availablePlans: products,
+    isLoadingPlans, // 🌟 Sent to template
+    hasError, // 🌟 Sent to template
+    refetchPlans: () => fetchProducts({ skus: SKUS, type: "in-app" }),
   };
 };

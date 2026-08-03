@@ -1,4 +1,3 @@
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { NavigatorScreenParams } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack"; // Use NativeStack
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
@@ -6,6 +5,7 @@ import { Profile } from "src/types/profile";
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
+  UserInfo: undefined;
   App: NavigatorScreenParams<AppStackParamList>;
 };
 

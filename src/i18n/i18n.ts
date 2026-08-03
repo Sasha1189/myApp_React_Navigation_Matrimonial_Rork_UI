@@ -5,7 +5,7 @@ import en from "./locales/en/index";
 import mr from "./locales/mr/index";
 
 // Get stored language or default to English
-const storedLanguage = storage.getString("user_language") || "en";
+const storedLanguage = storage.getString("user_language") || "mr";
 
 const resources = {
   en: { translation: en },

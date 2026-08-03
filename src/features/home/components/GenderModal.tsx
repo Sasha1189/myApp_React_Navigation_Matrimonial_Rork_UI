@@ -18,8 +18,6 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../types/profile";
 import { createUserOnBackend } from "../apis/userApi";
 import { useTranslation } from "react-i18next";
-import { getUniqueId } from "react-native-device-info";
-import { setDBDeviceIdCache } from "../../../cache/cacheConfig";
 
 interface GenderModalProps {
   visible: boolean;

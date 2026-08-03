@@ -1,128 +1,125 @@
 import { useState } from "react";
-import { Alert, Linking } from "react-native";
+import { Alert } from "react-native";
 import {
   getAuth,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from "@react-native-firebase/auth";
 import { useTranslation } from "react-i18next";
 
 export const useLoginEmail = () => {
   const { t } = useTranslation();
   const authInstance = getAuth();
-
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleBackPress = () => {
-    setPhoneNumber("");
-    setPassword("");
-  };
-
-  const handleAuthSubmit = async () => {
-    if (phoneNumber.length !== 10) {
-      Alert.alert(t("common.error"), t("auth.invalidPhone"));
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert(
-        t("common.error"),
-        t("auth.passwordTooShort", {
-          defaultValue: "Password must be at least 6 characters.",
-        }),
-      );
-      return;
-    }
-
+  // 🎯 CONNECTS DIRECTLY TO REACT-HOOK-FORM SUBMIT
+  const executeLogin = async (formData: any) => {
+    const { email, password } = formData;
     setIsLoading(true);
-    const formattedEmail = `+91${phoneNumber}@lonariyuvaconnect.com`;
 
     try {
-      // 1. Straightforward login attempt using modern modular API
-      await signInWithEmailAndPassword(authInstance, formattedEmail, password);
+      // 1. Pure, native standard Firebase authentication login pass
+      await signInWithEmailAndPassword(
+        authInstance,
+        email.toLowerCase().trim(),
+        password,
+      );
     } catch (error: any) {
       console.log("ℹ️ [Auth Flow]: SignIn rejected. Code:", error.code);
 
-      // 2. Clear, distinct error routing loops
+      // 2. Clear, distinct production error routing loops
       if (
         error.code === "auth/user-not-found" ||
         error.code === "auth/invalid-credential"
       ) {
-        // Account does not exist in Firebase Console
         Alert.alert(
-          t("common.error"),
+          t("common.error", "Error"),
           t(
             "auth.accountDoesNotExist",
             "This account does not exist. Please Sign Up first.",
           ),
         );
       } else if (error.code === "auth/wrong-password") {
-        // Password mismatch protection check
         Alert.alert(
-          t("common.error"),
+          t("common.error", "Error"),
           t("auth.incorrectPassword", "Incorrect password. Please try again."),
         );
       } else if (error.code === "auth/user-disabled") {
         Alert.alert(
-          t("common.error"),
+          t("common.error", "Error"),
           t("auth.userDisabled", "This account has been disabled."),
         );
       } else {
-        Alert.alert(t("common.error"), error.message || t("auth.failed"));
+        Alert.alert(
+          t("common.error", "Error"),
+          error.message || t("auth.failed", "Authentication failed."),
+        );
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    const adminPhoneNumber = "8554840100";
-    const whatsappMessage = encodeURIComponent(
-      t(
-        "auth.forgotPasswordSmsBody",
-        "Hello Admin, I forgot my password. Please help me reset it for my registered mobile number.",
-      ),
-    );
+  // 🎯 THE FIXED FORGOT PASSWORD METHOD WITH CONFIRMATION ALERT
+  const handleForgotPassword = async (currentEmailValue?: string) => {
+    // 1. Core input structural check validation
+    if (!currentEmailValue || !/^\S+@\S+$/i.test(currentEmailValue)) {
+      Alert.alert(
+        t("common.error", "Error"),
+        t(
+          "auth.enterValidEmailForReset",
+          "Please enter a valid email address first to reset your password."
+        )
+      );
+      return;
+    }
 
+    const cleanEmail = currentEmailValue.toLowerCase().trim();
+
+    // 2. 🎯 SHOW INTERACTIVE CONFIRMATION MODAL WINDOW
     Alert.alert(
-      t("auth.forgotAlertTitle", "Reset Password"),
-      t(
-        "auth.forgotAlertMessage",
-        "Call / Whatsapp admin on 8554840100 from your registered mobile number to reset password.",
-      ),
+      t("auth.resetConfirmTitle", "Confirm Reset"),
+      // Dynamically displays the typed email right inside the message content
+      `${t("auth.resetConfirmMsg", "We will send a password reset link to:")}\n\n${cleanEmail}`,
       [
         {
-          text: t("auth.forgotAlertCancel", "Cancel"),
+          text: t("auth.helpAlertCancel", "Cancel"),
           style: "cancel",
         },
         {
-          text: t("auth.forgotAlertCall", "Call"),
-          onPress: () => Linking.openURL(`tel:${adminPhoneNumber}`),
-        },
-        {
-          text: t("auth.forgotAlertWhatsapp", "WhatsApp"),
-          style: "default",
-          onPress: () =>
-            Linking.openURL(
-              `https://wa.me{adminPhoneNumber}?text=${whatsappMessage}`,
-            ),
+          text: t("auth.helpAlertBtn", "OK"),
+          // 3. 🎯 ONLY EXECUTED IF USER CLICKS OK NATIVELY
+          onPress: async () => {
+            setIsLoading(true);
+            try {
+              await sendPasswordResetEmail(authInstance, cleanEmail);
+              
+              Alert.alert(
+                t("auth.successTitle", "Success"),
+                t(
+                  "auth.passwordResetSent",
+                  "A password reset link has been sent to your email inbox."
+                )
+              );
+            } catch (error: any) {
+              console.error("Password reset failure after OK tap:", error);
+              Alert.alert(
+                t("common.error", "Error"),
+                error.message || "Failed to process password reset request."
+              );
+            } finally {
+              setIsLoading(false);
+            }
+          },
         },
       ],
-      { cancelable: true },
+      { cancelable: true }
     );
   };
 
-  const isButtonDisabled = phoneNumber.length !== 10 || password.length < 6;
-
   return {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
     isLoading,
-    handleBackPress,
-    handleAuthSubmit,
-    isButtonDisabled,
+    executeLogin,
     handleForgotPassword,
   };
 };

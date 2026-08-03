@@ -7,7 +7,6 @@ export default {
   startTrial: "Experience Premium for ₹1",
   payGoogle: "Contribute & Join", // Less transactional
   currentPlan: "Your Current Contribution",
-  free: "Guest",
   plans: {
     basic: {
       name: "Community Supporter", // Emotional label
@@ -54,4 +53,14 @@ export default {
   selectPlanMsg: "Please select a subscription plan to continue.",
   payError: "Could not process subscription. Please try again.",
   processingPayment: "Processing Payment.. please wait...",
+
+  //...
+  choosePlan: "Choose a Plan",
+
+  onceYear: "Once a year",
+
+  loadingStore: "Fetching items from Play Store...",
+  loadFailed: "Unable to load pricing options",
+
+  verifyError: "Could not process subscription. Please try again.",
 };

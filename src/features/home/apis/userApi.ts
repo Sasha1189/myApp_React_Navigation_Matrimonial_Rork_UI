@@ -1,6 +1,5 @@
 import { api } from "../../../services/api";
 import { firestore, doc, setDoc, getDoc } from "@/config/firebase";
-import { storage } from "../../../cache/cacheConfig";
 
 export interface CreateUserPayload {
   uid: string;

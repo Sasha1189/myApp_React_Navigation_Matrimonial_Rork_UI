@@ -10,57 +10,30 @@ import { useAuthNavigation } from "../../../navigation/hooks";
 export function useSignUpFlow() {
   const { t } = useTranslation();
   const navigation = useAuthNavigation();
-
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUpSubmit = async () => {
-    if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
-      Alert.alert(
-        t("common.error"),
-        "Please enter a valid 10-digit phone number",
-      );
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert(
-        t("common.error"),
-        t("auth.passwordMismatch", "Passwords do not match."),
-      );
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert(
-        t("common.error"),
-        t("auth.passwordTooShort", "Password must be at least 6 characters."),
-      );
-      return;
-    }
-
+  const executeRegistration = async (formData: any) => {
+    const { email, password } = formData;
     setIsLoading(true);
-    const dummyEmail = `+91${phoneNumber}@lonariyuvaconnect.com`;
 
     try {
-      // 👑 UPDATE 2: Fetch the active auth instance module
       const firebaseAuth = getAuth();
 
-      // 👑 UPDATE 3: Execute using clean modular function boundaries
-      await createUserWithEmailAndPassword(firebaseAuth, dummyEmail, password);
+      // Pure, native Firebase registration
+      await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
       Alert.alert(
         t("auth.successTitle", "Success"),
-        t("auth.registrationComplete", "Registration completed successfully!"),
+        t("auth.registrationComplete"),
       );
     } catch (error: any) {
-      console.error("Account registration failure: ", error);
+      console.error("Pure email registration failure: ", error);
       let msg = error.message;
 
       if (error.code === "auth/email-already-in-use") {
         msg = t(
           "auth.duplicateEmailError",
-          "This mobile number is already registered.",
+          "This email address is already registered.",
         );
       }
 
@@ -74,22 +47,9 @@ export function useSignUpFlow() {
     navigation.goBack();
   };
 
-  const isButtonDisabled =
-    phoneNumber.length < 10 ||
-    password.length < 6 ||
-    confirmPassword.length < 6 ||
-    isLoading;
-
   return {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
     isLoading,
-    handleSignUpSubmit,
+    executeRegistration,
     handleBackPress,
-    isButtonDisabled,
   };
 }
