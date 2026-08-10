@@ -49,13 +49,6 @@ const InputField: React.FC<InputFieldProps> = ({
             {required && <Text style={styles.requiredStar}> *</Text>}
           </Text>
         </View>
-
-        {locked && (
-          <View style={styles.lockBadge}>
-            <Lock size={10} color={theme.colors.success} />
-            <Text style={styles.lockBadgeText}>Verified</Text>
-          </View>
-        )}
       </View>
 
       <View style={styles.inputWrapper}>

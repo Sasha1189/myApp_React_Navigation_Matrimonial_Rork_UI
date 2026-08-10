@@ -1,10 +1,12 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
+import { LOOKUPS } from "@/features/utils/profileLookups"; // Enforce path to your profile lookup definitions
+import { Profile } from "../../../../types/profile"; // Enforce path to your profile schema
 
 interface ProgressBarProps {
-  data: any;
-  trackedFields: readonly string[];
+  data: Profile | undefined | null;
+  trackedFields: readonly (keyof Profile)[]; // Type-safe layout arrays mapping directly to Profile properties
   label?: string;
   showCount?: boolean;
 }
@@ -23,13 +25,26 @@ export const ProfileProgressBar = ({
     const total = trackedFields.length;
     const filled = trackedFields.filter((key) => {
       const val = data[key];
-      // Check for non-empty values (strings, arrays, numbers)
-      return (
-        val !== null &&
-        val !== undefined &&
-        val !== "" &&
-        (Array.isArray(val) ? val.length > 0 : true)
-      );
+
+      // Check 1: Handle null, undefined, or empty text strings
+      if (val === null || val === undefined || val === "") return false;
+
+      // Check 2: Evaluate fields using global LOOKUPS dictionary rules
+      if (key in LOOKUPS) {
+        const lookupField = key as keyof typeof LOOKUPS;
+        const index = typeof val === "number" ? val : Number(val);
+
+        // Index is out of bounds or resolves to a blank select option placeholder ""
+        if (!LOOKUPS[lookupField] || LOOKUPS[lookupField][index] === "") {
+          return false;
+        }
+        return true;
+      }
+
+      // Check 3: Check dynamic array values (like hobbies selection arrays)
+      if (Array.isArray(val) && val.length === 0) return false;
+
+      return true;
     }).length;
 
     return {
@@ -81,7 +96,7 @@ export const ProfileProgressBar = ({
 };
 
 const styles = StyleSheet.create({
-  container: { marginVertical: 10, width: "100%" },
+  container: { marginVertical: 4, width: "100%" }, // Slightly condensed vertical margin for clean dashboard fit
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

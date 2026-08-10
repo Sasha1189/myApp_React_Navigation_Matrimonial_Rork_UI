@@ -1,4 +1,4 @@
-type DOBDisplayMode = "age" | "dob" | "both" | "form"; // 🌟 Added "form" mode variant
+type DOBDisplayMode = "age" | "dob" | "both" | "form" | "tob"; // 🌟 Added "form" mode variant
 type DOBInput = string | Date | null | undefined;
 
 export const formatDOB = (
@@ -9,6 +9,15 @@ export const formatDOB = (
 
   const dob = new Date(dobStr);
   if (isNaN(dob.getTime())) return "";
+
+  // 1. New Time Formatting Logic ("05:20 AM")
+  if (mode === "tob") {
+    const hours = dob.getHours();
+    const minutes = dob.getMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const h = hours % 12 === 0 ? 12 : hours % 12;
+    return `${h}:${String(minutes).padStart(2, "0")} ${ampm}`;
+  }
 
   // Calculate age
   const today = new Date();
@@ -41,7 +50,7 @@ export const formatDOB = (
       return formattedDOB;
     case "both":
     default:
-      return age >= 0 ? `${age} years (${formattedDOB})` : formattedDOB;
+      return age >= 0 ? `${formattedDOB},(${age}y)` : formattedDOB;
   }
 };
 

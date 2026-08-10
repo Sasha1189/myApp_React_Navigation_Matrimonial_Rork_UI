@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import {
-  firestore,
-  collection,
-  queryFs,
-  orderBy,
-  getDocsFromCache,
-  limit,
-} from "@/config/firebase";
 import { FeedSyncService } from "../apis/feedApi";
 
 export function useFeedLatest(uid: string, isActive: boolean) {
@@ -21,7 +13,11 @@ export function useFeedLatest(uid: string, isActive: boolean) {
   const [error, setError] = useState<any>(null);
   const [currentIndex, _setIndex] = useState(0);
 
-  const loadLatestProfiles = useCallback(async () => {
+  /**
+   * Reads raw records directly out of the MMKV layer,
+   * sorts them descending by creation date, and clips to a limit of 50.
+   */
+  const loadLatestProfiles = useCallback(() => {
     const rawGender = user?.displayName || "";
     const gender = rawGender.toLowerCase().trim();
 
@@ -31,29 +27,32 @@ export function useFeedLatest(uid: string, isActive: boolean) {
       return;
     }
 
-    const targetCollection =
-      gender === "male" ? "femaleProfiles" : "maleProfiles";
-
     setIsLoading(true);
     setError(null);
+
     try {
-      const colRef = collection(firestore, targetCollection);
-      const q = queryFs(colRef, orderBy("createdAt", "desc"), limit(50));
+      // 1. Fetch current runtime dictionary from memory layer
+      const records = FeedSyncService.getCachedProfiles();
 
-      const snapshot = await getDocsFromCache(q);
+      // 2. Map, sort by createdAt descending, and slice to match old limit(50)
+      const data = Object.values(records)
+        .sort((a: any, b: any) => {
+          const timeA = a.createdAt?.seconds || 0;
+          const timeB = b.createdAt?.seconds || 0;
+          return timeB - timeA; // Emulates orderBy("createdAt", "desc")
+        })
+        .slice(0, 50); // Emulates limit(50)
 
-      const data = snapshot.docs.map((doc: any) => ({
-        uid: doc.id,
-        ...doc.data(),
-      }));
       setProfiles(data || []);
     } catch (e: any) {
       setError(e);
+      setProfiles([]);
     } finally {
       setIsLoading(false);
     }
   }, [user?.displayName]);
 
+  // Handle initialization and focus/active states
   useEffect(() => {
     if (uid && isActive) {
       loadLatestProfiles();
@@ -64,7 +63,7 @@ export function useFeedLatest(uid: string, isActive: boolean) {
 
   const updateIndex = useCallback(
     (val: number) => {
-      const next = Math.max(0, Math.min(val, profiles?.length));
+      const next = Math.max(0, Math.min(val, profiles?.length || 0));
       _setIndex(next);
     },
     [profiles.length],
@@ -73,7 +72,9 @@ export function useFeedLatest(uid: string, isActive: boolean) {
   const refetch = useCallback(async () => {
     setIsLoading(true);
     const success = await FeedSyncService.syncFeeds(user?.displayName || "");
-    if (success) await loadLatestProfiles();
+    if (success) {
+      loadLatestProfiles();
+    }
     setIsLoading(false);
   }, [user?.displayName, loadLatestProfiles]);
 

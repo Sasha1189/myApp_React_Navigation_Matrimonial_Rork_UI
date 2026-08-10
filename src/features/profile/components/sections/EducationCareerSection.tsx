@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
@@ -14,18 +14,10 @@ import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 import { useTranslation } from "react-i18next";
+import { transformLookupToOptions } from "@/features/utils/profileLookups";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
-
-// Your Options
-import {
-  annualIncomeOptions,
-  highestQualification,
-  industryOptions,
-  occupationOptions,
-  studyFieldOptions,
-} from "../form/profileOptions";
 
 export default function EditEducationCareerScreen({ navigation }: any) {
   const { myProfile, updateMyProfile } = useAuth();
@@ -60,17 +52,17 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Highest Qualification */}
         <Controller
           control={control}
-          name="highestQualification"
+          name="hq" // highestQualification -> hq
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.qualification")}
               value={value}
               placeholder={t("details.placeholders.qualification")}
-              options={highestQualification}
+              options={transformLookupToOptions("hq")}
               onSelect={onChange}
               icon={GraduationCap}
-              locked={getLockState("highestQualification")}
-              editable={!getLockState("highestQualification")}
+              locked={getLockState("hq")}
+              editable={!getLockState("hq")}
             />
           )}
         />
@@ -78,13 +70,13 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Field of Study */}
         <Controller
           control={control}
-          name="fieldOfStudy"
+          name="fs" // fieldOfStudy -> fs
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.studyField")}
               value={value}
               placeholder={t("details.placeholders.studyField")}
-              options={studyFieldOptions}
+              options={transformLookupToOptions("fs")}
               onSelect={onChange}
               icon={GraduationCap}
               editable={true}
@@ -95,13 +87,13 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Occupation */}
         <Controller
           control={control}
-          name="occupation"
+          name="oc" // occupation -> oc
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.occupation")}
               value={value}
               placeholder={t("details.placeholders.occupation")}
-              options={occupationOptions}
+              options={transformLookupToOptions("oc")}
               onSelect={onChange}
               icon={Briefcase}
               editable={true}
@@ -112,13 +104,13 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Industry */}
         <Controller
           control={control}
-          name="industry"
+          name="ind" // industry -> ind
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.industry")}
               value={value}
               placeholder={t("details.placeholders.industry")}
-              options={industryOptions}
+              options={transformLookupToOptions("ind")}
               onSelect={onChange}
               icon={Briefcase}
               editable={true}
@@ -129,13 +121,14 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Job Title */}
         <Controller
           control={control}
-          name="jobTitle"
+          name="jt" // jobTitle -> jt
           render={({ field: { onChange, value } }) => (
             <InputField
               label={t("details.labels.jobTitle")}
               value={value ?? ""}
               onChangeText={onChange}
               placeholder={t("details.placeholders.jobTitle")}
+              maxLength={50}
               icon={Briefcase}
               editable={true}
             />
@@ -145,13 +138,14 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Company Name */}
         <Controller
           control={control}
-          name="companyName"
+          name="cn" // companyName -> cn
           render={({ field: { onChange, value } }) => (
             <InputField
               label={t("details.labels.company")}
               value={value ?? ""}
               onChangeText={onChange}
               placeholder={t("details.placeholders.company")}
+              maxLength={50}
               icon={Building2}
               editable={true}
             />
@@ -161,13 +155,14 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Work Location */}
         <Controller
           control={control}
-          name="workLocation"
+          name="wl" // workLocation -> wl
           render={({ field: { onChange, value } }) => (
             <InputField
               label={t("details.labels.workCity")}
               value={value ?? ""}
               onChangeText={onChange}
               placeholder={t("details.placeholders.workLocation")}
+              maxLength={30}
               icon={MapPin}
               editable={true}
             />
@@ -177,13 +172,13 @@ export default function EditEducationCareerScreen({ navigation }: any) {
         {/* Annual Income */}
         <Controller
           control={control}
-          name="annualIncome"
+          name="ai" // annualIncome -> ai
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.income")}
               value={value}
               placeholder={t("details.placeholders.income")}
-              options={annualIncomeOptions}
+              options={transformLookupToOptions("ai")}
               onSelect={onChange}
               icon={Briefcase}
               editable={true}

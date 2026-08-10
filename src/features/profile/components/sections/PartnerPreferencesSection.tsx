@@ -3,7 +3,6 @@ import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
   HeartHandshake,
-  Ruler,
   MapPin,
   Home,
   GraduationCap,
@@ -17,18 +16,10 @@ import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 import { useTranslation } from "react-i18next";
+import { transformLookupToOptions } from "@/features/utils/profileLookups";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
-
-// Your Options
-import {
-  maritalStatusOptions,
-  highestQualification,
-  occupationOptions,
-  incomeOptions,
-  livingWithParentsOptions,
-} from "../form/profileOptions";
 
 export default function EditPartnerPreferencesScreen({ navigation }: any) {
   const { myProfile, updateMyProfile } = useAuth();
@@ -59,13 +50,13 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
         {/* Preferred Marital Status */}
         <Controller
           control={control}
-          name="preferredMaritalStatus"
+          name="pms" // preferredMaritalStatus -> pms
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.maritalStatus")}
               value={value}
               placeholder={t("details.placeholders.prefMarital")}
-              options={maritalStatusOptions}
+              options={transformLookupToOptions("ms")} // Reuses core 'ms' lookups
               onSelect={onChange}
               icon={HeartHandshake}
               editable={true}
@@ -76,13 +67,13 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
         {/* Preferred Education */}
         <Controller
           control={control}
-          name="preferredEducation"
+          name="pe" // preferredEducation -> pe
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.qualification")}
               value={value}
               placeholder={t("details.placeholders.prefEdu")}
-              options={highestQualification}
+              options={transformLookupToOptions("hq")} // Enforces custom partner labels
               onSelect={onChange}
               icon={GraduationCap}
               editable={true}
@@ -93,13 +84,13 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
         {/* Preferred Profession */}
         <Controller
           control={control}
-          name="preferredProfession"
+          name="pp" // preferredProfession -> pp
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.occupation")}
               value={value}
               placeholder={t("details.placeholders.prefProf")}
-              options={occupationOptions}
+              options={transformLookupToOptions("oc")} // Enforces custom partner label
               onSelect={onChange}
               icon={Briefcase}
               editable={true}
@@ -110,13 +101,13 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
         {/* Preferred Income Range */}
         <Controller
           control={control}
-          name="preferredIncomeRange"
+          name="pir" // preferredIncomeRange -> pir
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.income")}
               value={value}
               placeholder={t("details.placeholders.prefIncome")}
-              options={incomeOptions}
+              options={transformLookupToOptions("ai")} // Reuses core 'ai' lookups
               onSelect={onChange}
               icon={Banknote}
               editable={true}
@@ -127,13 +118,14 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
         {/* Preferred Location */}
         <Controller
           control={control}
-          name="locationPreference"
+          name="lp" // locationPreference -> lp
           render={({ field: { onChange, value } }) => (
             <InputField
               label={t("details.labels.locationPreference")}
               value={value || ""}
               onChangeText={onChange}
               placeholder={t("details.placeholders.prefLocation")}
+              maxLength={30}
               icon={MapPin}
               editable={true}
             />
@@ -143,13 +135,13 @@ export default function EditPartnerPreferencesScreen({ navigation }: any) {
         {/* Living with Parents */}
         <Controller
           control={control}
-          name="livingWithParents"
+          name="lwp" // livingWithParents -> lwp
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.livingWithParents")}
               value={value}
               placeholder={t("details.placeholders.parents")}
-              options={livingWithParentsOptions}
+              options={transformLookupToOptions("lwp")}
               onSelect={onChange}
               icon={Home}
               editable={true}

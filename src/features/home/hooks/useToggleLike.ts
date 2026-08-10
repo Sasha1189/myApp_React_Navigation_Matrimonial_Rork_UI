@@ -39,7 +39,7 @@ export const toggleLike = async (
       photo: otherUser.photo,
       ts,
     };
-    updates[mySentPath] = { ...likeData, ts: serverTimestamp() };
+    updates[mySentPath] = { ...likeData, ts: tsServer };
     updates[theirReceivedPath] = {
       uid: myProfile.myUid,
       name: myProfile.name || "User",

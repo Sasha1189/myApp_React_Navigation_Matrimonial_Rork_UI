@@ -12,17 +12,6 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 
-interface DateTimeProps {
-  label: string;
-  value?: Date | string;
-  placeholder?: string;
-  onChange: (val?: any) => void;
-  editable?: boolean;
-  icon?: any;
-  required?: boolean;
-  locked?: boolean;
-}
-
 const formatDisplayDate = (date: Date) => {
   return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 };
@@ -35,11 +24,24 @@ const formatDisplayTime = (date: Date) => {
   return `${h}:${String(minutes).padStart(2, "0")} ${ampm}`;
 };
 
-export const DatePickerField: React.FC<DateTimeProps> = ({
+interface DateTimeProps {
+  label: string;
+  value?: Date | string;
+  placeholder?: string;
+  onChange: (val?: any) => void;
+  mode: "date" | "time";
+  editable?: boolean;
+  icon?: any;
+  required?: boolean;
+  locked?: boolean;
+}
+
+export const DateTimePickerField: React.FC<DateTimeProps> = ({
   label,
   value,
   onChange,
   placeholder,
+  mode,
   editable = true,
   icon: Icon,
   required = false,
@@ -49,12 +51,30 @@ export const DatePickerField: React.FC<DateTimeProps> = ({
   const styles = useStyles(createStyles);
   const [show, setShow] = useState(false);
 
-  const dateValue = value
+  // 1. Unified Safe Parsing for both modes
+  const parsedDate = value
     ? value instanceof Date
       ? value
       : new Date(value)
-    : new Date(1995, 0, 1);
-  const display = value ? formatDisplayDate(new Date(value)) : "";
+    : null;
+
+  const isValidDate = parsedDate && !isNaN(parsedDate.getTime());
+
+  // 2. Dynamic Display Formatting based on mode
+  const display = isValidDate
+    ? mode === "date"
+      ? formatDisplayDate(parsedDate!)
+      : formatDisplayTime(parsedDate!)
+    : "";
+
+  // 3. Fallback configuration if field is empty
+  const defaultPickerValue = isValidDate
+    ? parsedDate!
+    : mode === "date"
+      ? new Date(1995, 0, 1)
+      : new Date();
+
+  const defaultPlaceholder = mode === "date" ? "DD/MM/YYYY" : "Select Time";
 
   return (
     <View style={styles.container}>
@@ -87,11 +107,11 @@ export const DatePickerField: React.FC<DateTimeProps> = ({
             !display && { color: theme.colors.textLight },
           ]}
         >
-          {display || placeholder || "DD/MM/YYYY"}
+          {display || placeholder || defaultPlaceholder}
         </Text>
       </TouchableOpacity>
 
-      {locked && (
+      {locked && mode === "date" && (
         <Text style={styles.lockNote}>
           This verified date cannot be changed.
         </Text>
@@ -99,78 +119,15 @@ export const DatePickerField: React.FC<DateTimeProps> = ({
 
       {show && (
         <DateTimePicker
-          value={dateValue}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "calendar"}
-          maximumDate={new Date()}
-          onChange={(event: any, date?: Date) => {
-            setShow(false);
-            if (date) {
-              onChange(date);
-            }
-          }}
-        />
-      )}
-    </View>
-  );
-};
-
-export const TimePickerField: React.FC<DateTimeProps> = ({
-  label,
-  value,
-  onChange,
-  placeholder,
-  editable = true,
-  icon: Icon,
-  required = false,
-  locked = false,
-}) => {
-  const { theme } = useAppTheme();
-  const styles = useStyles(createStyles);
-  const [show, setShow] = useState(false);
-
-  const display = value
-    ? typeof value === "string"
-      ? value
-      : formatDisplayTime(value)
-    : "";
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.labelRow}>
-        <View style={styles.labelLeft}>
-          {Icon && (
-            <View style={styles.iconWrapper}>
-              <Icon size={14} color={theme.colors.primary} />
-            </View>
-          )}
-          <Text style={styles.label}>
-            {label}
-            {required && <Text style={styles.requiredStar}> *</Text>}
-          </Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={() => editable && !locked && setShow(true)}
-        style={[styles.trigger, !editable && styles.disabledTrigger]}
-      >
-        <Text
-          style={[
-            styles.valueText,
-            !display && { color: theme.colors.textLight },
-          ]}
-        >
-          {display || placeholder || "Select Time"}
-        </Text>
-      </TouchableOpacity>
-
-      {show && (
-        <DateTimePicker
-          value={new Date()}
-          mode="time"
-          display={Platform.OS === "ios" ? "spinner" : "clock"}
+          value={defaultPickerValue}
+          mode={mode} // 👈 Direct bind ("date" or "time")
+          display={
+            Platform.OS === "ios"
+              ? "spinner"
+              : mode === "date"
+                ? "calendar"
+                : "clock"
+          }
           maximumDate={new Date()}
           onChange={(event: any, date?: Date) => {
             setShow(false);
@@ -229,7 +186,8 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: theme.borderRadius.md,
-      padding: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       backgroundColor: theme.colors.card,
       minHeight: 48,
       justifyContent: "center",

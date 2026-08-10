@@ -14,8 +14,7 @@ export const auth = getAuth(app);
 
 export const firestore = getFirestore(app);
 firestore.settings({
-  persistence: true,
-  cacheSizeBytes: 500 * 1024 * 1024,
+  persistence: false,
 });
 
 export const storage = getStorage(app);

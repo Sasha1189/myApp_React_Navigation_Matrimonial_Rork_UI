@@ -47,8 +47,7 @@ export const useBlockedUsers = () => {
               const data = snap.data();
               return {
                 uid: id,
-                fullName:
-                  data?.fullName || data?.displayName || t("common.user"),
+                fullName: data?.fn || data?.displayName || t("common.user"),
                 thumbnail: data?.thumbnail || data?.photo || "",
               };
             }

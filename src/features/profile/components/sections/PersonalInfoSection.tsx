@@ -1,15 +1,13 @@
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import {
-  User,
   UserCheck,
   Calendar,
   Timer,
   MapPin,
   HeartHandshake,
   Ruler,
-  Scale,
   Activity,
   Droplets,
   Sparkles,
@@ -24,22 +22,11 @@ import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 import { useTranslation } from "react-i18next";
-import { formatDOB } from "@/utils/dateUtils";
+import { transformLookupToOptions } from "@/features/utils/profileLookups";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
-import { DatePickerField, TimePickerField } from "../form/DateTimePickers";
-
-import {
-  genderOptions,
-  maritalStatusOptions,
-  bodyTypeOptions,
-  bloodGroupOptions,
-  manglikOptions,
-  rashiOptions,
-  horoscopeOptions,
-  isReady as isReadyOptions,
-} from "../form/profileOptions";
+import { DateTimePickerField } from "../form/DateTimePickers";
 
 export default function EditPersonalInfoScreen({ navigation }: any) {
   const { myProfile, updateMyProfile } = useAuth();
@@ -68,48 +55,70 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
       }}
     >
       <View style={{ gap: theme.spacing.xs }}>
-        {/* 1. Full Name */}
-        <Controller
-          control={control}
-          name="fullName"
-          rules={{ required: true }}
-          render={({ field: { onChange, value } }) => (
-            <InputField
-              label={t("details.labels.fullName")}
-              placeholder={t("details.labels.fullName")}
-              value={value}
-              onChangeText={onChange}
-              icon={UserCheck}
-              required
-              locked={getLockState("fullName")}
-              editable={!getLockState("fullName")}
+        {/* ROW 0: First name & Last name */}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          <View style={{ flex: 1 }}>
+            {/* 1a. Name */}
+            <Controller
+              control={control}
+              name="fn" // firstName -> fn
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label={t("details.labels.firstName")}
+                  placeholder={t("details.placeholders.firstName")}
+                  value={value}
+                  onChangeText={onChange}
+                  icon={UserCheck}
+                  required
+                  maxLength={15}
+                  locked={getLockState("fn")}
+                  editable={!getLockState("fn")}
+                />
+              )}
             />
-          )}
-        />
+          </View>
+          <View style={{ flex: 1 }}>
+            {/* 1b. Lastname */}
+            <Controller
+              control={control}
+              name="ln" // lastName -> sn
+              rules={{ required: true }}
+              render={({ field: { onChange, value } }) => (
+                <InputField
+                  label={t("details.labels.lastName")}
+                  placeholder={t("details.placeholders.lastName")}
+                  value={value}
+                  onChangeText={onChange}
+                  icon={UserCheck}
+                  required
+                  maxLength={15}
+                  locked={getLockState("ln")}
+                  editable={!getLockState("ln")}
+                />
+              )}
+            />
+          </View>
+        </View>
 
         {/* ROW 1: DOB & Time of Birth */}
         <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="dateOfBirth"
+              name="db" // dateOfBirth -> db
               rules={{ required: true }}
               render={({ field: { onChange, value } }) => (
-                <DatePickerField
+                <DateTimePickerField
+                  mode="date"
                   label={t("details.labels.dateOfBirth")}
                   placeholder="YYYY-MM-DD"
-                  value={formatDOB(value, "form")}
-                  onChange={(selectedDate) => {
-                    const dateString =
-                      selectedDate instanceof Date
-                        ? selectedDate.toISOString().split("T")[0]
-                        : selectedDate;
-                    onChange(dateString);
-                  }}
+                  value={value ?? undefined}
+                  onChange={onChange}
                   icon={Calendar}
                   required
-                  locked={getLockState("dateOfBirth")}
-                  editable={!getLockState("dateOfBirth")}
+                  locked={getLockState("db")}
+                  editable={!getLockState("db")}
                 />
               )}
             />
@@ -118,12 +127,13 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="timeOfBirth"
+              name="tob" // timeOfBirth -> tob
               render={({ field: { onChange, value } }) => (
-                <TimePickerField
+                <DateTimePickerField
+                  mode="time"
                   label={t("details.labels.timeOfBirth")}
-                  placeholder="e.g. 06:30 AM"
-                  value={value ?? ""}
+                  placeholder=" 05:20 AM"
+                  value={value ?? undefined}
                   onChange={onChange}
                   icon={Timer}
                 />
@@ -135,16 +145,16 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
         {/* ROW 2: Place of Birth & Height */}
         <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
           <View style={{ flex: 1 }}>
-            {/*  Place of Birth */}
             <Controller
               control={control}
-              name="placeOfBirth"
+              name="pb" // placeOfBirth -> pb
               render={({ field: { onChange, value } }) => (
                 <InputField
                   label={t("details.labels.birthPlace")}
-                  placeholder="City, State"
+                  placeholder={t("details.placeholders.birthPlace")}
                   value={value}
                   onChangeText={onChange}
+                  maxLength={40}
                   icon={MapPin}
                 />
               )}
@@ -153,7 +163,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="height"
+              name="ht" // height -> ht
               rules={{
                 pattern: {
                   value: /^[0-9]{3}$/,
@@ -167,7 +177,7 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
                 return (
                   <InputField
                     label={t("details.labels.height")}
-                    placeholder="e.g. 170cm"
+                    placeholder={t("details.placeholders.height")}
                     value={stringValue}
                     keyboardType="numeric"
                     maxLength={3}
@@ -188,13 +198,13 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="bodyType"
+              name="bt" // bodyType -> bt
               render={({ field: { onChange, value } }) => (
                 <PickerField
                   label={t("details.labels.bodyType")}
                   placeholder="Slim/Athletic..."
                   value={value}
-                  options={bodyTypeOptions}
+                  options={transformLookupToOptions("bt")} // Dynamically binds LOOKUPS.bt numeric indexes
                   onSelect={onChange}
                   icon={Activity}
                 />
@@ -205,13 +215,13 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="bloodGroup"
+              name="bg" // bloodGroup -> bg
               render={({ field: { onChange, value } }) => (
                 <PickerField
                   label={t("details.labels.bloodGroup")}
                   placeholder={t("details.labels.bloodGroup")}
                   value={value}
-                  options={bloodGroupOptions}
+                  options={transformLookupToOptions("bg")} // Dynamically binds LOOKUPS.bg numeric indexes
                   onSelect={onChange}
                   icon={Droplets}
                 />
@@ -225,13 +235,13 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="manglikStatus"
+              name="mg" // manglikStatus -> mg
               render={({ field: { onChange, value } }) => (
                 <PickerField
                   label={t("details.labels.manglik")}
                   placeholder="Yes/No/Partial"
                   value={value}
-                  options={manglikOptions}
+                  options={transformLookupToOptions("mg")} // Dynamically binds LOOKUPS.mg numeric indexes
                   onSelect={onChange}
                   icon={Sparkles}
                 />
@@ -242,13 +252,13 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="rashi"
+              name="rs" // rashi -> rs
               render={({ field: { onChange, value } }) => (
                 <PickerField
                   label={t("details.labels.rashi")}
                   placeholder={t("details.labels.rashi")}
                   value={value}
-                  options={rashiOptions}
+                  options={transformLookupToOptions("rs")} // Dynamically binds LOOKUPS.rs numeric indexes
                   onSelect={onChange}
                   icon={Star}
                 />
@@ -256,17 +266,16 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
             />
           </View>
         </View>
-
         {/* 13. Horoscope Required */}
         <Controller
           control={control}
-          name="horoscopeRequired"
+          name="hr" // horoscopeRequired -> hr
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.horoscopeRequired")}
               placeholder="Yes/No/Optional"
               value={value}
-              options={horoscopeOptions}
+              options={transformLookupToOptions("hr")} // Maps to LOOKUPS.hr numeric indices
               onSelect={onChange}
               icon={Zap}
             />
@@ -278,19 +287,19 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="maritalStatus"
+              name="ms" // maritalStatus -> ms
               rules={{ required: true }}
               render={({ field: { onChange, value } }) => (
                 <PickerField
                   label={t("details.labels.maritalStatus")}
                   placeholder={t("details.labels.maritalStatus")}
                   value={value}
-                  options={maritalStatusOptions}
+                  options={transformLookupToOptions("ms")} // Maps to LOOKUPS.ms numeric indices
                   onSelect={onChange}
                   icon={HeartHandshake}
                   required
-                  locked={getLockState("maritalStatus")}
-                  editable={!getLockState("maritalStatus")}
+                  locked={getLockState("ms")}
+                  editable={!getLockState("ms")}
                 />
               )}
             />
@@ -298,13 +307,13 @@ export default function EditPersonalInfoScreen({ navigation }: any) {
           <View style={{ flex: 1 }}>
             <Controller
               control={control}
-              name="isReady"
+              name="ir" // isReady -> ir
               render={({ field: { onChange, value } }) => (
                 <PickerField
                   label={t("details.labels.isReady")}
                   placeholder="Yes / No still studying"
                   value={value}
-                  options={isReadyOptions}
+                  options={transformLookupToOptions("ir")} // Kept as standard string values to match schema definitions
                   onSelect={onChange}
                   icon={HeartIcon}
                 />

@@ -7,9 +7,9 @@ import {
 } from "../../../cache/cacheConfig";
 
 interface ProfileStats {
-  matchesCount: number | string; // Can return count or "Upgrade to see" / "Lock" strings
-  sentCount: number | string;
-  receivedCount: number | string;
+  matchesCount: number; // Can return count or "Upgrade to see" / "Lock" strings
+  sentCount: number;
+  receivedCount: number;
   isLoading: boolean;
 }
 

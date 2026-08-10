@@ -17,6 +17,8 @@ import {
   HeartHandshake,
   Ruler,
   Scale,
+  Zap,
+  Link,
   Activity,
   Droplets,
   Sparkles,
@@ -41,12 +43,14 @@ import {
 } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useAppNavigation } from "@/navigation/hooks";
+import { Profile } from "@/types/profile";
+import { getDisplayValue } from "@/features/utils/profileLookups";
 
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 
-import { formatDOB } from "../../../utils/dateUtils";
+import { formatDOB, formatTime } from "../../../utils/dateUtils";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
 import {
   DetailSection,
@@ -67,7 +71,7 @@ export default function UserDetailsScreen({ route }: any) {
 
   const navigation = useAppNavigation();
   const { myProfile, tier } = useAuth();
-  const profile = route.params?.profile;
+  const profile = route.params?.profile as Profile;
   usePreventScreenCapture();
 
   const isSelf = myProfile?.uid === profile?.uid;
@@ -75,6 +79,21 @@ export default function UserDetailsScreen({ route }: any) {
   const canViewContact = isSelf || tier === "basic" || tier === "premium";
 
   const canBlock = tier === "basic" || tier === "premium";
+
+  const HOBBIES_LOOKUP = [
+    "Reading",
+    "Traveling",
+    "Cooking",
+    "Music",
+    "Movies",
+    "Sports",
+    "Fitness",
+    "Dancing",
+    "Photography",
+    "Gaming",
+    "Art & Craft",
+    "Other",
+  ];
 
   const { handleShare, handleBlock } = useSocialActions(profile);
 
@@ -97,7 +116,10 @@ export default function UserDetailsScreen({ route }: any) {
         <DetailSection title={t("details.sections.personal")} icon={Users}>
           <DetailRow
             label={t("details.labels.fullName")}
-            value={profile.fullName}
+            value={
+              `${profile?.fn || ""} ${profile?.ln || ""}`.trim() ||
+              "Not Provided"
+            }
             icon={UserCheck}
             fullWidth
           />
@@ -107,45 +129,59 @@ export default function UserDetailsScreen({ route }: any) {
             icon={User}
           />
           <DetailRow
-            label={t("details.labels.age")}
-            value={formatDOB(profile?.dateOfBirth, "age")}
+            label={t("details.labels.dateOfBirth")}
+            value={formatDOB(profile?.db, "both")}
             icon={Calendar}
           />
           <DetailRow
+            label={t("details.labels.timeOfBirth")}
+            value={formatDOB(profile?.tob, "tob")}
+            icon={Calendar}
+          />
+          <DetailRow
+            label={t("details.labels.birthPlace")}
+            value={profile.pb}
+            icon={MapPin}
+          />
+          <DetailRow
             label={t("details.labels.height")}
-            value={profile.height}
+            value={profile.ht}
             icon={Ruler}
           />
           <DetailRow
-            label={t("details.labels.weight")}
-            value={profile.weight}
-            icon={Scale}
-          />
-          <DetailRow
-            label={t("details.labels.maritalStatus")}
-            value={profile.maritalStatus}
-            icon={HeartHandshake}
+            label={t("details.labels.bodyType")}
+            value={getDisplayValue("bt", profile.bt)}
+            icon={MapPin}
           />
           <DetailRow
             label={t("details.labels.bloodGroup")}
-            value={profile.bloodGroup}
+            value={getDisplayValue("bg", profile.bg)}
             icon={Droplets}
           />
           <DetailRow
             label={t("details.labels.rashi")}
-            value={profile.rashi}
+            value={getDisplayValue("rs", profile.rs)}
             icon={Star}
           />
           <DetailRow
             label={t("details.labels.manglik")}
-            value={profile.manglikStatus}
+            value={getDisplayValue("mg", profile.mg)}
             icon={Sparkles}
           />
           <DetailRow
-            label={t("details.labels.birthPlace")}
-            value={profile.placeOfBirth}
-            icon={MapPin}
-            fullWidth
+            label={t("details.labels.horoscopeRequired")}
+            value={getDisplayValue("hr", profile.hr)}
+            icon={Sparkles}
+          />
+          <DetailRow
+            label={t("details.labels.maritalStatus")}
+            value={getDisplayValue("ms", profile.ms)}
+            icon={HeartHandshake}
+          />
+          <DetailRow
+            label={t("details.labels.isReady")}
+            value={getDisplayValue("ir", profile.ir)}
+            icon={HeartHandshake}
           />
         </DetailSection>
 
@@ -153,20 +189,39 @@ export default function UserDetailsScreen({ route }: any) {
         <DetailSection title={t("details.sections.about")} icon={Heart}>
           <DetailRow
             label={t("details.labels.shortBio")}
-            value={profile.shortBio}
+            value={profile.sb}
             icon={MessageCircle}
             fullWidth
           />
           <DetailRow
             label={t("details.labels.goals")}
-            value={profile?.aspirations}
+            value={profile?.as} //aspirations
             icon={Target}
             fullWidth
           />
           <DetailRow
             label={t("details.labels.beliefsValues")}
-            value={profile?.beliefsValues}
+            value={profile?.bv}
             icon={Church}
+            fullWidth
+          />
+          //added
+          <DetailRow
+            label={t("details.labels.strengths")}
+            value={profile?.st}
+            icon={Zap}
+            fullWidth
+          />
+          <DetailRow
+            label={t("details.labels.likesDislikesText")}
+            value={profile?.ld}
+            icon={Heart}
+            fullWidth
+          />
+          <DetailRow
+            label={t("details.labels.socialMedia")}
+            value={profile?.sm}
+            icon={Link}
             fullWidth
           />
         </DetailSection>
@@ -178,38 +233,44 @@ export default function UserDetailsScreen({ route }: any) {
         >
           <DetailRow
             label={t("details.labels.qualification")}
-            value={profile.highestQualification}
+            value={getDisplayValue("hq", profile.hq)}
             icon={GraduationCap}
           />
           <DetailRow
             label={t("details.labels.studyField")}
-            value={profile.fieldOfStudy}
+            value={getDisplayValue("fs", profile.fs)}
             icon={GraduationCap}
           />
           <DetailRow
             label={t("details.labels.occupation")}
-            value={profile.occupation}
+            value={getDisplayValue("oc", profile.oc)}
             icon={Briefcase}
           />
           <DetailRow
             label={t("details.labels.industry")}
-            value={profile.industry}
+            value={getDisplayValue("ind", profile.ind)}
             icon={Building}
           />
           <DetailRow
+            label={t("details.labels.jobTitle")}
+            value={profile.jt}
+            icon={Building}
+            fullWidth
+          />
+          <DetailRow
             label={t("details.labels.company")}
-            value={profile.companyName}
+            value={profile.cn}
             icon={Building}
             fullWidth
           />
           <DetailRow
             label={t("details.labels.workCity")}
-            value={profile.workLocation}
+            value={profile.wl}
             icon={MapPin}
           />
           <DetailRow
             label={t("details.labels.income")}
-            value={profile.annualIncome}
+            value={getDisplayValue("ai", profile.ai)}
             icon={DollarSign}
           />
         </DetailSection>
@@ -217,38 +278,28 @@ export default function UserDetailsScreen({ route }: any) {
         {/* 4. Family Details - Parallel Grid */}
         <DetailSection title={t("details.sections.family")} icon={Home}>
           <DetailRow
-            label={t("details.labels.familyType")}
-            value={profile.familyType}
-            icon={Home}
-          />
-          <DetailRow
-            label={t("details.labels.values")}
-            value={profile.familyValues}
-            icon={Heart}
-          />
-          <DetailRow
             label={t("details.labels.brothers")}
-            value={profile.numberOfBrothers}
+            value={profile.nb !== undefined ? `${profile.nb}` : undefined}
             icon={User}
           />
           <DetailRow
             label={t("details.labels.sisters")}
-            value={profile.numberOfSisters}
+            value={profile.ns !== undefined ? `${profile.ns}` : undefined}
             icon={User}
           />
           <DetailRow
             label={t("details.labels.fatherOcc")}
-            value={profile.fatherOccupation}
+            value={profile.fo}
             icon={User}
           />
           <DetailRow
             label={t("details.labels.motherOcc")}
-            value={profile.motherOccupation}
+            value={profile.mo}
             icon={User}
           />
           <DetailRow
             label={t("details.labels.siblingsInfo")}
-            value={profile.siblingsDetails}
+            value={profile.sd}
             icon={Users}
             fullWidth
           />
@@ -258,34 +309,28 @@ export default function UserDetailsScreen({ route }: any) {
         {canViewContact ? (
           <DetailSection title={t("details.sections.contact")} icon={Phone}>
             <DetailRow
+              label={t("details.labels.mobile")}
+              value={profile.mn}
+              icon={Phone}
+            />
+            <DetailRow
               label={t("details.labels.currentCity")}
-              value={profile.currentCity}
+              value={getDisplayValue("ct" as any, profile.cc)}
               icon={MapPin}
             />
             <DetailRow
               label={t("details.labels.nativePlace")}
-              value={profile.nativePlace}
+              value={getDisplayValue("ct" as any, profile.np)}
               icon={Home}
             />
             <DetailRow
-              label={t("details.labels.mobile")}
-              value={profile.mobileNumber}
-              icon={Phone}
-            />
-            <DetailRow
-              label={t("details.labels.email")}
-              value={profile.emailAddress}
-              icon={Mail}
-              fullWidth
-            />
-            <DetailRow
               label={t("details.labels.contactPref")}
-              value={profile.preferredContact}
+              value={getDisplayValue("pc", profile.pc)}
               icon={MessageCircle}
             />
             <DetailRow
               label={t("details.labels.createdBy")}
-              value={profile.profileCreatedBy}
+              value={getDisplayValue("cb", profile.cb)}
               icon={UserPlus}
             />
           </DetailSection>
@@ -305,81 +350,87 @@ export default function UserDetailsScreen({ route }: any) {
         <DetailSection title={t("details.sections.lifestyle")} icon={Activity}>
           <DetailRow
             label={t("details.labels.diet")}
-            value={profile.dietPreferences}
+            value={getDisplayValue("dp", profile.dp)}
             icon={Utensils}
           />
           <DetailRow
             label={t("details.labels.smoking")}
-            value={profile.smokingHabit}
+            value={getDisplayValue("sh", profile.sh)}
             icon={Cigarette}
           />
           <DetailRow
             label={t("details.labels.drinking")}
-            value={profile.drinkingHabit}
+            value={getDisplayValue("dh", profile.dh)}
             icon={Wine}
           />
           <DetailRow
             label={t("details.labels.exercise")}
-            value={profile.exerciseRoutine}
+            value={getDisplayValue("er", profile.er)}
             icon={Dumbbell}
           />
           <DetailRow
             label={t("details.labels.fitness")}
-            value={profile.fitnessLevel}
+            value={getDisplayValue("fl", profile.fl)}
             icon={Activity}
           />
           <DetailRow
-            label={t("details.labels.personality")}
-            value={profile.personalityType}
-            icon={Brain}
+            label={t("details.labels.beliefSystem")}
+            value={getDisplayValue("bs", profile.bs)}
+            icon={Sparkles}
           />
 
           {/* Hobbies - Custom Chip Layout */}
-          {profile?.hobbies?.length > 0 && (
+          {Array.isArray(profile?.hb) && profile.hb.length > 0 && (
             <View style={styles.hobbiesBox}>
               <Text style={styles.hobbyLabel}>
                 {t("details.labels.hobbies")}
               </Text>
               <View style={styles.hobbyList}>
-                {profile.hobbies.map((h: string, i: number) => (
-                  <View key={i} style={styles.tag}>
-                    <Text style={styles.tagText}>{h}</Text>
-                  </View>
-                ))}
+                {profile.hb.map((hobbyIdx: number, i: number) => {
+                  // Map numeric list pointers directly to legible tag string rows
+                  const legibleLabel =
+                    HOBBIES_LOOKUP[hobbyIdx] || `Hobby #${hobbyIdx}`;
+                  return (
+                    <View key={i} style={styles.tag}>
+                      <Text style={styles.tagText}>{legibleLabel}</Text>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           )}
         </DetailSection>
+
         {/* 7. Partner Preferences - Parallel Grid */}
         <DetailSection title={t("details.sections.preferences")} icon={Star}>
           <DetailRow
             label={t("details.labels.maritalStatus")}
-            value={profile.preferredMaritalStatus}
+            value={getDisplayValue("ms", profile.pms)}
             icon={HeartHandshake}
           />
           <DetailRow
-            label={t("details.labels.manglik")}
-            value={profile.manglikPreference}
-            icon={Sparkles}
-          />
-          <DetailRow
             label={t("details.labels.education")}
-            value={profile.preferredEducation}
+            value={getDisplayValue("hq", profile.pe)}
             icon={GraduationCap}
           />
           <DetailRow
             label={t("details.labels.profession")}
-            value={profile.preferredProfession}
+            value={getDisplayValue("oc", profile.pp)}
             icon={Briefcase}
           />
           <DetailRow
             label={t("details.labels.minIncome")}
-            value={profile.preferredIncomeRange}
+            value={getDisplayValue("ai", profile.pir)}
             icon={DollarSign}
           />
           <DetailRow
+            label={t("details.labels.locationPreference")}
+            value={profile?.lp}
+            icon={MapPin}
+          />
+          <DetailRow
             label={t("details.labels.livingWithParents")}
-            value={profile.livingWithParents}
+            value={getDisplayValue("lwp", profile.lwp)}
             icon={Home}
             fullWidth
           />
@@ -471,14 +522,15 @@ export const createStyles = (theme: AppTheme) =>
     disclaimerCard: {
       backgroundColor: theme.colors.accent + "20",
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.lg,
       flexDirection: "row",
       alignItems: "center",
       marginBottom: theme.spacing.lg,
     },
     disclaimerText: {
       flex: 1,
-      fontSize: theme.fontSize.sm,
+      fontSize: theme.fontSize.xs,
       color: theme.colors.text,
       marginLeft: theme.spacing.md,
     },

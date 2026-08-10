@@ -7,17 +7,22 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { ChevronDown, X, Check, Lock } from "lucide-react-native";
+import { ChevronDown, X, Check } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 
+export interface PickerOption {
+  label: string;
+  value: string | number;
+}
+
 interface PickerFieldProps {
   label?: string;
-  value: string;
+  value: string | number;
   placeholder: string;
-  options: readonly string[];
-  onSelect: (value: string) => void;
+  options: readonly PickerOption[] | readonly string[];
+  onSelect: (value: any) => void;
   icon?: any;
   editable?: boolean;
   required?: boolean;
@@ -39,13 +44,31 @@ const PickerField: React.FC<PickerFieldProps> = ({
   const styles = useStyles(createStyles);
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Normalize options array dynamically
+  const normalizedOptions = React.useMemo<readonly PickerOption[]>(() => {
+    return options.map((opt) =>
+      typeof opt === "string" ? { label: opt, value: opt } : opt,
+    );
+  }, [options]);
+
+  // Determine if the current state value counts as an empty schema assignment (0, "", null, undefined)
+  const isValueEmpty =
+    value === "" || value === undefined || value === null || value === 0;
+
+  // Resolve active display label text
+  const selectedLabel = React.useMemo(() => {
+    if (isValueEmpty) return "";
+    const found = normalizedOptions.find((opt) => opt.value === value);
+    return found ? found.label : String(value);
+  }, [value, normalizedOptions, isValueEmpty]);
+
   const handleOpen = () => {
     if (editable && !locked) setModalVisible(true);
   };
 
   return (
     <View style={styles.container}>
-      {/* 1. Header with Tinted Icon & Verified Badge */}
+      {/* 1. Header with Tinted Icon */}
       <View style={styles.labelRow}>
         <View style={styles.labelLeft}>
           {Icon && (
@@ -60,7 +83,7 @@ const PickerField: React.FC<PickerFieldProps> = ({
         </View>
       </View>
 
-      {/* 2. Selection Trigger */}
+      {/* 2. Selection Trigger Input Field box */}
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={handleOpen}
@@ -73,14 +96,14 @@ const PickerField: React.FC<PickerFieldProps> = ({
         <Text
           style={[
             styles.valueText,
-            !value && { color: theme.colors.textLight },
-            !editable && { color: theme.colors.textLight },
+            // 🎯 FIXED BUG 1: Uses consolidated isValueEmpty to ensure 0 captures textLight styling natively
+            (isValueEmpty || !editable) && { color: theme.colors.textLight },
           ]}
         >
-          {value || placeholder || `Select ${label}`}
+          {selectedLabel || placeholder || `Select ${label}`}
         </Text>
         {!locked && editable && (
-          <ChevronDown size={18} color={theme.colors.textLight} />
+          <ChevronDown size={16} color={theme.colors.textLight} />
         )}
       </TouchableOpacity>
 
@@ -90,7 +113,7 @@ const PickerField: React.FC<PickerFieldProps> = ({
         </Text>
       )}
 
-      {/* 3. Selection Modal (Clean List) */}
+      {/* 3. Selection Modal Sheet List */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -105,30 +128,46 @@ const PickerField: React.FC<PickerFieldProps> = ({
             </View>
 
             <FlatList
-              data={options}
-              keyExtractor={(item) => item}
+              data={normalizedOptions}
+              keyExtractor={(item) => String(item.value)}
               contentContainerStyle={styles.listPadding}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.optionItem}
-                  onPress={() => {
-                    onSelect(item);
-                    setModalVisible(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      value === item && styles.selectedOptionText,
-                    ]}
+              renderItem={({ item }) => {
+                const isSelected = value === item.value;
+                // 🎯 FIXED BUG 2: Detects if this item option row is the clear placeholder block (index 0 or "")
+                const isOptionPlaceholder =
+                  item.value === 0 || item.value === "";
+
+                return (
+                  <TouchableOpacity
+                    style={styles.optionItem}
+                    onPress={() => {
+                      onSelect(item.value);
+                      setModalVisible(false);
+                    }}
                   >
-                    {item}
-                  </Text>
-                  {value === item && (
-                    <Check size={20} color={theme.colors.primary} />
-                  )}
-                </TouchableOpacity>
-              )}
+                    <View style={{ width: 20 }} />
+                    <Text
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.selectedOptionText,
+                        // Tint placeholder clear option row dim so user understands it resets selection
+                        isOptionPlaceholder && {
+                          color: theme.colors.textLight,
+                          fontStyle: "italic",
+                        },
+                      ]}
+                    >
+                      {/* If the option's label is literal blank empty text, display clear hint layout text */}
+                      {item.label === "" ? "Clear Selection" : item.label}
+                    </Text>
+                    <View style={{ width: 20, alignItems: "center" }}>
+                      {isSelected && !isOptionPlaceholder && (
+                        <Check size={20} color={theme.colors.primary} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>
@@ -163,21 +202,6 @@ const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.4,
     },
     requiredStar: { color: theme.colors.danger },
-    lockBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: `${theme.colors.success}10`,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 100,
-    },
-    lockBadgeText: {
-      fontSize: 10,
-      fontWeight: "700",
-      color: theme.colors.success,
-      marginLeft: 4,
-      textTransform: "uppercase",
-    },
     trigger: {
       flexDirection: "row",
       alignItems: "center",
@@ -185,7 +209,8 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: theme.borderRadius.md,
-      padding: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       backgroundColor: theme.colors.card,
       minHeight: 48,
     },
@@ -229,11 +254,16 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      padding: theme.spacing.lg,
+      padding: theme.spacing.sm,
       borderBottomWidth: 0.5,
       borderBottomColor: theme.colors.border,
     },
-    optionText: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    optionText: {
+      flex: 1,
+      textAlign: "center",
+      fontSize: theme.fontSize.md,
+      color: theme.colors.text,
+    },
     selectedOptionText: { color: theme.colors.primary, fontWeight: "700" },
   });
 

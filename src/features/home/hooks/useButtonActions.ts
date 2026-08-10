@@ -47,8 +47,8 @@ export function useButtonActions(profile: Profile | undefined) {
           uid: user?.uid as string,
           otherUser: {
             uid: profile.uid,
-            name: profile.fullName || "User",
-            photo: profile.thumbnail || "",
+            name: profile.fn || "User",
+            photo: profile.tb || "",
           },
         };
         navigation.navigate("Chat", navigationPayload);
@@ -71,13 +71,13 @@ export function useButtonActions(profile: Profile | undefined) {
         await toggleLike(
           {
             myUid: myProfile.uid,
-            name: myProfile.fullName,
-            photo: myProfile.thumbnail as string,
+            name: myProfile.fn,
+            photo: myProfile.tb as string,
           },
           {
             uid: profile.uid,
-            name: profile.fullName || "User",
-            photo: profile.thumbnail || "",
+            name: profile.fn || "User",
+            photo: profile.tb || "",
           },
         );
       } catch (err) {

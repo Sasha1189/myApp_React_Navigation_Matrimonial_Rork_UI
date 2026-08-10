@@ -28,7 +28,7 @@ export async function getProfile(
 }
 
 export async function apiUpdateProfile(
-  payload: Partial<Profile> & { uid: string; gender: string },
+  payload: any & { uid: string; gender: string },
 ): Promise<Profile> {
   const { uid, gender, ...data } = payload;
 

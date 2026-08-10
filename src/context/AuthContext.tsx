@@ -17,7 +17,7 @@ import {
   getDBDeviceIdCache,
   setDBDeviceIdCache,
 } from "../cache/cacheConfig";
-import { getDefaultProfile } from "../utils/getDefaultProfile";
+import { getDefaultProfile } from "../types/getDefaultProfile";
 import { Profile } from "../types/profile";
 import { usePresence } from "@/features/messages/hooks/usePresence";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";

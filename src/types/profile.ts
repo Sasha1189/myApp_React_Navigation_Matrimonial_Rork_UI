@@ -1,148 +1,81 @@
 export interface Profile {
-  // Basic Information
+  // Unchanged Backend Master Keys
   uid: string;
-  photos: Photo[];
-  thumbnail?: string;
-  likeCount: number;
-  liked?: boolean; // whether current user liked this profile
-  likedMe?: boolean; // whether this profile liked current user
-  createdAt: Date;
-  updatedAt: Date;
-  blockedUserUIDs?: string[];
-
-  // Profile Status
-  isActive: boolean;
-  isVerified: boolean; // Admin verified
-  subscription?: {
-    plan: "trial" | "basic" | "premium";
-    endsAt?: number; // Timestamp for trial/subscription expiry
-    startedAt: number;
-  };
-  tier: "" | "basic" | "premium"; // User-selected tier for display purposes
-  // Personal & Birth Information-13
-  fullName: string;
-  dateOfBirth: Date | null;
-  timeOfBirth?: string | null;
-  placeOfBirth: string;
   gender: "" | "Male" | "Female";
-  maritalStatus: "" | "Never Married" | "Divorced" | "Widowed";
-  height: string;
-  weight: string;
-  bodyType: "" | "Slim" | "Athletic" | "Average" | "Heavy";
-  bloodGroup: "" | "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
-  manglikStatus: "" | "Yes" | "No" | "Partial" | "Don't Know";
-  rashi:
-    | ""
-    | "Aries"
-    | "Taurus"
-    | "Gemini"
-    | "Cancer"
-    | "Leo"
-    | "Virgo"
-    | "Libra"
-    | "Scorpio"
-    | "Sagittarius"
-    | "Capricorn"
-    | "Aquarius"
-    | "Pisces";
-  horoscopeRequired: "" | "Yes" | "No" | "Optional";
-  isReady: string;
+  tier: "" | "basic" | "premium";
+  liked?: boolean;
 
-  // About Me-6
-  shortBio: string;
-  aspirations: string;
-  beliefsValues: string;
-  strengths: string;
-  likesDislikesText: string;
-  socialMedia: string;
+  // Compressed Basic Information
+  photos: Photo[]; // photos Array
+  tb?: string; // thumbnail URL
+  ca: Date | string; // createdAt
+  ua: Date | string; // updatedAt
+  iv: boolean; // isVerified
+  pid: string; // profileId
 
-  // Contact Details-6
-  currentCity: string;
-  nativePlace: string;
-  mobileNumber: string;
-  emailAddress?: string;
-  preferredContact: "" | "WhatsApp" | "Phone" | "Email" | "Chat only";
-  profileCreatedBy: "Self" | "Father" | "Mother" | "Sibling";
+  // Compressed Personal & Birth Information
+  fn: string; // fullName
+  ln: string; // lastName
+  db: Date | string | null; // dateOfBirth
+  tob?: Date | string | null; // timeOfBirth
+  pb: string; // placeOfBirth
+  ms: number; // maritalStatus enum index
+  ht: string; // height
+  bt: number; // bodyType enum index
+  bg: number; // bloodGroup enum index
+  mg: number; // manglikStatus enum index
+  rs: number; // rashi enum index
+  hr: number; // horoscopeRequired enum index
+  ir: string; // isReady
 
-  // Education & Career-8
-  highestQualification:
-    | ""
-    | "10th"
-    | "12th"
-    | "Diploma"
-    | "Bachelor's"
-    | "Master's"
-    | "PhD"
-    | "Other";
-  fieldOfStudy:
-    | ""
-    | "Engineering"
-    | "Arts"
-    | "Science"
-    | "Commerce"
-    | "Medicine"
-    | "Law"
-    | "Other";
-  occupation:
-    | ""
-    | "Working"
-    | "Business"
-    | "Self-employed"
-    | "Freelancer"
-    | "Not working"
-    | "Student";
-  industry:
-    | ""
-    | "IT"
-    | "Finance"
-    | "Govt"
-    | "Education"
-    | "Healthcare"
-    | "Other";
-  jobTitle?: string;
-  companyName?: string;
-  workLocation?: string;
-  annualIncome: "" | "₹UPTO 5L" | "₹5L+" | "₹10L+" | "₹20L+";
+  // Compressed About Me
+  sb: string; // shortBio
+  as: string; // aspirations
+  bv: string; // beliefsValues
+  st: string; // strengths
+  ld: string; // likesDislikesText
+  sm: string; // socialMedia
 
-  // Family Details-7
-  fatherOccupation?: string;
-  motherOccupation?: string;
-  numberOfBrothers: number;
-  numberOfSisters: number;
-  siblingsDetails?: string;
-  familyType: "" | "Joint" | "Nuclear";
-  familyValues: "" | "Traditional" | "Modern";
+  // Compressed Contact Details
+  cc: string; // currentCity
+  np: string; // nativePlace
+  mn: string; // mobileNumber
+  pc: number; // preferredContact enum index
+  cb: number; // profileCreatedBy enum index
 
-  // Lifestyle & Habits-8
-  dietPreferences: "" | "Vegetarian" | "Eggetarian" | "Non-Veg";
-  smokingHabit: "" | "No" | "Occasionally" | "Yes";
-  drinkingHabit: "" | "No" | "Occasionally" | "Yes";
-  exerciseRoutine: "" | "Regular" | "Sometimes" | "Rarely" | "Never";
-  fitnessLevel: "" | "Fit" | "Average" | "Overweight" | "Athletic";
-  hobbies: string[];
-  personalityType: "" | "Introvert" | "Extrovert" | "Ambivert";
-  beliefSystem: "" | "Spiritual" | "Open-minded";
+  // Compressed Education & Career
+  hq: number; // highestQualification enum index
+  fs: number; // fieldOfStudy enum index
+  oc: number; // occupation enum index
+  ind: number; // industry enum index
+  jt?: string; // jobTitle
+  cn?: string; // companyName
+  wl?: string; // workLocation
+  ai: number; // annualIncome enum index
 
-  // Partner Preferences-9
-  preferredAgeRange: { min: number; max: number } | null;
-  preferredHeightRange: { min: string; max: string } | null;
-  preferredMaritalStatus: "" | "Never Married" | "Divorced" | "Widowed";
-  manglikPreference: "" | "Required" | "Not Required" | "Don't Know";
-  preferredEducation:
-    | ""
-    | "12th"
-    | "Graduate"
-    | "Postgraduate"
-    | "No preference";
-  preferredProfession:
-    | ""
-    | "Working Professional"
-    | "Govt Job"
-    | "Business"
-    | "No preference";
-  preferredIncomeRange: "" | "₹3L+" | "₹5L+" | "₹10L+" | "No preference";
-  locationPreference?: string | null;
-  livingWithParents: "" | "Okay" | "Not okay" | "Prefer separate";
+  // Compressed Family Details
+  fo?: string; // fatherOccupation
+  mo?: string; // motherOccupation
+  nb: string; // numberOfBrothers
+  ns: string; // numberOfSisters
+  sd?: string; // siblingsDetails
+
+  // Compressed Lifestyle & Habits
+  dp: number; // dietPreferences enum index
+  sh: number; // smokingHabit enum index
+  dh: number; // drinkingHabit enum index
+  er: number; // exerciseRoutine enum index
+  fl: number; // fitnessLevel enum index
+  hb: number[]; // hobbies Array
+  bs: number; // beliefSystem enum index
+
+  // Compressed Partner Preferences
+  pms: number; // preferredMaritalStatus enum index
+  pe: number; // preferredEducation enum index
+  pp: number; // preferredProfession enum index
+  pir: number; // preferredIncomeRange enum index
+  lp?: string | null; // locationPreference
+  lwp: number; // livingWithParents enum index
 }
 
 export interface Match {

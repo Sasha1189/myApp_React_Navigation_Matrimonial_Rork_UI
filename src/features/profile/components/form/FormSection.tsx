@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Profile } from "../../../../types/profile";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -10,8 +11,8 @@ interface FormSectionProps {
   title: string;
   icon: React.ComponentType<any>;
   onPress: () => void;
-  data: any;
-  fields: readonly string[];
+  data: Profile | undefined | null; // Typed to enforce the compressed schema
+  fields: readonly (keyof Profile)[]; // Type-safe array mapping directly to Profile properties
 }
 
 const FormSection: React.FC<FormSectionProps> = ({

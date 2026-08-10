@@ -5,18 +5,17 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   Alert,
+  StyleSheet,
 } from "react-native";
 import {
   X,
   Calendar,
+  Ruler,
   MapPin,
-  GraduationCap,
   Briefcase,
   HeartHandshake,
   Heart,
-  Ruler,
 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -27,14 +26,8 @@ import { storage } from "@/cache/cacheConfig";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
 import PickerField from "../../profile/components/form/PickerField";
-
-// Import your existing options
-import {
-  districtOptions,
-  annualIncomeOptions,
-  maritalStatusOptions,
-  isReady as isReadyOptions,
-} from "../../profile/components/form/profileOptions";
+import { LOOKUPS } from "../../utils/profileLookups"; // Ensure this matches your actual schema file location
+import { districtOptions } from "../../profile/components/form/profileOptions"; // Kept since district handles a custom separate list
 
 export default function FilterScreen() {
   const navigation = useNavigation();
@@ -44,23 +37,23 @@ export default function FilterScreen() {
   const { t } = useTranslation();
   const uid = user?.uid as string;
 
+  // 1. UPDATED: Swapped state object keys to match the optimized schema
+  // Indices (ai, ms) initialize as empty strings so the PickerField displays placeholders properly when unselected
   const [filters, setFilters] = useState({
     maxAge: "",
     maxHeight: "",
-    nativePlace: "",
-    minIncome: "",
-    maritalStatus: "",
-    isReady: "",
+    np: "", // nativePlace -> np (remains string district name)
+    ai: "" as number | "", // annualIncome -> ai (numeric enum index)
+    ms: "" as number | "", // maritalStatus -> ms (numeric enum index)
+    ir: "", // isReady -> ir
   });
 
   const applyFilters = () => {
     const age = parseInt(filters.maxAge);
     if (filters.maxAge && (age < 18 || age > 60)) {
-      Alert.alert(
-        t("filters.title"), // Alert Header
-        t("filters.errors.invalidAge"), // Error Message
-        [{ text: "OK" }],
-      );
+      Alert.alert(t("filters.title"), t("filters.errors.invalidAge"), [
+        { text: "OK" },
+      ]);
       return;
     }
 
@@ -72,6 +65,7 @@ export default function FilterScreen() {
       return;
     }
 
+    // Securely cache the compressed schema state object parameters
     storage.set(`active_filter_params_${uid}`, JSON.stringify(filters));
     storage.set(`active_mode_${uid}`, "filter");
     navigation.goBack();
@@ -81,10 +75,10 @@ export default function FilterScreen() {
     setFilters({
       maxAge: "",
       maxHeight: "",
-      nativePlace: "",
-      minIncome: "",
-      maritalStatus: "",
-      isReady: "",
+      np: "",
+      ai: "",
+      ms: "",
+      ir: "",
     });
 
     storage.set(`active_mode_${uid}`, "default");
@@ -100,6 +94,14 @@ export default function FilterScreen() {
 
     const maxLength = key === "maxAge" ? 2 : 3;
     setFilters((prev) => ({ ...prev, [key]: normalized.slice(0, maxLength) }));
+  };
+
+  // Helper utility to convert array lookups into select options format on the fly
+  const transformLookupToOptions = (field: keyof typeof LOOKUPS) => {
+    return LOOKUPS[field].map((label, index) => ({
+      label: label === "" ? t("filters.any") : label,
+      value: index,
+    })) as any;
   };
 
   const renderRow = (label: string, icon: any, component: React.ReactNode) => (
@@ -133,6 +135,7 @@ export default function FilterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View>
+          {/* MAX AGE */}
           {renderRow(
             t("filters.maxAge"),
             Calendar,
@@ -153,6 +156,7 @@ export default function FilterScreen() {
             </View>,
           )}
 
+          {/* MAX HEIGHT */}
           {renderRow(
             t("filters.maxHeight"),
             Ruler,
@@ -172,54 +176,54 @@ export default function FilterScreen() {
               />
             </View>,
           )}
-          {/* 
+
+          {/* NATIVE PLACE (DISTRICT) */}
           {renderRow(
             t("filters.nativePlace"),
             MapPin,
             <PickerField
               placeholder={t("filters.placeholders.district")}
-              value={filters.nativePlace}
+              value={filters.np}
               options={districtOptions}
-              onSelect={(val) =>
-                setFilters((p) => ({ ...p, nativePlace: val }))
-              }
+              onSelect={(val) => setFilters((p) => ({ ...p, np: val }))}
             />,
           )}
 
+          {/* MIN INCOME (ai) */}
           {renderRow(
             t("filters.minIncome"),
             Briefcase,
             <PickerField
               placeholder={t("filters.placeholders.income")}
-              value={filters.minIncome}
-              options={annualIncomeOptions}
-              onSelect={(val) => setFilters((p) => ({ ...p, minIncome: val }))}
+              value={filters.ai === "" ? "" : String(filters.ai)}
+              options={transformLookupToOptions("ai")}
+              onSelect={(val) => setFilters((p) => ({ ...p, ai: Number(val) }))}
             />,
           )}
 
+          {/* MARITAL STATUS (ms) */}
           {renderRow(
             t("filters.status"),
             HeartHandshake,
             <PickerField
               placeholder={t("filters.placeholders.status")}
-              value={filters.maritalStatus}
-              options={maritalStatusOptions}
-              onSelect={(val) =>
-                setFilters((p) => ({ ...p, maritalStatus: val }))
-              }
+              value={filters.ms === "" ? "" : String(filters.ms)}
+              options={transformLookupToOptions("ms")}
+              onSelect={(val) => setFilters((p) => ({ ...p, ms: Number(val) }))}
             />,
           )}
 
+          {/* IS READY (ir) */}
           {renderRow(
             t("filters.ready"),
             Heart,
             <PickerField
               placeholder={t("filters.placeholders.ready")}
-              value={filters.isReady}
-              options={isReadyOptions}
-              onSelect={(val) => setFilters((p) => ({ ...p, isReady: val }))}
+              value={filters.ir}
+              options={[t("filters.any"), "Yes", "No"]}
+              onSelect={(val) => setFilters((p) => ({ ...p, ir: String(val) }))}
             />,
-          )} */}
+          )}
         </View>
       </ScrollView>
 
@@ -231,6 +235,7 @@ export default function FilterScreen() {
     </SafeAreaView>
   );
 }
+
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {

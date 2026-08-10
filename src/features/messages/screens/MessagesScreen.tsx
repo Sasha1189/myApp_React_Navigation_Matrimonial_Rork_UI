@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
 } from "react-native";
 import { Heart, MessageCircle, Send } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
@@ -21,7 +20,6 @@ import { UserBanner } from "../components/UserBanner";
 import { ChatBanner } from "../components/ChatBanner";
 import { ChatFooter } from "../components/ChatFooter";
 import { ChatFloatingUI } from "@/features/messages/components/ChatFloatingUI";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 export default function MessagesScreen() {

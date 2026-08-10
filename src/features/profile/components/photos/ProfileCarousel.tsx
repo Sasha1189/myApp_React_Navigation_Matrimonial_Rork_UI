@@ -55,7 +55,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
                   source={
                     item?.downloadURL
                       ? { uri: item.downloadURL }
-                      : require("../../../../../assets/images/profile.webp")
+                      : { uri: item.localUrl || "" }
                   }
                   placeholder={require("../../../../../assets/images/profile.webp")}
                   placeholderContentFit="cover"

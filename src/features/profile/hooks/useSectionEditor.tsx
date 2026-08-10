@@ -27,10 +27,12 @@ export function useSectionEditor<T extends FieldValues>(
     control,
     handleSubmit,
     reset,
-    formState: { isDirty },
+    formState, // Extract errors mapping array here
   } = useForm<T>({
     defaultValues: profile || {},
   });
+
+  const { isDirty } = formState;
 
   // Handle Discard Alert
   const handleBack = useCallback(() => {
@@ -65,11 +67,13 @@ export function useSectionEditor<T extends FieldValues>(
       if (isSaving) return;
       setIsSaving(true);
 
+      console.log("onSave called with data:", data);
+
       try {
         const changedFields: Partial<T> = {};
 
         sectionFields.forEach((key) => {
-          const newValue = data[key];
+          let newValue = data[key];
           const oldValue = profile?.[key];
 
           // 1. Skip if value hasn't changed at all
@@ -77,19 +81,34 @@ export function useSectionEditor<T extends FieldValues>(
 
           // 2. Skip if field is immutable and already locked down on server
           if (isFieldLocked(profile, key as any)) return;
+          if (newValue === 0 && key !== "nb" && key !== "ns") {
+            newValue = "" as any;
+          }
 
-          // 3. Skip if the value is blank garbage (empty string, whitespace, null, or undefined)
+          // 3. Skip if the value is blank garbage text, null, or undefined
           if (
             newValue === null ||
             newValue === undefined ||
             (typeof newValue === "string" && newValue.trim() === "")
           ) {
+            // However, if the old value was populated and user manually cleared it,
+            // pass "" onward to trigger an explicit field clear in database cloud rows
+            if (
+              oldValue !== undefined &&
+              oldValue !== null &&
+              oldValue !== 0 &&
+              oldValue !== ""
+            ) {
+              changedFields[key] = "" as any;
+            }
             return;
           }
 
           // 4. Safe & Optimized: Capture ONLY the actual modified payload changes
           changedFields[key] = newValue;
         });
+
+        console.log("Changed fields to update:", changedFields);
 
         // Only ping your endpoint if real updates occurred
         if (Object.keys(changedFields).length > 0) {
@@ -108,7 +127,7 @@ export function useSectionEditor<T extends FieldValues>(
     },
   );
 
-  // 4. Header Injection (Demo Aesthetic)
+  // 4. Header Injection
   useEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -152,5 +171,5 @@ export function useSectionEditor<T extends FieldValues>(
     });
   }, [navigation, isSaving, isDirty, theme, handleBack, onSave, title]);
 
-  return { control };
+  return { control, formState };
 }

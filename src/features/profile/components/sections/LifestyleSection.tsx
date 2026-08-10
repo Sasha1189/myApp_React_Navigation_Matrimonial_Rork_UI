@@ -16,19 +16,26 @@ import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG } from "../form/profileValidation";
 import { Profile } from "../../../../types/profile";
 import { useTranslation } from "react-i18next";
+import { transformLookupToOptions } from "@/features/utils/profileLookups";
 
 import PickerField from "../form/PickerField";
 import MultiSelectField from "../form/MultiSelectField";
 
-// Your Options
-import {
-  dietOptions,
-  habitOptions,
-  exerciseOptions,
-  fitnessOptions,
-  beliefOptions,
-  hobbyOptions,
-} from "../form/profileOptions";
+// Separate standalone array lookup since 'hb' index array is missing from LOOKUPS root object
+const HOBBIES_LOOKUP = [
+  "Reading",
+  "Traveling",
+  "Cooking",
+  "Music",
+  "Movies",
+  "Sports",
+  "Fitness",
+  "Dancing",
+  "Photography",
+  "Gaming",
+  "Art & Craft",
+  "Other",
+];
 
 export default function EditLifestyleScreen({ navigation }: any) {
   const { myProfile, updateMyProfile } = useAuth();
@@ -46,6 +53,14 @@ export default function EditLifestyleScreen({ navigation }: any) {
     config.title,
   );
 
+  // Convert flat hobbies list to uniform structural lookup objects mapping indexes to labels
+  const structuredHobbyOptions = React.useMemo(() => {
+    return HOBBIES_LOOKUP.map((label, index) => ({
+      label,
+      value: index,
+    }));
+  }, []);
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.colors.background }}
@@ -59,13 +74,13 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Diet Preferences */}
         <Controller
           control={control}
-          name="dietPreferences"
+          name="dp" // dietPreferences -> dp
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.diet")}
               value={value}
               placeholder={t("details.placeholders.diet")}
-              options={dietOptions}
+              options={transformLookupToOptions("dp")}
               onSelect={onChange}
               icon={Coffee}
               editable={true}
@@ -76,13 +91,13 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Smoking Habit */}
         <Controller
           control={control}
-          name="smokingHabit"
+          name="sh" // smokingHabit -> sh
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.smoking")}
               value={value}
               placeholder={t("details.placeholders.habit")}
-              options={habitOptions}
+              options={transformLookupToOptions("sh")}
               onSelect={onChange}
               icon={Droplets}
               editable={true}
@@ -93,13 +108,13 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Drinking Habit */}
         <Controller
           control={control}
-          name="drinkingHabit"
+          name="dh" // drinkingHabit -> dh
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.drinking")}
               value={value}
               placeholder={t("details.placeholders.habit")}
-              options={habitOptions}
+              options={transformLookupToOptions("dh")}
               onSelect={onChange}
               icon={Wine}
               editable={true}
@@ -110,13 +125,13 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Exercise Routine */}
         <Controller
           control={control}
-          name="exerciseRoutine"
+          name="er" // exerciseRoutine -> er
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.exercise")}
               value={value}
               placeholder={t("details.placeholders.exercise")}
-              options={exerciseOptions}
+              options={transformLookupToOptions("er")}
               onSelect={onChange}
               icon={Activity}
               editable={true}
@@ -127,13 +142,13 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Fitness Level */}
         <Controller
           control={control}
-          name="fitnessLevel"
+          name="fl" // fitnessLevel -> fl
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.fitness")}
               value={value}
               placeholder={t("details.placeholders.fitness")}
-              options={fitnessOptions}
+              options={transformLookupToOptions("fl")}
               onSelect={onChange}
               icon={Heart}
               editable={true}
@@ -144,12 +159,12 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Hobbies (MultiSelect) - Premium Chip View */}
         <Controller
           control={control}
-          name="hobbies"
+          name="hb" // hobbies -> hb
           render={({ field: { onChange, value } }) => (
             <MultiSelectField
               label={t("details.labels.hobbies")}
-              value={Array.isArray(value) ? value : []}
-              options={hobbyOptions}
+              value={Array.isArray(value) ? value : []} // Array of numeric indices e.g. [1, 3]
+              options={structuredHobbyOptions}
               onChange={onChange}
               placeholder={t("details.placeholders.multiHobbies")}
               icon={Sparkles}
@@ -161,13 +176,13 @@ export default function EditLifestyleScreen({ navigation }: any) {
         {/* Belief System */}
         <Controller
           control={control}
-          name="beliefSystem"
+          name="bs" // beliefSystem -> bs
           render={({ field: { onChange, value } }) => (
             <PickerField
               label={t("details.labels.beliefSystem")}
               value={value}
               placeholder={t("details.placeholders.beliefSystem")}
-              options={beliefOptions}
+              options={transformLookupToOptions("bs")}
               onSelect={onChange}
               icon={Sparkles}
               editable={true}

@@ -8,6 +8,9 @@ import { useTranslation } from "react-i18next";
 import { storage } from "@/cache/cacheConfig";
 import { apiUpdateProfile } from "@/features/profile/api/profileApi";
 import { useAppNavigation } from "@/navigation/hooks";
+import { sanitizePayload } from "@/utils/sanitizePayload";
+import { generateTimeBasedSuffix } from "@/utils/IDGenerater";
+import { Profile } from "@/types/profile";
 
 const SKUS = ["basic_membership_1y", "premium_membership_1y"];
 const PROFILE_CACHE_KEY = "self_profile_cache";
@@ -46,36 +49,48 @@ export const useSubscription = () => {
         if (user) await getIdToken(user, true);
         setTier(result.newTier);
 
-        // STEP 4: ISOLATED POST-PAYMENT CLOUD SYNC
+        // 🎯 STEP 4: ISOLATED POST-PAYMENT CLOUD SYNC
         if (user && result.newTier) {
           try {
             const cachedString = storage.getString(PROFILE_CACHE_KEY);
             if (cachedString) {
               const currentLocalProfile = JSON.parse(cachedString);
 
-              delete currentLocalProfile.photos;
-              delete currentLocalProfile.thumbnail;
+              let finalPid = currentLocalProfile.pid || "";
+              if (!finalPid || finalPid.trim() === "") {
+                finalPid = generateTimeBasedSuffix(); // Generates "LYC-XXXX" once
+              }
 
-              const completeCloudPayload = {
+              if (
+                !currentLocalProfile.tier ||
+                currentLocalProfile.tier === "none"
+              ) {
+                delete currentLocalProfile.ph;
+                delete currentLocalProfile.tb;
+              }
+
+              const rawCloudPayload = {
                 ...currentLocalProfile,
                 uid: user?.uid,
                 gender: user?.displayName,
                 tier: result.newTier,
-                photos: [],
-                thumbnail: "",
+                pid: finalPid,
               };
 
-              await apiUpdateProfile(completeCloudPayload);
+              const optimizedPayload = sanitizePayload(rawCloudPayload);
 
-              storage.set(
-                PROFILE_CACHE_KEY,
-                JSON.stringify(completeCloudPayload),
-              );
+              // Force-override critical native variables to ensure they are never sanitized out
+              optimizedPayload.uid = user?.uid;
+              optimizedPayload.gender = user?.displayName;
+              optimizedPayload.tier = result.newTier;
+              optimizedPayload.pid = finalPid;
 
-              setMyProfile(completeCloudPayload);
+              await apiUpdateProfile(optimizedPayload);
+
+              storage.set(PROFILE_CACHE_KEY, JSON.stringify(optimizedPayload));
+              setMyProfile(optimizedPayload as Profile);
             }
           } catch (syncErr) {
-            // 🟢 SHIELD CATCH: If profile sync drops out, we catch it here so it NEVER hangs the UI!
             console.error(
               "❌ [POST-PAYMENT SYNC ERROR]: Non-fatal profile upload error caught safely:",
               syncErr,

@@ -1,13 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import {
-  firestore,
-  collection,
-  queryFs,
-  getDocsFromCache,
-  where,
-} from "@/config/firebase";
 import { storage } from "@/cache/cacheConfig";
+import { FeedSyncService } from "../apis/feedApi";
 
 export function useFeedFilter(uid: string, isActive: boolean, filters: any) {
   const { user } = useAuth();
@@ -16,15 +10,10 @@ export function useFeedFilter(uid: string, isActive: boolean, filters: any) {
   const [error, setError] = useState<any>(null);
   const [currentIndex, _setIndex] = useState(0);
 
-  const performFilter = useCallback(async () => {
+  const performFilter = useCallback(() => {
     if (!isActive || !filters) return;
     setIsLoading(true);
-
-    const calculateDateFromAge = (age: number) => {
-      const d = new Date();
-      d.setFullYear(d.getFullYear() - age);
-      return d; // Returns a Date object exactly 'age' years ago
-    };
+    setError(null);
 
     try {
       const rawGender = user?.displayName || "";
@@ -36,64 +25,88 @@ export function useFeedFilter(uid: string, isActive: boolean, filters: any) {
         return;
       }
 
-      const targetCollection =
-        gender === "male" ? "femaleProfiles" : "maleProfiles";
+      // 1. Fetch current local runtime dataset from MMKV
+      const records = FeedSyncService.getCachedProfiles();
+      const allProfiles = Object.values(records);
+      const scoredData: any[] = [];
 
-      const colRef = collection(firestore, targetCollection);
-
-      let q = queryFs(colRef);
-
+      // Setup age matching boundary variables if configured
+      let youngestPossibleBirthDate: Date | null = null;
       if (filters.maxAge) {
         const ageInt = parseInt(filters.maxAge, 10);
-        const youngestPossibleBirthDate = new Date();
-        // Birth date must be AFTER this date to be YOUNGER than ageInt
+        youngestPossibleBirthDate = new Date();
         youngestPossibleBirthDate.setFullYear(
           youngestPossibleBirthDate.getFullYear() - ageInt,
         );
-
-        q = queryFs(q, where("dateOfBirth", ">=", youngestPossibleBirthDate));
       }
 
-      const snapshot = await getDocsFromCache(q);
-
-      const rawData = snapshot.docs.map((doc: any) => ({
-        uid: doc.id,
-        ...doc.data(),
-      }));
-
-      // SCORING ENGINE
-      const scoredData = rawData.map((p: any) => {
+      // 2. Iterate, evaluate structural thresholds, and compute rankings
+      for (const p of allProfiles) {
         let score = 0;
+        let passAgeCheck = true;
 
-        // 1. Max Height (Less than)
-        if (filters.maxHeight && Number(p.height) <= Number(filters.maxHeight))
-          score++;
+        // --- Age Range Validation ---
+        if (youngestPossibleBirthDate && p.dateOfBirth) {
+          // Convert Firestore Timestamp seconds/milliseconds payload cleanly to a Date structure
+          const birthDate = p.dateOfBirth.seconds
+            ? new Date(p.dateOfBirth.seconds * 1000)
+            : new Date(p.dateOfBirth);
 
-        // 2. Native Place (Exact)
-        if (filters.nativePlace && p.nativePlace === filters.nativePlace)
+          // The profile's birth date must be AFTER this threshold to be YOUNGER than filters.maxAge
+          if (birthDate < youngestPossibleBirthDate) {
+            passAgeCheck = false;
+          } else {
+            score++; // Matches your logic: Age check satisfied gets an automatic match score point
+          }
+        } else if (filters.maxAge) {
+          // If a filter is requested but profile data doesn't have a valid field, fail validation safely
+          passAgeCheck = false;
+        }
+
+        // If age ceiling restriction checks fail, immediately skip parsing the rest of this profile
+        if (!passAgeCheck) continue;
+
+        // --- Weight Scored Filter Points Matrix ---
+        // 1. Max Height (Less than or Equal)
+        if (
+          filters.maxHeight &&
+          p.height !== undefined &&
+          Number(p.height) <= Number(filters.maxHeight)
+        ) {
           score++;
+        }
+
+        // 2. Native Place (Exact Match)
+        if (filters.nativePlace && p.nativePlace === filters.nativePlace) {
+          score++;
+        }
 
         // 3. Min Income (Greater than or Equal)
         if (
           filters.minIncome &&
+          p.annualIncome !== undefined &&
           Number(p.annualIncome) >= Number(filters.minIncome)
-        )
+        ) {
           score++;
+        }
 
-        // 4. Marital Status (Exact)
-        if (filters.maritalStatus && p.maritalStatus === filters.maritalStatus)
+        // 4. Marital Status (Exact Match)
+        if (
+          filters.maritalStatus &&
+          p.maritalStatus === filters.maritalStatus
+        ) {
           score++;
+        }
 
-        // 5. Ready to Marry (Exact)
-        if (filters.isReady && p.isReady === filters.isReady) score++;
+        // 5. Ready to Marry (Exact Match)
+        if (filters.isReady && p.isReady === filters.isReady) {
+          score++;
+        }
 
-        // Age is already checked by Firestore, so we add the point automatically
-        if (filters.maxAge) score++;
+        scoredData.push({ ...p, matchScore: score });
+      }
 
-        return { ...p, matchScore: score };
-      });
-
-      // SORTING: 6 Matches -> 5 Matches -> ...
+      // 3. Sort Results: Highest Score (6 Matches) -> Lowest Score (0 Matches)
       const sorted = scoredData.sort(
         (a: any, b: any) => b.matchScore - a.matchScore,
       );
@@ -101,18 +114,22 @@ export function useFeedFilter(uid: string, isActive: boolean, filters: any) {
     } catch (e) {
       setError(e);
       console.error("Filter Ranking Error:", e);
+      setProfiles([]);
     } finally {
       setIsLoading(false);
     }
   }, [isActive, filters, user?.displayName]);
 
+  // Processes filtering calculations instantly upon focused screen entry or filter edits
   useEffect(() => {
-    if (uid && isActive) performFilter();
+    if (uid && isActive) {
+      performFilter();
+    }
   }, [uid, isActive, filters, performFilter]);
 
   const updateIndex = useCallback(
     (val: number) => {
-      const next = Math.max(0, Math.min(val, profiles?.length));
+      const next = Math.max(0, Math.min(val, profiles?.length || 0));
       _setIndex(next);
     },
     [profiles.length],
@@ -126,10 +143,9 @@ export function useFeedFilter(uid: string, isActive: boolean, filters: any) {
   const refetch = useCallback(async () => {
     if (profiles.length > 0) {
       updateIndex(0);
-      await performFilter();
-      return;
+      performFilter();
     }
-  }, [profiles?.length, user?.displayName, updateIndex]);
+  }, [profiles?.length, performFilter, updateIndex]);
 
   return {
     profiles,
@@ -139,7 +155,7 @@ export function useFeedFilter(uid: string, isActive: boolean, filters: any) {
     isError: !!error,
     error,
     feedDone: true,
-    resetFeed: resetFeed,
+    resetFeed,
     refetch,
   };
 }

@@ -8,15 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  X,
-  Search,
-  MapPin,
-  Calendar,
-  User,
-  Sparkles,
-  Clock,
-} from "lucide-react-native";
+import { X, Search, MapPin, User, Sparkles, Clock } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -25,6 +17,8 @@ import { useAuth } from "@/context/AuthContext";
 import { storage } from "../../../cache/cacheConfig";
 import PickerField from "@/features/profile/components/form/PickerField";
 import { useTranslation } from "react-i18next";
+
+type SearchFieldType = "fullName" | "currentCity";
 
 export default function SearchScreen() {
   const navigation = useNavigation();
@@ -36,26 +30,25 @@ export default function SearchScreen() {
   const { t } = useTranslation();
 
   // 1. Search Configuration
-  const [searchField, setSearchField] = useState<"fullName" | "currentCity">(
-    "fullName",
-  );
+  const [searchField, setSearchField] = useState<SearchFieldType>("fullName");
   const [searchQuery, setSearchQuery] = useState("");
 
   // 2. Icon map for the header display
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<SearchFieldType, any> = {
     fullName: User,
     currentCity: MapPin,
   };
 
-  // 2. Actions
-  // const handleSearch = () => {
-  //   if (!searchQuery.trim()) return;
+  // Options configuration matching translation setup keys
+  const searchOptions = [
+    { label: t("search.fields.fullName", "Full Name"), value: "fullName" },
+    {
+      label: t("search.fields.currentCity", "Current City"),
+      value: "currentCity",
+    },
+  ];
 
-  //   storage.set(`search_field_${uid}`, searchField);
-  //   storage.set(`search_query_${uid}`, searchQuery.trim());
-  //   storage.set(`active_mode_${uid}`, "search");
-  //   navigation.goBack();
-  // };
+  // 3. Actions
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
 
@@ -82,26 +75,33 @@ export default function SearchScreen() {
   };
 
   if (!theme) return null;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.closeButton}
+          activeOpacity={0.7}
         >
           <X size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("search.title")}</Text>
-        <TouchableOpacity onPress={clearSearch}>
+        <TouchableOpacity onPress={clearSearch} activeOpacity={0.7}>
           <Text style={styles.clearText}>{t("search.clear")}</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled" // Prevents losing focus on tap
+      >
         <View style={styles.searchSection}>
           <TouchableOpacity
             style={[styles.inputContainer, styles.latestButtonExtra]}
             onPress={handleLatest}
+            activeOpacity={0.8}
           >
             <Clock size={20} color={theme.colors.primary} />
             <Text
@@ -117,21 +117,27 @@ export default function SearchScreen() {
 
           <Text style={styles.sectionTitle}>{t("search.criteriaTitle")}</Text>
 
-          {/* Field Selection (Picker) */}
+          {/* Field Selection (Picker) with clean object options mapping */}
           <PickerField
             label={t("search.searchBy")}
             placeholder={t("search.placeholderSelect")}
-            value={searchField.charAt(0).toUpperCase() + searchField.slice(1)}
-            options={["fullName", "currentCity"]}
-            onSelect={(val) =>
-              setSearchField(val as "fullName" | "currentCity")
+            value={
+              searchOptions.find((opt) => opt.value === searchField)?.label ||
+              ""
             }
+            options={searchOptions.map((opt) => opt.value)}
+            onSelect={(val) => setSearchField(val as SearchFieldType)}
             icon={iconMap[searchField] || User}
           />
 
           {/* Single Query Input */}
           <View style={styles.inputContainer}>
-            <Search size={20} color={theme.colors.textLight} />
+            <View style={styles.inputIconWrapper}>
+              {React.createElement(iconMap[searchField] || Search, {
+                size: 20,
+                color: theme.colors.textLight,
+              })}
+            </View>
             <TextInput
               style={styles.input}
               placeholder={t(`search.placeholders.${searchField}`)}
@@ -140,13 +146,31 @@ export default function SearchScreen() {
               onChangeText={setSearchQuery}
               returnKeyType="search"
               onSubmitEditing={handleSearch}
+              autoCorrect={false}
+              autoCapitalize={searchField === "fullName" ? "words" : "none"}
             />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                activeOpacity={0.7}
+              >
+                <X size={18} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+        <TouchableOpacity
+          style={[
+            styles.searchButton,
+            !searchQuery.trim() && { opacity: 0.5 }, // Visual disabled helper status
+          ]}
+          onPress={handleSearch}
+          disabled={!searchQuery.trim()}
+          activeOpacity={0.8}
+        >
           <Search size={20} color="white" />
           <Text style={styles.searchButtonText}>{t("search.button")}</Text>
         </TouchableOpacity>
@@ -204,16 +228,20 @@ export const createStyles = (theme: AppTheme) =>
     },
     latestButtonExtra: {
       borderColor: theme.colors.primary,
-      backgroundColor: theme.colors.primary + "0A", // Very subtle primary tint
+      backgroundColor: theme.colors.primary + "0A",
       justifyContent: "center",
       gap: theme.spacing.sm,
       borderStyle: "dashed",
+    },
+    inputIconWrapper: {
+      marginRight: theme.spacing.xs,
     },
     input: {
       flex: 1,
       fontSize: theme.fontSize.md,
       color: theme.colors.text,
-      marginLeft: theme.spacing.sm,
+      marginLeft: theme.spacing.xs,
+      paddingVertical: 0,
     },
     sectionTitle: {
       fontSize: theme.fontSize.md,
@@ -225,26 +253,6 @@ export const createStyles = (theme: AppTheme) =>
       fontSize: theme.fontSize.md,
       color: theme.colors.text,
       marginLeft: theme.spacing.sm,
-    },
-    popularSection: {
-      marginTop: theme.spacing.xl,
-    },
-    tagsContainer: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: theme.spacing.sm,
-    },
-    tag: {
-      paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
-      backgroundColor: theme.colors.card,
-      borderRadius: theme.borderRadius.round,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    tagText: {
-      fontSize: theme.fontSize.sm,
-      color: theme.colors.text,
     },
     footer: {
       padding: theme.spacing.lg,

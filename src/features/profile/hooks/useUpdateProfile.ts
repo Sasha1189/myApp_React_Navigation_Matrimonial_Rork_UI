@@ -43,7 +43,6 @@ export const useUpdateProfile = (
             ...cleanNewData,
           });
         }
-      } else {
       }
 
       // 5. Sync Local State & MMKV Storage Cache cleanly

@@ -2,14 +2,7 @@ import { useState } from "react";
 import { Alert, Linking } from "react-native";
 import { signOut } from "@react-native-firebase/auth";
 import { auth, rtdb } from "@/config/firebase";
-import {
-  ref,
-  serverTimestamp,
-  update,
-  off,
-  goOffline,
-  keepSynced,
-} from "@react-native-firebase/database";
+import { ref, serverTimestamp, update } from "@react-native-firebase/database";
 import { useAuth } from "@/context/AuthContext";
 import { clearCacheOnLogout } from "@/cache/cacheConfig";
 import { useTranslation } from "react-i18next";

@@ -20,6 +20,7 @@ import {
   GraduationCap,
   Sparkles,
   MapPin,
+  IdCard,
 } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
@@ -29,6 +30,7 @@ import { formatDOB } from "../../../utils/dateUtils";
 import { ActionButtons } from "../components/ActionButtons";
 import { useButtonActions } from "../hooks/useButtonActions";
 import { useTranslation } from "react-i18next";
+import { getDisplayValue } from "@/features/utils/profileLookups";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -147,13 +149,17 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       {/* 3. PREMIUM CONTENT LAYOUT */}
       <View style={styles.cardContent}>
         <View style={styles.nameAgeRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {profile?.fullName}
-          </Text>
-          <Text style={styles.age}>
-            {formatDOB(profile.dateOfBirth, "age")}
-          </Text>
-          {/* NEW: READY PILL POSITIONED NEXT TO AGE */}
+          {/* Wrap Name to enforce maximum boundary checks */}
+          <View style={styles.nameWrapper}>
+            <Text style={styles.name} numberOfLines={1}>
+              {`${profile?.fn || ""} ${profile?.ln || ""}`.trim() ||
+                "User Name"}
+            </Text>
+          </View>
+
+          <Text style={styles.age}>{formatDOB(profile?.db, "age")}</Text>
+
+          {/* Pill Container automatically lines up */}
           <View
             style={[
               styles.readyPill,
@@ -164,34 +170,48 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           >
             <Sparkles size={10} color="white" />
             <Text style={styles.readyPillText}>
-              {profile?.isReady === "Ready"
-                ? t("card.ready")
-                : t("card.studying")}
+              {profile?.ir === "Ready" ? t("card.ready") : t("card.studying")}
             </Text>
           </View>
         </View>
 
         {/* GLASSMORPHISM BADGES */}
         <View style={styles.badgeRow}>
-          {profile?.occupation && (
+          {/* OCCUPATION BADGE */}
+          {typeof profile?.oc === "number" && profile.oc > 0 && (
             <View style={styles.glassBadge}>
               <Briefcase size={12} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.badgeText}>{profile.occupation}</Text>
+              <Text style={styles.badgeText}>
+                {getDisplayValue("oc", profile.oc)}
+              </Text>
             </View>
           )}
-          {profile?.fieldOfStudy && (
+          {/* FIELD OF STUDY BADGE */}
+          {typeof profile?.fs === "number" && profile.fs > 0 && (
             <View style={styles.glassBadge}>
               <GraduationCap size={12} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.badgeText}>{profile.fieldOfStudy}</Text>
+              <Text style={styles.badgeText}>
+                {getDisplayValue("fs", profile.fs)}
+              </Text>
             </View>
           )}
         </View>
-        {/* PARALLEL GLASS BADGES (CITY & STUDY) */}
+        {/* PARALLEL GLASS BADGES (CITY) */}
         <View style={styles.badgeRow}>
-          {profile?.currentCity && (
+          {!!profile?.cc && (
             <View style={styles.glassBadge}>
               <MapPin size={12} color="white" />
-              <Text style={styles.badgeText}>{profile.currentCity}</Text>
+              <Text style={styles.badgeText}>
+                {getDisplayValue("ct" as any, profile.cc)}
+              </Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.badgeRow}>
+          {profile?.pid && (
+            <View style={styles.glassBadge}>
+              <IdCard size={12} color="white" />
+              <Text style={styles.badgeText}>{profile.pid}</Text>
             </View>
           )}
         </View>
@@ -273,20 +293,11 @@ export const createStyles = (theme: AppTheme) =>
 
     cardContent: {
       position: "absolute",
-      bottom: 10,
+      bottom: 0,
       left: 0,
       right: 60,
       padding: 20,
     },
-
-    // GLASSMORPHISM BADGES
-    bio: {
-      color: "rgba(255,255,255,0.8)",
-      fontSize: 14,
-      lineHeight: 20,
-      letterSpacing: 0.3,
-    },
-
     floatingActions: {
       position: "absolute",
       right: 12,
@@ -296,20 +307,23 @@ export const createStyles = (theme: AppTheme) =>
     },
     nameAgeRow: {
       flexDirection: "row",
-      alignItems: "center", // Perfectly centers the Pill with the Text
+      alignItems: "baseline", // Perfectly centers the Pill with the Text
       marginBottom: 10,
-      flexWrap: "wrap", // Prevents overflow if name is long
+      gap: 6,
+    },
+    nameWrapper: {
+      maxWidth: "55%", // Guarantees the name clips nicely if it is very long
     },
     name: {
-      fontSize: 22,
+      fontSize: theme.fontSize.lg,
       fontWeight: "800",
       color: "white",
       letterSpacing: 0.5,
     },
     age: {
-      fontSize: 20,
+      fontSize: theme.fontSize.xs,
+      fontWeight: "500",
       color: "rgba(255,255,255,0.9)",
-      marginHorizontal: 8,
     },
     readyPill: {
       flexDirection: "row",
@@ -317,11 +331,12 @@ export const createStyles = (theme: AppTheme) =>
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 6,
+      alignSelf: "center",
       // No more far-right positioning
     },
     readyPillText: {
-      fontSize: 9,
-      fontWeight: "900",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "500",
       color: "white",
       marginLeft: 4,
       letterSpacing: 0.5,
@@ -335,16 +350,16 @@ export const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "rgba(255,255,255,0.15)",
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 5,
+      paddingVertical: 3,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.2)",
     },
     badgeText: {
       color: "white",
-      fontSize: 11,
-      fontWeight: "600",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "400",
       marginLeft: 6,
     },
     premiumBanner: {

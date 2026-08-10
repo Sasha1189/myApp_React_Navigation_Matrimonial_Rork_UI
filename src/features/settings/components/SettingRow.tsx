@@ -113,13 +113,13 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
     },
     settingTitle: {
-      fontSize: 15,
+      fontSize: theme.fontSize.sm,
       fontWeight: "600",
       color: theme.colors.text,
       letterSpacing: 0.3,
     },
     settingSubtitle: {
-      fontSize: 12,
+      fontSize: theme.fontSize.xs,
       color: theme.colors.textLight,
       marginTop: 2,
     },
