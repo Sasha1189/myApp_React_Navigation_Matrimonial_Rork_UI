@@ -31,6 +31,7 @@ import { ActionButtons } from "../components/ActionButtons";
 import { useButtonActions } from "../hooks/useButtonActions";
 import { useTranslation } from "react-i18next";
 import { getDisplayValue } from "@/features/utils/profileLookups";
+import { resolvePhotoUri } from "@/utils/photoUtils";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -106,23 +107,23 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           keyExtractor={(_, index) => index.toString()}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          renderItem={({ item }) => (
-            <View style={styles.slideFrame}>
-              <Image
-                source={
-                  item?.downloadURL
-                    ? { uri: item.downloadURL }
-                    : require("../../../../assets/images/profile.webp")
-                }
-                placeholder={require("../../../../assets/images/profile.webp")}
-                placeholderContentFit="cover"
-                style={styles.image}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={200}
-              />
-            </View>
-          )}
+          renderItem={({ item }) => {
+            const imageUri =
+              resolvePhotoUri(item?.downloadURL, profile.uid) || "";
+            return (
+              <View style={styles.slideFrame}>
+                <Image
+                  source={{ uri: imageUri }}
+                  placeholder={require("../../../../assets/images/profile.webp")}
+                  placeholderContentFit="cover"
+                  style={styles.image}
+                  contentFit="cover"
+                  cachePolicy="disk"
+                  transition={200}
+                />
+              </View>
+            );
+          }}
         />
       </View>
 

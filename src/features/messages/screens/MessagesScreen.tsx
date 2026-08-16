@@ -51,10 +51,7 @@ export default function MessagesScreen() {
     tier,
   );
 
-  const { panHandlers, triggerTabChange } = useTabSwipe(
-    activeTab,
-    setActiveTab,
-  );
+  const { triggerTabChange } = useTabSwipe(activeTab, setActiveTab);
   const flatListRef = useRef<FlatList>(null);
 
   const { currentData, isLoadingState } = useMemo(() => {
@@ -129,7 +126,6 @@ export default function MessagesScreen() {
       ) : (
         <View style={{ flex: 1 }}>
           <FlatList
-            {...panHandlers}
             key={activeTab}
             ref={flatListRef}
             data={currentData}

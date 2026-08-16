@@ -1,43 +1,127 @@
+// import React from "react";
+// import { View, Text, TouchableOpacity } from "react-native";
+// import { ChevronRight } from "lucide-react-native";
+
+// interface MenuItem {
+//   icon: any;
+//   label: string;
+//   onPress: () => void;
+// }
+
+// interface MenuSectionProps {
+//   menuItems: MenuItem[];
+//   theme: any;
+//   styles: any;
+// }
+
+// export const MenuSection: React.FC<MenuSectionProps> = ({
+//   menuItems,
+//   theme,
+//   styles,
+// }) => {
+//   return (
+//     <View style={styles.menuContainer}>
+//       {menuItems.map((item, i) => (
+//         <TouchableOpacity
+//           key={i}
+//           style={styles.menuItem}
+//           onPress={item.onPress}
+//         >
+//           <View style={styles.menuLeft}>
+//             <View style={styles.iconWrapper}>
+//               <item.icon size={18} color={theme.colors.primary} />
+//             </View>
+//             <View style={styles.titleContainer}>
+//               <Text style={styles.menuLabel}>{item.label}</Text>
+//             </View>
+//           </View>
+//           <ChevronRight size={18} color={theme.colors.textLight} />
+//         </TouchableOpacity>
+//       ))}
+//     </View>
+//   );
+// };
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { ChevronRight } from "lucide-react-native";
+import { Edit3, Eye, Camera, ChevronRight } from "lucide-react-native";
 
-interface MenuItem {
+// 1. Single reusable item component
+interface MenuItemProps {
   icon: any;
   label: string;
   onPress: () => void;
+  theme: any;
+  styles: any;
 }
 
+export const MenuItemComponent: React.FC<MenuItemProps> = ({
+  icon: IconComponent,
+  label,
+  onPress,
+  theme,
+  styles,
+}) => {
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
+      <View style={styles.menuLeft}>
+        <View style={styles.iconWrapper}>
+          <IconComponent size={18} color={theme.colors.primary} />
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.menuLabel}>{label}</Text>
+        </View>
+      </View>
+      <ChevronRight size={18} color={theme.colors.textLight} />
+    </TouchableOpacity>
+  );
+};
+
+// 2. Main section component calling the item 3 times directly
 interface MenuSectionProps {
-  menuItems: MenuItem[];
+  myProfile: any;
+  navigation: any;
+  t: (key: string) => string;
   theme: any;
   styles: any;
 }
 
 export const MenuSection: React.FC<MenuSectionProps> = ({
-  menuItems,
+  myProfile,
+  navigation,
+  t,
   theme,
   styles,
 }) => {
   return (
     <View style={styles.menuContainer}>
-      {menuItems.map((item, i) => (
-        <TouchableOpacity
-          key={i}
-          style={styles.menuItem}
-          onPress={item.onPress}
-        >
-          <View style={styles.menuLeft}>
-            <View style={styles.iconWrapper}>
-              <item.icon size={18} color={theme.colors.primary} />
-            </View>
-            <View style={styles.titleContainer}>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-            </View>
-          </View>
-          <ChevronRight size={18} color={theme.colors.textLight} />
-        </TouchableOpacity>
-      ))}
+      {/* Edit Profile */}
+      <MenuItemComponent
+        icon={Edit3}
+        label={t("profile.editProfile")}
+        onPress={() => navigation.navigate("EditProfile")}
+        theme={theme}
+        styles={styles}
+      />
+
+      {/* View Preview */}
+      <MenuItemComponent
+        icon={Eye}
+        label={t("profile.viewPreview")}
+        onPress={() =>
+          myProfile && navigation.navigate("Details", { profile: myProfile })
+        }
+        theme={theme}
+        styles={styles}
+      />
+
+      {/* Manage Photos */}
+      <MenuItemComponent
+        icon={Camera}
+        label={t("profile.managePhotos")}
+        onPress={() => navigation.navigate("ManagePhotos")}
+        theme={theme}
+        styles={styles}
+      />
     </View>
   );
 };

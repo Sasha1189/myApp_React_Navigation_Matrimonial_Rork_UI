@@ -48,7 +48,7 @@ export function useButtonActions(profile: Profile | undefined) {
           otherUser: {
             uid: profile.uid,
             name: profile.fn || "User",
-            photo: profile.tb || "",
+            photo: profile.tn || "",
           },
         };
         navigation.navigate("Chat", navigationPayload);
@@ -72,12 +72,12 @@ export function useButtonActions(profile: Profile | undefined) {
           {
             myUid: myProfile.uid,
             name: myProfile.fn,
-            photo: myProfile.tb as string,
+            photo: myProfile.tn as string,
           },
           {
             uid: profile.uid,
             name: profile.fn || "User",
-            photo: profile.tb || "",
+            photo: profile.tn || "",
           },
         );
       } catch (err) {

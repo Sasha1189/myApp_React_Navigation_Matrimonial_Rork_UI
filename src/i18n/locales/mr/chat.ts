@@ -1,6 +1,8 @@
 export default {
-  recentActivity: "अलीकडील क्रियाकलाप",
-  lastSeen: "शेवटचे पहिले",
+  recentActivity: "अलीकडील ऍक्टिव्हीटी",
+  lastSeen: "शेवटचे पहिले {{time}}",
+  typing: "टाईप करत आहे...",
+  online: "ऑनलाईन आहे",
   tabs: {
     chats: "चॅट्स",
     sent: "पाठवलेले लाईक",

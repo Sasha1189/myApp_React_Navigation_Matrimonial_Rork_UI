@@ -55,7 +55,8 @@
             }
           }
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "runtimeVersion": {
       "policy": "appVersion"

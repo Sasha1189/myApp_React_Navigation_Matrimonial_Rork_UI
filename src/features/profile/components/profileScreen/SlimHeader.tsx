@@ -5,6 +5,7 @@ import Svg, { Circle } from "react-native-svg";
 import { RefreshCw } from "lucide-react-native";
 import { formatDOB } from "../../../../utils/dateUtils";
 import { useTranslation } from "react-i18next";
+import { resolvePhotoUri } from "../../../../utils/photoUtils";
 
 interface SlimHeaderProps {
   profile: any;
@@ -32,6 +33,10 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
   const offset = circumference - (circumference * completionPercent) / 100;
 
   const age = profile?.db ? formatDOB(profile.db, "age") : "18";
+  const imageUri =
+    resolvePhotoUri(profile?.photos?.[0].downloadURL, profile.uid) ||
+    profile?.photos?.[0].localUrl ||
+    "";
 
   return (
     <View style={styles.headerCard}>
@@ -59,11 +64,7 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
           />
         </Svg>
         <Image
-          source={
-            profile?.photos?.[0]?.downloadURL
-              ? { uri: profile.photos?.[0].downloadURL }
-              : { uri: profile.photos?.[0].localUrl || "" }
-          }
+          source={{ uri: imageUri }}
           placeholder={require("../../../../../assets/images/profile.webp")}
           placeholderContentFit="cover"
           style={styles.profileImage}

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { StyleSheet, ScrollView, Alert } from "react-native";
-import { Edit3, Eye, Camera } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
@@ -25,26 +24,6 @@ export default function ProfileScreen({ navigation }: any) {
   const { matchesCount, sentCount, receivedCount, isLoading } = useProfileStats(
     user?.uid,
   );
-
-  // 2. ADDED HERE: Menu navigation descriptors mapping UI actions
-  const menuItems = [
-    {
-      icon: Edit3,
-      label: t("profile.editProfile"),
-      onPress: () => navigation.navigate("EditProfile"),
-    },
-    {
-      icon: Eye,
-      label: t("profile.viewPreview"),
-      onPress: () =>
-        myProfile && navigation.navigate("Details", { profile: myProfile }),
-    },
-    {
-      icon: Camera,
-      label: t("profile.managePhotos"),
-      onPress: () => navigation.navigate("ManagePhotos"),
-    },
-  ];
 
   // 3. ADDED HERE: Refresh interaction handler function (Fixed syntax error)
   const handleRefresh = async () => {
@@ -83,7 +62,13 @@ export default function ProfileScreen({ navigation }: any) {
         styles={styles}
       />
 
-      <MenuSection menuItems={menuItems} theme={theme} styles={styles} />
+      <MenuSection
+        myProfile={myProfile}
+        navigation={navigation}
+        t={t}
+        theme={theme}
+        styles={styles}
+      />
 
       <PremiumBanner
         onPress={() => navigation.navigate("Paywall")}

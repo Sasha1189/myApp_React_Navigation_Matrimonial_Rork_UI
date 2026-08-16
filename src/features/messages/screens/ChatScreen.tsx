@@ -33,7 +33,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const sender = {
     uid,
     name: myProfile?.fn || "User",
-    photo: myProfile?.tb,
+    photo: myProfile?.tn,
   };
   const flatListRef = useRef<FlatList>(null);
   const navigation = useAppNavigation();

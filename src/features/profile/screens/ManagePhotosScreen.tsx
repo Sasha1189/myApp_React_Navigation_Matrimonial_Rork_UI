@@ -9,6 +9,8 @@ import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 import { useTranslation } from "react-i18next";
+import { resolvePhotoUri } from "@/utils/photoUtils";
+import { Photo } from "@/types/profile";
 
 export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();
@@ -35,18 +37,31 @@ export default function ManagePhotosScreen() {
     uploadPhotos();
   };
 
+  const userUid = myProfile?.uid || "";
+
+  const formattedPhotos: Photo[] = (photos || []).map((photo) => ({
+    ...photo,
+    downloadURL: resolvePhotoUri(photo?.downloadURL, userUid),
+  }));
+
   if (!theme) return null;
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
         {/* Photos Grid */}
         <ManagePhotosGrid
-          photos={photos}
+          photos={formattedPhotos}
           maxPhotos={maxPhotos}
           onAdd={addPhoto}
           onDelete={deletePhoto}
           onSetPrimary={setPrimary}
         />
+
+        {/* Tip */}
+        <View style={styles.tipCard}>
+          <Edit3 size={20} color={theme.colors.accent} />
+          <Text style={styles.tipText}>{t("photos.tip")}</Text>
+        </View>
 
         {/* Save Button */}
         <UploadButton
@@ -56,12 +71,6 @@ export default function ManagePhotosScreen() {
           isEditing={isEditing}
           onPress={handleSavePress}
         />
-
-        {/* Tip */}
-        <View style={styles.tipCard}>
-          <Edit3 size={20} color={theme.colors.accent} />
-          <Text style={styles.tipText}>{t("photos.tip")}</Text>
-        </View>
       </View>
     </ScrollView>
   );
@@ -78,7 +87,8 @@ export const createStyles = (theme: AppTheme) =>
     tipCard: {
       backgroundColor: theme.colors.accent + "20",
       borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
+      padding: theme.spacing.xs,
+      marginBottom: theme.spacing.md,
       flexDirection: "row",
       alignItems: "center",
     },

@@ -29,6 +29,11 @@ export const createStyles = (theme: AppTheme) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
+      backgroundColor: theme.colors.card,
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
     },
     emptyText: {
       fontSize: 18,

@@ -64,28 +64,24 @@ export const useSettingsActions = () => {
           try {
             const currentUser = auth.currentUser;
 
+            // 1. Set RTDB status to offline BEFORE revoking auth token
             if (currentUser) {
               const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
-
-              // Fire-and-forget update prevents network thread hanging freezes
-              update(statusRef, {
-                state: "offline",
-                lastChanged: serverTimestamp(),
-              }).catch((err) =>
-                console.log("Background status sync skipped:", err.message),
-              );
+              try {
+                await update(statusRef, {
+                  state: "offline",
+                  lastChanged: serverTimestamp(),
+                });
+              } catch (statusErr) {
+                console.log("Background status sync skipped:", statusErr);
+              }
             }
 
-            try {
-              await clearCacheOnLogout();
-            } catch (cacheError) {
-              console.error(
-                "Cache purge failed but continuing cleanup chain:",
-                cacheError,
-              );
-            }
+            // 2. Clear local cache
+            await clearCacheOnLogout();
+
+            // 3. Revoke auth session
             await signOut(auth);
-            setUser(null);
           } catch (error: any) {
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {

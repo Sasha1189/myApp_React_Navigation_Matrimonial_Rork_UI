@@ -152,19 +152,4 @@ export async function clearCacheOnLogout() {
   } catch (storageError) {
     console.error("⚠️ MMKV purge error:", storageError);
   }
-
-  try {
-    const firestoreInstance = getFirestore();
-
-    // 👑 FIX 3: Terminate the cache engine cleanly
-    await terminate(firestoreInstance);
-    try {
-      await clearIndexedDbPersistence(firestoreInstance);
-    } catch (persistenceError) {
-      console.log("Skipping internal persistence cleanup:", persistenceError);
-    }
-  } catch (e) {
-    console.error("❌ Firestore cache clear failed, but proceeding", e);
-    throw e; // Pass up to the handler routine safely
-  }
 }

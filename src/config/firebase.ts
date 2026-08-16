@@ -1,6 +1,9 @@
 import { getApp } from "@react-native-firebase/app";
 import { getAuth } from "@react-native-firebase/auth";
-import { getFirestore } from "@react-native-firebase/firestore";
+import {
+  getFirestore,
+  initializeFirestore,
+} from "@react-native-firebase/firestore";
 import { getStorage } from "@react-native-firebase/storage";
 import {
   getDatabase,
@@ -12,10 +15,15 @@ import {
 export const app = getApp();
 export const auth = getAuth(app);
 
+async function initializeFirebaseServices() {
+  // Initialize Firestore with persistence off
+  await initializeFirestore(app, {
+    persistence: false, // disable offline persistence
+  });
+}
+initializeFirebaseServices();
+
 export const firestore = getFirestore(app);
-firestore.settings({
-  persistence: false,
-});
 
 export const storage = getStorage(app);
 

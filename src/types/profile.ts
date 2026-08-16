@@ -7,7 +7,7 @@ export interface Profile {
 
   // Compressed Basic Information
   photos: Photo[]; // photos Array
-  tb?: string; // thumbnail URL
+  tn?: string; // thumbnail URL
   ca: Date | string; // createdAt
   ua: Date | string; // updatedAt
   iv: boolean; // isVerified

@@ -14,6 +14,7 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../../../types/profile";
+import { resolvePhotoUri } from "@/utils/photoUtils";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -44,32 +45,34 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item, index) => `${item.id}-${index}`}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  width: screenWidth - 12 * 2,
-                  height: "100%",
-                }}
-              >
-                <Image
-                  source={
-                    item?.downloadURL
-                      ? { uri: item.downloadURL }
-                      : { uri: item.localUrl || "" }
-                  }
-                  placeholder={require("../../../../../assets/images/profile.webp")}
-                  placeholderContentFit="cover"
-                  style={styles.profileImage}
-                  contentFit={item?.downloadURL ? "cover" : "contain"}
-                  cachePolicy="disk"
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.7)"]}
-                  style={styles.imageGradient}
-                  pointerEvents="none"
-                />
-              </View>
-            )}
+            renderItem={({ item }) => {
+              const imageUri =
+                resolvePhotoUri(item?.downloadURL, profile?.uid) ||
+                item?.localUrl ||
+                "";
+              return (
+                <View
+                  style={{
+                    width: screenWidth - 12 * 2,
+                    height: "100%",
+                  }}
+                >
+                  <Image
+                    source={{ uri: imageUri }}
+                    placeholder={require("../../../../../assets/images/profile.webp")}
+                    placeholderContentFit="cover"
+                    style={styles.profileImage}
+                    contentFit={item?.downloadURL ? "cover" : "contain"}
+                    cachePolicy="disk"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.7)"]}
+                    style={styles.imageGradient}
+                    pointerEvents="none"
+                  />
+                </View>
+              );
+            }}
             onScroll={onScroll}
             scrollEventThrottle={16}
           />
