@@ -1,108 +1,188 @@
-import { useState, useCallback, useEffect } from "react";
-import { storage } from "../../../cache/cacheConfig";
-import { useAuth } from "../../../context/AuthContext";
-import { FeedSyncService } from "../apis/feedApi";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Profile } from "@/types/profile";
+import { FeedHookResult } from "../type/type";
+import {
+  feedRepository,
+  FETCH_PAGE_SIZE_SEARCH,
+  MAX_MEMORY_LIMIT,
+} from "../apis/feedRepository";
 
 export function useFeedSearch(
   uid: string,
   isActive: boolean,
-  field: string,
   query: string,
-) {
-  const { user } = useAuth();
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<any>(null);
-  const [currentIndex, _setIndex] = useState(0);
+): FeedHookResult {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [resetCount, setResetCount] = useState<number>(0);
+  const mode = "search";
 
-  /**
-   * Performs an instant string prefix query over the profiles
-   * held directly inside your high-performance MMKV cache layer.
-   * Utilizes an early-exit loop to maximize performance on large datasets.
-   */
-  const performSearch = useCallback(() => {
-    const cleanQuery = query?.trim() || "";
+  const isFetchingRef = useRef<boolean>(false);
+  const initialLoadedRef = useRef<boolean>(false);
 
-    if (!isActive || !cleanQuery) {
-      setProfiles([]);
-      setIsLoading(false);
-      return;
-    }
+  const feedKey = `${mode}-${resetCount}`;
 
-    const rawGender = user?.displayName || "";
-    const gender = rawGender.toLowerCase().trim();
+  // 1. Initial Search Execution
+  const performSearch = useCallback(
+    async (shouldRemount = false) => {
+      const cleanQuery = query?.trim();
 
-    if (gender !== "male" && gender !== "female") {
-      setProfiles([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // 1. Grab raw dictionary profiles straight from MMKV memory
-      const records = FeedSyncService.getCachedProfiles();
-      const normalizedQuery = cleanQuery.toLowerCase();
-
-      const allProfiles = Object.values(records);
-      const filteredData: any[] = [];
-
-      // 2. High-Efficiency Early-Exit Loop
-      for (const profile of allProfiles) {
-        // Stop execution the exact moment our target limit of 20 is met
-        if (filteredData.length >= 20) {
-          break;
-        }
-
-        const fieldValue = profile[field];
-        if (
-          typeof fieldValue === "string" &&
-          fieldValue.toLowerCase().startsWith(normalizedQuery)
-        ) {
-          filteredData.push(profile);
-        }
+      if (!isActive || !cleanQuery) {
+        setProfiles([]);
+        setCurrentIndex(0);
+        setHasMore(false);
+        setIsError(false);
+        setError(null);
+        return;
       }
 
-      setProfiles(filteredData);
-    } catch (e: any) {
-      setError(e);
-      setProfiles([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isActive, query, field, user?.displayName]);
+      if (isFetchingRef.current) return;
 
-  // Performs search instantly matching text state changes or active mode toggles
-  useEffect(() => {
-    if (uid && isActive) {
-      performSearch();
-    } else {
-      setProfiles([]);
-    }
-  }, [uid, isActive, query, field, performSearch]);
+      setIsLoading(true);
+      setIsError(false);
+      setError(null);
+      isFetchingRef.current = true;
 
-  const updateIndex = useCallback(
-    (val: number) => {
-      const next = Math.max(0, Math.min(val, profiles?.length || 0));
-      _setIndex(next);
+      try {
+        console.log(
+          `[useFeedSearch] Executing search for query: "${cleanQuery}"`,
+        );
+
+        const parsed = await feedRepository.searchProfiles(
+          cleanQuery,
+          FETCH_PAGE_SIZE_SEARCH,
+          0,
+        );
+
+        setProfiles(parsed ?? []);
+        setCurrentIndex(0);
+        setHasMore(parsed.length === FETCH_PAGE_SIZE_SEARCH);
+
+        initialLoadedRef.current = true;
+
+        // Trigger remount AFTER new profiles & initialIndex are set
+        if (shouldRemount) {
+          setResetCount((prev) => prev + 1);
+        }
+      } catch (err: unknown) {
+        console.error("❌ [useFeedSearch] Search Error:", err);
+        setIsError(true);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        setProfiles([]);
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
+        isFetchingRef.current = false;
+      }
     },
-    [profiles.length],
+    [isActive, query],
   );
+
+  // 2. Trigger search when query or active status changes
+  useEffect(() => {
+    if (
+      uid &&
+      isActive &&
+      !initialLoadedRef.current &&
+      !isFetchingRef.current
+    ) {
+      performSearch();
+    }
+  }, [uid, isActive, performSearch]);
+
+  // 3. Load More (Append next search batch)
+  const loadMore = useCallback(async () => {
+    const cleanQuery = query?.trim();
+
+    if (
+      !isActive ||
+      !cleanQuery ||
+      isFetchingRef.current ||
+      isLoading ||
+      isLoadingMore ||
+      !hasMore ||
+      profiles.length === 0
+    ) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    setIsLoadingMore(true);
+
+    try {
+      const nextOffset = profiles.length;
+      console.log(
+        `[useFeedSearch] Fetching next search page (offset: ${nextOffset}, limit: ${FETCH_PAGE_SIZE_SEARCH})...`,
+      );
+
+      const parsed = await feedRepository.searchProfiles(
+        cleanQuery,
+        FETCH_PAGE_SIZE_SEARCH,
+        nextOffset,
+      );
+
+      if (!parsed || parsed.length === 0) {
+        setHasMore(false);
+      } else {
+        setProfiles((prev) => [...prev, ...parsed]);
+        if (parsed.length < FETCH_PAGE_SIZE_SEARCH) {
+          setHasMore(false);
+        }
+      }
+    } catch (err: unknown) {
+      console.error("❌ [useFeedSearch] LoadMore Error:", err);
+    } finally {
+      isFetchingRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [isActive, query, isLoading, isLoadingMore, hasMore, profiles.length]);
+
+  // 4. Index Update & Memory Purge
+  const updateIndex = useCallback(
+    (index: number) => {
+      setCurrentIndex(index);
+
+      // MEMORY PURGE: Check if memory limit is reached
+      if (index >= MAX_MEMORY_LIMIT) {
+        console.log(
+          `[useFeedSearch] Reached memory limit (${index}). Purging stack and re-executing search...`,
+        );
+        // Reset tracking ref and reload fresh batch from top (index 0)
+        initialLoadedRef.current = false;
+
+        performSearch(true);
+      }
+    },
+    [profiles, uid, performSearch],
+  );
+
+  // 5. Feed Reset
+  const resetFeed = useCallback(() => {
+    initialLoadedRef.current = false;
+
+    setCurrentIndex(0);
+
+    performSearch(true);
+  }, [uid, performSearch]);
 
   return {
     profiles,
-    currentIndex: 0, // Keeps your default screen configuration structure untouched
+    currentIndex,
     updateIndex,
     isLoading,
-    isError: !!error,
-    error,
-    feedDone: true,
-    resetFeed: () => {
-      storage.set(`active_mode_${uid}`, "default");
-      storage.remove(`search_query_${uid}`);
-    },
+    isLoadingMore,
+    hasMore,
+    resetFeed,
     refetch: performSearch,
+    isError,
+    error,
+    loadMore,
+    mode: "search",
+    feedKey,
   };
 }

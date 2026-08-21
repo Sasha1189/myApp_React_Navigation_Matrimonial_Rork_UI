@@ -1,0 +1,157 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "b144b5df-05c2-4acc-bded-57ceca47568f",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "sql_profile_table": {
+      "name": "sql_profile_table",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ca": {
+          "name": "ca",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ua": {
+          "name": "ua",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fn": {
+          "name": "fn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ln": {
+          "name": "ln",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "db": {
+          "name": "db",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ht": {
+          "name": "ht",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "np": {
+          "name": "np",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ai": {
+          "name": "ai",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ms": {
+          "name": "ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ir": {
+          "name": "ir",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "profile_data": {
+          "name": "profile_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_ca": {
+          "name": "idx_ca",
+          "columns": [
+            "ca"
+          ],
+          "isUnique": false
+        },
+        "idx_ua": {
+          "name": "idx_ua",
+          "columns": [
+            "ua"
+          ],
+          "isUnique": false
+        },
+        "idx_fn": {
+          "name": "idx_fn",
+          "columns": [
+            "fn"
+          ],
+          "isUnique": false
+        },
+        "idx_ln": {
+          "name": "idx_ln",
+          "columns": [
+            "ln"
+          ],
+          "isUnique": false
+        },
+        "idx_np": {
+          "name": "idx_np",
+          "columns": [
+            "np"
+          ],
+          "isUnique": false
+        },
+        "idx_filter_matrix": {
+          "name": "idx_filter_matrix",
+          "columns": [
+            "ms",
+            "ai",
+            "db"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

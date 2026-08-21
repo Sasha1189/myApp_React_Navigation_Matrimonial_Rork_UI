@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { StyleSheet } from "react-native";
 import { usePreventScreenCapture } from "expo-screen-capture";
 import { View, StatusBar } from "react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -9,30 +10,36 @@ import { VerticalSwipeList } from "../components/VerticalSwipeList";
 export default function HomeScreen() {
   const { theme } = useAppTheme();
   const { user } = useAuth();
-  const uid = user?.uid as string;
+  const uid = user?.uid ?? "";
 
   usePreventScreenCapture();
 
-  // 🎯 Check if the logged-in user possesses a structurally valid gender setting
-  const isGenderReady =
-    user?.displayName === "Male" || user?.displayName === "Female";
+  const userGender = user?.displayName?.trim().toLowerCase();
+  const isGenderReady = userGender === "male" || userGender === "female";
 
   const feed = useActiveFeed(isGenderReady ? uid : "");
 
-  const { profiles, isLoading } = feed;
+  const containerStyle = useMemo(
+    () => [styles.container, { backgroundColor: theme.colors.background }],
+    [theme.colors.background],
+  );
+
+  const { feedKey } = feed;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={containerStyle}>
       <StatusBar
         translucent={false}
         backgroundColor={theme.colors.background}
         barStyle="light-content"
       />
-      <VerticalSwipeList
-        profiles={profiles}
-        isLoading={isLoading}
-        feed={feed}
-      />
+      <VerticalSwipeList key={feedKey} feed={feed} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

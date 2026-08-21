@@ -1,10 +1,5 @@
 import { createMMKV } from "react-native-mmkv";
-import {
-  firestore,
-  getFirestore,
-  terminate,
-  clearIndexedDbPersistence,
-} from "@/config/firebase";
+import { resetDatabase } from "@/db/client";
 
 // 1. Core Storage (MMKV)
 export const storage = createMMKV({
@@ -148,7 +143,13 @@ export const setDBDeviceIdCache = (deviceId: string) => {
 
 export async function clearCacheOnLogout() {
   try {
+    // 1. Wipe SQLite tables (drops sql_profile_table, user_profiles, __drizzle_migrations)
+    resetDatabase();
+
+    // 2. Clear all MMKV keys (last_synced_at, is_initial_sync_done_*, etc.)
     storage.clearAll();
+
+    console.log("🧹 DB and MMKV cache wiped successfully on logout.");
   } catch (storageError) {
     console.error("⚠️ MMKV purge error:", storageError);
   }

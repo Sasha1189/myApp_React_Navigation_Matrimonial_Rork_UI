@@ -43,16 +43,16 @@ export const FeedSyncService = {
     gender: string | null | undefined,
     tier: string = "none",
   ): Promise<boolean> => {
-    // Edge Case: Defend against missing, null, undefined, or non-string gender parameters safely
     if (!gender || typeof gender !== "string") return false;
 
     const normalizedGender = gender.toLowerCase().trim();
+
     if (normalizedGender !== "male" && normalizedGender !== "female")
       return false;
 
-    // Direct targeting logic based on target search pool
     const targetCollection =
       normalizedGender === "male" ? "femaleProfiles" : "maleProfiles";
+
     const userTier = tier?.toLowerCase().trim() || "none";
 
     try {
@@ -60,7 +60,6 @@ export const FeedSyncService = {
       let existingProfiles = FeedSyncService.getCachedProfiles();
       let hasNewData = false;
 
-      // Helper function to extract document data safely and append to memory dictionary
       const mergeSnapshots = (
         snapshot: FirebaseFirestoreTypes.QuerySnapshot,
       ) => {

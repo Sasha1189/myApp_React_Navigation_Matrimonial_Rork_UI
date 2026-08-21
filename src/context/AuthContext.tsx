@@ -28,6 +28,7 @@ import {
   getUserDeviceId,
   updateUserDeviceId,
 } from "@/features/home/apis/userApi";
+import { syncUserProfiles, performDeltaSync } from "@/services/syncService";
 import { Alert } from "react-native";
 
 interface AuthContextType {
@@ -49,6 +50,7 @@ const TIER_CACHE_KEY = "self_tier_cache";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
   const [tier, setTier] = useState<"none" | "basic" | "premium">(() => {
     const cached = storage.getString(TIER_CACHE_KEY);
     return (cached as any) || "none";
@@ -58,22 +60,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return cached ? JSON.parse(cached) : getDefaultProfile();
   });
 
-  const isGenderValid =
-    user?.displayName === "Male" || user?.displayName === "Female";
+  // Standardized gender verification
+  const userGender = user?.displayName?.trim().toLowerCase();
+  const isGenderValid = userGender === "male" || userGender === "female";
 
   usePresence(user?.uid, tier, isGenderValid ? user?.displayName : undefined);
 
   const updateMyProfile = useUpdateProfile(user, myProfile, setMyProfile, tier);
 
-  //profile
+  // 1. Sync User's Own Profile
   useEffect(() => {
     const syncProfile = async () => {
-      const userDisplayName = user?.displayName
-        ? user.displayName.toLowerCase()
-        : "";
-      const isGenderValid =
-        userDisplayName === "male" || userDisplayName === "female";
-
       if (!user?.uid || !isGenderValid) return;
 
       try {
@@ -118,17 +115,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     syncProfile();
   }, [user?.uid, user?.displayName]);
 
-  // 2. sync feed
+  // 2. Sync Opposite Gender Profiles into Local SQLite (Bulk Dump + Delta)
   useEffect(() => {
-    if (!isGenderValid || !tier) return;
+    if (!user?.uid || !isGenderValid) return;
 
-    const lastSync = storage.getNumber("profiles_last_sync_timestamp") || 0;
-    const oneDay = 24 * 60 * 60 * 1000;
+    const runProfileDatabaseSync = async () => {
+      try {
+        const isPaid = tier === "basic" || tier === "premium";
 
-    if (lastSync === 0 || lastSync === 1 || Date.now() - lastSync > oneDay) {
-      FeedSyncService.syncFeeds(user?.displayName as string, tier);
-    }
-  }, [user?.displayName, tier]);
+        // Step A: Initial Sync (Paid Gzip Dump or Free 15 Profiles)
+        await syncUserProfiles(isPaid, user.displayName);
+
+        // Step B: Delta Sync (Incremental updates since last sync timestamp)
+        await performDeltaSync(isPaid, user.displayName);
+      } catch (error) {
+        console.error(
+          "❌ [Auth Context]: SQLite local feed sync failed:",
+          error,
+        );
+      }
+    };
+
+    runProfileDatabaseSync();
+  }, [user?.uid, user?.displayName, tier, isGenderValid]);
 
   // 3. Hardware Identity & Security Binding Control (PAID USERS ONLY)
   useEffect(() => {

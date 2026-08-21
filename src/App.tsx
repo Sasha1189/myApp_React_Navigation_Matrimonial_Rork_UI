@@ -1,3 +1,4 @@
+import "@/db/client";
 import * as SplashScreen from "expo-splash-screen";
 import React from "react";
 import { AuthProvider } from "./context/AuthContext";

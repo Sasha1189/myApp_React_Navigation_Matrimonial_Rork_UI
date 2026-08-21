@@ -34,8 +34,8 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
 
   const age = profile?.db ? formatDOB(profile.db, "age") : "18";
   const imageUri =
-    resolvePhotoUri(profile?.photos?.[0].downloadURL, profile.uid) ||
-    profile?.photos?.[0].localUrl ||
+    resolvePhotoUri(profile?.photos?.[0]?.downloadURL, profile.uid) ||
+    profile?.photos?.[0]?.localUrl ||
     "";
 
   return (

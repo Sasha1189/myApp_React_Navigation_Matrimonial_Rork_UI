@@ -1,96 +1,193 @@
-import { useState, useEffect, useCallback } from "react";
-import { storage } from "../../../cache/cacheConfig";
-import { useAuth } from "../../../context/AuthContext";
-import { FeedSyncService } from "../apis/feedApi";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Profile } from "@/types/profile";
+import { storage } from "@/cache/cacheConfig";
+import { FeedHookResult } from "../type/type";
+import {
+  feedRepository,
+  FETCH_PAGE_SIZE_DEFAULT,
+  MAX_MEMORY_LIMIT,
+} from "../apis/feedRepository";
 
-export function useFeedDefault(uid: string, isActive: boolean) {
-  const { user } = useAuth();
-  const indexKey = `index_${uid}_default`;
+export function useFeedDefault(uid: string, isActive: boolean): FeedHookResult {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [resetCount, setResetCount] = useState<number>(0);
+  const mode = "default";
 
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(() => {
-    const g = user?.displayName?.toLowerCase().trim();
-    return g === "male" || g === "female";
-  });
-  const [error, setError] = useState<any>(null);
-  const [currentIndex, _setIndex] = useState(
-    () => storage.getNumber(indexKey) || 0,
+  const isFetchingRef = useRef<boolean>(false);
+  const initialLoadedRef = useRef<boolean>(false);
+
+  const feedKey = `${mode}-${resetCount}`;
+
+  // 1. Initial Load anchored at cached lastCa
+  const fetchInitialProfiles = useCallback(
+    async (shouldRemount = false) => {
+      if (!uid) return;
+
+      setIsLoading(true);
+      setIsError(false);
+      setError(null);
+      isFetchingRef.current = true;
+
+      try {
+        const cachedCa =
+          storage.getNumber(`last_ca_${uid}`) ??
+          storage.getString(`last_ca_${uid}`) ??
+          null;
+
+        console.log(
+          `[useFeedDefault] Loading feed for ${uid} relative to cached ca:`,
+          cachedCa,
+        );
+
+        const { profiles: initialData, initialIndex } =
+          await feedRepository.getInitialFeed(cachedCa);
+
+        // Update dataset and target starting index together
+        setProfiles(initialData ?? []);
+        setCurrentIndex(initialIndex ?? 0);
+        setHasMore((initialData?.length ?? 0) > 0);
+
+        const activeProfile = initialData?.[initialIndex];
+        if (activeProfile?.ca !== undefined && activeProfile?.ca !== null) {
+          storage.set(`last_ca_${uid}`, Number(activeProfile.ca));
+        }
+
+        initialLoadedRef.current = true;
+
+        // Trigger remount AFTER new profiles & initialIndex are set
+        if (shouldRemount) {
+          setResetCount((prev) => prev + 1);
+        }
+      } catch (err: unknown) {
+        console.error("[useFeedDefault] Failed to load initial profiles:", err);
+        setIsError(true);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        setProfiles([]);
+      } finally {
+        setIsLoading(false);
+        isFetchingRef.current = false;
+      }
+    },
+    [uid],
   );
 
-  const loadLocalProfiles = useCallback(() => {
-    const rawGender = user?.displayName || "";
-    const gender = rawGender.toLowerCase().trim();
+  // 2. Trigger fetch when tab becomes active
+  useEffect(() => {
+    if (
+      uid &&
+      isActive &&
+      !initialLoadedRef.current &&
+      !isFetchingRef.current
+    ) {
+      fetchInitialProfiles();
+    }
+  }, [uid, isActive, fetchInitialProfiles]);
 
-    if (gender !== "male" && gender !== "female") {
-      setProfiles([]);
-      setIsLoading(false);
+  // 3. Forward Pagination
+  const loadMore = useCallback(async () => {
+    if (
+      !isActive ||
+      isFetchingRef.current ||
+      isLoadingMore ||
+      isLoading ||
+      !hasMore
+    ) {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    isFetchingRef.current = true;
+    setIsLoadingMore(true);
 
     try {
-      const records = FeedSyncService.getCachedProfiles();
+      const lastProfile = profiles[profiles.length - 1];
+      const lastCa = lastProfile?.ca;
 
-      // Simply sort and return—no internal map conversion required anymore!
-      const data = Object.values(records).sort((a: any, b: any) => {
-        const timeA = a.createdAt?.seconds || 0;
-        const timeB = b.createdAt?.seconds || 0;
-        return timeA - timeB;
-      });
+      console.log(`[useFeedDefault] Triggered loadMore after ca: ${lastCa}`);
+      const nextProfiles = await feedRepository.getNextFeedPage(
+        lastCa,
+        FETCH_PAGE_SIZE_DEFAULT,
+      );
 
-      setProfiles(data || []);
-    } catch (e: any) {
-      setError(e);
-      setProfiles([]);
+      if (!nextProfiles || nextProfiles.length === 0) {
+        setHasMore(false);
+      } else {
+        setProfiles((prev) => [...prev, ...nextProfiles]);
+        if (nextProfiles.length < FETCH_PAGE_SIZE_DEFAULT) {
+          setHasMore(false);
+        }
+      }
+    } catch (err: unknown) {
+      console.error("[useFeedDefault] Error fetching next page:", err);
     } finally {
-      setIsLoading(false);
+      isFetchingRef.current = false;
+      setIsLoadingMore(false);
     }
-  }, [user?.displayName]);
+  }, [isActive, profiles, isLoadingMore, isLoading, hasMore]);
 
-  useEffect(() => {
-    if (uid && isActive) {
-      loadLocalProfiles();
-    } else {
-      setIsLoading(false);
-    }
-  }, [uid, isActive, loadLocalProfiles]);
-
+  // 4. Index Update & MMKV Persistence
   const updateIndex = useCallback(
-    (val: number) => {
-      const maxLimit = profiles?.length || 0;
-      const next = Math.max(0, Math.min(val, maxLimit));
-      _setIndex(next);
-      storage.set(indexKey, next);
+    (index: number) => {
+      setCurrentIndex(index);
+
+      const activeProfile = profiles[index];
+      if (
+        activeProfile?.ca !== undefined &&
+        activeProfile?.ca !== null &&
+        uid
+      ) {
+        const caValue = Number(activeProfile.ca);
+        console.log(
+          `[useFeedDefault] Persisting lastCa for ${uid}: ${caValue}`,
+        );
+        storage.set(`last_ca_${uid}`, caValue);
+      }
+
+      // MEMORY PURGE: Memory limit reached
+      if (index >= MAX_MEMORY_LIMIT) {
+        console.log(
+          `[useFeedDefault] Reached memory limit (${index}). Purging stack and re-anchoring...`,
+        );
+        // Reset tracking ref and reload fresh batch from top (index 0)
+        initialLoadedRef.current = false;
+        // Fetch new profiles first, then increment resetCount to remount
+        fetchInitialProfiles(true);
+      }
     },
-    [profiles.length, indexKey],
+    [profiles, uid, fetchInitialProfiles],
   );
 
-  const refetch = useCallback(async () => {
-    if (profiles.length > 0) {
-      updateIndex(0);
-      loadLocalProfiles();
-      return;
+  // 5. Feed Reset
+  const resetFeed = useCallback(() => {
+    initialLoadedRef.current = false;
+
+    if (uid) {
+      storage.remove(`last_ca_${uid}`);
     }
 
-    setIsLoading(true);
-    const success = await FeedSyncService.syncFeeds(user?.displayName || "");
-    if (success) {
-      loadLocalProfiles();
-    }
-    setIsLoading(false);
-  }, [profiles?.length, user?.displayName, loadLocalProfiles, updateIndex]);
+    setCurrentIndex(0);
+    // Fetch fresh stack and remount list upon resolution
+    fetchInitialProfiles(true);
+  }, [uid, fetchInitialProfiles]);
 
   return {
     profiles,
     currentIndex,
     updateIndex,
     isLoading,
-    isError: !!error,
+    isLoadingMore,
+    hasMore,
+    resetFeed,
+    refetch: fetchInitialProfiles,
+    isError,
     error,
-    feedDone: true,
-    resetFeed: () => updateIndex(0),
-    refetch,
+    loadMore,
+    mode: "default",
+    feedKey,
   };
 }

@@ -1,97 +1,105 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { storage } from "@/cache/cacheConfig";
+import { useDatabase } from "@/context/DatabaseContext";
+import { Profile } from "@/types/profile";
 import { useFeedDefault } from "./useFeedDefault";
 import { useFeedLatest } from "./useFeedLatest";
 import { useFeedSearch } from "./useFeedSearch";
 import { useFeedFilter } from "./useFeedFilter";
 import { useLikeBlockCache } from "./useLikeBlockCache";
-import { storage } from "../../../cache/cacheConfig";
-import { FeedHookResult } from "../type/type";
 
-export function useActiveFeed(uid: string): FeedHookResult {
+/** Helper to safely parse JSON from storage */
+function parseFilterParams(
+  raw: string | undefined,
+): Record<string, any> | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function useActiveFeed(uid: string) {
+  // 1. Consume Database Context
+  const { isDbReady, migrationError } = useDatabase();
+
   const [mode, setMode] = useState(
     () => storage.getString(`active_mode_${uid}`) || "default",
-  );
-  const [searchField, setSearchField] = useState(
-    () => storage.getString(`search_field_${uid}`) || "name",
   );
   const [searchQuery, setSearchQuery] = useState(
     () => storage.getString(`search_query_${uid}`) || "",
   );
-  const [filterParams, setFilterParams] = useState(() => {
-    const saved = storage.getString(`active_filter_params_${uid}`);
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [filterParams, setFilterParams] = useState(() =>
+    parseFilterParams(storage.getString(`active_filter_params_${uid}`)),
+  );
 
-  // 2. The Storage "Watcher"
+  // 2. Listen to MMKV storage updates for mode/search/filter changes
   useEffect(() => {
     const listener = storage.addOnValueChangedListener((key) => {
       if (key === `active_mode_${uid}`) {
         setMode(storage.getString(key) || "default");
       }
-      if (key === `search_field_${uid}`) {
-        setSearchField(storage.getString(key) || "name");
-      }
       if (key === `search_query_${uid}`) {
         setSearchQuery(storage.getString(key) || "");
       }
-      // 🔹 Watch for Filter changes
       if (key === `active_filter_params_${uid}`) {
-        const saved = storage.getString(key);
-        setFilterParams(saved ? JSON.parse(saved) : null);
+        setFilterParams(parseFilterParams(storage.getString(key)));
       }
     });
+
     return () => listener.remove();
   }, [uid]);
 
-  // 3. Initialize Shards (Clean & Reactive)
-  const defaultFeed = useFeedDefault(uid, mode === "default");
-  const latestFeed = useFeedLatest(uid, mode === "latest");
+  // 3. Gate sub-hooks with `isDbReady && mode === "..."` to prevent redundant queries
+  const defaultFeed = useFeedDefault(uid, isDbReady && mode === "default");
+  const latestFeed = useFeedLatest(uid, isDbReady && mode === "latest");
   const searchFeed = useFeedSearch(
     uid,
-    mode === "search",
-    searchField,
+    isDbReady && mode === "search",
     searchQuery,
   );
-  const filterFeed = useFeedFilter(uid, mode === "filter", filterParams);
+  const filterFeed = useFeedFilter(
+    uid,
+    isDbReady && mode === "filter",
+    filterParams,
+  );
 
-  // 4. Selection & Merge Logic (Rest of your existing code...)
+  // 4. Select active feed sub-hook
   const activeFeed = useMemo(() => {
-    if (mode === "search") return searchFeed;
-    if (mode === "latest") return latestFeed;
-    if (mode === "filter") return filterFeed;
-    return defaultFeed;
-  }, [mode, filterFeed, searchFeed, latestFeed, defaultFeed]);
+    switch (mode) {
+      case "search":
+        return searchFeed;
+      case "latest":
+        return latestFeed;
+      case "filter":
+        return filterFeed;
+      default:
+        return defaultFeed;
+    }
+  }, [mode, defaultFeed, latestFeed, searchFeed, filterFeed]);
 
-  // 5. Get the reactive likes/blocks
   const { likedSet, blockedSet } = useLikeBlockCache();
 
-  // 6. Merge Logic
+  // 5. Exclude blocked profiles and attach dynamic `liked` state
   const finalProfiles = useMemo(() => {
     const raw = activeFeed.profiles || [];
-    if (!raw?.length) return [];
+    if (!raw.length) return [];
 
     return raw
-      .filter((p: any) => p?.uid && !blockedSet.has(p.uid))
-      .map((p: any) => ({
+      .filter((p: Profile) => p?.uid && !blockedSet.has(p.uid))
+      .map((p: Profile) => ({
         ...p,
         liked: likedSet.has(p.uid),
       }));
   }, [activeFeed.profiles, likedSet, blockedSet]);
 
-  const updateIndex = useCallback(
-    (val: number) => {
-      activeFeed.updateIndex(val);
-    },
-    [activeFeed],
-  );
-
   return {
     ...activeFeed,
     profiles: finalProfiles,
-    resetFeed: activeFeed.resetFeed,
-    refetch: activeFeed.refetch,
-    updateIndex,
-    isLoading: activeFeed.isLoading,
+    isLoading: !isDbReady || Boolean(activeFeed.isLoading),
+    error: migrationError || activeFeed.error || null,
+    isDbReady,
     mode,
   };
 }
