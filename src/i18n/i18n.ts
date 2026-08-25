@@ -1,11 +1,11 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { storage } from "../cache/cacheConfig";
+import { appStorage } from "../cacheMMKV/cacheConfig";
 import en from "./locales/en/index";
 import mr from "./locales/mr/index";
 
 // Get stored language or default to English
-const storedLanguage = storage.getString("user_language") || "mr";
+const storedLanguage = appStorage.getString("user_language") || "mr";
 
 const resources = {
   en: { translation: en },

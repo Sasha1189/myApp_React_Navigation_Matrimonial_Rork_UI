@@ -1,13 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  ScrollView,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  BackHandler,
-} from "react-native";
+import { ScrollView, View, Text, StyleSheet, BackHandler } from "react-native";
 import { Crown } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";

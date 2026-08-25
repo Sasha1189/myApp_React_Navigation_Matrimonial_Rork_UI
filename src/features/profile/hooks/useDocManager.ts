@@ -2,16 +2,18 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { File } from "expo-file-system";
-import { Profile, Photo } from "../../../types/profile";
+import { Profile, Photo } from "../types/profile";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { apiDeletePhoto, apiGenerateUploadUrl } from "../api/photoApis"; // Or matching vdoc backend APIs
+import { useMyProfile } from "../context/ProfileContext";
 
 const MAX_DOC_SIZE_MB = 5;
 const MAX_DOC_SIZE_BYTES = MAX_DOC_SIZE_MB * 1024 * 1024;
 
 export function useDocManager(profile: Profile | null) {
-  const { user, updateMyProfile } = useAuth();
+  const { user } = useAuth();
+  const { updateMyProfile } = useMyProfile();
   const { t } = useTranslation();
   const uid = user?.uid;
 

@@ -12,7 +12,7 @@ import {
 } from "lucide-react-native";
 import { SECTION_CONFIG } from "../components/form/profileValidation";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { useAuth } from "@/context/AuthContext";
+import { useMyProfile } from "../context/ProfileContext";
 import FormSection from "../components/form/FormSection";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +28,7 @@ const ICON_MAP: Record<string, any> = {
 };
 
 export default function EditProfileScreen() {
-  const { myProfile } = useAuth();
+  const { myProfile } = useMyProfile();
   const { t } = useTranslation();
   const navigation = useAppNavigation();
 

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { Profile } from "../../../types/profile";
-import { toggleLike } from "./useToggleLike";
+import { Profile } from "../../profile/types/profile";
+import { toggleLike } from "@/features/likes/services/likesService";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
@@ -12,7 +12,7 @@ export function useButtonActions(profile: Profile | undefined) {
 
   const [isLiking, setIsLiking] = useState(false);
 
-  const { user, myProfile, tier } = useAuth();
+  const { user, tier } = useAuth();
 
   const handleActionBtnTap = async (
     action: "like" | "message" | "profileDetails",
@@ -33,7 +33,7 @@ export function useButtonActions(profile: Profile | undefined) {
     }
 
     if (action === "message") {
-      if (!myProfile?.uid) {
+      if (!user?.uid) {
         Alert.alert(
           "Complete Your Profile",
           "Please add your name and photo to use this feature.",
@@ -58,7 +58,7 @@ export function useButtonActions(profile: Profile | undefined) {
     }
 
     if (action === "like") {
-      if (!myProfile?.uid) {
+      if (!user?.uid) {
         Alert.alert(
           "Complete Your Profile",
           "Please add your name and photo to use this feature.",
@@ -68,18 +68,7 @@ export function useButtonActions(profile: Profile | undefined) {
       if (isLiking) return;
       setIsLiking(true);
       try {
-        await toggleLike(
-          {
-            myUid: myProfile.uid,
-            name: myProfile.fn,
-            photo: myProfile.tn as string,
-          },
-          {
-            uid: profile.uid,
-            name: profile.fn || "User",
-            photo: profile.tn || "",
-          },
-        );
+        await toggleLike(user?.uid, profile?.uid);
       } catch (err) {
         console.error("Like toggle failed:", err);
       } finally {

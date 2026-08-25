@@ -14,7 +14,7 @@ import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
-import { storage } from "../../../cache/cacheConfig";
+import { FeedCache } from "../cache/feedCache";
 import PickerField from "@/features/profile/components/form/PickerField";
 import { useTranslation } from "react-i18next";
 
@@ -52,25 +52,25 @@ export default function SearchScreen() {
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
 
-    // Write to storage - Hook will react to these instantly
-    storage.set(`search_field_${uid}`, searchField);
-    storage.set(`search_query_${uid}`, searchQuery.trim());
-    storage.set(`active_mode_${uid}`, "search");
+    FeedCache.setSearchField(uid, searchField);
+    FeedCache.setSearchQuery(uid, searchQuery.trim());
+    FeedCache.setMode(uid, "search");
 
     navigation.goBack();
   };
 
   const handleLatest = () => {
-    storage.set(`active_mode_${uid}`, "latest");
+    FeedCache.setMode(uid, "latest");
     navigation.goBack();
   };
 
   const clearSearch = () => {
     setSearchQuery("");
     setSearchField("fullName");
-    storage.set(`active_mode_${uid}`, "default");
-    storage.remove(`search_field_${uid}`);
-    storage.remove(`search_query_${uid}`);
+
+    if (uid) {
+      FeedCache.clearSearch(uid);
+    }
     navigation.goBack();
   };
 

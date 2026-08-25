@@ -8,19 +8,19 @@ import {
   MapPin,
 } from "lucide-react-native";
 
-import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
-import { Profile } from "../../../../types/profile";
+import { Profile } from "../../types/profile";
 import { useTranslation } from "react-i18next";
 import { transformLookupToOptions } from "@/features/utils/profileLookups";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
+import { useMyProfile } from "../../context/ProfileContext";
 
 export default function EditEducationCareerScreen({ navigation }: any) {
-  const { myProfile, updateMyProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useMyProfile();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 

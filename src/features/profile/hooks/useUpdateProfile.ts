@@ -1,5 +1,5 @@
-import { storage } from "../../../cache/cacheConfig";
-import { Profile } from "../../../types/profile";
+import { appStorage } from "@/cacheMMKV/cacheConfig";
+import { Profile } from "../types/profile";
 import { apiUpdateProfile } from "../api/profileApi";
 import { sanitizePayload } from "../../../utils/sanitizePayload";
 
@@ -47,7 +47,7 @@ export const useUpdateProfile = (
 
       // 5. Sync Local State & MMKV Storage Cache cleanly
       setMyProfile(fullySanitizedProfile);
-      storage.set(PROFILE_CACHE_KEY, JSON.stringify(fullySanitizedProfile));
+      appStorage.set(PROFILE_CACHE_KEY, JSON.stringify(fullySanitizedProfile));
     } catch (error) {
       throw error;
     }

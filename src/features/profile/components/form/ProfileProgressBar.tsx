@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { LOOKUPS } from "@/features/utils/profileLookups"; // Enforce path to your profile lookup definitions
-import { Profile } from "../../../../types/profile"; // Enforce path to your profile schema
+import { Profile } from "../../types/profile"; // Enforce path to your profile schema
 
 interface ProgressBarProps {
   data: Profile | undefined | null;

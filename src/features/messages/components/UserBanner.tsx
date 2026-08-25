@@ -1,52 +1,27 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ActivityIndicator,
-} from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Heart, ChevronRight } from "lucide-react-native";
 import { Image } from "expo-image";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { UserBannerItem } from "../type/chattype";
-import { useAuth } from "src/context/AuthContext";
-import { LikesReceivedCache } from "../../../cache/cacheConfig";
-import { getProfile } from "../../profile/api/profileApi";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { useTranslation } from "react-i18next";
+import { Profile } from "@/features/profile/types/profile";
 
 interface UserBannerProps {
-  item: UserBannerItem;
+  item: Profile;
   type: "sent" | "received";
 }
 
 export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { user } = useAuth();
   const { t } = useTranslation();
   const navigation = useAppNavigation();
-  const [isFetching, setIsFetching] = useState(false);
 
-  const handlePress = async () => {
-    if (isFetching) return;
-    setIsFetching(true);
-    try {
-      let profile = LikesReceivedCache.getProfileDetail(item.id);
-      if (!profile) {
-        profile = await getProfile(item.id, user?.displayName || "");
-        LikesReceivedCache.saveProfileDetail(item.id, profile);
-      }
-      navigation.navigate("Details", { profile });
-    } catch (error) {
-      console.error("Profile load failed:", error);
-    } finally {
-      setIsFetching(false);
-    }
+  const handlePress = () => {
+    navigation.navigate("Details", { profile: item });
   };
 
   if (!theme) return null;
@@ -56,30 +31,24 @@ export const UserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
       style={styles.container}
       onPress={handlePress}
       activeOpacity={0.6}
-      disabled={isFetching}
     >
       <View style={styles.imageWrapper}>
         <Image
           source={
-            item.photo
-              ? { uri: item.photo }
+            item.tn
+              ? { uri: item.tn }
               : require("../../../../assets/images/profile.webp")
           }
           style={styles.image}
           contentFit="cover"
           cachePolicy="disk"
         />
-        {isFetching && (
-          <View style={styles.imageLoader}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
-          </View>
-        )}
       </View>
 
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.name} numberOfLines={1}>
-            {item?.name || t("chat.status.defaultUser")}
+            {item?.fn || t("chat.status.defaultUser")}
           </Text>
           <ChevronRight size={16} color={theme.colors.border} />
         </View>

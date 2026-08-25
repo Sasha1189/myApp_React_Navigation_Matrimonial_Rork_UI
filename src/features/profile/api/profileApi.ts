@@ -5,7 +5,7 @@ import {
   getDoc,
   firestoreServerTimestamp,
 } from "../../../config/firebase";
-import { Profile } from "../../../types/profile";
+import { Profile } from "../types/profile";
 
 export async function getProfile(
   uid: string,

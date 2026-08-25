@@ -1,7 +1,7 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack"; // Use NativeStack
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import { Profile } from "src/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;

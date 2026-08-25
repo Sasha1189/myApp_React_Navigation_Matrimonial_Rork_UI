@@ -42,8 +42,9 @@ import {
   Heart,
 } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
+import { useMyProfile } from "../context/ProfileContext";
 import { useAppNavigation } from "@/navigation/hooks";
-import { Profile } from "@/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 import { getDisplayValue } from "@/features/utils/profileLookups";
 
 import { AppTheme } from "@/theme/theme";
@@ -70,7 +71,8 @@ export default function UserDetailsScreen({ route }: any) {
   const styles = useStyles(createStyles);
 
   const navigation = useAppNavigation();
-  const { myProfile, tier } = useAuth();
+  const { tier } = useAuth();
+  const { myProfile } = useMyProfile();
   const profile = route.params?.profile as Profile;
   usePreventScreenCapture();
 

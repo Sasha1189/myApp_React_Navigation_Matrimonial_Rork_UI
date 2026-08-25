@@ -4,7 +4,7 @@ export default {
   managePhotos: "तुमचे फोटो Add करा",
   completion: "{{percent}}% प्रोफाईल पूर्ण झाले",
   stats: {
-    matches: "मॅचेस",
+    matches: " लाईक मॅचेस",
     sent: "पाठवलेले लाईक",
     received: "मिळालेले लाईक",
   },

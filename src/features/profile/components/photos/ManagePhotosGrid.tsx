@@ -11,7 +11,7 @@ import { Plus, Star, X } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { Photo } from "../../../../types/profile";
+import { Photo } from "../../types/profile";
 
 const { width } = Dimensions.get("window");
 

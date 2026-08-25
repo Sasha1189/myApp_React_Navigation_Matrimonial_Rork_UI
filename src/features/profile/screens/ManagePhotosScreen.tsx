@@ -4,20 +4,20 @@ import { Edit3 } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { useAuth } from "../../../context/AuthContext";
+import { useMyProfile } from "../context/ProfileContext";
 import { usePhotoManager } from "../hooks/usePhotoManager";
 import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 import { useTranslation } from "react-i18next";
 import { resolvePhotoUri } from "@/utils/photoUtils";
-import { Photo } from "@/types/profile";
+import { Photo } from "@/features/profile/types/profile";
 
 export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
 
-  const { myProfile } = useAuth();
+  const { myProfile } = useMyProfile();
 
   const {
     photos,

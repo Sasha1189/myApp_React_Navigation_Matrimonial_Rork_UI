@@ -3,19 +3,19 @@ import { ScrollView, View } from "react-native";
 import { Controller } from "react-hook-form";
 import { Users, User, Info, Heart, Home } from "lucide-react-native";
 
-import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG } from "../form/profileValidation";
-import { Profile } from "../../../../types/profile";
+import { Profile } from "../../types/profile";
 import { useTranslation } from "react-i18next";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
 import { transformLookupToOptions } from "@/features/utils/profileLookups";
+import { useMyProfile } from "../../context/ProfileContext";
 
 export default function EditFamilyDetailsScreen({ navigation }: any) {
-  const { myProfile, updateMyProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useMyProfile();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 

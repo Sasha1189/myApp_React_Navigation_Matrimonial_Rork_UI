@@ -20,16 +20,17 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
-import { Profile } from "../../../../types/profile";
+import { Profile } from "../../types/profile";
 import { useTranslation } from "react-i18next";
 import { transformLookupToOptions } from "@/features/utils/profileLookups";
 
 import InputField from "../form/InputField";
 import PickerField from "../form/PickerField";
 import { DateTimePickerField } from "../form/DateTimePickers";
+import { useMyProfile } from "../../context/ProfileContext";
 
 export default function EditPersonalInfoScreen({ navigation }: any) {
-  const { myProfile, updateMyProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useMyProfile();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
   const config = SECTION_CONFIG.find((s) => s.id === "personal")!;

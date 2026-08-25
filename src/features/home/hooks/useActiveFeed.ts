@@ -1,72 +1,67 @@
-import { useState, useEffect, useMemo } from "react";
-import { storage } from "@/cache/cacheConfig";
-import { useDatabase } from "@/context/DatabaseContext";
-import { Profile } from "@/types/profile";
-import { useFeedDefault } from "./useFeedDefault";
-import { useFeedLatest } from "./useFeedLatest";
-import { useFeedSearch } from "./useFeedSearch";
-import { useFeedFilter } from "./useFeedFilter";
-import { useLikeBlockCache } from "./useLikeBlockCache";
-
-/** Helper to safely parse JSON from storage */
-function parseFilterParams(
-  raw: string | undefined,
-): Record<string, any> | null {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+import { useState, useEffect, useMemo, useRef } from "react";
+import { appStorage } from "@/cacheMMKV/cacheConfig";
+import { FeedCache, FeedMode } from "../cache/feedCache";
+import { Profile } from "@/features/profile/types/profile";
+import { useDefaultFeed } from "./useDefaultFeed";
+import { useLatestFeed } from "./useLatestFeed";
+import { useSearchFeed } from "./useSearchFeed";
+import { useFilterFeed } from "./useFilterFeed";
+import { useLikedSet } from "@/features/likes/hook/useLikedSet";
+import { useBlockedSet } from "@/features/block/hook/useBlockedSet";
 
 export function useActiveFeed(uid: string) {
-  // 1. Consume Database Context
-  const { isDbReady, migrationError } = useDatabase();
-
-  const [mode, setMode] = useState(
-    () => storage.getString(`active_mode_${uid}`) || "default",
-  );
-  const [searchQuery, setSearchQuery] = useState(
-    () => storage.getString(`search_query_${uid}`) || "",
+  // 🔍 LOG 1: Track component render frequency......................
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(`[useActiveFeed] Render #${renderCount.current} | uid: "${uid}"`);
+  //............................................
+  const [mode, setMode] = useState<FeedMode>("default");
+  const [searchQuery, setSearchQuery] = useState(() =>
+    FeedCache.getSearchQuery(uid),
   );
   const [filterParams, setFilterParams] = useState(() =>
-    parseFilterParams(storage.getString(`active_filter_params_${uid}`)),
+    FeedCache.getFilterParams(uid),
   );
 
-  // 2. Listen to MMKV storage updates for mode/search/filter changes
+  // Listen to MMKV updates for active mode, search queries, and filter parameters
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
-      if (key === `active_mode_${uid}`) {
-        setMode(storage.getString(key) || "default");
+    if (!uid) {
+      console.log("[useActiveFeed] No UID provided, listener skipped.");
+      return;
+    }
+
+    const keys = FeedCache.getKeys(uid);
+
+    const listener = appStorage.addOnValueChangedListener((key) => {
+      console.log(`[useActiveFeed] MMKV key changed: ${key}`);
+      if (key === keys.mode) {
+        const newMode = FeedCache.getMode(uid);
+        console.log(`[useActiveFeed] Mode updated -> ${newMode}`);
+        setMode(FeedCache.getMode(uid));
       }
-      if (key === `search_query_${uid}`) {
-        setSearchQuery(storage.getString(key) || "");
+      if (key === keys.searchQuery) {
+        const newQuery = FeedCache.getSearchQuery(uid);
+        console.log(`[useActiveFeed] SearchQuery updated -> ${newQuery}`);
+        setSearchQuery(FeedCache.getSearchQuery(uid));
       }
-      if (key === `active_filter_params_${uid}`) {
-        setFilterParams(parseFilterParams(storage.getString(key)));
+      if (key === keys.filterParams) {
+        const newParams = FeedCache.getFilterParams(uid);
+        console.log(`[useActiveFeed] FilterParams updated`, newParams);
+        setFilterParams(FeedCache.getFilterParams(uid));
       }
     });
 
     return () => listener.remove();
   }, [uid]);
 
-  // 3. Gate sub-hooks with `isDbReady && mode === "..."` to prevent redundant queries
-  const defaultFeed = useFeedDefault(uid, isDbReady && mode === "default");
-  const latestFeed = useFeedLatest(uid, isDbReady && mode === "latest");
-  const searchFeed = useFeedSearch(
-    uid,
-    isDbReady && mode === "search",
-    searchQuery,
-  );
-  const filterFeed = useFeedFilter(
-    uid,
-    isDbReady && mode === "filter",
-    filterParams,
-  );
+  // Sub-hooks executed conditionally based on active mode
+  const defaultFeed = useDefaultFeed(uid, mode === "default");
+  const latestFeed = useLatestFeed(uid, mode === "latest");
+  const searchFeed = useSearchFeed(uid, mode === "search", searchQuery);
+  const filterFeed = useFilterFeed(uid, mode === "filter", filterParams);
 
-  // 4. Select active feed sub-hook
   const activeFeed = useMemo(() => {
+    console.log(`[useActiveFeed] Active feed computed for mode: ${mode}`);
     switch (mode) {
       case "search":
         return searchFeed;
@@ -79,11 +74,15 @@ export function useActiveFeed(uid: string) {
     }
   }, [mode, defaultFeed, latestFeed, searchFeed, filterFeed]);
 
-  const { likedSet, blockedSet } = useLikeBlockCache();
+  const likedSet = useLikedSet();
+  const blockedSet = useBlockedSet();
 
-  // 5. Exclude blocked profiles and attach dynamic `liked` state
+  // Exclude blocked users and annotate liked state in real-time
   const finalProfiles = useMemo(() => {
     const raw = activeFeed.profiles || [];
+    console.log(
+      `[useActiveFeed] Computing finalProfiles (raw count: ${raw.length})`,
+    );
     if (!raw.length) return [];
 
     return raw
@@ -97,9 +96,8 @@ export function useActiveFeed(uid: string) {
   return {
     ...activeFeed,
     profiles: finalProfiles,
-    isLoading: !isDbReady || Boolean(activeFeed.isLoading),
-    error: migrationError || activeFeed.error || null,
-    isDbReady,
+    isLoading: Boolean(activeFeed.isLoading),
+    error: activeFeed.error || null,
     mode,
   };
 }

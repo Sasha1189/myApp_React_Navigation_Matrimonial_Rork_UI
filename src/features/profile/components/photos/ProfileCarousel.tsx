@@ -13,7 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { Profile } from "../../../../types/profile";
+import { Profile } from "../../types/profile";
 import { resolvePhotoUri } from "@/utils/photoUtils";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");

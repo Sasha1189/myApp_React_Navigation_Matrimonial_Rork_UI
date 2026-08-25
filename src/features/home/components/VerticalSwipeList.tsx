@@ -7,7 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-import { Profile } from "@/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 import { FeedHookResult } from "../type/type";
 import { SwipeCard } from "./SwipeCard";
 import { FeedStatusCard } from "./FeedStatusCard";

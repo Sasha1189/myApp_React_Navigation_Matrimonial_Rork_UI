@@ -3,13 +3,11 @@ import { Alert, Linking } from "react-native";
 import { signOut } from "@react-native-firebase/auth";
 import { auth, rtdb } from "@/config/firebase";
 import { ref, serverTimestamp, update } from "@react-native-firebase/database";
-import { useAuth } from "@/context/AuthContext";
-import { clearCacheOnLogout } from "@/cache/cacheConfig";
+import { clearCacheOnLogout } from "@/cacheMMKV/cacheConfig";
 import { useTranslation } from "react-i18next";
 import { useAppNavigation } from "src/navigation/hooks";
 
 export const useSettingsActions = () => {
-  const { setUser } = useAuth();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const WHATSAPP_NUMBER = "918554840100";

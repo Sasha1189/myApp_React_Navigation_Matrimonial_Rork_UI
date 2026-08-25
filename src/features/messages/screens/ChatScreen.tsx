@@ -14,7 +14,6 @@ import {
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { useAuth } from "src/context/AuthContext";
 import { useChatSession } from "../hooks/useChatSession";
 import { MessageBubble } from "../components/MessageBubble";
 import { ChatInput } from "../components/ChatInput";
@@ -23,13 +22,14 @@ import { ChatListHelper } from "../components/ChatListHelper";
 import { ChatHeader } from "../components/ChatHeader";
 import { AppStackScreenProps } from "src/navigation/types";
 import { IMessage } from "../type/chattype";
+import { useMyProfile } from "@/features/profile/context/ProfileContext";
 
 export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   const { roomId, otherUser, uid } = route.params;
-  const { myProfile } = useAuth();
+  const { myProfile } = useMyProfile();
   const sender = {
     uid,
     name: myProfile?.fn || "User",

@@ -3,18 +3,18 @@ import { useAuth } from "../../../context/AuthContext"; // Import your Auth hook
 import {
   LikesCache,
   LikesReceivedCache,
-  storage,
-} from "../../../cache/cacheConfig";
+} from "@/features/likes/cache/likesCache";
+import { likesStorage } from "@/cacheMMKV/cacheConfig";
 
 interface ProfileStats {
-  matchesCount: number; // Can return count or "Upgrade to see" / "Lock" strings
-  sentCount: number;
-  receivedCount: number;
+  matchesCount: number | string;
+  sentCount: number | string;
+  receivedCount: number | string;
   isLoading: boolean;
 }
 
 export function useProfileStats(uid: string | undefined) {
-  const { tier } = useAuth(); // Read user subscription status reactively
+  const { tier } = useAuth();
 
   const calculateLocalStats = (): ProfileStats => {
     if (!uid) {
@@ -28,7 +28,7 @@ export function useProfileStats(uid: string | undefined) {
 
     const upgradeLabel = "Upgrade to see";
 
-    if (tier === "none") {
+    if (tier !== "basic" && tier !== "premium") {
       return {
         sentCount: upgradeLabel,
         receivedCount: upgradeLabel,
@@ -47,7 +47,7 @@ export function useProfileStats(uid: string | undefined) {
     // --- CONDITION 2: BASIC TIER (ONLY SENT COUNT UNLOCKED) ---
     if (tier === "basic") {
       return {
-        sentCount: sentIds.length, // Basic tier can see exactly how many likes they sent!
+        sentCount: sentIds?.length, // Basic tier can see exactly how many likes they sent!
         receivedCount: upgradeLabel, // Hidden for basic tier - prompts upgrade
         matchesCount: upgradeLabel, // Hidden for basic tier - prompts upgrade
         isLoading: false,
@@ -60,9 +60,9 @@ export function useProfileStats(uid: string | undefined) {
     const mutualMatches = receivedIds.filter((id) => sentSet.has(id));
 
     return {
-      sentCount: sentIds.length,
-      receivedCount: receivedIds.length,
-      matchesCount: mutualMatches.length, // Pure local matching calculation with 0 database cost!
+      sentCount: sentIds?.length,
+      receivedCount: receivedIds?.length,
+      matchesCount: mutualMatches?.length, // Pure local matching calculation with 0 database cost!
       isLoading: false,
     };
   };
@@ -71,7 +71,7 @@ export function useProfileStats(uid: string | undefined) {
 
   useEffect(() => {
     if (!uid) return;
-    const listener = storage.addOnValueChangedListener((key) => {
+    const listener = likesStorage.addOnValueChangedListener((key) => {
       if (key === "likes_ids_index" || key === "likes_received_cache_key") {
         setStats(calculateLocalStats());
       }

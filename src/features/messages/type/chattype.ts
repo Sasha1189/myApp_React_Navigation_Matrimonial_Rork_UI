@@ -1,4 +1,4 @@
-import { Profile } from "../../../types/profile";
+import { Profile } from "../../profile/types/profile";
 
 export interface ChatUser {
   uid: string;
@@ -22,12 +22,4 @@ export interface IInboxItem {
   updatedAt: number;
   otherUser: ChatUser;
   u?: Boolean;
-}
-
-export interface UserBannerItem {
-  id: string; // roomId for chats, uid for likes
-  name: string;
-  photo?: string | null;
-  age?: string;
-  profile?: Profile;
 }

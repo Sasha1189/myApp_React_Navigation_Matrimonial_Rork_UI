@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useMemo } from "react";
 import { useColorScheme } from "react-native";
-import { storage } from "@/cache/cacheConfig";
+import { appStorage } from "@/cacheMMKV/cacheConfig";
 import { theme } from "./theme";
 
 const THEME_KEY = "user-theme-mode";
@@ -19,7 +19,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const systemScheme = useColorScheme() || "light";
 
   const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = storage.getString(THEME_KEY);
+    const saved = appStorage.getString(THEME_KEY);
     return (saved as ThemeMode) || systemScheme;
   });
 
@@ -30,7 +30,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       toggleTheme: () => {
         const nextMode = mode === "light" ? "dark" : "light";
         setMode(nextMode);
-        storage.set(THEME_KEY, nextMode);
+        appStorage.set(THEME_KEY, nextMode);
       },
     }),
     [mode],

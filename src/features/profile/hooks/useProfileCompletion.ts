@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Profile } from "@/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 import { LOOKUPS } from "@/features/utils/profileLookups";
 
 // 1. Every single field a user can fill out across your forms

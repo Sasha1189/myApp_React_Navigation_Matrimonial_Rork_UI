@@ -12,7 +12,10 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useMessageInbox } from "../hooks/useMessageInbox";
-import { useLikeSent, useLikeReceived } from "../hooks/useLikesList";
+import {
+  useLikeSent,
+  useLikeReceived,
+} from "@/features/likes/hook/useLikedReceivedProfilesList";
 import { useTabSwipe } from "../hooks/useTabSwipe";
 import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
@@ -23,12 +26,11 @@ import { ChatFloatingUI } from "@/features/messages/components/ChatFloatingUI";
 import { useTranslation } from "react-i18next";
 
 export default function MessagesScreen() {
+  const { user, tier } = useAuth();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { user, tier } = useAuth();
   const { t } = useTranslation();
 
-  const uid = user?.uid;
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats",
   );
@@ -42,12 +44,14 @@ export default function MessagesScreen() {
     hasMore,
     reset,
     isLoading: chatsLoading,
-  } = useMessageInbox(uid || "");
+  } = useMessageInbox(user?.uid || "");
 
-  const { data: likesSent, isLoading: sentLoading } = useLikeSent(uid || "");
+  const { profiles: likesSent, isLoading: sentLoading } = useLikeSent(
+    user?.uid || "",
+  );
 
-  const { data: likesReceived, isLoading: recLoading } = useLikeReceived(
-    uid || "",
+  const { profiles: likesReceived, isLoading: recLoading } = useLikeReceived(
+    user?.uid || "",
     tier,
   );
 
@@ -129,10 +133,10 @@ export default function MessagesScreen() {
             key={activeTab}
             ref={flatListRef}
             data={currentData}
-            keyExtractor={(item) => item.roomId || item.uid || item.id}
+            keyExtractor={(item) => item.roomId || item.uid}
             renderItem={({ item }) =>
               activeTab === "chats" ? (
-                <ChatBanner item={item} uid={uid!} />
+                <ChatBanner item={item} uid={user?.uid!} />
               ) : (
                 <UserBanner item={item} type={activeTab} />
               )

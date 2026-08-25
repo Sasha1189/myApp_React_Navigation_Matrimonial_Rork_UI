@@ -22,12 +22,21 @@ import { useNavigation } from "@react-navigation/native";
 import { AppTheme } from "@/theme/theme";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
-import { storage } from "@/cache/cacheConfig";
+import { FeedCache } from "../cache/feedCache";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
 import PickerField from "../../profile/components/form/PickerField";
 import { LOOKUPS } from "../../utils/profileLookups"; // Ensure this matches your actual schema file location
 import { districtOptions } from "../../profile/components/form/profileOptions"; // Kept since district handles a custom separate list
+
+const INITIAL_FILTERS = {
+  maxAge: "",
+  maxHeight: "",
+  np: "",
+  ai: "" as number | "",
+  ms: "" as number | "",
+  ir: "",
+};
 
 export default function FilterScreen() {
   const navigation = useNavigation();
@@ -37,19 +46,15 @@ export default function FilterScreen() {
   const { t } = useTranslation();
   const uid = user?.uid as string;
 
-  // 1. UPDATED: Swapped state object keys to match the optimized schema
-  // Indices (ai, ms) initialize as empty strings so the PickerField displays placeholders properly when unselected
-  const [filters, setFilters] = useState({
-    maxAge: "",
-    maxHeight: "",
-    np: "", // nativePlace -> np (remains string district name)
-    ai: "" as number | "", // annualIncome -> ai (numeric enum index)
-    ms: "" as number | "", // maritalStatus -> ms (numeric enum index)
-    ir: "", // isReady -> ir
+  const [filters, setFilters] = useState(() => {
+    const cached = uid ? FeedCache.getFilterParams(uid) : null;
+    return cached ? { ...INITIAL_FILTERS, ...cached } : INITIAL_FILTERS;
   });
 
   const applyFilters = () => {
-    const age = parseInt(filters.maxAge);
+    if (!uid) return;
+
+    const age = parseInt(filters.maxAge, 10);
     if (filters.maxAge && (age < 18 || age > 60)) {
       Alert.alert(t("filters.title"), t("filters.errors.invalidAge"), [
         { text: "OK" },
@@ -57,7 +62,7 @@ export default function FilterScreen() {
       return;
     }
 
-    const height = parseInt(filters.maxHeight);
+    const height = parseInt(filters.maxHeight, 10);
     if (filters.maxHeight && (height < 100 || height > 250)) {
       Alert.alert(t("filters.title"), t("filters.errors.invalidHeight"), [
         { text: "OK" },
@@ -65,24 +70,20 @@ export default function FilterScreen() {
       return;
     }
 
-    // Securely cache the compressed schema state object parameters
-    storage.set(`active_filter_params_${uid}`, JSON.stringify(filters));
-    storage.set(`active_mode_${uid}`, "filter");
+    // Persist filter state and update active feed mode atomically via FeedCache
+    FeedCache.setFilterParams(uid, filters);
+    FeedCache.setMode(uid, "filter");
+
     navigation.goBack();
   };
 
   const clearFilter = () => {
-    setFilters({
-      maxAge: "",
-      maxHeight: "",
-      np: "",
-      ai: "",
-      ms: "",
-      ir: "",
-    });
+    setFilters(INITIAL_FILTERS);
 
-    storage.set(`active_mode_${uid}`, "default");
-    storage.remove(`active_filter_params_${uid}`);
+    if (uid) {
+      FeedCache.clearFilter(uid);
+    }
+
     navigation.goBack();
   };
 

@@ -1,10 +1,4 @@
-import { Profile } from "../../../types/profile";
-
-export interface FetchFeedResult {
-  profiles: Profile[];
-  lastCreatedAt?: string; // This is the cursor for pagination
-  done: boolean;
-}
+import { Profile } from "../../profile/types/profile";
 
 export interface FeedHookResult {
   profiles: Profile[];

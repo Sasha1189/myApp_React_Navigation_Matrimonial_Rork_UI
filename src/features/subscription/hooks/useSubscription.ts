@@ -5,12 +5,12 @@ import { getIdToken } from "@/config/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { apiSubscribe } from "../apis/subscriptionApi";
 import { useTranslation } from "react-i18next";
-import { storage } from "@/cache/cacheConfig";
+import { appStorage } from "@/cacheMMKV/cacheConfig";
 import { apiUpdateProfile } from "@/features/profile/api/profileApi";
 import { useAppNavigation } from "@/navigation/hooks";
 import { sanitizePayload } from "@/utils/sanitizePayload";
 import { generateTimeBasedSuffix } from "@/utils/IDGenerater";
-import { Profile } from "@/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 
 const SKUS = ["basic_membership_1y", "premium_membership_1y"];
 const PROFILE_CACHE_KEY = "self_profile_cache";
@@ -52,7 +52,7 @@ export const useSubscription = () => {
         // 🎯 STEP 4: ISOLATED POST-PAYMENT CLOUD SYNC
         if (user && result.newTier) {
           try {
-            const cachedString = storage.getString(PROFILE_CACHE_KEY);
+            const cachedString = appStorage.getString(PROFILE_CACHE_KEY);
             if (cachedString) {
               const currentLocalProfile = JSON.parse(cachedString);
 
@@ -87,7 +87,10 @@ export const useSubscription = () => {
 
               await apiUpdateProfile(optimizedPayload);
 
-              storage.set(PROFILE_CACHE_KEY, JSON.stringify(optimizedPayload));
+              appStorage.set(
+                PROFILE_CACHE_KEY,
+                JSON.stringify(optimizedPayload),
+              );
               setMyProfile(optimizedPayload as Profile);
             }
           } catch (syncErr) {

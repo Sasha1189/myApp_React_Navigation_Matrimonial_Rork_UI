@@ -3,8 +3,9 @@ import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { File, Paths } from "expo-file-system";
-import { Profile, Photo } from "../../../types/profile";
+import { Profile, Photo } from "../types/profile";
 import { useAuth } from "../../../context/AuthContext";
+import { useMyProfile } from "../context/ProfileContext";
 import { useTranslation } from "react-i18next";
 import {
   apiDeletePhoto,
@@ -15,7 +16,8 @@ import {
 const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
-  const { user, updateMyProfile, tier } = useAuth();
+  const { user, tier } = useAuth();
+  const { updateMyProfile } = useMyProfile();
   const { t } = useTranslation();
   const uid = user?.uid;
   const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);

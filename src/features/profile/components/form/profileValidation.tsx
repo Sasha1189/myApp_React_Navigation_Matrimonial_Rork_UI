@@ -1,4 +1,4 @@
-import { Profile } from "../../../../types/profile";
+import { Profile } from "../../types/profile";
 
 // 1. UPDATED: Mapped to compressed short keys
 export const requiredFields: (keyof Profile)[] = [

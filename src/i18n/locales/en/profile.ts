@@ -5,7 +5,7 @@ export default {
   managePhotos: "Add Photos",
   completion: "{{percent}}% Profile Completed",
   stats: {
-    matches: "Matches",
+    matches: "Like Matches",
     sent: "Like Sent",
     received: "Like Recv",
   },

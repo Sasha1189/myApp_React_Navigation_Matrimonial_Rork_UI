@@ -14,11 +14,12 @@ import {
 import InputField from "../form/InputField";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";
-import { Profile } from "@/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 import { useTranslation } from "react-i18next";
+import { useMyProfile } from "../../context/ProfileContext";
 
 export default function EditAboutMeScreen({ navigation }: any) {
-  const { myProfile, updateMyProfile } = useAuth();
+  const { myProfile, updateMyProfile } = useMyProfile();
   const { theme } = useAppTheme();
   const { t } = useTranslation();
   const config = SECTION_CONFIG.find((s) => s.id === "about")!;

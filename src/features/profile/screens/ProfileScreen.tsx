@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, ScrollView, Alert } from "react-native";
 import { useAuth } from "@/context/AuthContext";
+import { useMyProfile } from "../context/ProfileContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
@@ -15,7 +16,8 @@ import { useProfileCompletion } from "../hooks/useProfileCompletion";
 export default function ProfileScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { user, myProfile } = useAuth();
+  const { user } = useAuth();
+  const { myProfile } = useMyProfile();
   const { t } = useTranslation();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
