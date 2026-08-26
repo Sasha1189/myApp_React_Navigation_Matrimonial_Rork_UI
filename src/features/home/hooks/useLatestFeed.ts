@@ -73,10 +73,13 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
   // 2. Trigger initial fetch when tab/hook becomes active
   useEffect(() => {
     if (uid && isActive && !initialLoadedRef.current) {
+      setCurrentIndex(0);
       fetchLatestProfiles();
     } else if (!isActive) {
       // Reset ref when user leaves tab so next visit triggers a fresh index 0 load
       initialLoadedRef.current = false;
+      setCurrentIndex(0);
+      setProfiles([]);
     }
   }, [uid, isActive, fetchLatestProfiles]);
 
@@ -176,6 +179,7 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
   const resetFeed = useCallback(() => {
     initialLoadedRef.current = false;
     setCurrentIndex(0);
+    setProfiles([]);
     fetchLatestProfiles(true);
   }, [fetchLatestProfiles]);
 

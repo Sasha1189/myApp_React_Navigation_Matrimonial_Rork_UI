@@ -171,12 +171,7 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
     // Fetch fresh stack and remount list upon resolution
     fetchInitialProfiles(true);
   }, [uid, fetchInitialProfiles]);
-  console.log(
-    "[useDefaultFeed] return value updated:",
-    isLoading,
-    "&",
-    profiles?.length,
-  );
+
   return {
     profiles,
     currentIndex,

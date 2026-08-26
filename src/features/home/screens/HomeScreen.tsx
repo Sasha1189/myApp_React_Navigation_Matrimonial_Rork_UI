@@ -41,8 +41,6 @@ export default function HomeScreen() {
       </View>
     );
   }
-  console.log("FeedKey:-", feedKey);
-  console.log("Feed:", feed?.profiles?.length);
 
   return (
     <View style={containerStyle}>

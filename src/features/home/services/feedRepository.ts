@@ -15,6 +15,8 @@ import {
   or,
 } from "drizzle-orm";
 import { Profile } from "@/features/profile/types/profile";
+import { BlocksCache } from "@/features/block/cache/blockCache";
+import { LikesCache } from "@/features/likes/cache/likesCache";
 
 //For limiting swipe deck memory
 export const MAX_MEMORY_LIMIT = 50;
@@ -33,6 +35,24 @@ export interface InitialFeedResult {
   profiles: Profile[];
   initialIndex: number;
 }
+
+/**
+ * Reusable ingestion filter: Excludes blocked users and annotates liked status
+ * synchronously using local MMKV cache at fetch time.
+ */
+export const processFeedProfiles = (profiles: Profile[]): Profile[] => {
+  if (!profiles || profiles.length === 0) return [];
+
+  const blockedSet = new Set(BlocksCache.getMergedIds());
+  const likedSet = new Set(LikesCache.getIds());
+
+  return profiles
+    .filter((p) => p?.uid && !blockedSet.has(p.uid))
+    .map((p) => ({
+      ...p,
+      liked: likedSet.has(p.uid),
+    }));
+};
 
 export const feedRepository = {
   /**
@@ -75,7 +95,7 @@ export const feedRepository = {
           .limit(futureLimit)
           .all();
 
-        const profiles = rows.map(parseProfileRow);
+        const profiles = processFeedProfiles(rows.map(parseProfileRow));
         console.log(
           `[feedRepository] Cold start loaded ${profiles.length} profiles.`,
         );
@@ -96,7 +116,9 @@ export const feedRepository = {
         .all();
 
       // Reverse past rows so they are chronological (earliest -> latest)
-      const pastProfiles = pastRows.map(parseProfileRow).reverse();
+      const pastProfiles = processFeedProfiles(
+        pastRows.map(parseProfileRow).reverse(),
+      );
 
       // 3. Returning User: Fetch future profiles (> lastCa)
       console.log(
@@ -110,7 +132,9 @@ export const feedRepository = {
         .limit(futureLimit)
         .all();
 
-      const futureProfiles = futureRows.map(parseProfileRow);
+      const futureProfiles = processFeedProfiles(
+        futureRows.map(parseProfileRow),
+      );
 
       const combinedProfiles = [...pastProfiles, ...futureProfiles];
 
@@ -167,12 +191,7 @@ export const feedRepository = {
         .limit(limit)
         .all();
 
-      const nextProfiles = rows.map(parseProfileRow);
-      console.log(
-        `[feedRepository] Appending ${nextProfiles.length} new profiles.`,
-      );
-
-      return nextProfiles;
+      return processFeedProfiles(rows.map(parseProfileRow));
     } catch (error) {
       console.error("[feedRepository] Error fetching next feed page:", error);
       throw error;
@@ -191,7 +210,7 @@ export const feedRepository = {
       .limit(limit)
       .all();
 
-    return rows.map(parseProfileRow);
+    return processFeedProfiles(rows.map(parseProfileRow));
   },
 
   /**
@@ -209,7 +228,7 @@ export const feedRepository = {
       .limit(limit)
       .all();
 
-    return rows.map(parseProfileRow);
+    return processFeedProfiles(rows.map(parseProfileRow));
   },
 
   /**
@@ -267,7 +286,7 @@ export const feedRepository = {
       .offset(offset)
       .all();
 
-    return rows.map(parseProfileRow);
+    return processFeedProfiles(rows.map(parseProfileRow));
   },
 
   /**
@@ -295,6 +314,6 @@ export const feedRepository = {
       .offset(offset)
       .all();
 
-    return rows.map(parseProfileRow);
+    return processFeedProfiles(rows.map(parseProfileRow));
   },
 };

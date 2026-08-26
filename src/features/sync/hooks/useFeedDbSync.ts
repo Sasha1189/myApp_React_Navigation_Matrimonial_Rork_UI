@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useAuth } from "@/context";
 import {
-  syncUserProfiles,
+  syncFeedProfiles,
   performDeltaSync,
-} from "../services/profileSyncService";
+} from "../services/syncFeedService";
 
-export const useProfileDbSync = () => {
+export const useFeedDbSync = () => {
   const { user, tier } = useAuth();
 
   useEffect(() => {
@@ -14,28 +14,27 @@ export const useProfileDbSync = () => {
     let isMounted = true;
     const isPaid = tier === "basic" || tier === "premium";
 
-    const runProfileDbSync = async () => {
+    console.log("useFeedDbSync start with:", isPaid, user?.displayName);
+
+    const runFeedDbSync = async () => {
       try {
         // 1. Initial / Bulk Sync
-        const syncedCount = await syncUserProfiles(isPaid, user?.displayName);
+        const syncedCount = await syncFeedProfiles(isPaid, user?.displayName);
 
         // 2. Incremental Delta Sync
         const deltaCount = await performDeltaSync(isPaid, user?.displayName);
 
         if (isMounted) {
           console.log(
-            `[useProfileDbSync] Sync complete. Initial: ${syncedCount}, Delta: ${deltaCount}`,
+            `[useFeedDbSync] Sync complete. Initial: ${syncedCount}, Delta: ${deltaCount}`,
           );
         }
       } catch (error) {
-        console.error(
-          "[useProfileDbSync] Error during background sync:",
-          error,
-        );
+        console.error("[useFeedDbSync] Error during background sync:", error);
       }
     };
 
-    runProfileDbSync();
+    runFeedDbSync();
 
     return () => {
       isMounted = false;

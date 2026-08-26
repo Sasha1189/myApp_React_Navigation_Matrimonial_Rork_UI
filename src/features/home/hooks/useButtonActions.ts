@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../profile/types/profile";
@@ -9,77 +9,82 @@ import { useTranslation } from "react-i18next";
 export function useButtonActions(profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const { t } = useTranslation();
-
+  const { user, tier } = useAuth();
   const [isLiking, setIsLiking] = useState(false);
 
-  const { user, tier } = useAuth();
+  const handleActionBtnTap = useCallback(
+    async (action: "like" | "message" | "profileDetails") => {
+      if (!profile?.uid) return;
 
-  const handleActionBtnTap = async (
-    action: "like" | "message" | "profileDetails",
-  ) => {
-    if (!profile?.uid) return;
+      const isRestricted = tier === "none";
 
-    const isRestricted = tier === "none";
-
-    if ((action === "message" || action === "like") && isRestricted) {
-      Alert.alert(t("alerts.upgradeRequired"), t("alerts.featureRestricted"), [
-        { text: t("alerts.cancel"), style: "cancel" },
-        {
-          text: t("alerts.upgradeNow"),
-          onPress: () => navigation.navigate("Paywall"),
-        },
-      ]);
-      return;
-    }
-
-    if (action === "message") {
-      if (!user?.uid) {
+      if ((action === "message" || action === "like") && isRestricted) {
         Alert.alert(
-          "Complete Your Profile",
-          "Please add your name and photo to use this feature.",
+          t("alerts.upgradeRequired"),
+          t("alerts.featureRestricted"),
+          [
+            { text: t("alerts.cancel"), style: "cancel" },
+            {
+              text: t("alerts.upgradeNow"),
+              onPress: () => navigation.navigate("Paywall"),
+            },
+          ],
         );
         return;
       }
-      try {
-        const roomId = [user?.uid, profile.uid].sort().join("_");
-        const navigationPayload = {
-          roomId,
-          uid: user?.uid as string,
-          otherUser: {
-            uid: profile.uid,
-            name: profile.fn || "User",
-            photo: profile.tn || "",
-          },
-        };
-        navigation.navigate("Chat", navigationPayload);
-      } catch (err) {
-        console.error("Failed to start chat:", err);
-      }
-    }
 
-    if (action === "like") {
-      if (!user?.uid) {
-        Alert.alert(
-          "Complete Your Profile",
-          "Please add your name and photo to use this feature.",
-        );
+      if (action === "message") {
+        if (!user?.uid) {
+          Alert.alert(
+            "Complete Your Profile",
+            "Please add your name and photo to use this feature.",
+          );
+          return;
+        }
+        try {
+          const roomId = [user.uid, profile.uid].sort().join("_");
+          navigation.navigate("Chat", {
+            roomId,
+            uid: user.uid,
+            otherUser: {
+              uid: profile.uid,
+              name: profile.fn || "User",
+              photo: profile.tn || "",
+            },
+          });
+        } catch (err) {
+          console.error("Failed to start chat:", err);
+        }
         return;
       }
-      if (isLiking) return;
-      setIsLiking(true);
-      try {
-        await toggleLike(user?.uid, profile?.uid);
-      } catch (err) {
-        console.error("Like toggle failed:", err);
-      } finally {
-        setIsLiking(false);
-      }
-    }
 
-    if (action === "profileDetails") {
-      navigation.navigate("Details", { profile });
-    }
-  };
+      if (action === "like") {
+        if (!user?.uid) {
+          Alert.alert(
+            "Complete Your Profile",
+            "Please add your name and photo to use this feature.",
+          );
+          return;
+        }
+        if (isLiking) return;
+
+        setIsLiking(true);
+        try {
+          await toggleLike(user.uid, profile.uid);
+        } catch (err) {
+          console.error("Like toggle failed:", err);
+        } finally {
+          setIsLiking(false);
+        }
+        return;
+      }
+
+      if (action === "profileDetails") {
+        navigation.navigate("Details", { profile });
+      }
+    },
+    [profile, tier, user, isLiking, navigation, t],
+  );
 
   return { handleActionBtnTap };
 }

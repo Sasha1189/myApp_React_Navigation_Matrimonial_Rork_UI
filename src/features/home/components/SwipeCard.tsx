@@ -33,6 +33,7 @@ import { useButtonActions } from "../hooks/useButtonActions";
 import { useTranslation } from "react-i18next";
 import { getDisplayValue } from "@/features/utils/profileLookups";
 import { resolvePhotoUri } from "@/utils/photoUtils";
+import { useIsProfileLiked } from "@/features/likes/hook/useIsProfileLiked";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -43,6 +44,7 @@ interface SwipeCardProps {
   itemFullSize: number;
   itemSize: number;
   spacing: number;
+  isLiked?: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -267,6 +269,7 @@ const SwipeCardComponent: React.FC<SwipeCardProps> = ({
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+  const isLiked = useIsProfileLiked(profile.uid);
   const { handleActionBtnTap } = useButtonActions(profile);
 
   const cardWidth = useMemo(() => screenWidth - spacing * 2, [spacing]);
@@ -323,10 +326,10 @@ const SwipeCardComponent: React.FC<SwipeCardProps> = ({
 
       <View style={styles.floatingActions}>
         <ActionButtons
+          liked={isLiked}
           onLike={handleLike}
           onMessage={handleMessage}
           onProfileDetails={handleProfileDetails}
-          liked={profile?.liked}
         />
       </View>
 

@@ -82,14 +82,14 @@ const mapRawToProfileSchema = (p: any) => {
 /**
  * Main Sync Entry Point
  */
-export const syncUserProfiles = async (
+export const syncFeedProfiles = async (
   isPaid: boolean,
   userGender?: string | null,
 ): Promise<number> => {
   const targetCollection = getTargetCollection(userGender);
   if (!targetCollection) return 0;
 
-  if (isPaid) {
+  if (!isPaid) {
     return await handlePaidBulkSync(targetCollection);
   } else {
     return await handleFreeTierSync(targetCollection);
@@ -106,6 +106,12 @@ const handlePaidBulkSync = async (
     `is_initial_sync_done_${targetCollection}`,
   );
   if (isCompleted) return 0;
+
+  console.log("isCompleted bulk sync:", isCompleted);
+  console.log(
+    "Started bulk sync via handlePaidBulkSync for target collection:",
+    targetCollection,
+  );
 
   const bundleUrl = `${CDN_BASE_URL}/${targetCollection}_dump.json.gz`;
   const response = await fetch(bundleUrl);
@@ -202,7 +208,9 @@ const handleFreeTierSync = async (
     }
   });
 
-  return freeProfiles.length;
+  console.log("handleFreeTierSync done with profiles:", freeProfiles?.length);
+
+  return freeProfiles?.length;
 };
 
 /**
@@ -218,6 +226,11 @@ export const performDeltaSync = async (
   const targetCollection = getTargetCollection(gender);
   if (!targetCollection) return 0;
 
+  console.log(
+    "Started performDeltaSync for target collection:",
+    targetCollection,
+  );
+
   const now = Date.now();
   const lastRunTime =
     appStorage.getNumber(`last_delta_run_${targetCollection}`) || 0;
@@ -228,6 +241,8 @@ export const performDeltaSync = async (
   }
 
   const lastSyncedAt = appStorage.getNumber("last_synced_at") || 0;
+
+  console.log("performDeltaSync lastSyncedAt:", lastSyncedAt);
 
   // Convert numeric timestamp to Firestore Timestamp instance for query compatibility
   const filterTimestamp =
@@ -282,6 +297,8 @@ export const performDeltaSync = async (
         .run();
     }
   });
+
+  console.log("performDeltaSync updated profile length:", updates?.length);
 
   appStorage.set("last_synced_at", latestTimestamp);
   return updates.length;

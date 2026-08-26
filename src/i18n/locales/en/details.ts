@@ -72,7 +72,7 @@ export default {
     share: "Share Profile",
     block: "Block",
     unblock: "Unblock",
-    blockShare: "Block / Share",
+    blockTitle: "Block",
   },
   placeholders: {
     firstName: "Enter your first name",

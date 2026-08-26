@@ -97,7 +97,7 @@ export default function UserDetailsScreen({ route }: any) {
     "Other",
   ];
 
-  const { handleShare, handleBlock } = useSocialActions(profile);
+  const { handleBlock } = useSocialActions(profile);
 
   if (!profile) return null;
   return (
@@ -440,15 +440,11 @@ export default function UserDetailsScreen({ route }: any) {
         {/* Block-Share  */}
         {!isSelf && (
           <DetailSection
-            title={t("details.actions.blockShare")}
+            title={t("details.actions.blockTitle")}
             icon={ShieldAlert}
           >
             {canBlock ? (
-              <ProfileActionFooter
-                onShare={handleShare}
-                onBlock={handleBlock}
-                loading={false}
-              />
+              <ProfileActionFooter onBlock={handleBlock} loading={false} />
             ) : (
               <TouchableOpacity
                 style={styles.upgradeCard}

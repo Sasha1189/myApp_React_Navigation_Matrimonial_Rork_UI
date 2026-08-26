@@ -1,27 +1,30 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { appStorage } from "@/cacheMMKV/cacheConfig";
 import { FeedCache, FeedMode } from "../cache/feedCache";
-import { Profile } from "@/features/profile/types/profile";
 import { useDefaultFeed } from "./useDefaultFeed";
 import { useLatestFeed } from "./useLatestFeed";
 import { useSearchFeed } from "./useSearchFeed";
 import { useFilterFeed } from "./useFilterFeed";
-import { useLikedSet } from "@/features/likes/hook/useLikedSet";
 import { useBlockedSet } from "@/features/block/hook/useBlockedSet";
 
 export function useActiveFeed(uid: string) {
-  // 🔍 LOG 1: Track component render frequency......................
+  // Track component render frequency
   const renderCount = useRef(0);
   renderCount.current += 1;
-  console.log(`[useActiveFeed] Render #${renderCount.current} | uid: "${uid}"`);
-  //............................................
-  const [mode, setMode] = useState<FeedMode>("default");
+  console.log(`[useActiveFeed] Render #${renderCount.current}`);
+
+  // Read initial cache values directly on mount
+  const [mode, setMode] = useState<FeedMode>(
+    () => FeedCache.getMode(uid) || "default",
+  );
   const [searchQuery, setSearchQuery] = useState(() =>
     FeedCache.getSearchQuery(uid),
   );
   const [filterParams, setFilterParams] = useState(() =>
     FeedCache.getFilterParams(uid),
   );
+
+  const blockedSet = useBlockedSet();
 
   // Listen to MMKV updates for active mode, search queries, and filter parameters
   useEffect(() => {
@@ -37,17 +40,17 @@ export function useActiveFeed(uid: string) {
       if (key === keys.mode) {
         const newMode = FeedCache.getMode(uid);
         console.log(`[useActiveFeed] Mode updated -> ${newMode}`);
-        setMode(FeedCache.getMode(uid));
+        setMode(newMode);
       }
       if (key === keys.searchQuery) {
         const newQuery = FeedCache.getSearchQuery(uid);
         console.log(`[useActiveFeed] SearchQuery updated -> ${newQuery}`);
-        setSearchQuery(FeedCache.getSearchQuery(uid));
+        setSearchQuery(newQuery);
       }
       if (key === keys.filterParams) {
         const newParams = FeedCache.getFilterParams(uid);
         console.log(`[useActiveFeed] FilterParams updated`, newParams);
-        setFilterParams(FeedCache.getFilterParams(uid));
+        setFilterParams(newParams);
       }
     });
 
@@ -74,28 +77,15 @@ export function useActiveFeed(uid: string) {
     }
   }, [mode, defaultFeed, latestFeed, searchFeed, filterFeed]);
 
-  const likedSet = useLikedSet();
-  const blockedSet = useBlockedSet();
-
-  // Exclude blocked users and annotate liked state in real-time
-  const finalProfiles = useMemo(() => {
-    const raw = activeFeed.profiles || [];
-    console.log(
-      `[useActiveFeed] Computing finalProfiles (raw count: ${raw.length})`,
-    );
-    if (!raw.length) return [];
-
-    return raw
-      .filter((p: Profile) => p?.uid && !blockedSet.has(p.uid))
-      .map((p: Profile) => ({
-        ...p,
-        liked: likedSet.has(p.uid),
-      }));
-  }, [activeFeed.profiles, likedSet, blockedSet]);
+  const visibleProfiles = useMemo(() => {
+    const rawProfiles = activeFeed.profiles || [];
+    if (blockedSet.size === 0) return rawProfiles; // O(1) direct pass-through
+    return rawProfiles.filter((profile) => !blockedSet.has(profile.uid));
+  }, [activeFeed.profiles, blockedSet]);
 
   return {
     ...activeFeed,
-    profiles: finalProfiles,
+    profiles: visibleProfiles,
     isLoading: Boolean(activeFeed.isLoading),
     error: activeFeed.error || null,
     mode,
