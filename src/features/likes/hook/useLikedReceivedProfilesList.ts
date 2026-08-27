@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { likesStorage } from "@/cacheMMKV/cacheConfig";
 import { LikesCache, LikesReceivedCache } from "../cache/likesCache";
-import { profileService } from "@/db/repositories/profileService";
+import { profileService } from "@/features/likes/services/profileService";
 import { Profile } from "@/features/profile/types/profile";
 
 export function useLikeSent(myUid: string) {

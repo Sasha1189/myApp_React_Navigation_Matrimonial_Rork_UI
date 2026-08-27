@@ -5,24 +5,30 @@ import {
   performDeltaSync,
 } from "../services/syncFeedService";
 
-export const useFeedDbSync = () => {
-  const { user, tier } = useAuth();
+export const useFeedDbSync = (enabled: boolean = false) => {
+  const { user, tier, isVerified } = useAuth();
 
   useEffect(() => {
-    if (!user || tier === "none") return;
+    if (!enabled || !user?.uid || !user?.displayName) return;
 
     let isMounted = true;
     const isPaid = tier === "basic" || tier === "premium";
 
-    console.log("useFeedDbSync start with:", isPaid, user?.displayName);
-
     const runFeedDbSync = async () => {
       try {
         // 1. Initial / Bulk Sync
-        const syncedCount = await syncFeedProfiles(isPaid, user?.displayName);
+        const syncedCount = await syncFeedProfiles(
+          isPaid,
+          isVerified,
+          user.displayName,
+        );
 
         // 2. Incremental Delta Sync
-        const deltaCount = await performDeltaSync(isPaid, user?.displayName);
+        const deltaCount = await performDeltaSync(
+          isPaid,
+          isVerified,
+          user.displayName,
+        );
 
         if (isMounted) {
           console.log(
@@ -39,5 +45,5 @@ export const useFeedDbSync = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.uid, tier, user?.displayName]);
+  }, [enabled, user?.uid, user?.displayName, tier, isVerified]);
 };

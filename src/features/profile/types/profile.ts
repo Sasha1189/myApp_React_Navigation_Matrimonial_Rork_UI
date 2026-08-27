@@ -11,6 +11,7 @@ export interface Profile {
   ca: Date | string; // createdAt
   ua: Date | string; // updatedAt
   iv: boolean; // isVerified
+  ia: boolean; // isActive
   pid: string; // profileId
 
   // Compressed Personal & Birth Information

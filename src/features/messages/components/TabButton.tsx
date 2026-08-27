@@ -49,7 +49,7 @@ export const createStyles = (theme: AppTheme) =>
       paddingHorizontal: theme.spacing.md,
       borderWidth: 1, // Thinner border is more modern
       borderColor: theme.colors.border,
-      borderRadius: theme.borderRadius.round, // Pill-shaped
+      borderRadius: theme.borderRadius.sm, // Pill-shaped
       backgroundColor: theme.colors.card,
       // Subtle shadow for depth
       elevation: 1,

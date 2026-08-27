@@ -1,29 +1,29 @@
 import { useEffect } from "react";
+import { useAuth } from "@/context";
 import { AppState, AppStateStatus } from "react-native";
 import { presenceService } from "../services/presenceService";
 
-export const usePresence = (
-  uid: string | undefined,
-  tier: "none" | "basic" | "premium",
-  gender: string | undefined | null,
-) => {
+export const usePresence = (enabled: boolean = false) => {
+  const { user, tier } = useAuth();
   useEffect(() => {
-    if (!uid) return;
+    // 1. Early exit if disabled or essential user identity is missing
+    if (!enabled || !user?.uid) return;
 
-    const isPaidUser = tier === "basic" || tier === "premium";
+    const userGender = user.displayName?.trim().toLowerCase();
+    const isGenderValid = userGender === "male" || userGender === "female";
 
-    if (!isPaidUser) {
-      presenceService.deactivateSocket();
-      return;
-    }
+    if (!isGenderValid) return;
 
-    if (!gender) {
-      return;
-    }
+    const uid = user.uid;
 
     // 1. Wake up socket & sync inbox
     presenceService.activateSocket();
     presenceService.setInboxSync(uid, true);
+    presenceService
+      .setUserStatus(uid, "online")
+      .catch((err) =>
+        console.error("[usePresence] Initial online status failed:", err),
+      );
 
     // 2. Attach presence listener
     const cleanupPresenceListener = presenceService.setupPresenceListener(uid);
@@ -53,6 +53,8 @@ export const usePresence = (
       cleanupPresenceListener();
       appStateSub.remove();
       presenceService.setInboxSync(uid, false);
+      presenceService.setUserStatus(uid, "offline").catch(() => {});
+      presenceService.deactivateSocket();
     };
-  }, [uid, tier, gender]);
+  }, [enabled, user?.uid, user?.displayName, tier]);
 };

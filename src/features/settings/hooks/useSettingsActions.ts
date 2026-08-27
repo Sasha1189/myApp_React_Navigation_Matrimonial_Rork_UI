@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Alert, Linking } from "react-native";
-import { signOut } from "@react-native-firebase/auth";
-import { auth, rtdb } from "@/config/firebase";
-import { ref, serverTimestamp, update } from "@react-native-firebase/database";
-import { clearCacheOnLogout } from "@/cacheMMKV/cacheConfig";
+import { useAuth } from "@/context";
+import { logoutUser } from "@/context/services/logoutUser";
 import { useTranslation } from "react-i18next";
 import { useAppNavigation } from "src/navigation/hooks";
 
 export const useSettingsActions = () => {
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const WHATSAPP_NUMBER = "918554840100";
@@ -60,26 +59,7 @@ export const useSettingsActions = () => {
           setIsProcessing(true);
 
           try {
-            const currentUser = auth.currentUser;
-
-            // 1. Set RTDB status to offline BEFORE revoking auth token
-            if (currentUser) {
-              const statusRef = ref(rtdb, `/status/${currentUser.uid}`);
-              try {
-                await update(statusRef, {
-                  state: "offline",
-                  lastChanged: serverTimestamp(),
-                });
-              } catch (statusErr) {
-                console.log("Background status sync skipped:", statusErr);
-              }
-            }
-
-            // 2. Clear local cache
-            await clearCacheOnLogout();
-
-            // 3. Revoke auth session
-            await signOut(auth);
+            logoutUser(user?.uid);
           } catch (error: any) {
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {

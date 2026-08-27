@@ -14,13 +14,25 @@ import {
 } from "@react-native-firebase/auth";
 import { AuthContextType, UserTier } from "./types/auth.types";
 import { calculateUserTier } from "./utils/authTierUtils";
+import {
+  appStorage,
+  TIER_CACHE_KEY,
+  IS_VERIFIED_CACHE_KEY,
+} from "@/cacheMMKV/cacheConfig";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  const [tier, setTier] = useState<UserTier>("none");
   const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [isVerified, setIsVerified] = useState<boolean>(() => {
+    const cachedVer = appStorage.getBoolean(IS_VERIFIED_CACHE_KEY);
+    return (cachedVer as boolean) || false;
+  });
+  const [tier, setTier] = useState<UserTier>(() => {
+    const cached = appStorage.getString(TIER_CACHE_KEY);
+    return (cached as any) || "none";
+  });
 
   useEffect(() => {
     const auth = getAuth();
@@ -38,15 +50,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (firebaseUser) {
         try {
-          const idTokenResult = await getIdTokenResult(firebaseUser, true);
-          const resolvedTier = calculateUserTier(idTokenResult);
-          setTier(resolvedTier);
+          const idTokenResult = await getIdTokenResult(firebaseUser, false);
+          const activeTier = calculateUserTier(idTokenResult);
+
+          // 3. SYNC TIER STATE & CACHE
+          setTier((currentTier) => {
+            if (currentTier !== activeTier) {
+              appStorage.set(TIER_CACHE_KEY, activeTier);
+              return activeTier;
+            }
+            return currentTier;
+          });
+
+          //4. verified
+          setTier((currentTier) => {
+            if (currentTier !== activeTier) {
+              appStorage.set(TIER_CACHE_KEY, activeTier);
+              return activeTier;
+            }
+            return currentTier;
+          });
         } catch (error) {
           console.error(
             "[AuthContext] Failed to retrieve token claims:",
             error,
           );
-          setTier("none");
         }
       } else {
         setTier("none");
@@ -61,6 +89,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       user,
       authLoading,
+      isVerified,
+      setIsVerified,
       tier,
       setUser,
       setTier,

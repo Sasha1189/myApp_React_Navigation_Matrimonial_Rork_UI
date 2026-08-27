@@ -12,6 +12,11 @@ export const appStorage = createMMKV({ id: "cache-app" });
 
 const allStorages: MMKV[] = [likesStorage, blocksStorage, appStorage];
 
+// ==========================================
+// 1. MMKV KEYS
+// ==========================================
+export const TIER_CACHE_KEY = "self_tier_cache";
+
 // Universal JSON parser helper
 export const safeParse = <T>(data: string | undefined, fallback: T): T => {
   if (!data) return fallback;
@@ -22,6 +27,11 @@ export const safeParse = <T>(data: string | undefined, fallback: T): T => {
     return fallback;
   }
 };
+
+// ==========================================
+// 1. Verification Docu KEY
+// ==========================================
+export const IS_VERIFIED_CACHE_KEY = "isVerified_Cache";
 
 // ==========================================
 // 2. DEVICE & SYSTEM CONFIG
@@ -48,10 +58,10 @@ export const setDBDeviceIdCache = (deviceId: string) => {
 export async function clearCacheOnLogout() {
   try {
     // 1. Reset SQLite tables (Drizzle / Local DB) temporerily called from client
-    await resetDatabase();
+    // await resetDatabase();
 
     // 2. Clear all MMKV instances in parallel
-    allStorages.forEach((inst) => inst.clearAll());
+    // allStorages.forEach((inst) => inst.clearAll());
 
     console.log("🧹 SQLite and MMKV domain caches purged successfully.");
   } catch (storageError) {

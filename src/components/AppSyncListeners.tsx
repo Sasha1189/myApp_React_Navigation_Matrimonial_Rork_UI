@@ -5,29 +5,26 @@ import { useDeviceBinding } from "@/features/sync/hooks/useDeviceBinding";
 import { useFeedDbSync } from "@/features/sync/hooks/useFeedDbSync";
 import { useLikesSync } from "@/features/sync/hooks/useLikesSync";
 import { useBlocksSync } from "@/features/sync/hooks/useBlocksSync";
+import { useIsVerifiedSync } from "@/features/sync/hooks/useIsVerifiedSync";
 
 export const AppSyncListeners: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user, tier } = useAuth();
 
-  const userGender = user?.displayName?.trim().toLowerCase();
-  const isGenderValid = userGender === "male" || userGender === "female";
+  const hasUser = Boolean(user?.uid && user?.displayName);
+  const isPaid = tier === "basic" || tier === "premium";
+  const isPaidUser = hasUser && isPaid;
 
-  // 2. Hardware security verification
-  useDeviceBinding();
+  // 1. Paid-Only Features & Security Syncs
+  useDeviceBinding(isPaidUser);
+  useLikesSync(isPaidUser);
+  useBlocksSync(isPaidUser);
+  usePresence(isPaidUser);
+  useIsVerifiedSync(user?.uid, isPaidUser);
 
-  // 3. SQLite background profile sync
-  useFeedDbSync();
-
-  // 4. RTDB Likes sync (boot & 24h incremental)
-  useLikesSync();
-
-  // 5. RTDB Blocks sync (boot & 24h incremental)
-  useBlocksSync();
-
-  // 1. Online presence tracking
-  usePresence(user?.uid, tier, isGenderValid ? user?.displayName : undefined);
+  // 2. All-User Sync (Runs for Free, Paid, Verified, and Unverified users)
+  useFeedDbSync(hasUser);
 
   return <>{children}</>;
 };

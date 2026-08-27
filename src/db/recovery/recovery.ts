@@ -1,15 +1,13 @@
-import * as FileSystem from "expo-file-system";
-import { Paths } from "expo-file-system";
+import { File, Paths } from "expo-file-system";
 
 export async function resetDatabase(
-  dbName: string = "app.db",
+  dbName: string = "matrimonial.db",
 ): Promise<boolean> {
   try {
-    const dbPath = `${Paths.document.uri}SQLite/${dbName}`;
-    const fileInfo = await FileSystem.getInfoAsync(dbPath);
+    const dbFile = new File(Paths.document, "SQLite", dbName);
 
-    if (fileInfo.exists) {
-      await FileSystem.deleteAsync(dbPath, { idempotent: true });
+    if (dbFile.exists) {
+      dbFile.delete();
     }
     return true;
   } catch (error) {

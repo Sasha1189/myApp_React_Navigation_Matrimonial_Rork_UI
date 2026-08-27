@@ -1,38 +1,61 @@
 import { useEffect } from "react";
 import { Alert } from "react-native";
-import DeviceInfo from "react-native-device-info";
+import { getUniqueId } from "react-native-device-info";
 import { useAuth } from "@/context/AuthContext";
+import {
+  appStorage,
+  TIER_CACHE_KEY,
+  getDBDeviceIdCache,
+  setDBDeviceIdCache,
+} from "@/cacheMMKV/cacheConfig";
 import { GOOGLE_REVIEWER_UIDS } from "../../../config/securityConfig";
+import { logoutUser } from "@/context/services/logoutUser";
+import {
+  getUserDeviceId,
+  updateUserDeviceId,
+} from "../services/deviceBindingService";
 
-export const useDeviceBinding = () => {
-  const { user, logout } = useAuth();
+export const useDeviceBinding = (enabled: boolean = false) => {
+  const { user, tier } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    // 1. Early exit if disabled or essential user identity is missing
+    if (!enabled || !user?.uid) return;
 
     const verifyDeviceBinding = async () => {
       try {
-        // Skip strict device checks for official app reviewer UIDs
-        if (GOOGLE_REVIEWER_UIDS.includes(user.uid)) {
-          console.log(
-            "[useDeviceBinding] Skipping device verification for reviewer UID:",
-            user.uid,
-          );
+        if (GOOGLE_REVIEWER_UIDS.includes(user.uid)) return;
+
+        const isPaidUser = tier === "basic" || tier === "premium";
+        if (!user.displayName || !isPaidUser) return;
+
+        const currentHardwareId = await getUniqueId();
+        const cachedId = getDBDeviceIdCache();
+
+        if (cachedId === currentHardwareId) return;
+
+        const dbId = await getUserDeviceId(user.uid);
+
+        if (!dbId || dbId.trim() === "") {
+          await updateUserDeviceId(user.uid, currentHardwareId);
+          setDBDeviceIdCache(currentHardwareId);
           return;
         }
 
-        const deviceId = await DeviceInfo.getUniqueId();
-
-        // TODO: Replace with your actual backend or Firestore verification call
-        // const storedDeviceId = await fetchUserBoundDeviceId(user.uid);
-        const storedDeviceId = deviceId; // Placeholder comparison logic
-
-        if (storedDeviceId && storedDeviceId !== deviceId) {
+        if (dbId !== currentHardwareId) {
           Alert.alert(
-            "Security Violation",
-            "This account is bound to another physical device. You will be logged out.",
-            [{ text: "OK", onPress: () => logout() }],
+            "Device Mismatch",
+            "This account is registered on another device. Contact support.",
+            [
+              {
+                text: "Logout",
+                onPress: () => logoutUser(user.uid),
+              },
+            ],
+            { cancelable: false },
           );
+        } else {
+          setDBDeviceIdCache(dbId);
         }
       } catch (error) {
         console.error(
@@ -43,5 +66,5 @@ export const useDeviceBinding = () => {
     };
 
     verifyDeviceBinding();
-  }, [user, logout]);
+  }, [user?.uid, tier]);
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { blocksStorage } from "@/cacheMMKV/cacheConfig";
 import { BlocksCache } from "../cache/blockCache";
-import { profileService } from "@/db/repositories/profileService";
+import { profileService } from "@/features/likes/services/profileService";
 import { Profile } from "@/features/profile/types/profile";
 
 export function useBlockedList(myUid: string) {

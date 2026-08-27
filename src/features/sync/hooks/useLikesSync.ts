@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { syncLikes } from "../services/likesSyncService";
 
-export const useLikesSync = () => {
+export const useLikesSync = (enabled: boolean = false) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user?.uid) return;
+    // 1. Early exit if disabled or essential user identity is missing
+    if (!enabled || !user?.uid) return;
 
     let isMounted = true;
 
@@ -29,5 +30,5 @@ export const useLikesSync = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.uid]);
+  }, [enabled, user?.uid]);
 };

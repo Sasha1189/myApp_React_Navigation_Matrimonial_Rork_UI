@@ -18,7 +18,12 @@ export const profileService = {
         .from(sqlProfileTable)
         .where(inArray(sqlProfileTable.uid, uids));
 
-      const Profiles = results.map(parseProfileRow);
+      const Profiles = results.map((row) =>
+        parseProfileRow({
+          ...row,
+          profileData: JSON.stringify(row.profileData),
+        }),
+      );
 
       const profileMap = new Map(Profiles.map((p) => [p.uid, p as Profile]));
       return uids

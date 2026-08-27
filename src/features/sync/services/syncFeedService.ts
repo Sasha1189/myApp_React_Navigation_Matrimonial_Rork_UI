@@ -84,12 +84,18 @@ const mapRawToProfileSchema = (p: any) => {
  */
 export const syncFeedProfiles = async (
   isPaid: boolean,
+  isVerified: boolean,
   userGender?: string | null,
 ): Promise<number> => {
   const targetCollection = getTargetCollection(userGender);
   if (!targetCollection) return 0;
 
-  if (!isPaid) {
+  if (isPaid && isVerified) {
+    console.log(
+      "[handlePaidBulkSync] Handle Bulk sync hit:",
+      isPaid,
+      isVerified,
+    );
     return await handlePaidBulkSync(targetCollection);
   } else {
     return await handleFreeTierSync(targetCollection);
@@ -106,12 +112,6 @@ const handlePaidBulkSync = async (
     `is_initial_sync_done_${targetCollection}`,
   );
   if (isCompleted) return 0;
-
-  console.log("isCompleted bulk sync:", isCompleted);
-  console.log(
-    "Started bulk sync via handlePaidBulkSync for target collection:",
-    targetCollection,
-  );
 
   const bundleUrl = `${CDN_BASE_URL}/${targetCollection}_dump.json.gz`;
   const response = await fetch(bundleUrl);
@@ -218,18 +218,14 @@ const handleFreeTierSync = async (
  */
 export const performDeltaSync = async (
   isPaid: boolean,
+  isVerified: boolean,
   gender: string | null | undefined,
   forceSync: boolean = false,
 ): Promise<number> => {
-  if (!isPaid) return 0;
+  if (!isPaid && !isVerified) return 0;
 
   const targetCollection = getTargetCollection(gender);
   if (!targetCollection) return 0;
-
-  console.log(
-    "Started performDeltaSync for target collection:",
-    targetCollection,
-  );
 
   const now = Date.now();
   const lastRunTime =
