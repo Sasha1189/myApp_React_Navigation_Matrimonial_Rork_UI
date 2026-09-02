@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Profile } from "@/features/profile/types/profile";
 import { FeedCache } from "../cache/feedCache";
+import { appStorage } from "@/cacheMMKV/cacheConfig";
 import { FeedHookResult } from "../type/type";
 import {
   feedRepository,
@@ -37,11 +38,6 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
       try {
         const cachedCa = FeedCache.getLastCa(uid);
 
-        console.log(
-          `[useFeedDefault] Loading feed for ${uid} relative to cached ca:`,
-          cachedCa,
-        );
-
         const { profiles: initialData, initialIndex } =
           await feedRepository.getInitialFeed(cachedCa);
 
@@ -49,6 +45,8 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
         setProfiles(initialData ?? []);
         setCurrentIndex(initialIndex ?? 0);
         setHasMore((initialData?.length ?? 0) > 0);
+
+        console.log(`[useDefaultFeed]  Count: ${initialData?.length}`);
 
         const activeProfile = initialData?.[initialIndex];
         if (activeProfile?.ca !== undefined && activeProfile?.ca !== null) {
@@ -86,6 +84,24 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
     }
   }, [uid, isActive, fetchInitialProfiles]);
 
+  // 2.1 Listen for MMKV Sync Completion Flags (Free & Bulk Sync)
+  useEffect(() => {
+    if (!uid) return;
+
+    // Set listener to catch both free and bulk sync completion keys
+    const listener = appStorage.addOnValueChangedListener((key) => {
+      const isFreeSyncDone = key.startsWith("is_free_sync_done_");
+      const isBulkSyncDone = key.startsWith("is_initial_sync_done_");
+
+      if (isFreeSyncDone || isBulkSyncDone) {
+        initialLoadedRef.current = false;
+        fetchInitialProfiles();
+      }
+    });
+
+    return () => listener.remove();
+  }, [uid, fetchInitialProfiles]);
+
   // 3. Forward Pagination
   const loadMore = useCallback(async () => {
     if (
@@ -105,7 +121,6 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
       const lastProfile = profiles[profiles.length - 1];
       const lastCa = lastProfile?.ca;
 
-      console.log(`[useFeedDefault] Triggered loadMore after ca: ${lastCa}`);
       const nextProfiles = await feedRepository.getNextFeedPage(
         lastCa,
         FETCH_PAGE_SIZE_DEFAULT,
@@ -139,17 +154,11 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
         uid
       ) {
         const caValue = Number(activeProfile.ca);
-        console.log(
-          `[useFeedDefault] Persisting lastCa for ${uid}: ${caValue}`,
-        );
         FeedCache.setLastCa(uid, caValue);
       }
 
       // MEMORY PURGE: Memory limit reached
       if (index >= MAX_MEMORY_LIMIT) {
-        console.log(
-          `[useFeedDefault] Reached memory limit (${index}). Purging stack and re-anchoring...`,
-        );
         // Reset tracking ref and reload fresh batch from top (index 0)
         initialLoadedRef.current = false;
         // Fetch new profiles first, then increment resetCount to remount

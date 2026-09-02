@@ -31,6 +31,7 @@ export type AppStackParamList = {
   Details: { profile: Profile } | { userId: string } | { self: true };
   EditProfile: undefined;
   ManagePhotos: undefined;
+  ManageVerDoc: undefined;
   Filter: undefined;
   Search: undefined;
   Settings: undefined;

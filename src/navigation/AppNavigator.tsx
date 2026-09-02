@@ -9,6 +9,7 @@ import {
   EditProfileScreen,
   ManagePhotosScreen,
   UserDetailsScreen,
+  VerificationDocScreen,
 } from "@/features/profile/screens";
 import {
   EditAboutMeScreen,
@@ -19,7 +20,6 @@ import {
   EditLifestyleScreen,
   EditPartnerPreferencesScreen,
 } from "@/features/profile/components/sections";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TabNavigator from "./TabNavigator";
 import { AppStackParamList } from "./types";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -29,7 +29,6 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppNavigator() {
   const { theme } = useAppTheme();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   if (!theme) return null;
 
@@ -89,6 +88,13 @@ export default function AppNavigator() {
         component={ManagePhotosScreen}
         options={{
           title: t("navigation.managePhotos"),
+        }}
+      />
+      <Stack.Screen
+        name="ManageVerDoc"
+        component={VerificationDocScreen}
+        options={{
+          title: t("navigation.manageverdoc"),
         }}
       />
       <Stack.Screen

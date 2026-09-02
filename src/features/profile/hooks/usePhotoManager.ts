@@ -68,57 +68,65 @@ export function usePhotoManager(profile: Profile | null) {
     }
   };
 
-  // 🔹 Delete photo (storage + db) -> UPDATED FOR R2
+  // 🔹 Delete photo (storage + db) -> UPDATED FOR R2 WITH CONFIRMATION
   const deletePhoto = async (photoId: string) => {
     const toDelete = photos.find((p) => p.id === photoId);
     if (!toDelete) return;
 
-    // Case: Only exists locally (not uploaded yet)
-    if (toDelete.localUrl && !toDelete.downloadURL) {
-      setPhotos(photos.filter((p) => p.id !== photoId));
-      return;
-    }
+    Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"), [
+      {
+        text: t("common.cancel", "Cancel"),
+        style: "cancel",
+      },
+      {
+        text: t("common.delete", "Yes"),
+        style: "destructive",
+        onPress: async () => {
+          // Case: Only exists locally (not uploaded yet)
+          if (toDelete.localUrl && !toDelete.downloadURL) {
+            setPhotos(photos.filter((p) => p.id !== photoId));
+            return;
+          }
 
-    try {
-      // 1. Modular Delete from R2 via Backend
-      if (toDelete.downloadURL) {
-        // We assume the downloadURL looks like: https://r2-domain.com/users/123/file.jpg
-        // We pass the full URL to the backend, which will parse out the key and delete it
-        // await fetch(`${API_BASE_URL}/delete-photo`, {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify({ fileUrl: toDelete.downloadURL, uid }),
-        // });
-        await apiDeletePhoto(toDelete.downloadURL);
-      }
+          try {
+            // 1. Modular Delete from R2 via Backend
+            if (toDelete.downloadURL) {
+              await apiDeletePhoto(toDelete.downloadURL);
+            }
 
-      // 2. Filter local list
-      const updated = photos.filter((p) => p.id !== photoId);
-      let newRootThumbnail = profile?.tn || "";
+            // 2. Filter local list
+            const updated = photos.filter((p) => p.id !== photoId);
+            let newRootThumbnail = profile?.tn || "";
 
-      // 3. Handle Primary Promotion
-      if (toDelete.isPrimary) {
-        if (updated.length > 0) {
-          // Promote the next photo in line as primary
-          newRootThumbnail = await syncPrimaryThumbnail(updated[0], uid!);
-        } else {
-          // No photos left
-          newRootThumbnail = "";
-        }
-      }
+            // 3. Handle Primary Promotion
+            if (toDelete.isPrimary) {
+              if (updated.length > 0) {
+                // Promote the next photo in line as primary
+                newRootThumbnail = await syncPrimaryThumbnail(updated[0], uid!);
+              } else {
+                // No photos left
+                newRootThumbnail = "";
+              }
+            }
 
-      // 4. Update Database (Firestore/RTDB)
-      const cleanPhotosForDb = updated.map(({ localUrl, ...rest }) => rest);
-      await updateMyProfile({
-        photos: cleanPhotosForDb,
-        tn: newRootThumbnail,
-      });
+            // 4. Update Database (Firestore/RTDB)
+            const cleanPhotosForDb = updated.map(
+              ({ localUrl, ...rest }) => rest,
+            );
+            await updateMyProfile({
+              photos: cleanPhotosForDb,
+              tn: newRootThumbnail,
+            });
 
-      setPhotos(updated);
-      Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"));
-    } catch (err) {
-      Alert.alert(t("photos.errorTitle"), t("photos.deleteError"));
-    }
+            setPhotos(updated);
+            Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"));
+          } catch (err) {
+            console.error("Delete failed:", err);
+            Alert.alert(t("photos.errorTitle"), t("photos.deleteError"));
+          }
+        },
+      },
+    ]);
   };
 
   // 🔹 Set primary (UNCHANGED)

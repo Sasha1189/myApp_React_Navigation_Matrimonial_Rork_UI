@@ -4,8 +4,8 @@ import { Check, Star } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
-import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { useTierStatus } from "../hooks/useTierStatus";
 
 interface SubscriptionCardProps {
   planId: "basic" | "premium";
@@ -15,19 +15,21 @@ interface SubscriptionCardProps {
   onSelect: () => void;
 }
 
-export const SubscriptionCard = ({
+export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   planId,
   skuId,
   availablePlans,
   isSelected,
   onSelect,
-}: SubscriptionCardProps) => {
+}) => {
   const { t } = useTranslation();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const { tier } = useAuth();
 
-  // 1. 🌟 ONLY MAP THE FEATURES FROM YOUR TRANSLATION FILE
+  const { getCardState } = useTierStatus();
+  const { isCurrentSubscription, isExpiredPlan, showSelectCircle } =
+    getCardState(planId);
+
   const features =
     planId === "basic"
       ? [
@@ -45,19 +47,16 @@ export const SubscriptionCard = ({
           t("subscription.plans.premium.features.5"),
         ];
 
-  // 2. Cross-reference with the live Play Store object
   const playStoreProduct = availablePlans?.find(
     (product) => product.id === skuId,
   );
 
   if (!playStoreProduct) return null;
 
-  // 3. 🌟 KEEP STORE THINGS AS THEY ARE DIRECTLY FROM GOOGLE PLAY
   const playStoreTitle = playStoreProduct.displayName;
-  let livePayPrice = playStoreProduct.displayPrice; // Base price (e.g. ₹1,699.00)
+  let livePayPrice = playStoreProduct.displayPrice;
   let originalBasePrice = undefined;
 
-  // Detect and handle the console offers array directly
   if (
     playStoreProduct.platform === "android" &&
     playStoreProduct.discountOffers
@@ -71,24 +70,25 @@ export const SubscriptionCard = ({
     }
   }
 
-  const isCurrentActivePlan = tier?.toLowerCase() === planId.toLowerCase();
-
-  // Evaluate card status variables to dynamically swap outline borders gracefully
-  const cardBorderColor = isCurrentActivePlan
+  // Active -> Green | Selected (including Expired) -> Primary Highlight | Unselected -> Standard/Warning
+  const cardBorderColor = isCurrentSubscription
     ? theme.colors.success
     : isSelected
       ? theme.colors.primary
-      : planId === "premium"
-        ? theme.colors.warning
-        : theme.colors.border;
+      : isExpiredPlan
+        ? theme.colors.danger
+        : planId === "premium"
+          ? theme.colors.warning
+          : theme.colors.border;
 
   return (
     <TouchableOpacity
       activeOpacity={0.9}
       style={[styles.card, { borderColor: cardBorderColor }]}
-      onPress={() => !isCurrentActivePlan && onSelect()}
+      disabled={isCurrentSubscription}
+      onPress={onSelect}
     >
-      {/* Show Most Loved Badge on Premium Cards */}
+      {/* Most Popular Badge for Premium */}
       {planId === "premium" && (
         <View style={styles.badge}>
           <Star size={10} color="white" fill="white" />
@@ -96,81 +96,94 @@ export const SubscriptionCard = ({
         </View>
       )}
 
-      {/* Main Core Metadata Header block */}
+      {/* Header Block */}
       <View style={styles.headerRow}>
-        <View style={styles.titleAndPriceBlock}>
-          {/* Plan Title Name directly from Play Console */}
-          <Text style={[styles.name, isSelected && styles.nameSelected]}>
-            {playStoreTitle}
-          </Text>
-
-          {/* Pricing Display Sub-Section */}
-          <View style={styles.priceContainer}>
-            <View style={styles.priceRow}>
-              {/* Active Retail Charge Value */}
-              <Text style={styles.price}>{livePayPrice}</Text>
-
-              {/* Billing Cycle Frequency Indicator */}
-              <Text style={styles.periodText}>
-                / {t("subscription.onceYear")}
-              </Text>
-
-              {/* Original Strikethrough Price if Discount Offer exists */}
-              {originalBasePrice && (
-                <Text style={styles.strikePrice}>{originalBasePrice}</Text>
-              )}
-            </View>
-
-            {/* Badges Container row (Discounts & Regulatory Tax details) */}
-            <View style={styles.badgesRow}>
-              {originalBasePrice &&
-                playStoreProduct.discountOffers &&
-                (() => {
-                  const promoOffer = playStoreProduct.discountOffers.find(
-                    (offer: any) => offer.id,
-                  );
-                  const baseAmt = playStoreProduct.price;
-                  const promoAmt = promoOffer?.price;
-
-                  if (baseAmt && promoAmt && baseAmt > promoAmt) {
-                    const pct = Math.round(
-                      ((baseAmt - promoAmt) / baseAmt) * 100,
-                    );
-                    return (
-                      <View style={styles.discountBadge}>
-                        <Text style={styles.discountBadgeText}>
-                          ~{pct}% Less
-                        </Text>
-                      </View>
-                    );
-                  }
-                  return null;
-                })()}
-
-              <View style={styles.taxBadge}>
-                <Text style={styles.taxBadgeText}>
-                  INCL. 18% GST + 15% TAXES
+        <Text style={[styles.name, isSelected && styles.nameSelected]}>
+          {playStoreTitle}
+        </Text>
+        <View style={styles.priceAndStatusRow}>
+          {/* Left 80% Block */}
+          <View style={styles.priceBlock}>
+            <View style={styles.priceContainer}>
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>{livePayPrice}</Text>
+                <Text style={styles.periodText}>
+                  / {t("subscription.onceYear")}
                 </Text>
+                {originalBasePrice && (
+                  <Text style={styles.strikePrice}>{originalBasePrice}</Text>
+                )}
+              </View>
+
+              <View style={styles.badgesRow}>
+                {originalBasePrice &&
+                  playStoreProduct.discountOffers &&
+                  (() => {
+                    const promoOffer = playStoreProduct.discountOffers.find(
+                      (offer: any) => offer.id,
+                    );
+                    const baseAmt = playStoreProduct.price;
+                    const promoAmt = promoOffer?.price;
+
+                    if (baseAmt && promoAmt && baseAmt > promoAmt) {
+                      const pct = Math.round(
+                        ((baseAmt - promoAmt) / baseAmt) * 100,
+                      );
+                      return (
+                        <View style={styles.discountBadge}>
+                          <Text style={styles.discountBadgeText}>
+                            ~{pct}% Less
+                          </Text>
+                        </View>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                <View style={styles.taxBadge}>
+                  <Text style={styles.taxBadgeText}>
+                    INCL. 18% GST + 15% TAXES
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        {/* Action Selection State Render Controls */}
-        {isCurrentActivePlan ? (
-          <View style={styles.activeTag}>
-            <Text style={styles.activeTagText}>
-              {t("subscription.currentPlan")}
-            </Text>
+          {/* Right 20% Status & Control Container */}
+          <View style={styles.statusIndicatorContainer}>
+            {/* 1. Selection Circle (Placed top so it renders above the status badge) */}
+            {showSelectCircle && (
+              <View
+                style={[styles.circle, isSelected && styles.circleSelected]}
+              >
+                {isSelected && (
+                  <Check size={14} color="white" strokeWidth={4} />
+                )}
+              </View>
+            )}
+
+            {/* 2. Active Plan Badge */}
+            {isCurrentSubscription && (
+              <View style={styles.activeTag}>
+                <Text style={styles.activeTagText}>
+                  {t("subscription.currentPlan")}
+                </Text>
+              </View>
+            )}
+
+            {/* 3. Expired Plan Badge */}
+            {isExpiredPlan && (
+              <View style={styles.expiredTag}>
+                <Text style={styles.expiredTagText}>
+                  {t("subscription.expired")}
+                </Text>
+              </View>
+            )}
           </View>
-        ) : (
-          <View style={[styles.circle, isSelected && styles.circleSelected]}>
-            {isSelected && <Check size={14} color="white" strokeWidth={4} />}
-          </View>
-        )}
+        </View>
       </View>
 
-      {/* Benefits checklist footer layout */}
+      {/* Features List */}
       <View style={styles.featuresContainer}>
         {features.map((featureText, index) => (
           <View key={index} style={styles.featureItem}>
@@ -212,36 +225,34 @@ export const createStyles = (theme: AppTheme) => {
       fontSize: theme.fontSize.xs, // Maps to xs token (12px)
       fontWeight: "800",
     },
-    headerRow: {
+    headerRow: {},
+    priceAndStatusRow: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: theme.spacing.md, // Maps to md token (16px)
+      justifyContent: "space-between",
     },
-    titleAndPriceBlock: {
-      flex: 1,
-      paddingRight: theme.spacing.sm, // Prevent clipping against the selection circle
+    priceBlock: {
+      flex: 0.8,
     },
     name: {
       fontSize: theme.fontSize.lg, // Maps to lg token (18px)
-      fontWeight: "700",
+      fontWeight: "600",
       color: theme.colors.text,
     },
     nameSelected: {
       color: theme.colors.primary,
     },
     priceContainer: {
-      marginTop: theme.spacing.xs, // Maps to xs token (4px)
+      // marginTop: theme.spacing.xs, // Maps to xs token (4px)
       width: "100%",
     },
     priceRow: {
       flexDirection: "row",
       alignItems: "baseline",
-      flexWrap: "wrap",
     },
     price: {
-      fontSize: theme.fontSize.xxl, // Boosted to xxl (32px) to match your requested size (26px) perfectly
-      fontWeight: "800",
+      fontSize: theme.fontSize.lg, // Boosted to xxl (32px) to match your requested size (26px) perfectly
+      fontWeight: "600",
       color: theme.colors.text, // Dynamic color instead of hardcoded "#333"
     },
     periodText: {
@@ -261,8 +272,7 @@ export const createStyles = (theme: AppTheme) => {
       flexDirection: "row",
       alignItems: "center",
       gap: theme.spacing.sm, // Maps to sm token (8px)
-      marginTop: theme.spacing.sm,
-      flexWrap: "wrap",
+      marginTop: theme.spacing.xs,
     },
     discountBadge: {
       // Swapped hardcoded light green to a secure adaptive theme alpha setup
@@ -298,6 +308,13 @@ export const createStyles = (theme: AppTheme) => {
       fontWeight: "700",
       letterSpacing: 0.3,
     },
+    statusIndicatorContainer: {
+      flex: 0.2,
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: theme.spacing.xs,
+    },
     circle: {
       width: 24,
       height: 24,
@@ -312,7 +329,6 @@ export const createStyles = (theme: AppTheme) => {
       backgroundColor: theme.colors.primary,
     },
     activeTag: {
-      // Styled using adaptive transparent context block configurations
       backgroundColor: isDarkTheme
         ? "rgba(76, 175, 80, 0.2)"
         : "rgba(46, 204, 113, 0.15)",
@@ -322,6 +338,19 @@ export const createStyles = (theme: AppTheme) => {
     },
     activeTagText: {
       color: theme.colors.success,
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    expiredTag: {
+      backgroundColor: isDarkTheme
+        ? "rgba(244, 67, 54, 0.2)"
+        : "rgba(231, 76, 60, 0.15)",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    expiredTagText: {
+      color: theme.colors.danger,
       fontSize: 11,
       fontWeight: "700",
     },

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { blocksStorage } from "@/cacheMMKV/cacheConfig";
 import { BlocksCache } from "../cache/blockCache";
-import { profileService } from "@/features/likes/services/profileService";
+import { feedRepository } from "@/features/home/services/feedRepository";
 import { Profile } from "@/features/profile/types/profile";
 
 export function useBlockedList(myUid: string) {
@@ -13,7 +13,7 @@ export function useBlockedList(myUid: string) {
     setIsLoading(true);
     try {
       const ids = BlocksCache.getMyIds();
-      const data = await profileService.fetchProfilesByUids(ids);
+      const data = await feedRepository.fetchProfilesByUids(ids);
       setProfiles(data);
     } catch (error) {
       console.error("[useLikeSent] Failed to load profiles:", error);

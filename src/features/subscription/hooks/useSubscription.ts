@@ -5,24 +5,25 @@ import { getIdToken } from "@/config/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { apiSubscribe } from "../apis/subscriptionApi";
 import { useTranslation } from "react-i18next";
-import { appStorage } from "@/cacheMMKV/cacheConfig";
+import { appStorage, PROFILE_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
 import { apiUpdateProfile } from "@/features/profile/api/profileApi";
 import { useAppNavigation } from "@/navigation/hooks";
 import { sanitizePayload } from "@/utils/sanitizePayload";
 import { generateTimeBasedSuffix } from "@/utils/IDGenerater";
 import { Profile } from "@/features/profile/types/profile";
+import { useMyProfile } from "@/features/profile/context/ProfileContext";
 
 const SKUS = ["basic_membership_1y", "premium_membership_1y"];
-const PROFILE_CACHE_KEY = "self_profile_cache";
 
 export const useSubscription = () => {
-  const { user, tier, setTier, setMyProfile } = useAuth();
+  const { user, tier } = useAuth();
+  const { myProfile, setMyProfile } = useMyProfile();
   const { t } = useTranslation();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const navigation = useAppNavigation();
   const [selectedPlanId, setSelectedPlanId] = useState<string>(
     tier && tier !== "none" ? tier : "",
   );
-  const [isProcessing, setIsProcessing] = useState(false);
-  const navigation = useAppNavigation();
 
   const {
     connected,
@@ -35,6 +36,7 @@ export const useSubscription = () => {
       setIsProcessing(true);
       try {
         const receipt = purchase.purchaseToken;
+
         const result = await apiSubscribe({
           planId: purchase.productId,
           purchaseToken: receipt || "",
@@ -43,34 +45,33 @@ export const useSubscription = () => {
             Platform.OS === "android" ? "google_play_real" : "apple_app_store",
         });
 
-        // isConsumable: true allows buying it again after a year if needed
         await finishTransaction({ purchase, isConsumable: true });
 
         if (user) await getIdToken(user, true);
-        setTier(result.newTier);
 
-        // 🎯 STEP 4: ISOLATED POST-PAYMENT CLOUD SYNC
         if (user && result.newTier) {
           try {
-            const cachedString = appStorage.getString(PROFILE_CACHE_KEY);
-            if (cachedString) {
-              const currentLocalProfile = JSON.parse(cachedString);
-
-              let finalPid = currentLocalProfile.pid || "";
+            if (myProfile) {
+              let finalPid = myProfile?.pid || "";
               if (!finalPid || finalPid.trim() === "") {
                 finalPid = generateTimeBasedSuffix(); // Generates "LYC-XXXX" once
               }
 
-              if (
-                !currentLocalProfile.tier ||
-                currentLocalProfile.tier === "none"
-              ) {
-                delete currentLocalProfile.ph;
-                delete currentLocalProfile.tb;
+              const hasActiveTier =
+                myProfile.tier === "basic" || myProfile.tier === "premium";
+
+              let profileForSync: Profile = myProfile;
+
+              if (!myProfile.tier || !hasActiveTier) {
+                profileForSync = {
+                  ...myProfile,
+                  photos: [],
+                  tn: "",
+                };
               }
 
               const rawCloudPayload = {
-                ...currentLocalProfile,
+                ...profileForSync,
                 uid: user?.uid,
                 gender: user?.displayName,
                 tier: result.newTier,
@@ -79,19 +80,20 @@ export const useSubscription = () => {
 
               const optimizedPayload = sanitizePayload(rawCloudPayload);
 
-              // Force-override critical native variables to ensure they are never sanitized out
               optimizedPayload.uid = user?.uid;
               optimizedPayload.gender = user?.displayName;
               optimizedPayload.tier = result.newTier;
               optimizedPayload.pid = finalPid;
+              optimizedPayload.ia = true;
 
               await apiUpdateProfile(optimizedPayload);
+
+              setMyProfile(optimizedPayload as Profile);
 
               appStorage.set(
                 PROFILE_CACHE_KEY,
                 JSON.stringify(optimizedPayload),
               );
-              setMyProfile(optimizedPayload as Profile);
             }
           } catch (syncErr) {
             console.error(
@@ -100,6 +102,7 @@ export const useSubscription = () => {
             );
           }
         }
+
         Alert.alert(t("common.success"), t("subscription.activated"), [
           {
             text: "OK",
@@ -131,7 +134,6 @@ export const useSubscription = () => {
   const isSubmitDisabled =
     !selectedPlanId || selectedPlanId === tier || isProcessing;
 
-  // handle pay......
   const handlePay = async () => {
     if (isSubmitDisabled || !user) return;
     setIsProcessing(true);
@@ -151,8 +153,8 @@ export const useSubscription = () => {
       return;
     }
 
-    // 🌟 TYPE SAFEGUARD: Confirms platform is Android to unlock properties
     let activeOfferToken = undefined;
+
     if (product.platform === "android" && product.discountOffers) {
       const promoOffer = product.discountOffers.find((offer: any) => offer.id);
       if (promoOffer) {
@@ -187,8 +189,8 @@ export const useSubscription = () => {
     isProcessing,
     isSubmitDisabled,
     availablePlans: products,
-    isLoadingPlans, // 🌟 Sent to template
-    hasError, // 🌟 Sent to template
+    isLoadingPlans,
+    hasError,
     refetchPlans: () => fetchProducts({ skus: SKUS, type: "in-app" }),
   };
 };

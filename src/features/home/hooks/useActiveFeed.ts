@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { appStorage } from "@/cacheMMKV/cacheConfig";
 import { FeedCache, FeedMode } from "../cache/feedCache";
 import { useDefaultFeed } from "./useDefaultFeed";
@@ -13,7 +13,7 @@ export function useActiveFeed(uid: string) {
   renderCount.current += 1;
   console.log(`[useActiveFeed] Render #${renderCount.current}`);
 
-  // Read initial cache values directly on mount
+  // 1. Initial MMKV state hydration
   const [mode, setMode] = useState<FeedMode>(
     () => FeedCache.getMode(uid) || "default",
   );
@@ -26,43 +26,40 @@ export function useActiveFeed(uid: string) {
 
   const blockedSet = useBlockedSet();
 
-  // Listen to MMKV updates for active mode, search queries, and filter parameters
+  // 2. Targeted MMKV Listener Guard
   useEffect(() => {
-    if (!uid) {
-      console.log("[useActiveFeed] No UID provided, listener skipped.");
-      return;
-    }
+    if (!uid) return;
 
     const keys = FeedCache.getKeys(uid);
+    const trackedKeys = new Set([
+      keys.mode,
+      keys.searchQuery,
+      keys.filterParams,
+    ]);
 
     const listener = appStorage.addOnValueChangedListener((key) => {
-      console.log(`[useActiveFeed] MMKV key changed: ${key}`);
+      if (!trackedKeys.has(key)) return;
+
+      console.log(`[useActiveFeed] Relevant MMKV key changed: ${key}`);
       if (key === keys.mode) {
-        const newMode = FeedCache.getMode(uid);
-        console.log(`[useActiveFeed] Mode updated -> ${newMode}`);
-        setMode(newMode);
-      }
-      if (key === keys.searchQuery) {
-        const newQuery = FeedCache.getSearchQuery(uid);
-        console.log(`[useActiveFeed] SearchQuery updated -> ${newQuery}`);
-        setSearchQuery(newQuery);
-      }
-      if (key === keys.filterParams) {
-        const newParams = FeedCache.getFilterParams(uid);
-        console.log(`[useActiveFeed] FilterParams updated`, newParams);
-        setFilterParams(newParams);
+        setMode(FeedCache.getMode(uid) || "default");
+      } else if (key === keys.searchQuery) {
+        setSearchQuery(FeedCache.getSearchQuery(uid));
+      } else if (key === keys.filterParams) {
+        setFilterParams(FeedCache.getFilterParams(uid));
       }
     });
 
     return () => listener.remove();
   }, [uid]);
 
-  // Sub-hooks executed conditionally based on active mode
+  // 3. Sub-hooks (ensure sub-hooks return STABLE_EMPTY_FEED when enabled is false)
   const defaultFeed = useDefaultFeed(uid, mode === "default");
   const latestFeed = useLatestFeed(uid, mode === "latest");
   const searchFeed = useSearchFeed(uid, mode === "search", searchQuery);
   const filterFeed = useFilterFeed(uid, mode === "filter", filterParams);
 
+  // 4. Resolve active feed based directly on mode
   const activeFeed = useMemo(() => {
     console.log(`[useActiveFeed] Active feed computed for mode: ${mode}`);
     switch (mode) {
@@ -77,17 +74,25 @@ export function useActiveFeed(uid: string) {
     }
   }, [mode, defaultFeed, latestFeed, searchFeed, filterFeed]);
 
+  // 5. O(1) Block filtering with memoized outputs
   const visibleProfiles = useMemo(() => {
     const rawProfiles = activeFeed.profiles || [];
-    if (blockedSet.size === 0) return rawProfiles; // O(1) direct pass-through
+    if (!blockedSet || blockedSet.size === 0) return rawProfiles;
     return rawProfiles.filter((profile) => !blockedSet.has(profile.uid));
   }, [activeFeed.profiles, blockedSet]);
 
-  return {
-    ...activeFeed,
-    profiles: visibleProfiles,
-    isLoading: Boolean(activeFeed.isLoading),
-    error: activeFeed.error || null,
-    mode,
-  };
+  console.log(
+    `[useActiveFeed] Returning feed with ${visibleProfiles.length} visible profiles (mode: ${mode})`,
+  );
+
+  return useMemo(
+    () => ({
+      ...activeFeed,
+      profiles: visibleProfiles,
+      isLoading: Boolean(activeFeed.isLoading),
+      error: activeFeed.error || null,
+      mode,
+    }),
+    [activeFeed, visibleProfiles, mode],
+  );
 }

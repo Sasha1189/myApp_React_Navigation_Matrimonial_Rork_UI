@@ -3,6 +3,7 @@ export default {
   viewPreview: "तुमचे प्रोफाईल पहा",
   managePhotos: "तुमचे फोटो Add करा",
   completion: "{{percent}}% प्रोफाईल पूर्ण झाले",
+  addVerDoc: "तुमचे ओळखपत्र जोडा",
   stats: {
     matches: " लाईक मॅचेस",
     sent: "पाठवलेले लाईक",

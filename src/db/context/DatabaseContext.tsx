@@ -5,13 +5,13 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { db } from "@/db/client";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import migrations from "../../drizzle/migrations";
-import { resetDatabase } from "@/db/recovery/recovery";
 import * as Updates from "expo-updates";
 
-// Match database name used in client configuration
+import { db, expoDb } from "@/db/client"; // Updated import to match your refactored db/index.ts
+import migrations from "../../../drizzle/migrations";
+import { resetDatabase } from "@/db/recovery/recovery";
+
 const DB_NAME = "matrimonial.db";
 
 interface DatabaseContextType {
@@ -22,9 +22,7 @@ interface DatabaseContextType {
   handleReset: () => Promise<void>;
 }
 
-const DatabaseContext = createContext<DatabaseContextType>(
-  {} as DatabaseContextType,
-);
+const DatabaseContext = createContext<DatabaseContextType | null>(null);
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -46,7 +44,14 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({
   const handleReset = useCallback(async () => {
     setIsResetting(true);
     try {
-      const success = await resetDatabase(DB_NAME); // Fixed target DB file
+      // Close active SQLite connection before deleting DB files (essential for WAL mode)
+      try {
+        expoDb.closeSync();
+      } catch (closeErr) {
+        console.warn("Could not close DB connection prior to reset:", closeErr);
+      }
+
+      const success = await resetDatabase(DB_NAME);
       if (success) {
         await Updates.reloadAsync();
       }
@@ -75,4 +80,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useDatabase = () => useContext(DatabaseContext);
+export const useDatabase = (): DatabaseContextType => {
+  const context = useContext(DatabaseContext);
+  if (!context) {
+    throw new Error("useDatabase must be used within a DatabaseProvider");
+  }
+  return context;
+};

@@ -1,3 +1,4 @@
+import { clearCacheOnLogout } from "@/cacheMMKV/cacheConfig";
 import { getAuth, signOut } from "@react-native-firebase/auth";
 import {
   getDatabase,
@@ -14,6 +15,8 @@ export async function logoutUser(uid?: string): Promise<void> {
       lastChanged: serverTimestamp(),
     }).catch((err) => console.log("Background status sync skipped:", err));
   }
+
+  clearCacheOnLogout();
 
   await signOut(getAuth());
 }

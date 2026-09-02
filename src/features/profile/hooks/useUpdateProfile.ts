@@ -1,9 +1,7 @@
-import { appStorage } from "@/cacheMMKV/cacheConfig";
+import { appStorage, PROFILE_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
 import { Profile } from "../types/profile";
 import { apiUpdateProfile } from "../api/profileApi";
 import { sanitizePayload } from "../../../utils/sanitizePayload";
-
-const PROFILE_CACHE_KEY = "self_profile_cache";
 
 export const useUpdateProfile = (
   user: any,

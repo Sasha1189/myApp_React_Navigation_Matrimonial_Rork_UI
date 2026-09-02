@@ -28,12 +28,12 @@ export const PremiumBanner: React.FC<PremiumBannerProps> = ({
         style={styles.premiumGrad}
       >
         <View style={styles.premiumContent}>
+          <View style={styles.crownCircle}>
+            <Crown size={20} color="#FFD700" />
+          </View>
           <View>
             <Text style={styles.premTitle}>{t("profile.premium.upgrade")}</Text>
             <Text style={styles.premSub}>{t("profile.premium.benefits")}</Text>
-          </View>
-          <View style={styles.crownCircle}>
-            <Crown size={20} color="#FFD700" />
           </View>
         </View>
       </LinearGradient>

@@ -1,14 +1,11 @@
 import { rtdb } from "../../../config/firebase";
-import { ref, get } from "@react-native-firebase/database";
+import { ref, set } from "@react-native-firebase/database";
 
-export const checkUserVerification = async (
-  myUid: string,
-): Promise<boolean> => {
+export const setDocPath = async (myUid: string): Promise<boolean> => {
   try {
     const verRef = ref(rtdb, `docVer/${myUid}`);
-    const snap = await get(verRef);
-
-    return snap.exists() && snap.val() === true;
+    await set(verRef, false);
+    return true;
   } catch (error) {
     console.error(
       "[checkUserVerification] Failed to fetch verification state:",

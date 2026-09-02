@@ -7,7 +7,7 @@ import { IMessage } from "../type/chattype";
 import { ReadStatus } from "./ReadStatus";
 import { Ionicons } from "@expo/vector-icons";
 
-export const MessageBubble = React.memo(
+export const ChatBubble = React.memo(
   ({
     message,
     isMe,
@@ -54,15 +54,15 @@ export const MessageBubble = React.memo(
             {
               alignSelf: isMe ? "flex-end" : "flex-start",
               backgroundColor: isMe ? theme.colors.primary + "20" : "#ECECEC",
-              padding: 10,
+              padding: 6,
               margin: 5,
-              borderRadius: 15,
+              borderRadius: 6,
               maxWidth: "80%",
               opacity: pressed ? 0.7 : 1,
             },
           ]}
         >
-          <Text style={{ fontSize: 16 }}>{message.t}</Text>
+          <Text style={{ fontSize: 14 }}>{message.t}</Text>
           <View
             style={{
               flexDirection: "row",
@@ -70,7 +70,7 @@ export const MessageBubble = React.memo(
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 10, color: "gray", marginRight: 4 }}>
+            <Text style={{ fontSize: 8, color: "gray", marginRight: 4 }}>
               {new Date(message.ts).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -106,6 +106,7 @@ export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
+      padding: theme.spacing.md,
     },
     rowContainer: {
       flexDirection: "row",

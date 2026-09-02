@@ -6,14 +6,12 @@ import React, {
   useMemo,
   ReactNode,
 } from "react";
-import { appStorage } from "@/cacheMMKV/cacheConfig";
+import { appStorage, PROFILE_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
 import { useAuth } from "@/context/AuthContext";
 import { Profile } from "../types/profile";
 import { getDefaultProfile } from "../types/getDefaultProfile";
 import { getProfile } from "../api/profileService";
 import { useUpdateProfile } from "../hooks/useUpdateProfile";
-
-export const PROFILE_CACHE_KEY = "self_profile_cache";
 
 interface ProfileContextType {
   myProfile: Profile;
@@ -52,7 +50,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // 🎯 FAST PATH: Skip state updates if local state is already hydrated from cache
       if (appStorage?.contains(PROFILE_CACHE_KEY)) {
         if (isMounted) setIsLoadingProfile(false);
         return;

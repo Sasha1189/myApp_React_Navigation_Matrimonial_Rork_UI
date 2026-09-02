@@ -1,27 +1,66 @@
-import { useEffect } from "react";
+// import { useEffect } from "react";
+// import { useAuth } from "@/context/AuthContext";
+// import { syncBlocks } from "../services/blocksSyncService";
+
+// export const useBlocksSync = (enabled: boolean = false) => {
+//   const { user } = useAuth();
+
+//   useEffect(() => {
+//     if (!enabled || !user?.uid) return;
+
+//     let isMounted = true;
+
+//     const runBlocksSync = async () => {
+//       try {
+//         await Promise.all([syncBlocks(user.uid)]);
+//       } catch (error) {
+//         console.error("[useBlocksSync] Blocks background sync failed:", error);
+//       }
+//     };
+
+//     runBlocksSync();
+
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, [enabled, user?.uid]);
+// };
+
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { syncBlocks } from "../services/blocksSyncService";
 
 export const useBlocksSync = (enabled: boolean = false) => {
   const { user } = useAuth();
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const isSyncRunningRef = useRef<boolean>(false);
+
+  const uid = user?.uid;
 
   useEffect(() => {
-    // 1. Early exit if disabled or essential user identity is missing
-    if (!enabled || !user?.uid) return;
+    // 1. Guard against unready state, disabled flag, or active sync
+    if (!enabled || !uid || isSyncRunningRef.current) return;
 
     let isMounted = true;
 
     const runBlocksSync = async () => {
-      try {
-        await Promise.all([syncBlocks(user.uid)]);
+      isSyncRunningRef.current = true;
+      setIsSyncing(true);
 
+      try {
+        await syncBlocks(uid);
+      } catch (error) {
         if (isMounted) {
-          console.log(
-            "[useBlocksSync] Blocks sync cycle completed successfully.",
+          console.error(
+            "[useBlocksSync] Blocks background sync failed:",
+            error,
           );
         }
-      } catch (error) {
-        console.error("[useBlocksSync] Blocks background sync failed:", error);
+      } finally {
+        isSyncRunningRef.current = false;
+        if (isMounted) {
+          setIsSyncing(false);
+        }
       }
     };
 
@@ -30,5 +69,7 @@ export const useBlocksSync = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, user?.uid]);
+  }, [enabled, uid]);
+
+  return { isSyncing };
 };

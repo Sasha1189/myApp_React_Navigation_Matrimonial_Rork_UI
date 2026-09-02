@@ -4,7 +4,7 @@ import { usePreventScreenCapture } from "expo-screen-capture";
 import { View, StatusBar } from "react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
-import { useDatabase } from "@/context/DatabaseContext";
+import { useDatabase } from "@/db/context/DatabaseContext";
 import { DatabaseErrorModal } from "@/db/recovery/DatabaseErrorModal";
 import { useActiveFeed } from "../hooks/useActiveFeed";
 import { VerticalSwipeList } from "../components/VerticalSwipeList";
@@ -15,7 +15,7 @@ export default function HomeScreen() {
   const { isDbReady, migrationError } = useDatabase();
   const uid = user?.uid ?? "";
 
-  usePreventScreenCapture();
+  // usePreventScreenCapture();
 
   const userGender = user?.displayName?.trim().toLowerCase();
   const isGenderReady = userGender === "male" || userGender === "female";

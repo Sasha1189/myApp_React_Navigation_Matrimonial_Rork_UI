@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "db:generate": "drizzle-kit generate",
+    "db:drop": "drizzle-kit drop"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

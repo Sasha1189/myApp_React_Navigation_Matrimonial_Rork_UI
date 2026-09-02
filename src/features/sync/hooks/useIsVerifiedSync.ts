@@ -1,34 +1,84 @@
-import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { appStorage, IS_VERIFIED_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
+// import { useEffect } from "react";
+// import { useMyProfile } from "@/features/profile/context/ProfileContext";
+// import { checkUserVerification } from "@/features/sync/services/verificationService";
+
+// export const useIsVerifiedSync = (uid?: string, enabled: boolean = false) => {
+//   const { myProfile, setMyProfile } = useMyProfile();
+//   const isVerified = myProfile?.iv;
+
+//   useEffect(() => {
+//     if (!enabled || !uid || isVerified) return;
+
+//     const syncVerification = async () => {
+//       try {
+//         const isVerifiedRTDB = await checkUserVerification(uid);
+
+//         if (isVerifiedRTDB) {
+//           setMyProfile({ ...myProfile, iv: isVerifiedRTDB });
+//         }
+//       } catch (error) {
+//         console.error(
+//           "[useIsVerifiedSync] Failed to sync user verification status:",
+//           error,
+//         );
+//       }
+//     };
+
+//     syncVerification();
+//   }, [uid, enabled]);
+// };
+
+import { useEffect, useRef, useState } from "react";
+import { useMyProfile } from "@/features/profile/context/ProfileContext";
 import { checkUserVerification } from "@/features/sync/services/verificationService";
 
 export const useIsVerifiedSync = (uid?: string, enabled: boolean = false) => {
-  const { isVerified, setIsVerified } = useAuth();
+  const { myProfile, setMyProfile } = useMyProfile();
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const isSyncRunningRef = useRef<boolean>(false);
+
+  const isVerified = Boolean(myProfile?.iv);
 
   useEffect(() => {
-    // 1. Guard against disabled flag, missing UID, or already verified status
-    if (!enabled || !uid || isVerified) return;
+    // 1. Guard against unready state, disabled flag, already verified, or active sync
+    if (!enabled || !uid || isVerified || isSyncRunningRef.current) return;
+
+    let isMounted = true;
 
     const syncVerification = async () => {
+      isSyncRunningRef.current = true;
+      setIsSyncing(true);
+
       try {
         const isVerifiedRTDB = await checkUserVerification(uid);
 
-        if (isVerifiedRTDB) {
-          // 2. Persist to MMKV for offline boot
-          appStorage.set(IS_VERIFIED_CACHE_KEY, true);
-
-          // 3. Update React AuthContext state to trigger immediate router unlock
-          setIsVerified?.(true);
+        if (isMounted && isVerifiedRTDB) {
+          // Use functional updater to prevent overwriting concurrent profile changes
+          setMyProfile((prevProfile) =>
+            prevProfile ? { ...prevProfile, iv: isVerifiedRTDB } : prevProfile,
+          );
         }
       } catch (error) {
-        console.error(
-          "[useIsVerifiedSync] Failed to sync user verification status:",
-          error,
-        );
+        if (isMounted) {
+          console.error(
+            "[useIsVerifiedSync] Failed to sync user verification status:",
+            error,
+          );
+        }
+      } finally {
+        isSyncRunningRef.current = false;
+        if (isMounted) {
+          setIsSyncing(false);
+        }
       }
     };
 
     syncVerification();
-  }, [uid, enabled, isVerified, setIsVerified]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [uid, enabled, isVerified, setMyProfile]);
+
+  return { isSyncing };
 };

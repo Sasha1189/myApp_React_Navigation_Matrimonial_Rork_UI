@@ -19,8 +19,8 @@ import {
 import { useTabSwipe } from "../hooks/useTabSwipe";
 import { TabButton } from "../components/TabButton";
 import { EmptyState } from "../components/EmptyState";
-import { UserBanner } from "../components/UserBanner";
-import { ChatBanner } from "../components/ChatBanner";
+import { LikedUserBanner } from "../components/LikedUserBanner";
+import { MessageBanner } from "../components/MessageBanner";
 import { ChatFooter } from "../components/ChatFooter";
 import { ChatFloatingUI } from "@/features/messages/components/ChatFloatingUI";
 import { useTranslation } from "react-i18next";
@@ -34,6 +34,8 @@ export default function MessagesScreen() {
   const [activeTab, setActiveTab] = useState<"chats" | "sent" | "received">(
     "chats",
   );
+  const uid = user?.uid;
+  const safeUid = uid ?? "";
 
   const {
     banners: chatBanners,
@@ -44,14 +46,12 @@ export default function MessagesScreen() {
     hasMore,
     reset,
     isLoading: chatsLoading,
-  } = useMessageInbox(user?.uid || "");
+  } = useMessageInbox(safeUid);
 
-  const { profiles: likesSent, isLoading: sentLoading } = useLikeSent(
-    user?.uid || "",
-  );
+  const { profiles: likesSent, isLoading: sentLoading } = useLikeSent(safeUid);
 
   const { profiles: likesReceived, isLoading: recLoading } = useLikeReceived(
-    user?.uid || "",
+    safeUid,
     tier,
   );
 
@@ -115,12 +115,6 @@ export default function MessagesScreen() {
         </View>
       </View>
 
-      {/* 2. RHF Style Section Title */}
-      <View style={styles.titleWrapper}>
-        <Text style={styles.sectionTitle}>{t("chat.recentActivity")}</Text>
-        <View style={styles.titleUnderline} />
-      </View>
-
       {isLoadingState && currentData.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator color={theme.colors.primary} size="small" />
@@ -136,9 +130,9 @@ export default function MessagesScreen() {
             keyExtractor={(item) => item.roomId || item.uid}
             renderItem={({ item }) =>
               activeTab === "chats" ? (
-                <ChatBanner item={item} uid={user?.uid!} />
+                <MessageBanner item={item} uid={user?.uid!} />
               ) : (
-                <UserBanner item={item} type={activeTab} />
+                <LikedUserBanner item={item} type={activeTab} />
               )
             }
             contentContainerStyle={styles.listContent}
@@ -186,28 +180,9 @@ export const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-evenly",
-      paddingHorizontal: theme.spacing.md,
       paddingBottom: theme.spacing.sm,
     },
-    titleWrapper: {
-      paddingHorizontal: theme.spacing.lg,
-      marginTop: theme.spacing.lg,
-      marginBottom: theme.spacing.sm,
-    },
-    sectionTitle: {
-      fontSize: theme.fontSize.xs, // Small and sophisticated
-      fontWeight: "800",
-      color: theme.colors.textLight,
-      textTransform: "uppercase",
-      letterSpacing: 1.5,
-    },
-    titleUnderline: {
-      height: 2,
-      width: 24,
-      backgroundColor: theme.colors.primary,
-      marginTop: 4,
-      borderRadius: 1,
-    },
+
     listContent: {
       paddingHorizontal: theme.spacing.md,
       paddingTop: theme.spacing.sm,

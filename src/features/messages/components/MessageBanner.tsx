@@ -8,7 +8,7 @@ import { useAppNavigation } from "../../../navigation/hooks";
 import { formatTime } from "../../../utils/dateUtils"; // Helper for ts
 import { IInboxItem } from "../type/chattype";
 
-export const ChatBanner = React.memo(
+export const MessageBanner = React.memo(
   ({ item, uid }: { item: IInboxItem; uid: string }) => {
     const { theme } = useAppTheme();
     const styles = useStyles(createStyles);
@@ -31,7 +31,7 @@ export const ChatBanner = React.memo(
 
     return (
       <TouchableOpacity
-        style={styles.activityCard} // Removed unreadCard from here for a cleaner look
+        style={styles.card} // Removed unreadCard from here for a cleaner look
         onPress={handlePress}
         activeOpacity={0.6}
       >
@@ -80,22 +80,24 @@ export const ChatBanner = React.memo(
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    activityCard: {
+    card: {
       flexDirection: "row",
       alignItems: "center",
+      padding: theme.spacing.sm,
+      paddingRight: theme.spacing.lg,
       backgroundColor: theme.colors.card,
-      paddingVertical: theme.spacing.md,
-      paddingHorizontal: theme.spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border, // Border instead of shadow for RHF look
+      borderRadius: 12,
+      borderBottomWidth: 0.5,
+      borderColor: theme.colors.border,
+      marginBottom: theme.spacing.xs,
     },
     imageWrapper: {
       position: "relative",
     },
     activityImage: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      width: 38,
+      height: 38,
+      borderRadius: 19,
       marginRight: theme.spacing.md,
       backgroundColor: theme.colors.background,
       borderWidth: 1,
@@ -112,13 +114,13 @@ export const createStyles = (theme: AppTheme) =>
       marginBottom: 2,
     },
     name: {
-      fontSize: theme.fontSize.md,
+      fontSize: theme.fontSize.sm,
       fontWeight: "500", // Standard weight
       color: theme.colors.text,
-      letterSpacing: 0.2,
+      letterSpacing: 0.3,
     },
     unreadName: {
-      fontWeight: "700", // Bold only when unread
+      fontWeight: "600", // Bold only when unread
     },
     time: {
       fontSize: theme.fontSize.xs,
@@ -136,7 +138,7 @@ export const createStyles = (theme: AppTheme) =>
     },
     msg: {
       flex: 1,
-      fontSize: theme.fontSize.sm,
+      fontSize: theme.fontSize.xs,
       color: theme.colors.textLight,
       lineHeight: 20,
     },

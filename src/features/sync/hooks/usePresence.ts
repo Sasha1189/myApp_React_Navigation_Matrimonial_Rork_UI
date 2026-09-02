@@ -1,60 +1,139 @@
-import { useEffect } from "react";
-import { useAuth } from "@/context";
+// import { useEffect } from "react";
+// import { useAuth } from "@/context";
+// import { AppState, AppStateStatus } from "react-native";
+// import { presenceService } from "../services/presenceService";
+
+// export const usePresence = (enabled: boolean = false) => {
+//   const { user, tier } = useAuth();
+//   useEffect(() => {
+//     // 1. Early exit if disabled or essential user identity is missing
+//     if (!enabled || !user?.uid) return;
+
+//     const userGender = user.displayName?.trim().toLowerCase();
+//     const isGenderValid = userGender === "male" || userGender === "female";
+
+//     if (!isGenderValid) return;
+
+//     const uid = user.uid;
+
+//     // 1. Wake up socket & sync inbox
+//     presenceService.activateSocket();
+//     presenceService.setInboxSync(uid, true);
+//     presenceService
+//       .setUserStatus(uid, "online")
+//       .catch((err) =>
+//         console.error("[usePresence] Initial online status failed:", err),
+//       );
+
+//     // 2. Attach presence listener
+//     const cleanupPresenceListener = presenceService.setupPresenceListener(uid);
+
+//     // 3. Attach AppState lifecycle listener
+//     const handleAppState = async (nextAppState: AppStateStatus) => {
+//       try {
+//         if (nextAppState === "active") {
+//           presenceService.activateSocket();
+//           await presenceService.setUserStatus(uid, "online");
+//         } else if (nextAppState === "background") {
+//           await presenceService.setUserStatus(uid, "offline");
+//           presenceService.deactivateSocket();
+//         }
+//       } catch (lifecycleErr) {
+//         console.error(
+//           "[usePresence] AppState lifecycle update rejected:",
+//           lifecycleErr,
+//         );
+//       }
+//     };
+
+//     const appStateSub = AppState.addEventListener("change", handleAppState);
+
+//     // 4. Cleanup on unmount or user change
+//     return () => {
+//       cleanupPresenceListener();
+//       appStateSub.remove();
+//       presenceService.setInboxSync(uid, false);
+//       presenceService.setUserStatus(uid, "offline").catch(() => {});
+//       presenceService.deactivateSocket();
+//     };
+//   }, [enabled, user?.uid, user?.displayName, tier]);
+// };
+
+import { useEffect, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
+import { useAuth } from "@/context";
 import { presenceService } from "../services/presenceService";
 
 export const usePresence = (enabled: boolean = false) => {
-  const { user, tier } = useAuth();
+  const { user } = useAuth();
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+
+  const uid = user?.uid;
+  const gender = user?.displayName?.trim().toLowerCase();
+  const isValidGender = gender === "male" || gender === "female";
+
   useEffect(() => {
-    // 1. Early exit if disabled or essential user identity is missing
-    if (!enabled || !user?.uid) return;
+    // 1. Guard against invalid execution states
+    if (!enabled || !uid || !isValidGender) return;
 
-    const userGender = user.displayName?.trim().toLowerCase();
-    const isGenderValid = userGender === "male" || userGender === "female";
+    let isEffectActive = true;
 
-    if (!isGenderValid) return;
+    const initializePresence = async () => {
+      try {
+        presenceService.activateSocket();
+        presenceService.setInboxSync(uid, true);
 
-    const uid = user.uid;
+        if (isEffectActive) {
+          await presenceService.setUserStatus(uid, "online");
+        }
+      } catch (err) {
+        console.error("[usePresence] Initial online status failed:", err);
+      }
+    };
 
-    // 1. Wake up socket & sync inbox
-    presenceService.activateSocket();
-    presenceService.setInboxSync(uid, true);
-    presenceService
-      .setUserStatus(uid, "online")
-      .catch((err) =>
-        console.error("[usePresence] Initial online status failed:", err),
-      );
-
-    // 2. Attach presence listener
+    // 2. Attach listeners & activate
+    initializePresence();
     const cleanupPresenceListener = presenceService.setupPresenceListener(uid);
 
-    // 3. Attach AppState lifecycle listener
+    // 3. AppState lifecycle listener with guarded execution order
     const handleAppState = async (nextAppState: AppStateStatus) => {
+      const currentAppState = appStateRef.current;
+      appStateRef.current = nextAppState;
+
       try {
-        if (nextAppState === "active") {
+        if (
+          currentAppState.match(/inactive|background/) &&
+          nextAppState === "active"
+        ) {
           presenceService.activateSocket();
           await presenceService.setUserStatus(uid, "online");
-        } else if (nextAppState === "background") {
-          await presenceService.setUserStatus(uid, "offline");
+        } else if (
+          currentAppState === "active" &&
+          nextAppState.match(/inactive|background/)
+        ) {
+          // Await status dispatch BEFORE closing socket channel
+          await presenceService.setUserStatus(uid, "offline").catch(() => {});
           presenceService.deactivateSocket();
         }
       } catch (lifecycleErr) {
-        console.error(
-          "[usePresence] AppState lifecycle update rejected:",
-          lifecycleErr,
-        );
+        console.error("[usePresence] AppState update failed:", lifecycleErr);
       }
     };
 
     const appStateSub = AppState.addEventListener("change", handleAppState);
 
-    // 4. Cleanup on unmount or user change
+    // 4. Clean cleanup on unmount or identity change
     return () => {
-      cleanupPresenceListener();
+      isEffectActive = false;
       appStateSub.remove();
+      cleanupPresenceListener();
+
       presenceService.setInboxSync(uid, false);
-      presenceService.setUserStatus(uid, "offline").catch(() => {});
-      presenceService.deactivateSocket();
+      // Fire-and-forget offline status before closing socket
+      presenceService.setUserStatus(uid, "offline").finally(() => {
+        presenceService.deactivateSocket();
+      });
     };
-  }, [enabled, user?.uid, user?.displayName, tier]);
+    // Removed 'tier' and stabilized primitives
+  }, [enabled, uid, gender, isValidGender]);
 };

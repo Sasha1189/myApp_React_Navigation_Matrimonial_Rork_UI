@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import Svg, { Circle } from "react-native-svg";
 import { RefreshCw } from "lucide-react-native";
-import { formatDOB } from "../../../../utils/dateUtils";
+import { formatDOB } from "@/utils/dateUtils";
 import { useTranslation } from "react-i18next";
-import { resolvePhotoUri } from "../../../../utils/photoUtils";
+import { resolvePhotoUri } from "@/utils/photoUtils";
 
 interface SlimHeaderProps {
   profile: any;

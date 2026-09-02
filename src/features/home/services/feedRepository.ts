@@ -1,20 +1,22 @@
 import { db } from "@/db/client";
-import { sqlProfileTable } from "@/db/schema/sqlprofiles";
-import { parseProfileRow } from "@/utils/parseProfile";
+import { parseProfileRow } from "@/db/utils/parseProfile";
 import {
   asc,
   desc,
   gt,
   lte,
-  count,
   lt,
   and,
   gte,
   eq,
   like,
   or,
+  inArray,
 } from "drizzle-orm";
 import { Profile } from "@/features/profile/types/profile";
+import { UserTier } from "@/context/types/auth.types";
+import { appStorage, TIER_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
+import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
 import { BlocksCache } from "@/features/block/cache/blockCache";
 import { LikesCache } from "@/features/likes/cache/likesCache";
 
@@ -35,7 +37,23 @@ export interface InitialFeedResult {
   profiles: Profile[];
   initialIndex: number;
 }
+export type FeedTable = typeof freeUserFeeds | typeof paidUserFeeds;
 
+/**
+ * Resolves active feed table based on user tier in storage.
+ */
+export const resolveFeedTable = (overrideIsFree?: boolean): FeedTable => {
+  if (typeof overrideIsFree === "boolean") {
+    return overrideIsFree ? freeUserFeeds : paidUserFeeds;
+  }
+
+  const cachedTier = appStorage.getString(TIER_CACHE_KEY) as
+    | UserTier
+    | undefined;
+  const isPaid = cachedTier === "basic" || cachedTier === "premium";
+
+  return isPaid ? paidUserFeeds : freeUserFeeds;
+};
 /**
  * Reusable ingestion filter: Excludes blocked users and annotates liked status
  * synchronously using local MMKV cache at fetch time.
@@ -46,12 +64,30 @@ export const processFeedProfiles = (profiles: Profile[]): Profile[] => {
   const blockedSet = new Set(BlocksCache.getMergedIds());
   const likedSet = new Set(LikesCache.getIds());
 
-  return profiles
-    .filter((p) => p?.uid && !blockedSet.has(p.uid))
-    .map((p) => ({
-      ...p,
-      liked: likedSet.has(p.uid),
-    }));
+  const inactiveUids: string[] = [];
+  const validProfiles: Profile[] = [];
+
+  // Single pass through the profiles array
+  for (let i = 0; i < profiles.length; i++) {
+    const p = profiles[i];
+    if (!p?.uid) continue;
+
+    if (p.ia === false) {
+      inactiveUids.push(p.uid);
+    } else if (!blockedSet.has(p.uid)) {
+      validProfiles.push({
+        ...p,
+        liked: likedSet.has(p.uid),
+      });
+    }
+  }
+
+  // Trigger background purge if any inactive profiles were found
+  if (inactiveUids.length > 0) {
+    purgeInactiveProfilesFromDb(inactiveUids);
+  }
+
+  return validProfiles;
 };
 
 export const feedRepository = {
@@ -62,18 +98,11 @@ export const feedRepository = {
     lastCa?: string | Date | number | null,
     pastLimit: number = PAST_BATCH_SIZE,
     futureLimit: number = FUTURE_BATCH_SIZE,
+    overrideIsFree?: boolean,
   ): Promise<InitialFeedResult> {
+    const table = resolveFeedTable(overrideIsFree);
+
     try {
-      // 1. Fetch Total Database Count
-      const [countResult] = db
-        .select({ total: count() })
-        .from(sqlProfileTable)
-        .all();
-
-      const totalDbLength = countResult?.total ?? 0;
-      console.log(`[feedRepository] Total Profiles in DB: ${totalDbLength}`);
-
-      // --------------------------------
       const normalizedCa =
         lastCa instanceof Date
           ? lastCa.getTime()
@@ -85,33 +114,24 @@ export const feedRepository = {
 
       // 1. Cold Start: No previous lastCa
       if (!normalizedCa || normalizedCa === 0) {
-        console.log(
-          `[feedRepository] Cold start: Fetching initial ${futureLimit} profiles...`,
-        );
         const rows = db
           .select()
-          .from(sqlProfileTable)
-          .orderBy(asc(sqlProfileTable.ca))
+          .from(table)
+          .orderBy(asc(table.ca))
           .limit(futureLimit)
           .all();
 
         const profiles = processFeedProfiles(rows.map(parseProfileRow));
-        console.log(
-          `[feedRepository] Cold start loaded ${profiles.length} profiles.`,
-        );
 
         return { profiles, initialIndex: 0 };
       }
 
       // 2. Returning User: Fetch past profiles (<= lastCa)
-      console.log(
-        `[feedRepository] Fetching ${pastLimit} past profiles (ca < ${normalizedCa})...`,
-      );
       const pastRows = db
         .select()
-        .from(sqlProfileTable)
-        .where(lt(sqlProfileTable.ca, normalizedCa))
-        .orderBy(desc(sqlProfileTable.ca))
+        .from(table)
+        .where(lt(table.ca, normalizedCa))
+        .orderBy(desc(table.ca))
         .limit(pastLimit)
         .all();
 
@@ -121,14 +141,11 @@ export const feedRepository = {
       );
 
       // 3. Returning User: Fetch future profiles (> lastCa)
-      console.log(
-        `[feedRepository] Fetching ${futureLimit} future profiles (ca >= ${normalizedCa})...`,
-      );
       const futureRows = db
         .select()
-        .from(sqlProfileTable)
-        .where(gte(sqlProfileTable.ca, normalizedCa))
-        .orderBy(asc(sqlProfileTable.ca))
+        .from(table)
+        .where(gte(table.ca, normalizedCa))
+        .orderBy(asc(table.ca))
         .limit(futureLimit)
         .all();
 
@@ -139,20 +156,9 @@ export const feedRepository = {
       const combinedProfiles = [...pastProfiles, ...futureProfiles];
 
       const initialIndex = pastProfiles?.length > 0 ? pastProfiles.length : 0;
-
       console.log(
-        `[feedRepository] Feed Initialized:\n` +
-          `  - Past Profiles Loaded: ${pastProfiles.length}\n` +
-          `  - Future Profiles Loaded: ${futureProfiles.length}\n` +
-          `  - Target Initial Index: ${initialIndex}\n` +
-          combinedProfiles
-            .map(
-              (p, i) =>
-                `  [Index ${i}${i === initialIndex ? " *ACTIVE*" : ""}] UID: ${p.uid} | ca: ${p.ca}`,
-            )
-            .join("\n"),
+        `[feedRepository.getInitialFeed] Loaded ${combinedProfiles.length} `,
       );
-
       return { profiles: combinedProfiles, initialIndex };
     } catch (error) {
       console.error("[feedRepository] Error loading initial feed:", error);
@@ -166,9 +172,11 @@ export const feedRepository = {
   async getNextFeedPage(
     lastCa?: string | Date | number | null,
     limit: number = FUTURE_BATCH_SIZE,
+    overrideIsFree?: boolean,
   ): Promise<Profile[]> {
     try {
       if (!lastCa) return [];
+      const table = resolveFeedTable(overrideIsFree);
 
       const normalizedCa =
         lastCa instanceof Date
@@ -179,15 +187,11 @@ export const feedRepository = {
               : Number(lastCa)
             : lastCa;
 
-      console.log(
-        `[feedRepository] Fetching next batch (ca > ${normalizedCa}, limit: ${limit})...`,
-      );
-
       const rows = db
         .select()
-        .from(sqlProfileTable)
-        .where(gt(sqlProfileTable.ca, normalizedCa))
-        .orderBy(asc(sqlProfileTable.ca))
+        .from(table)
+        .where(gt(table.ca, normalizedCa))
+        .orderBy(asc(table.ca))
         .limit(limit)
         .all();
 
@@ -201,12 +205,12 @@ export const feedRepository = {
   /**
    * Fetch initial batch of profiles ordered by updated_at (ua) descending
    */
-  getLatestProfiles: (limit: number = 50) => {
-    console.log(`[feedRepository] Fetching latest ${limit} profiles...`);
+  getLatestProfiles: (limit: number = 50, overrideIsFree?: boolean) => {
+    const table = resolveFeedTable(overrideIsFree);
     const rows = db
       .select()
-      .from(sqlProfileTable)
-      .orderBy(desc(sqlProfileTable.ua))
+      .from(table)
+      .orderBy(desc(table.ua))
       .limit(limit)
       .all();
 
@@ -216,15 +220,17 @@ export const feedRepository = {
   /**
    * Fetch next batch of older profiles where ua < lastUa
    */
-  getMoreLatestProfiles: (lastUa: number, limit: number = 50) => {
-    console.log(
-      `[feedRepository] Fetching next ${limit} profiles (ua < ${lastUa})...`,
-    );
+  getMoreLatestProfiles: (
+    lastUa: number,
+    limit: number = 50,
+    overrideIsFree?: boolean,
+  ) => {
+    const table = resolveFeedTable(overrideIsFree);
     const rows = db
       .select()
-      .from(sqlProfileTable)
-      .where(lt(sqlProfileTable.ua, lastUa))
-      .orderBy(desc(sqlProfileTable.ua))
+      .from(table)
+      .where(lt(table.ua, lastUa))
+      .orderBy(desc(table.ua))
       .limit(limit)
       .all();
 
@@ -237,28 +243,29 @@ export const feedRepository = {
   buildFilterConditions: (filters: any) => {
     const conditions: any[] = [];
     if (!filters) return conditions;
+    const table = resolveFeedTable();
 
     if (filters.maxAge) {
       const ageInt = parseInt(filters.maxAge, 10);
       const cutoffDate = new Date();
       cutoffDate.setFullYear(cutoffDate.getFullYear() - ageInt);
-      conditions.push(gte(sqlProfileTable.db, cutoffDate.getTime()));
+      conditions.push(gte(table.db, cutoffDate.getTime()));
     }
 
     if (filters.maxHeight) {
-      conditions.push(lte(sqlProfileTable.ht, Number(filters.maxHeight)));
+      conditions.push(lte(table.ht, Number(filters.maxHeight)));
     }
 
     if (filters.nativePlace) {
-      conditions.push(eq(sqlProfileTable.np, filters.nativePlace));
+      conditions.push(eq(table.np, filters.nativePlace));
     }
 
     if (filters.minIncome) {
-      conditions.push(gte(sqlProfileTable.ai, Number(filters.minIncome)));
+      conditions.push(gte(table.ai, Number(filters.minIncome)));
     }
 
     if (filters.maritalStatus !== undefined && filters.maritalStatus !== "") {
-      conditions.push(eq(sqlProfileTable.ms, Number(filters.maritalStatus)));
+      conditions.push(eq(table.ms, Number(filters.maritalStatus)));
     }
 
     return conditions;
@@ -271,16 +278,14 @@ export const feedRepository = {
     filters: any,
     limit: number = 50,
     offset: number = 0,
+    overrideIsFree?: boolean,
   ) => {
-    console.log(
-      `[feedRepository] Fetching filtered profiles (limit: ${limit}, offset: ${offset})...`,
-    );
-
+    const table = resolveFeedTable(overrideIsFree);
     const conditions = feedRepository.buildFilterConditions(filters);
 
     const rows = db
       .select()
-      .from(sqlProfileTable)
+      .from(table)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .limit(limit)
       .offset(offset)
@@ -292,28 +297,71 @@ export const feedRepository = {
   /**
    * Search profiles by first or last name with offset pagination
    */
-  searchProfiles: (query: string, limit: number = 20, offset: number = 0) => {
+  searchProfiles: (
+    query: string,
+    limit: number = 20,
+    offset: number = 0,
+    overrideIsFree?: boolean,
+  ) => {
     const cleanQuery = query?.trim();
     if (!cleanQuery) return [];
 
-    console.log(
-      `[feedRepository] Searching profiles for "${cleanQuery}" (limit: ${limit}, offset: ${offset})...`,
-    );
+    const table = resolveFeedTable(overrideIsFree);
     const searchPattern = `${cleanQuery}%`;
 
     const rows = db
       .select()
-      .from(sqlProfileTable)
-      .where(
-        or(
-          like(sqlProfileTable.fn, searchPattern),
-          like(sqlProfileTable.ln, searchPattern),
-        ),
-      )
+      .from(table)
+      .where(or(like(table.fn, searchPattern), like(table.ln, searchPattern)))
       .limit(limit)
       .offset(offset)
       .all();
 
     return processFeedProfiles(rows.map(parseProfileRow));
   },
+
+  /**
+   * Hydrates profiles from local SQLite matching the provided UIDs.
+   * Preserves the exact array order passed in (e.g. chronological sorting).
+   */
+  async fetchProfilesByUids(
+    uids: string[],
+    overrideIsFree?: boolean,
+  ): Promise<Profile[]> {
+    if (!uids || uids.length === 0) return [];
+    const table = resolveFeedTable(overrideIsFree);
+
+    try {
+      const results = await db
+        .select()
+        .from(table)
+        .where(inArray(table.uid, uids));
+
+      const Profiles = results.map(parseProfileRow);
+
+      const profileMap = new Map(Profiles.map((p) => [p.uid, p as Profile]));
+      return uids
+        .map((uid) => profileMap.get(uid))
+        .filter((p): p is Profile => Boolean(p));
+    } catch (error) {
+      console.error("[profileService] Failed to load profiles by UIDs:", error);
+      return [];
+    }
+  },
+};
+
+/**
+ * Background deletion task for inactive SQLite profile rows
+ */
+const purgeInactiveProfilesFromDb = async (
+  uids: string[],
+  overrideIsFree?: boolean,
+): Promise<void> => {
+  if (!uids || uids.length === 0) return;
+  const table = resolveFeedTable(overrideIsFree);
+  try {
+    await db.delete(table).where(inArray(table.uid, uids));
+  } catch (err) {
+    console.error("[FeedSync] Failed to purge inactive profiles from DB:", err);
+  }
 };

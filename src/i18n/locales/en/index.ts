@@ -15,6 +15,7 @@ import editor from "./editor";
 import alerts from "./alerts";
 import filters from "./filters";
 import search from "./search";
+import doc from "./doc";
 
 export default {
   auth,
@@ -34,4 +35,5 @@ export default {
   common,
   filters,
   search,
+  doc,
 };

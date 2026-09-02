@@ -7,6 +7,7 @@ export default {
   startTrial: "₹१ मध्ये प्रीमियम अनुभव घ्या",
   payGoogle: "सहभाग नोंदवा आणि सहकार्य करा", // "Register participation and cooperate"
   currentPlan: "सध्याचे योगदान",
+  expired: "संपलेला आहे",
   free: "पाहुणे", // "Guest"
   plans: {
     basic: {

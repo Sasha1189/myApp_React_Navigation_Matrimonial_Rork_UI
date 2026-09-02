@@ -15,7 +15,7 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useChatSession } from "../hooks/useChatSession";
-import { MessageBubble } from "../components/MessageBubble";
+import { ChatBubble } from "../components/ChatBubble";
 import { ChatInput } from "../components/ChatInput";
 import { useAppNavigation } from "src/navigation/hooks";
 import { ChatListHelper } from "../components/ChatListHelper";
@@ -180,7 +180,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
                 );
               }
               return (
-                <MessageBubble
+                <ChatBubble
                   message={item}
                   isMe={item.s === uid}
                   onLongPress={handleMessageLongPress}

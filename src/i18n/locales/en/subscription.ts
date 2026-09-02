@@ -6,7 +6,8 @@ export default {
   mostPopular: "Most Loved", // Warmer than "Popular"
   startTrial: "Experience Premium for ₹1",
   payGoogle: "Contribute & Join", // Less transactional
-  currentPlan: "Your Current Contribution",
+  currentPlan: "Active",
+  expired: "Expired",
   plans: {
     basic: {
       name: "Community Supporter", // Emotional label
@@ -57,7 +58,7 @@ export default {
   //...
   choosePlan: "Choose a Plan",
 
-  onceYear: "Once a year",
+  onceYear: "yr",
 
   loadingStore: "Fetching items from Play Store...",
   loadFailed: "Unable to load pricing options",

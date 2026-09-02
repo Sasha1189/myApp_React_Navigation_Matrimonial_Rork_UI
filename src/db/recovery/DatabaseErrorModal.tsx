@@ -1,9 +1,17 @@
 import React, { useState } from "react";
-import { Modal, View, Text, Button, StyleSheet } from "react-native";
-import { useDatabase } from "@/context/DatabaseContext";
+import {
+  Modal,
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import { useDatabase } from "@/db/context/DatabaseContext";
 
 export function DatabaseErrorModal() {
-  const { migrationError, handleRetry, handleReset } = useDatabase();
+  const { migrationError, handleRetry, handleReset, isResetting } =
+    useDatabase();
   const [retryCount, setRetryCount] = useState(0);
 
   if (!migrationError) return null;
@@ -16,7 +24,7 @@ export function DatabaseErrorModal() {
   const hasAttemptedRetry = retryCount > 0;
 
   return (
-    <Modal visible={true} transparent animationType="slide">
+    <Modal visible={!!migrationError} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.card}>
           <Text style={styles.title}>Database Sync Issue</Text>
@@ -26,20 +34,35 @@ export function DatabaseErrorModal() {
               : "We encountered a problem setting up local offline storage. Please tap Retry to reconnect."}
           </Text>
 
-          <View style={styles.actions}>
-            <Button
-              title={hasAttemptedRetry ? "Try Again" : "Retry"}
-              onPress={onRetry}
-            />
+          {/* Dev-only detail view to inspect migration errors */}
+          {__DEV__ && migrationError?.message && (
+            <Text style={styles.errorDetails}>
+              Debug Error: {migrationError.message}
+            </Text>
+          )}
 
-            {hasAttemptedRetry && (
+          <View style={styles.actions}>
+            {isResetting ? (
+              <ActivityIndicator size="small" color="#d9534f" />
+            ) : (
               <>
-                <View style={styles.spacer} />
                 <Button
-                  title="Reset Local Storage"
-                  color="#d9534f"
-                  onPress={handleReset}
+                  title={hasAttemptedRetry ? "Try Again" : "Retry"}
+                  onPress={onRetry}
+                  disabled={isResetting}
                 />
+
+                {hasAttemptedRetry && (
+                  <>
+                    <View style={styles.spacer} />
+                    <Button
+                      title="Reset Local Storage"
+                      color="#d9534f"
+                      onPress={handleReset}
+                      disabled={isResetting}
+                    />
+                  </>
+                )}
               </>
             )}
           </View>
@@ -66,6 +89,15 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   body: { fontSize: 14, color: "#444", marginBottom: 20 },
+  errorDetails: {
+    fontSize: 12,
+    color: "#b91c1c",
+    backgroundColor: "#fef2f2",
+    padding: 8,
+    borderRadius: 6,
+    marginBottom: 16,
+    fontFamily: "monospace",
+  },
   actions: { marginTop: 10 },
   spacer: { height: 10 },
 });

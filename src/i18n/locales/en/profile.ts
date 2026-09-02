@@ -1,8 +1,9 @@
 export default {
-  editProfile: "Create My Profile",
+  editProfile: "Create Profile",
   editAbout: "Edit",
-  viewPreview: "Preview My Profile",
+  viewPreview: "Preview Profile",
   managePhotos: "Add Photos",
+  addVerDoc: "Add Verification Document",
   completion: "{{percent}}% Profile Completed",
   stats: {
     matches: "Like Matches",

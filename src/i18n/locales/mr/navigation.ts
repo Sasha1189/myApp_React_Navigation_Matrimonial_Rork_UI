@@ -6,6 +6,7 @@ export default {
   details: "प्रोफाइल माहिती",
   editProfile: "प्रोफाइल बदला",
   managePhotos: "फोटो जोडा",
+  manageverdoc: "पडताळणी",
   settings: "सेटिंग्ज",
   editAbout: "माझ्याबद्दल माहिती",
   editPersonal: "वैयक्तिक माहिती",

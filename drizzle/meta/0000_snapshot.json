@@ -1,11 +1,11 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b144b5df-05c2-4acc-bded-57ceca47568f",
+  "id": "30c5c885-5111-4866-82b3-d2afc5f25191",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "sql_profile_table": {
-      "name": "sql_profile_table",
+    "free_user_feeds": {
+      "name": "free_user_feeds",
       "columns": {
         "uid": {
           "name": "uid",
@@ -93,43 +93,182 @@
         }
       },
       "indexes": {
-        "idx_ca": {
-          "name": "idx_ca",
+        "idx_free_ca": {
+          "name": "idx_free_ca",
           "columns": [
             "ca"
           ],
           "isUnique": false
         },
-        "idx_ua": {
-          "name": "idx_ua",
+        "idx_free_ua": {
+          "name": "idx_free_ua",
           "columns": [
             "ua"
           ],
           "isUnique": false
         },
-        "idx_fn": {
-          "name": "idx_fn",
+        "idx_free_fn": {
+          "name": "idx_free_fn",
           "columns": [
             "fn"
           ],
           "isUnique": false
         },
-        "idx_ln": {
-          "name": "idx_ln",
+        "idx_free_ln": {
+          "name": "idx_free_ln",
           "columns": [
             "ln"
           ],
           "isUnique": false
         },
-        "idx_np": {
-          "name": "idx_np",
+        "idx_free_np": {
+          "name": "idx_free_np",
           "columns": [
             "np"
           ],
           "isUnique": false
         },
-        "idx_filter_matrix": {
-          "name": "idx_filter_matrix",
+        "idx_free_filter_matrix": {
+          "name": "idx_free_filter_matrix",
+          "columns": [
+            "ms",
+            "ai",
+            "db"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "paid_user_feeds": {
+      "name": "paid_user_feeds",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ca": {
+          "name": "ca",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ua": {
+          "name": "ua",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fn": {
+          "name": "fn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ln": {
+          "name": "ln",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "db": {
+          "name": "db",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ht": {
+          "name": "ht",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "np": {
+          "name": "np",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ai": {
+          "name": "ai",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ms": {
+          "name": "ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ir": {
+          "name": "ir",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "profile_data": {
+          "name": "profile_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_paid_ca": {
+          "name": "idx_paid_ca",
+          "columns": [
+            "ca"
+          ],
+          "isUnique": false
+        },
+        "idx_paid_ua": {
+          "name": "idx_paid_ua",
+          "columns": [
+            "ua"
+          ],
+          "isUnique": false
+        },
+        "idx_paid_fn": {
+          "name": "idx_paid_fn",
+          "columns": [
+            "fn"
+          ],
+          "isUnique": false
+        },
+        "idx_paid_ln": {
+          "name": "idx_paid_ln",
+          "columns": [
+            "ln"
+          ],
+          "isUnique": false
+        },
+        "idx_paid_np": {
+          "name": "idx_paid_np",
+          "columns": [
+            "np"
+          ],
+          "isUnique": false
+        },
+        "idx_paid_filter_matrix": {
+          "name": "idx_paid_filter_matrix",
           "columns": [
             "ms",
             "ai",

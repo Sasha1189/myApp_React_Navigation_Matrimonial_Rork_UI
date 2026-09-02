@@ -1,5 +1,4 @@
 import { doc, getDoc, firestore } from "@/config/firebase";
-import { getDefaultProfile } from "../types/getDefaultProfile";
 import { Profile } from "../types/profile";
 
 export const getProfile = async (

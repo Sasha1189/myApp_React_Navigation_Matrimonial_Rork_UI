@@ -7,15 +7,17 @@ import {
   where,
   orderBy,
   limit,
-  Timestamp, // Ensure Timestamp is exported from your firebase config
+  Timestamp,
 } from "@/config/firebase";
 import { gunzipSync, strFromU8 } from "fflate";
 import { db } from "@/db/client";
-import { sqlProfileTable } from "@/db/schema/sqlprofiles";
-import { sql } from "drizzle-orm";
+import { resolveFeedTable } from "@/features/home/services/feedRepository";
+import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
+import { sql, inArray } from "drizzle-orm";
 
 const CDN_BASE_URL = "https://cdn.yourdomain.com";
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+const SQLITE_DELETE_CHUNK_SIZE = 500;
 
 /**
  * Utility: Determines target Firestore collection based on user's gender
@@ -31,25 +33,15 @@ const getTargetCollection = (gender?: string | null): string | null => {
 /**
  * Utility: Safely parses Firestore Timestamps, Date objects, or numeric millis
  */
-
 const parseTimestamp = (value: any): number => {
   if (!value) return Date.now();
-
-  // 1. Already numeric milliseconds
   if (typeof value === "number") return value;
-
-  // 2. Firestore Timestamp object (.toMillis())
   if (typeof value?.toMillis === "function") return value.toMillis();
-
-  // 3. JS Date Object
   if (value instanceof Date) return value.getTime();
-
-  // 4. ISO String (e.g. "2026-06-22T16:15:23.462Z")
   if (typeof value === "string") {
     const parsed = new Date(value).getTime();
     return isNaN(parsed) ? Date.now() : parsed;
   }
-
   return 0;
 };
 
@@ -80,6 +72,18 @@ const mapRawToProfileSchema = (p: any) => {
 };
 
 /**
+ * Helper: Safely purges inactive UIDs from SQLite in safe batch sizes
+ */
+const purgeInactiveBatchFromTx = (tx: any, uids: string[]) => {
+  if (!uids || uids.length === 0) return;
+
+  for (let i = 0; i < uids.length; i += SQLITE_DELETE_CHUNK_SIZE) {
+    const chunk = uids.slice(i, i + SQLITE_DELETE_CHUNK_SIZE);
+    tx.delete(paidUserFeeds).where(inArray(paidUserFeeds.uid, chunk)).run();
+  }
+};
+
+/**
  * Main Sync Entry Point
  */
 export const syncFeedProfiles = async (
@@ -90,12 +94,14 @@ export const syncFeedProfiles = async (
   const targetCollection = getTargetCollection(userGender);
   if (!targetCollection) return 0;
 
+  console.log(
+    "[syncFeedProfiles] Handle Bulk sync hit-isPaid,isVerified:",
+    isPaid,
+    isVerified,
+  );
+
   if (isPaid && isVerified) {
-    console.log(
-      "[handlePaidBulkSync] Handle Bulk sync hit:",
-      isPaid,
-      isVerified,
-    );
+    console.log("handlePaidBulkSync - hit? why?");
     return await handlePaidBulkSync(targetCollection);
   } else {
     return await handleFreeTierSync(targetCollection);
@@ -107,11 +113,21 @@ export const syncFeedProfiles = async (
  */
 const handlePaidBulkSync = async (
   targetCollection: string,
+  overrideIsFree?: boolean,
 ): Promise<number> => {
   const isCompleted = appStorage.getBoolean(
     `is_initial_sync_done_${targetCollection}`,
   );
   if (isCompleted) return 0;
+
+  const table = resolveFeedTable(overrideIsFree);
+  // Only proceed for paid-user feeds; otherwise skip the bulk sync.
+  if (table !== paidUserFeeds) {
+    console.log(
+      "[handlePaidBulkSync] Paid user bulk sync returned 0 because table is not paidUserFeeds",
+    );
+    return 0;
+  }
 
   const bundleUrl = `${CDN_BASE_URL}/${targetCollection}_dump.json.gz`;
   const response = await fetch(bundleUrl);
@@ -128,36 +144,56 @@ const handlePaidBulkSync = async (
 
   db.transaction((tx) => {
     const chunkSize = 1000;
-    for (let i = 0; i < rawProfiles.length; i += chunkSize) {
-      const chunk = rawProfiles.slice(i, i + chunkSize).map((p: any) => {
-        const { item, updatedAt } = mapRawToProfileSchema(p);
-        if (updatedAt > maxTimestamp) maxTimestamp = updatedAt;
-        return item;
-      });
 
-      tx.insert(sqlProfileTable)
-        .values(chunk)
-        .onConflictDoUpdate({
-          target: sqlProfileTable.uid,
-          set: {
-            ca: sql`excluded.ca`,
-            ua: sql`excluded.ua`,
-            fn: sql`excluded.fn`,
-            ln: sql`excluded.ln`,
-            db: sql`excluded.db`,
-            ht: sql`excluded.ht`,
-            np: sql`excluded.np`,
-            ai: sql`excluded.ai`,
-            ms: sql`excluded.ms`,
-            ir: sql`excluded.ir`,
-            profileData: sql`excluded.profile_data`,
-          },
-        })
-        .run();
+    for (let i = 0; i < rawProfiles.length; i += chunkSize) {
+      const rawChunk = rawProfiles.slice(i, i + chunkSize);
+      const itemsToUpsert: any[] = [];
+      const uidsToDelete: string[] = [];
+
+      for (const p of rawChunk) {
+        const uid = p.uid || p.id;
+        if (!uid) continue;
+
+        // 🛑 Check for inactive status (ia === false)
+        if (p.ia === false) {
+          uidsToDelete.push(uid);
+        } else {
+          const { item, updatedAt } = mapRawToProfileSchema(p);
+          if (updatedAt > maxTimestamp) maxTimestamp = updatedAt;
+          itemsToUpsert.push(item);
+        }
+      }
+
+      // 1. Delete inactive profiles from SQLite
+      purgeInactiveBatchFromTx(tx, uidsToDelete);
+
+      // 2. Upsert valid active profiles into SQLite
+      if (itemsToUpsert.length > 0) {
+        tx.insert(table)
+          .values(itemsToUpsert)
+          .onConflictDoUpdate({
+            target: table.uid,
+            set: {
+              ca: sql`excluded.ca`,
+              ua: sql`excluded.ua`,
+              fn: sql`excluded.fn`,
+              ln: sql`excluded.ln`,
+              db: sql`excluded.db`,
+              ht: sql`excluded.ht`,
+              np: sql`excluded.np`,
+              ai: sql`excluded.ai`,
+              ms: sql`excluded.ms`,
+              ir: sql`excluded.ir`,
+              profileData: sql`excluded.profile_data`,
+            },
+          })
+          .run();
+      }
     }
   });
 
   const now = Date.now();
+  await new Promise((resolve) => setTimeout(resolve, 50));
   appStorage.set(`is_initial_sync_done_${targetCollection}`, true);
   appStorage.set("last_synced_at", maxTimestamp || now);
   appStorage.set(`last_delta_run_${targetCollection}`, now);
@@ -170,6 +206,14 @@ const handlePaidBulkSync = async (
 const handleFreeTierSync = async (
   targetCollection: string,
 ): Promise<number> => {
+  const syncKey = `is_free_sync_done_${targetCollection}`;
+
+  // 1. MMKV GUARD: Skip network query if initial free sync was already performed
+  const isCompleted = appStorage.getBoolean(syncKey);
+  if (isCompleted) {
+    return 0;
+  }
+
   const freeQuery = queryFs(
     collection(firestore, targetCollection),
     orderBy("createdAt", "desc"),
@@ -179,17 +223,32 @@ const handleFreeTierSync = async (
   const snapshot = await getDocsFromServer(freeQuery);
   if (snapshot.empty) return 0;
 
-  const freeProfiles = snapshot.docs.map((doc: any) => {
-    const data = doc.data();
-    return mapRawToProfileSchema({ uid: doc.id, ...data }).item;
-  });
+  const itemsToUpsert: any[] = [];
+  const uidsToDelete: string[] = [];
+
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
+    const uid = docSnap.id;
+
+    // 🛑 Check for inactive status (ia === false)
+    if (data.ia === false) {
+      uidsToDelete.push(uid);
+    } else {
+      const { item } = mapRawToProfileSchema({ uid, ...data });
+      itemsToUpsert.push(item);
+    }
+  }
 
   db.transaction((tx) => {
-    for (const item of freeProfiles) {
-      tx.insert(sqlProfileTable)
-        .values(item)
+    // 1. Delete inactive profiles
+    purgeInactiveBatchFromTx(tx, uidsToDelete);
+
+    // 2. Upsert active profiles
+    if (itemsToUpsert.length > 0) {
+      tx.insert(freeUserFeeds)
+        .values(itemsToUpsert)
         .onConflictDoUpdate({
-          target: sqlProfileTable.uid,
+          target: freeUserFeeds.uid,
           set: {
             ca: sql`excluded.ca`,
             ua: sql`excluded.ua`,
@@ -207,10 +266,14 @@ const handleFreeTierSync = async (
         .run();
     }
   });
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  appStorage.set(syncKey, true);
+  console.log(
+    "[handleFreeTierSync] done with active profiles:",
+    itemsToUpsert.length,
+  );
 
-  console.log("handleFreeTierSync done with profiles:", freeProfiles?.length);
-
-  return freeProfiles?.length;
+  return itemsToUpsert.length;
 };
 
 /**
@@ -221,8 +284,11 @@ export const performDeltaSync = async (
   isVerified: boolean,
   gender: string | null | undefined,
   forceSync: boolean = false,
+  overrideIsFree?: boolean,
 ): Promise<number> => {
-  if (!isPaid && !isVerified) return 0;
+  if (!(isPaid && isVerified)) return 0;
+
+  const table = resolveFeedTable(overrideIsFree);
 
   const targetCollection = getTargetCollection(gender);
   if (!targetCollection) return 0;
@@ -238,9 +304,6 @@ export const performDeltaSync = async (
 
   const lastSyncedAt = appStorage.getNumber("last_synced_at") || 0;
 
-  console.log("performDeltaSync lastSyncedAt:", lastSyncedAt);
-
-  // Convert numeric timestamp to Firestore Timestamp instance for query compatibility
   const filterTimestamp =
     lastSyncedAt > 0
       ? Timestamp.fromMillis(lastSyncedAt)
@@ -253,29 +316,40 @@ export const performDeltaSync = async (
 
   const snapshot = await getDocsFromServer(deltaQuery);
 
-  // Update last run time regardless of whether new updates existed
   appStorage.set(`last_delta_run_${targetCollection}`, now);
 
   if (snapshot.empty) return 0;
 
   let latestTimestamp = lastSyncedAt;
+  const itemsToUpsert: any[] = [];
+  const uidsToDelete: string[] = [];
 
-  const updates = snapshot.docs.map((doc: any) => {
-    const data = doc.data();
-    const { item, updatedAt } = mapRawToProfileSchema({
-      uid: doc.id,
-      ...data,
-    });
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
+    const uid = docSnap.id;
+    const { item, updatedAt } = mapRawToProfileSchema({ uid, ...data });
+
+    // ⏱️ Always track timestamp progress so we don't re-query this record
     if (updatedAt > latestTimestamp) latestTimestamp = updatedAt;
-    return item;
-  });
+
+    // 🛑 Check for inactive status (ia === false)
+    if (data.ia === false) {
+      uidsToDelete.push(uid);
+    } else {
+      itemsToUpsert.push(item);
+    }
+  }
 
   db.transaction((tx) => {
-    for (const item of updates) {
-      tx.insert(sqlProfileTable)
-        .values(item)
+    // 1. Delete inactive profiles from SQLite
+    purgeInactiveBatchFromTx(tx, uidsToDelete);
+
+    // 2. Upsert updated active profiles into SQLite
+    if (itemsToUpsert.length > 0) {
+      tx.insert(table)
+        .values(itemsToUpsert)
         .onConflictDoUpdate({
-          target: sqlProfileTable.uid,
+          target: table.uid,
           set: {
             ca: sql`excluded.ca`,
             ua: sql`excluded.ua`,
@@ -294,8 +368,6 @@ export const performDeltaSync = async (
     }
   });
 
-  console.log("performDeltaSync updated profile length:", updates?.length);
-
   appStorage.set("last_synced_at", latestTimestamp);
-  return updates.length;
+  return snapshot.docs.length;
 };

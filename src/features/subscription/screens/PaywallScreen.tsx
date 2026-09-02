@@ -30,33 +30,27 @@ export default function SubscriptionScreen() {
     refetchPlans,
   } = useSubscription();
 
-  // 🟢 FIXED SYSTEM LOCKOUT: Modern TypeScript compliant pattern
   useEffect(() => {
-    // 1. Assign the native event subscription to a variable reference
     const backHandlerSubscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
         if (isProcessing) {
-          return true; // Swallows the native hardware tap (does nothing)
+          return true;
         }
-        return false; // Executes default pop navigation behavior
+        return false;
       },
     );
-
-    // 2. Intercept React Navigation actions (Gestures / Header Buttons)
     const navigationUnsubscribe = navigation.addListener(
       "beforeRemove",
       (e) => {
         if (!isProcessing) {
-          return; // Safe to exit screen
+          return;
         }
-        e.preventDefault(); // Stop swipe/tap animations from rendering
+        e.preventDefault();
       },
     );
-
-    // 3. Clean up events cleanly by calling .remove() on the subscription object
     return () => {
-      backHandlerSubscription.remove(); // 🟢 Fixed: No more missing property error
+      backHandlerSubscription.remove();
       navigationUnsubscribe();
     };
   }, [isProcessing, navigation]);
@@ -85,14 +79,13 @@ export default function SubscriptionScreen() {
           <Text style={styles.sectionLabel}>
             {t("subscription.choosePlan")}
           </Text>
-          {/* 🌟 Dynamic fallback card loaders or error handling layout views */}
+
           <PlanStatusView
             isLoadingPlans={isLoadingPlans}
             hasError={hasError}
             refetchPlans={refetchPlans}
           />
 
-          {/* Catalog Selection List displays natively when store records resolve */}
           {!isLoadingPlans && !hasError && (
             <>
               {/* Plan Card 1 */}
@@ -114,7 +107,6 @@ export default function SubscriptionScreen() {
               />
             </>
           )}
-
           {/* 🌟 SEPARATE CLEAN BENEFITS LIST COMPONENT */}
           <AppBenefitsList />
         </View>
@@ -137,8 +129,8 @@ export const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.colors.background,
     },
     content: {
-      padding: theme.spacing.sm, // Maps to your sm token (8px) or use md if you prefer 16px
-      paddingBottom: 120, // Keep layout scroll clearance height constant
+      padding: theme.spacing.md,
+      paddingBottom: 120,
     },
     header: {
       flexDirection: "row",

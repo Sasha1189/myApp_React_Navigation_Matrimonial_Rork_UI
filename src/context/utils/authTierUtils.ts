@@ -7,25 +7,37 @@ const TIER_MAPPING: Record<string, UserTier> = {
   p: "premium",
 };
 
-/**
- * Parses Firebase ID token custom claims to resolve active subscription tier
- */
+export interface UserTierResult {
+  activeTier: UserTier;
+  claimTier: UserTier; // Original tier from token claims
+  isExpired: boolean;
+}
+
 export function calculateUserTier(
   idTokenResult: FirebaseAuthTypes.IdTokenResult | null,
-): UserTier {
+): UserTierResult {
   const claims = idTokenResult?.claims;
 
-  if (!claims || !claims.t) {
-    return "none";
+  const tierClaim = claims?.t;
+
+  if (!tierClaim) {
+    return { activeTier: "none", claimTier: "none", isExpired: false };
   }
 
-  const mappedTier = TIER_MAPPING[claims.t as string] || "none";
-  const expirySeconds = (claims.e as number) || 0;
+  const mappedTier = (TIER_MAPPING[tierClaim as string] as UserTier) || "none";
+
+  if (mappedTier === "none") {
+    return { activeTier: "none", claimTier: "none", isExpired: false };
+  }
+
+  const expirySeconds = Number(claims?.e) || 0;
   const currentTimeSeconds = Math.floor(Date.now() / 1000);
 
-  if (mappedTier !== "none" && currentTimeSeconds > expirySeconds) {
-    return "none";
-  }
+  const isExpired = expirySeconds > 0 && currentTimeSeconds >= expirySeconds;
 
-  return mappedTier;
+  return {
+    activeTier: isExpired ? "none" : mappedTier,
+    claimTier: mappedTier,
+    isExpired,
+  };
 }

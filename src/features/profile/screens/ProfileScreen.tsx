@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, ScrollView, Alert } from "react-native";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { useMyProfile } from "../context/ProfileContext";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -46,36 +46,36 @@ export default function ProfileScreen({ navigation }: any) {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Passing handlers down cleanly as standard element properties */}
-      <SlimHeader
-        profile={myProfile}
-        completionPercent={completionPercent}
-        isRefreshing={isRefreshing}
-        onRefresh={handleRefresh}
-        theme={theme}
-        styles={styles}
-      />
+      <View style={styles.content}>
+        <SlimHeader
+          profile={myProfile}
+          completionPercent={completionPercent}
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          theme={theme}
+          styles={styles}
+        />
 
-      <StatsBar
-        isLoading={isLoading}
-        sentCount={sentCount}
-        receivedCount={receivedCount}
-        matchesCount={matchesCount}
-        styles={styles}
-      />
+        <StatsBar
+          isLoading={isLoading}
+          sentCount={sentCount}
+          receivedCount={receivedCount}
+          matchesCount={matchesCount}
+          styles={styles}
+        />
 
-      <MenuSection
-        myProfile={myProfile}
-        navigation={navigation}
-        t={t}
-        theme={theme}
-        styles={styles}
-      />
+        <MenuSection
+          myProfile={myProfile}
+          navigation={navigation}
+          t={t}
+          styles={styles}
+        />
 
-      <PremiumBanner
-        onPress={() => navigation.navigate("Paywall")}
-        styles={styles}
-      />
+        <PremiumBanner
+          onPress={() => navigation.navigate("Paywall")}
+          styles={styles}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -83,8 +83,9 @@ export default function ProfileScreen({ navigation }: any) {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
-    scrollContent: { paddingBottom: 30 },
-    headerCard: { alignItems: "center", paddingTop: 25, paddingBottom: 15 },
+    content: { padding: 16 },
+    scrollContent: { paddingBottom: 60 },
+    headerCard: { alignItems: "center" },
     imageContainer: { width: 85, height: 85, position: "relative" },
     progressSvg: { position: "absolute", top: 0, left: 0 },
     profileImage: { width: 77, height: 77, borderRadius: 38.5, margin: 4 },
@@ -123,10 +124,9 @@ const createStyles = (theme: AppTheme) =>
     statsBar: {
       flexDirection: "row",
       backgroundColor: theme.colors.card,
-      marginHorizontal: 20,
-      marginVertical: 15,
+      marginVertical: 20,
       borderRadius: 15,
-      paddingVertical: 12,
+      paddingVertical: 8,
       alignItems: "center",
       elevation: 1,
     },
@@ -148,42 +148,14 @@ const createStyles = (theme: AppTheme) =>
     statDivider: { width: 1, height: 20, backgroundColor: theme.colors.border },
     menuContainer: {
       backgroundColor: theme.colors.card,
-      marginHorizontal: 20,
       borderRadius: 16,
-      padding: 4,
+      overflow: "hidden",
       elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
-    menuItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginRight: theme.spacing.xl,
-      padding: 10,
-    },
-    menuLeft: { flexDirection: "row", alignItems: "center" },
-    iconWrapper: {
-      width: 38,
-      height: 30,
-      borderRadius: 10,
-      backgroundColor: `${theme.colors.primary}12`,
-      alignItems: "center",
-      justifyContent: "center",
-      margin: 14,
-    },
-    titleContainer: {
-      flex: 1,
-      marginLeft: theme.spacing.md,
-      justifyContent: "center",
-    },
-    menuLabel: {
-      fontSize: theme.fontSize.sm,
-      fontWeight: "600",
-      color: theme.colors.text,
-      letterSpacing: 0.3,
-      opacity: 0.8,
-    },
+
     premiumCard: {
-      marginHorizontal: 20,
       marginTop: 20,
       borderRadius: 16,
       overflow: "hidden",
@@ -209,8 +181,8 @@ const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.3,
     },
     crownCircle: {
-      width: 40,
-      height: 40,
+      width: 38,
+      height: 38,
       borderRadius: 17,
       backgroundColor: "rgba(255,255,255,0.2)",
       alignItems: "center",
