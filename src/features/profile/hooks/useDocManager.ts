@@ -62,31 +62,6 @@ export function useDocManager(profile: Profile | null) {
     }
   };
 
-  // const deletePhoto = async (photoId?: string) => {
-  //   if (!uid) return;
-  //   if (isVerified) return;
-
-  //   Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"));
-
-  //   try {
-  //     setLoading(true);
-
-  //     const storagePath = `users/${uid}/ver_doc/vdoc_photo.jpg`;
-  //     const photoRef = refStorage(storage, storagePath);
-
-  //     await deleteObject(photoRef).catch(() => {});
-
-  //     setPhotos([]);
-  //     appStorage.set(IS_DOC_UPLOADED_CACHE_KEY, false);
-  //     setIsUploaded(false);
-  //   } catch (err) {
-  //     console.error("Delete failed:", err);
-  //     Alert.alert(t("photos.errorTitle"), t("photos.deleteError"));
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const deletePhoto = async (photoId?: string) => {
     if (!uid || isVerified) return;
 

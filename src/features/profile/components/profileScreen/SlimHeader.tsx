@@ -5,10 +5,11 @@ import Svg, { Circle } from "react-native-svg";
 import { RefreshCw } from "lucide-react-native";
 import { formatDOB } from "@/utils/dateUtils";
 import { useTranslation } from "react-i18next";
-import { resolvePhotoUri } from "@/utils/photoUtils";
+import { resolveThumbUri } from "@/utils/photoUtils";
+import { Profile } from "@/features/profile/types/profile";
 
 interface SlimHeaderProps {
-  profile: any;
+  profile: Profile;
   completionPercent: number;
   isRefreshing: boolean;
   onRefresh: () => void;
@@ -33,10 +34,9 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
   const offset = circumference - (circumference * completionPercent) / 100;
 
   const age = profile?.db ? formatDOB(profile.db, "age") : "18";
-  const imageUri =
-    resolvePhotoUri(profile?.photos?.[0]?.downloadURL, profile.uid) ||
-    profile?.photos?.[0]?.localUrl ||
-    "";
+  console.log("SlimHeader profile.db:", profile?.db, "age:", age);
+
+  const imageUri = resolveThumbUri(profile?.tn, profile?.uid) || "";
 
   return (
     <View style={styles.headerCard}>

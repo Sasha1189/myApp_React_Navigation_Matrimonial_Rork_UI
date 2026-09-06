@@ -26,11 +26,7 @@ export const ChatHeader = ({
   return (
     <TouchableOpacity style={styles.headerContainer} activeOpacity={0.7}>
       <Image
-        source={
-          photo
-            ? { uri: photo }
-            : require("../../../../assets/images/profile.webp")
-        }
+        source={{ uri: photo }}
         placeholder={require("../../../../assets/images/profile.webp")}
         placeholderContentFit="cover"
         contentFit="cover"

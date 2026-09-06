@@ -44,7 +44,7 @@ export const LikesReceivedCache = {
     const mergedMap = new Map<string, number>();
 
     [...current, ...newList].forEach((item) => {
-      mergedMap.set(item.uid, Math.max(mergedMap.get(item.uid) || 0, item.ts));
+      mergedMap.set(item.uid, item.ts);
     });
 
     const sorted = Array.from(mergedMap.entries())

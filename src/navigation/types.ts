@@ -20,9 +20,9 @@ export type AuthStackParamList = {
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Chat: {
-    roomId: string;
+    rId: string;
     uid: string;
-    otherUser: {
+    ou: {
       uid: string;
       name: string;
       photo: string;

@@ -196,7 +196,7 @@ const CardDetailsComponent: React.FC<CardDetailsProps> = ({
         >
           <Sparkles size={10} color="white" />
           <Text style={styles.readyPillText}>
-            {profile?.ir === "Ready" ? t("card.ready") : t("card.studying")}
+            {getDisplayValue("ir", profile.ir)}
           </Text>
         </View>
       </View>

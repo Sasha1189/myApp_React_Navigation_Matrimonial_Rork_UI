@@ -76,9 +76,7 @@ export const ChatBubble = React.memo(
                 minute: "2-digit",
               })}
             </Text>
-            {isMe && (
-              <ReadStatus isRead={message.r} isPending={message.pending} />
-            )}
+            {isMe && <ReadStatus isRead={message.r} isPending={message.p} />}
           </View>
         </Pressable>
 

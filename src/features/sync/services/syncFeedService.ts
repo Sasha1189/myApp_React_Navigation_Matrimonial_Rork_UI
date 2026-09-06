@@ -94,14 +94,9 @@ export const syncFeedProfiles = async (
   const targetCollection = getTargetCollection(userGender);
   if (!targetCollection) return 0;
 
-  console.log(
-    "[syncFeedProfiles] Handle Bulk sync hit-isPaid,isVerified:",
-    isPaid,
-    isVerified,
-  );
-
   if (isPaid && isVerified) {
-    console.log("handlePaidBulkSync - hit? why?");
+    //for time being testing
+    await handleFreeTierSync(targetCollection);
     return await handlePaidBulkSync(targetCollection);
   } else {
     return await handleFreeTierSync(targetCollection);
@@ -123,9 +118,6 @@ const handlePaidBulkSync = async (
   const table = resolveFeedTable(overrideIsFree);
   // Only proceed for paid-user feeds; otherwise skip the bulk sync.
   if (table !== paidUserFeeds) {
-    console.log(
-      "[handlePaidBulkSync] Paid user bulk sync returned 0 because table is not paidUserFeeds",
-    );
     return 0;
   }
 
@@ -268,10 +260,6 @@ const handleFreeTierSync = async (
   });
   await new Promise((resolve) => setTimeout(resolve, 50));
   appStorage.set(syncKey, true);
-  console.log(
-    "[handleFreeTierSync] done with active profiles:",
-    itemsToUpsert.length,
-  );
 
   return itemsToUpsert.length;
 };

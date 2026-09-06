@@ -7,6 +7,7 @@ import { Image } from "expo-image";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { formatTime } from "../../../utils/dateUtils"; // Helper for ts
 import { IInboxItem } from "../type/chattype";
+import { resolvePhotoUri } from "@/utils/photoUtils";
 
 export const MessageBanner = React.memo(
   ({ item, uid }: { item: IInboxItem; uid: string }) => {
@@ -16,37 +17,40 @@ export const MessageBanner = React.memo(
 
     if (!theme) return null;
 
+    const otherUid = item.ou?.uid;
+    const photo = item.ou?.photo;
+    const name = item.ou?.name ?? "";
+
+    const imageUri = resolvePhotoUri(photo ?? undefined, otherUid) || "";
+
+    //....
     const handlePress = () => {
-      if (!item.otherUser) return;
+      if (!item.ou) return;
       navigation.navigate("Chat", {
-        roomId: item.roomId,
+        rId: item.rId,
         uid: uid,
-        otherUser: {
-          uid: item.otherUser.uid,
-          name: item.otherUser.name,
-          photo: item.otherUser.photo,
+        ou: {
+          uid: item.ou.uid,
+          name: name,
+          photo: imageUri,
         },
       });
     };
 
     return (
       <TouchableOpacity
-        style={styles.card} // Removed unreadCard from here for a cleaner look
+        style={styles.card}
         onPress={handlePress}
         activeOpacity={0.6}
       >
         <View style={styles.imageWrapper}>
           <Image
-            source={
-              item?.otherUser?.photo
-                ? { uri: item.otherUser.photo }
-                : require("../../../../assets/images/profile.webp")
-            }
+            source={{ uri: imageUri }}
+            placeholder={require("../../../../assets/images/profile.webp")}
             style={styles.activityImage}
             contentFit="cover"
             cachePolicy="disk"
           />
-          {/* Subtle Online/Status indicator could go here later */}
         </View>
 
         <View style={styles.activityContent}>
@@ -55,10 +59,10 @@ export const MessageBanner = React.memo(
               style={[styles.name, item.u && styles.unreadName]}
               numberOfLines={1}
             >
-              {item.otherUser.name}
+              {name}
             </Text>
             <Text style={[styles.time, item.u && styles.unreadTime]}>
-              {formatTime(item.updatedAt)}
+              {formatTime(item.ua)}
             </Text>
           </View>
 
@@ -67,7 +71,7 @@ export const MessageBanner = React.memo(
               style={[styles.msg, item?.u && styles.unreadMsgText]}
               numberOfLines={1}
             >
-              {item.lastMessage}
+              {item.lm}
             </Text>
 
             {item.u && <View style={styles.unreadDot} />}

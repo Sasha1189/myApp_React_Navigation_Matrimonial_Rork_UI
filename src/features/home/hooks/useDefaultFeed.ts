@@ -46,8 +46,6 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
         setCurrentIndex(initialIndex ?? 0);
         setHasMore((initialData?.length ?? 0) > 0);
 
-        console.log(`[useDefaultFeed]  Count: ${initialData?.length}`);
-
         const activeProfile = initialData?.[initialIndex];
         if (activeProfile?.ca !== undefined && activeProfile?.ca !== null) {
           FeedCache.setLastCa(uid, Number(activeProfile.ca));

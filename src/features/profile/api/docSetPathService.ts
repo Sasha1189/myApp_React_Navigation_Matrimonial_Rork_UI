@@ -14,3 +14,19 @@ export const setDocPath = async (myUid: string): Promise<boolean> => {
     return false;
   }
 };
+
+// to be deleteted
+
+export const setVerify = async (myUid: string): Promise<boolean> => {
+  try {
+    const verRef = ref(rtdb, `docVer/${myUid}`);
+    await set(verRef, true);
+    return true;
+  } catch (error) {
+    console.error(
+      "[checkUserVerification] Failed to fetch verification state:",
+      error,
+    );
+    return false;
+  }
+};

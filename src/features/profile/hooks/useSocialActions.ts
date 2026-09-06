@@ -26,7 +26,6 @@ export function useSocialActions(profile: any) {
 
             navigation.goBack();
           } catch (error) {
-            console.log("block error1", error);
             Alert.alert(t("common.error"), t("alerts.blockError"));
           }
         },

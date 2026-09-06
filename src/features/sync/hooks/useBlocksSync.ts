@@ -1,31 +1,3 @@
-// import { useEffect } from "react";
-// import { useAuth } from "@/context/AuthContext";
-// import { syncBlocks } from "../services/blocksSyncService";
-
-// export const useBlocksSync = (enabled: boolean = false) => {
-//   const { user } = useAuth();
-
-//   useEffect(() => {
-//     if (!enabled || !user?.uid) return;
-
-//     let isMounted = true;
-
-//     const runBlocksSync = async () => {
-//       try {
-//         await Promise.all([syncBlocks(user.uid)]);
-//       } catch (error) {
-//         console.error("[useBlocksSync] Blocks background sync failed:", error);
-//       }
-//     };
-
-//     runBlocksSync();
-
-//     return () => {
-//       isMounted = false;
-//     };
-//   }, [enabled, user?.uid]);
-// };
-
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { syncBlocks } from "../services/blocksSyncService";

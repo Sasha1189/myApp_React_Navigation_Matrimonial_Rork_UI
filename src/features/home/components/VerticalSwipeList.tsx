@@ -55,10 +55,6 @@ export function VerticalSwipeList({ feed }: VerticalSwipeListProps) {
         activeIndex >= 0 &&
         activeIndex < profiles.length
       ) {
-        const activeProfile = profiles[activeIndex];
-        console.log(
-          `[VerticalSwipeList] Card Swiped -> Index: ${activeIndex} | UID: ${activeProfile?.uid} | ca: ${activeProfile?.ca}`,
-        );
         updateIndex(activeIndex);
       }
     },
@@ -108,7 +104,6 @@ export function VerticalSwipeList({ feed }: VerticalSwipeListProps) {
   // 6. Pagination Trigger with safer threshold
   const handleEndReached = useCallback(() => {
     if (isLoading || isLoadingMore || !hasMore) return;
-    console.log("[VerticalSwipeList] Native onEndReached triggered");
     feed.loadMore?.();
   }, [isLoading, feed]);
 
@@ -117,12 +112,6 @@ export function VerticalSwipeList({ feed }: VerticalSwipeListProps) {
     console.warn(
       `[VerticalSwipeList] Scroll to index ${info.index} failed. Retrying...`,
     );
-    // setTimeout(() => {
-    //   flatListRef.current?.scrollToIndex({
-    //     index: info.index,
-    //     animated: false,
-    //   });
-    // }, 100);
   }, []);
 
   // 8. Memoized Item Separator

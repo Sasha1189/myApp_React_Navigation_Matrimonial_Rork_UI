@@ -1,31 +1,3 @@
-// import { useEffect } from "react";
-// import { useAuth } from "@/context/AuthContext";
-// import { syncLikes } from "../services/likesSyncService";
-
-// export const useLikesSync = (enabled: boolean = false) => {
-//   const { user } = useAuth();
-
-//   useEffect(() => {
-//     if (!enabled || !user?.uid) return;
-
-//     let isMounted = true;
-
-//     const runLikesSync = async () => {
-//       try {
-//         await Promise.all([syncLikes(user.uid)]);
-//       } catch (error) {
-//         console.error("[useLikesSync] Likes background sync failed:", error);
-//       }
-//     };
-
-//     runLikesSync();
-
-//     return () => {
-//       isMounted = false;
-//     };
-//   }, [enabled, user?.uid]);
-// };
-
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { syncLikes } from "../services/likesSyncService";

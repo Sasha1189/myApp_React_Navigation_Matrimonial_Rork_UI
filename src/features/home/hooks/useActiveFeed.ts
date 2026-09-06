@@ -40,7 +40,6 @@ export function useActiveFeed(uid: string) {
     const listener = appStorage.addOnValueChangedListener((key) => {
       if (!trackedKeys.has(key)) return;
 
-      console.log(`[useActiveFeed] Relevant MMKV key changed: ${key}`);
       if (key === keys.mode) {
         setMode(FeedCache.getMode(uid) || "default");
       } else if (key === keys.searchQuery) {
@@ -61,7 +60,6 @@ export function useActiveFeed(uid: string) {
 
   // 4. Resolve active feed based directly on mode
   const activeFeed = useMemo(() => {
-    console.log(`[useActiveFeed] Active feed computed for mode: ${mode}`);
     switch (mode) {
       case "search":
         return searchFeed;
@@ -80,10 +78,6 @@ export function useActiveFeed(uid: string) {
     if (!blockedSet || blockedSet.size === 0) return rawProfiles;
     return rawProfiles.filter((profile) => !blockedSet.has(profile.uid));
   }, [activeFeed.profiles, blockedSet]);
-
-  console.log(
-    `[useActiveFeed] Returning feed with ${visibleProfiles.length} visible profiles (mode: ${mode})`,
-  );
 
   return useMemo(
     () => ({

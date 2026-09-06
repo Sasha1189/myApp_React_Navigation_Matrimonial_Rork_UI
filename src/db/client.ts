@@ -34,10 +34,6 @@ export const resetDatabase = () => {
 
     // 4. Re-enable foreign key constraints
     expoDb.execSync("PRAGMA foreign_keys = ON;");
-
-    console.log(
-      `🧹 Database wiped successfully. Dropped ${tables.length} table(s).`,
-    );
   } catch (e) {
     console.error("Failed to wipe database:", e);
   }

@@ -8,6 +8,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { useTranslation } from "react-i18next";
 import { Profile } from "@/features/profile/types/profile";
+import { resolveThumbUri } from "@/utils/photoUtils";
 
 interface UserBannerProps {
   item: Profile;
@@ -24,6 +25,11 @@ export const LikedUserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
     navigation.navigate("Details", { profile: item });
   };
 
+  const uid = item?.uid;
+  const photo = item?.tn;
+
+  const imageUri = resolveThumbUri(photo, uid) || "";
+
   if (!theme) return null;
 
   return (
@@ -34,11 +40,8 @@ export const LikedUserBanner: React.FC<UserBannerProps> = ({ item, type }) => {
     >
       <View style={styles.imageWrapper}>
         <Image
-          source={
-            item.tn
-              ? { uri: item.tn }
-              : require("../../../../assets/images/profile.webp")
-          }
+          source={{ uri: imageUri }}
+          placeholder={require("../../../../assets/images/profile.webp")}
           style={styles.image}
           contentFit="cover"
           cachePolicy="disk"

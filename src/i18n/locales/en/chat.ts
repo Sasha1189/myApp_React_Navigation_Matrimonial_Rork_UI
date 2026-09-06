@@ -13,8 +13,8 @@ export default {
     chatsSubtitle: "Start messaging them!",
     sentTitle: "No likes sent yet",
     sentSubtitle: "Start liking profiles to see them here!",
-    receivedTitle: "No likes received yet",
-    receivedSubtitle: "When someone likes you, they will appear here!",
+    receivedTitle: "{{count}} people liked you!",
+    receivedSubtitle: "Support Premium to see who liked you.",
   },
   footer: {
     loadOlder: "Load Older",

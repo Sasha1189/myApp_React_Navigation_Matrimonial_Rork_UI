@@ -18,9 +18,6 @@ export const deactivateUserProfile = async (
     }
 
     await updateDoc(docRef, { ia: false });
-    console.log(
-      `[profileService] Successfully deactivated profile for UID: ${uid}`,
-    );
   } catch (error) {
     console.error(
       `[profileService] Failed to set ia: false for ${uid}:`,

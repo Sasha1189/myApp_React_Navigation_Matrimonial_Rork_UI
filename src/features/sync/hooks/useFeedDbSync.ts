@@ -44,12 +44,6 @@ export const useFeedDbSync = (enabled: boolean = false) => {
           isVerified,
           displayName,
         );
-
-        if (isMounted) {
-          console.log(
-            `[useFeedDbSync] Sync complete. Initial: ${syncedCount}, Delta: ${deltaCount}`,
-          );
-        }
       } catch (error) {
         console.error("[useFeedDbSync] Error during background sync:", error);
       } finally {

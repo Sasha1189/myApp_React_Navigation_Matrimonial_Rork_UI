@@ -70,11 +70,6 @@ const performFullSync = async (myUid: string) => {
     }
 
     const merged = Array.from(new Set([...activeMine, ...activeTheirs]));
-    console.log(
-      "Initial fetch blocksync- mine, their",
-      activeMine,
-      activeTheirs,
-    );
     BlocksCache.sync(activeMine, merged);
 
     // Delete stale '1' tombstones from RTDB

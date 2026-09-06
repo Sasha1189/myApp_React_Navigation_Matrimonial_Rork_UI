@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { rtdb } from "../../../config/firebase";
 import {
@@ -14,17 +14,25 @@ import {
   goOnline,
 } from "@react-native-firebase/database";
 import { IInboxItem } from "../type/chattype";
+import { useBlockedSet } from "@/features/block/hook/useBlockedSet"; // Adjust path to your hook
+import { feedRepository } from "@/db/services/dbFeedServices"; // Adjust path to your feed repository
+import { Profile } from "@/features/profile/types/profile";
 
-const PAGE_SIZE = 50;
-const MAX_LIMIT = 200;
+const PAGE_SIZE = 20;
+const MAX_LIMIT = 100;
 
 export const useMessageInbox = (uid: string) => {
-  const [banners, setBanners] = useState<IInboxItem[]>([]);
+  const [rawBanners, setRawBanners] = useState<IInboxItem[]>([]);
+  const [profileMap, setProfileMap] = useState<Record<string, Profile>>({});
+
   const [isLive, setIsLive] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasNewAtTop, setHasNewAtTop] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Blocked Users Set
+  const blockedSet = useBlockedSet();
 
   const oldestTsRef = useRef<number | null>(null);
   const latestSeenTsRef = useRef<number>(0);
@@ -33,6 +41,58 @@ export const useMessageInbox = (uid: string) => {
   const msgUnsubscribe = useRef<(() => void) | null>(null);
   const unsubNotify = useRef<(() => void) | null>(null);
 
+  // 1. Batch-fetch missing profiles whenever rawBanners update
+  useEffect(() => {
+    const missingUids = Array.from(
+      new Set(
+        rawBanners
+          .map((item) => item.ou?.uid)
+          .filter(
+            (id): id is string =>
+              Boolean(id) && !blockedSet.has(id) && !profileMap[id],
+          ),
+      ),
+    );
+
+    if (missingUids.length === 0) return;
+
+    // Fetch missing profiles in parallel from local SQLite
+    Promise.all(missingUids.map((id) => feedRepository.fetchProfileByUid(id)))
+      .then((profiles) => {
+        const updates: Record<string, Profile> = {};
+        profiles.forEach((profile, idx) => {
+          if (profile) updates[missingUids[idx]] = profile;
+        });
+
+        if (Object.keys(updates).length > 0) {
+          setProfileMap((prev) => ({ ...prev, ...updates }));
+        }
+      })
+      .catch((err) =>
+        console.error("[useMessageInbox] Profile lookup failed", err),
+      );
+  }, [rawBanners, blockedSet, profileMap]);
+
+  // 2. Filter blocked users & attach name/photo to `ou`
+  const banners: IInboxItem[] = useMemo(() => {
+    return rawBanners
+      .filter((item) => item.ou?.uid && !blockedSet.has(item.ou.uid))
+      .map((item) => {
+        const profile = profileMap[item.ou.uid];
+        return {
+          ...item,
+          ou: {
+            ...item.ou,
+            name: profile?.fn ?? "",
+            photo: profile?.photos?.[0]?.downloadURL ?? null,
+          },
+        };
+      });
+  }, [rawBanners, blockedSet, profileMap]);
+
+  //----------------------------------------------------------------------------
+  // 3. Stop all listeners
+  //----------------------------------------------------------------------------
   const stopListeners = useCallback(() => {
     if (msgUnsubscribe.current) {
       msgUnsubscribe.current();
@@ -45,6 +105,9 @@ export const useMessageInbox = (uid: string) => {
     }
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // RTDB Sync Logic
+  // ---------------------------------------------------------------------------
   const startLive = useCallback(async () => {
     if (!uid) return;
     stopListeners();
@@ -57,18 +120,18 @@ export const useMessageInbox = (uid: string) => {
       limitToLast(PAGE_SIZE),
     );
 
-    // 1. Initial Fetch (One-time cost)
+    // 1. Initial Fetch
     try {
       const snap = await get(inboxQuery);
       const data = snap.val() || {};
       const sorted = (Object.values(data) as IInboxItem[]).sort(
-        (a, b) => b.updatedAt - a.updatedAt,
+        (a, b) => b.ua - a.ua,
       );
 
-      setBanners(sorted);
+      setRawBanners(sorted);
       if (sorted.length > 0) {
-        oldestTsRef.current = sorted[sorted.length - 1].updatedAt;
-        latestSeenTsRef.current = sorted[0].updatedAt;
+        oldestTsRef.current = sorted[sorted.length - 1].ua;
+        latestSeenTsRef.current = sorted[0].ua;
       }
       setHasMore(sorted.length === PAGE_SIZE);
     } catch (err) {
@@ -77,38 +140,32 @@ export const useMessageInbox = (uid: string) => {
       setIsLoading(false);
     }
 
-    // 2. Cost-Efficient Listeners: Only sync changes, not full list
+    // 2. Realtime Listeners
     const unsubAdded = onChildAdded(inboxQuery, (snap) => {
       const newItem = snap.val() as IInboxItem;
-      setBanners((prev) => {
-        if (prev.some((item) => item.roomId === newItem.roomId)) return prev;
-        const newList = [newItem, ...prev].sort(
-          (a, b) => b.updatedAt - a.updatedAt,
-        );
+      setRawBanners((prev) => {
+        if (prev.some((item) => item.rId === newItem.rId)) return prev;
+        const newList = [newItem, ...prev].sort((a, b) => b.ua - a.ua);
         return newList.slice(0, PAGE_SIZE);
       });
     });
 
     const unsubChanged = onChildChanged(inboxQuery, (snap) => {
       const updatedItem = snap.val() as IInboxItem;
-      setBanners((prev) =>
+      setRawBanners((prev) =>
         prev
-          .map((item) =>
-            item.roomId === updatedItem.roomId ? updatedItem : item,
-          )
-          .sort((a, b) => b.updatedAt - a.updatedAt),
+          .map((item) => (item.rId === updatedItem.rId ? updatedItem : item))
+          .sort((a, b) => b.ua - a.ua),
       );
     });
 
-    // 4. NEW: Listener for Deletions (Critical for Sync)
     const unsubRemoved = onChildRemoved(inboxQuery, (snap) => {
       const deletedRoomId = snap.key;
-      setBanners((prev) =>
-        prev.filter((item) => item.roomId !== deletedRoomId),
+      setRawBanners((prev) =>
+        prev.filter((item) => item.rId !== deletedRoomId),
       );
     });
 
-    // Save all three unsubscription functions
     msgUnsubscribe.current = () => {
       unsubAdded();
       unsubChanged();
@@ -116,18 +173,10 @@ export const useMessageInbox = (uid: string) => {
     };
   }, [uid, stopListeners]);
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     startLive();
-  //     return () => stopListeners();
-  //   }, [startLive, stopListeners]),
-  // );
+  //----------------------------------------------------------------------------
 
-  // Inside your useMessageInbox hook body:
   useFocusEffect(
     useCallback(() => {
-      // 🎯 CRITICAL ACCURACY FIX: Wake up the global valve before initiating data streams.
-      // This safely fixes any background goOffline() commands issued by the usePresence hook.
       try {
         goOnline(rtdb);
       } catch (err) {
@@ -142,6 +191,7 @@ export const useMessageInbox = (uid: string) => {
     }, [startLive, stopListeners]),
   );
 
+  // Pagination Logic
   const loadMore = useCallback(async () => {
     if (isFetchingMore || !hasMore || !oldestTsRef.current) return;
 
@@ -149,11 +199,10 @@ export const useMessageInbox = (uid: string) => {
       setIsLive(false);
       stopListeners();
 
-      // Background Notifier for new chats while in static mode
       const notifyQuery = query(ref(rtdb, `inbox/${uid}`), limitToLast(1));
       unsubNotify.current = onChildAdded(notifyQuery, (snap) => {
         const val = snap.val() as IInboxItem;
-        if (val?.updatedAt > latestSeenTsRef.current) setHasNewAtTop(true);
+        if (val?.ua > latestSeenTsRef.current) setHasNewAtTop(true);
       });
     }
 
@@ -161,7 +210,7 @@ export const useMessageInbox = (uid: string) => {
     try {
       const moreQuery = query(
         ref(rtdb, `inbox/${uid}`),
-        orderByChild("updatedAt"),
+        orderByChild("ua"),
         endAt(oldestTsRef.current - 1),
         limitToLast(PAGE_SIZE),
       );
@@ -171,22 +220,20 @@ export const useMessageInbox = (uid: string) => {
 
       if (data) {
         const batch = (Object.values(data) as IInboxItem[]).sort(
-          (a, b) => b.updatedAt - a.updatedAt,
+          (a, b) => b.ua - a.ua,
         );
+        oldestTsRef.current = batch[batch.length - 1].ua;
 
-        setBanners((prev) => {
+        setRawBanners((prev) => {
           const combined = [...prev, ...batch];
-          // Deduplicate by RoomID
           const unique = Array.from(
-            new Map(combined.map((item) => [item.roomId, item])).values(),
-          ).sort((a, b) => b.updatedAt - a.updatedAt);
+            new Map(combined.map((item) => [item.rId, item])).values(),
+          ).sort((a, b) => b.ua - a.ua);
 
           return unique.length > MAX_LIMIT
             ? unique.slice(0, MAX_LIMIT)
             : unique;
         });
-
-        oldestTsRef.current = batch[batch.length - 1].updatedAt;
         setHasMore(batch.length === PAGE_SIZE);
       } else {
         setHasMore(false);

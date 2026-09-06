@@ -47,7 +47,6 @@ export function useFilterFeed(
       isFetchingRef.current = true;
 
       try {
-        console.log(`[useFeedFilter] Executing filtered profile fetch...`);
         const parsed = await feedRepository.getFilteredProfiles(
           filters,
           FETCH_PAGE_SIZE_FILTER,
@@ -109,9 +108,6 @@ export function useFilterFeed(
 
     try {
       const nextOffset = profiles.length;
-      console.log(
-        `[useFeedFilter] Fetching next filtered page (offset: ${nextOffset}, limit: ${FETCH_PAGE_SIZE_FILTER})...`,
-      );
 
       const parsed = await feedRepository.getFilteredProfiles(
         filters,
@@ -142,10 +138,6 @@ export function useFilterFeed(
 
       // MEMORY PURGE: Check if memory limit is reached
       if (index >= MAX_MEMORY_LIMIT) {
-        console.log(
-          `[useFeedFilter] Reached memory limit (${index}). Purging stack and re-executing filter...`,
-        );
-
         // Reset tracking ref and reload fresh batch from top (index 0)
         initialLoadedRef.current = false;
 

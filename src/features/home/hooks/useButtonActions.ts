@@ -42,11 +42,11 @@ export function useButtonActions(profile: Profile | undefined) {
           return;
         }
         try {
-          const roomId = [user.uid, profile.uid].sort().join("_");
+          const rId = [user.uid, profile.uid].sort().join("_");
           navigation.navigate("Chat", {
-            roomId,
+            rId,
             uid: user.uid,
-            otherUser: {
+            ou: {
               uid: profile.uid,
               name: profile.fn || "User",
               photo: profile.tn || "",

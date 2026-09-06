@@ -52,7 +52,7 @@ export const resolveFeedTable = (overrideIsFree?: boolean): FeedTable => {
     | undefined;
   const isPaid = cachedTier === "basic" || cachedTier === "premium";
 
-  return isPaid ? paidUserFeeds : freeUserFeeds;
+  return isPaid ? freeUserFeeds : freeUserFeeds;
 };
 /**
  * Reusable ingestion filter: Excludes blocked users and annotates liked status
@@ -156,9 +156,7 @@ export const feedRepository = {
       const combinedProfiles = [...pastProfiles, ...futureProfiles];
 
       const initialIndex = pastProfiles?.length > 0 ? pastProfiles.length : 0;
-      console.log(
-        `[feedRepository.getInitialFeed] Loaded ${combinedProfiles.length} `,
-      );
+
       return { profiles: combinedProfiles, initialIndex };
     } catch (error) {
       console.error("[feedRepository] Error loading initial feed:", error);
@@ -318,35 +316,6 @@ export const feedRepository = {
       .all();
 
     return processFeedProfiles(rows.map(parseProfileRow));
-  },
-
-  /**
-   * Hydrates profiles from local SQLite matching the provided UIDs.
-   * Preserves the exact array order passed in (e.g. chronological sorting).
-   */
-  async fetchProfilesByUids(
-    uids: string[],
-    overrideIsFree?: boolean,
-  ): Promise<Profile[]> {
-    if (!uids || uids.length === 0) return [];
-    const table = resolveFeedTable(overrideIsFree);
-
-    try {
-      const results = await db
-        .select()
-        .from(table)
-        .where(inArray(table.uid, uids));
-
-      const Profiles = results.map(parseProfileRow);
-
-      const profileMap = new Map(Profiles.map((p) => [p.uid, p as Profile]));
-      return uids
-        .map((uid) => profileMap.get(uid))
-        .filter((p): p is Profile => Boolean(p));
-    } catch (error) {
-      console.error("[profileService] Failed to load profiles by UIDs:", error);
-      return [];
-    }
   },
 };
 

@@ -28,7 +28,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
-  const { roomId, otherUser, uid } = route.params;
+  const { rId, uid, ou } = route.params;
   const { myProfile } = useMyProfile();
   const sender = {
     uid,
@@ -68,7 +68,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     deleteMessage,
     getStatusLabel,
     resetToLive,
-  } = useChatSession(roomId, uid, sender, otherUser);
+  } = useChatSession(rId, uid, sender, ou);
 
   const helper = ChatListHelper({
     isLive,
@@ -77,35 +77,28 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     isLoadingMore: isLoadingEarlier,
     hasNewContent: hasNewAtBottom,
     onLoadMore: loadEarlier,
+    mode: "chat",
+    styles,
     onReset: () => {
       resetToLive();
       flatListRef.current?.scrollToOffset({ offset: 0 });
     },
-    mode: "chat",
-    styles,
   });
 
   useLayoutEffect(() => {
-    if (!otherUser?.uid) return;
+    if (!ou?.uid) return;
     navigation.setOptions({
       headerTitle: () => (
         <ChatHeader
-          name={otherUser.name}
-          photo={otherUser.photo}
+          name={ou.name}
+          photo={ou.photo}
           statusLabel={getStatusLabel()}
           isTyping={isOtherTyping}
           isOnline={otherStatus?.state === "online"}
         />
       ),
     });
-  }, [
-    navigation,
-    otherUser,
-    isOtherTyping,
-    otherStatus,
-    getStatusLabel,
-    theme,
-  ]);
+  }, [navigation, ou, isOtherTyping, otherStatus, getStatusLabel, theme]);
 
   // 2. Define the pop-up menu trigger function:
   const handleMessageLongPress = (messageItem: IMessage) => {

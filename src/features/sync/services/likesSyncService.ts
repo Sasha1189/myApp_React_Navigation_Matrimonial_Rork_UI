@@ -43,8 +43,19 @@ export const performFullSync = async (myUid: string) => {
     }
 
     if (ReceivedSnap.exists() && ReceivedSnap.val()) {
-      const remoteUids = Object.keys(ReceivedSnap.val());
-      LikesCache.setIds(remoteUids);
+      const newLikesList: { uid: string; ts: number }[] = [];
+
+      ReceivedSnap.forEach((childSnap) => {
+        const likerUid = childSnap.key;
+        const timestamp = childSnap.val();
+        if (likerUid && typeof timestamp === "number") {
+          newLikesList.push({ uid: likerUid, ts: timestamp });
+        }
+        return undefined;
+      });
+      // Update local MMKV cache and save sync timestamp
+      LikesReceivedCache.saveList(newLikesList);
+      LikesReceivedCache.updateSyncTimestamp();
     }
 
     LikesReceivedCache.updateSyncTimestamp();
@@ -57,26 +68,21 @@ export const syncLikesReceived24h = async (myUid: string, force = false) => {
   if (!myUid) return;
 
   // Gate check: Only execute if 24 hours have passed since last sync
-  if (!force && !LikesReceivedCache.shouldSync()) {
-    return;
-  }
+  if (!force && LikesReceivedCache.shouldSync()) return;
 
   try {
     const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
-
     // Queries RTDB server index for timestamp values >= 24h ago
     const recentLikesQuery = query(
       ref(rtdb, `likesReceived/${myUid}`),
       orderByValue(),
       startAt(twentyFourHoursAgo),
     );
-
-    const snap = await get(recentLikesQuery);
-
-    if (snap.exists() && snap.val()) {
+    const ReceivedSnap = await get(recentLikesQuery);
+    if (ReceivedSnap.exists() && ReceivedSnap.val()) {
       const newLikesList: { uid: string; ts: number }[] = [];
 
-      snap.forEach((childSnap) => {
+      ReceivedSnap.forEach((childSnap) => {
         const likerUid = childSnap.key;
         const timestamp = childSnap.val();
         if (likerUid && typeof timestamp === "number") {
@@ -84,8 +90,6 @@ export const syncLikesReceived24h = async (myUid: string, force = false) => {
         }
         return undefined;
       });
-
-      console.log("Delta receivedlike sync:", newLikesList);
 
       // Update local MMKV cache and save sync timestamp
       LikesReceivedCache.saveList(newLikesList);

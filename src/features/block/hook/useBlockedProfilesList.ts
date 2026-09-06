@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { blocksStorage } from "@/cacheMMKV/cacheConfig";
 import { BlocksCache } from "../cache/blockCache";
-import { feedRepository } from "@/features/home/services/feedRepository";
+import { feedRepository } from "@/db/services/dbFeedServices";
 import { Profile } from "@/features/profile/types/profile";
 
 export function useBlockedList(myUid: string) {

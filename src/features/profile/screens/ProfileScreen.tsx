@@ -23,9 +23,8 @@ export default function ProfileScreen({ navigation }: any) {
 
   // 1. ADDED HERE: Derived hook utilities inside the parent layout
   const completionPercent = useProfileCompletion(myProfile);
-  const { matchesCount, sentCount, receivedCount, isLoading } = useProfileStats(
-    user?.uid,
-  );
+  const { matchesCount, sentCount, receivedCount, isLoading, isSubscribed } =
+    useProfileStats(user?.uid);
 
   // 3. ADDED HERE: Refresh interaction handler function (Fixed syntax error)
   const handleRefresh = async () => {
@@ -61,6 +60,7 @@ export default function ProfileScreen({ navigation }: any) {
           sentCount={sentCount}
           receivedCount={receivedCount}
           matchesCount={matchesCount}
+          isSubscribed={isSubscribed}
           styles={styles}
         />
 

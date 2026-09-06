@@ -67,8 +67,6 @@ export function useSectionEditor<T extends FieldValues>(
       if (isSaving) return;
       setIsSaving(true);
 
-      console.log("onSave called with data:", data);
-
       try {
         const changedFields: Partial<T> = {};
 
@@ -107,8 +105,6 @@ export function useSectionEditor<T extends FieldValues>(
           // 4. Safe & Optimized: Capture ONLY the actual modified payload changes
           changedFields[key] = newValue;
         });
-
-        console.log("Changed fields to update:", changedFields);
 
         // Only ping your endpoint if real updates occurred
         if (Object.keys(changedFields).length > 0) {

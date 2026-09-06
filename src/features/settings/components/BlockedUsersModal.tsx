@@ -6,9 +6,9 @@ import {
   StyleSheet,
   Pressable,
   FlatList,
-  Image,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -18,6 +18,7 @@ import { Profile } from "@/features/profile/types/profile";
 import { useAuth } from "@/context/AuthContext";
 import { useBlockedList } from "@/features/block/hook/useBlockedProfilesList";
 import { toggleBlock } from "@/features/block/services/blocksService";
+import { resolvePhotoUri } from "@/utils/photoUtils";
 
 interface Props {
   visible: boolean;
@@ -40,36 +41,47 @@ export default function BlockedUsersModal({ visible, onClose }: Props) {
     return (first + second).toUpperCase() || "Username";
   };
 
-  const Item = ({ item }: { item: Profile }) => (
-    <View style={styles.row}>
-      <View style={styles.left}>
-        {item?.tn ? (
-          <Image source={{ uri: item.tn }} style={styles.avatarImg} />
-        ) : (
-          <View style={styles.avatarFallback}>
-            <Text style={styles.avatarFallbackText}>
-              {renderInitials(item?.fn)}
+  const Item = ({ item }: { item: Profile }) => {
+    const Uid = item?.uid;
+    const photo = item?.tn;
+    const imageUri = resolvePhotoUri(photo ?? undefined, Uid) || "";
+    return (
+      <View style={styles.row}>
+        <View style={styles.left}>
+          {item?.tn ? (
+            <Image
+              source={{ uri: imageUri }}
+              placeholder={require("../../../../assets/images/profile.webp")}
+              style={styles.avatarImg}
+              contentFit="cover"
+              cachePolicy="disk"
+            />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarFallbackText}>
+                {renderInitials(item?.fn)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.meta}>
+            <Text style={styles.name} numberOfLines={1}>
+              {item?.fn}
             </Text>
           </View>
-        )}
-        <View style={styles.meta}>
-          <Text style={styles.name} numberOfLines={1}>
-            {item?.fn}
-          </Text>
         </View>
-      </View>
 
-      <Pressable
-        onPress={() => toggleBlock(user?.uid!, item.uid)}
-        style={({ pressed }) => [
-          styles.unblockBtn,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-        ]}
-      >
-        <Text style={styles.unblockText}>{t("settings.unblock")}</Text>
-      </Pressable>
-    </View>
-  );
+        <Pressable
+          onPress={() => toggleBlock(user?.uid!, item.uid)}
+          style={({ pressed }) => [
+            styles.unblockBtn,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
+        >
+          <Text style={styles.unblockText}>{t("settings.unblock")}</Text>
+        </Pressable>
+      </View>
+    );
+  };
 
   if (!theme) return null;
   return (

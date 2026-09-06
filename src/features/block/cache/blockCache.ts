@@ -90,12 +90,6 @@ export const BlocksCache = {
       );
       const merged = Array.from(new Set([...filteredExisting, ...theirsAdd]));
 
-      console.log(
-        "Delta fetch blocksync-remove1, add",
-        theirsRemove,
-        theirsAdd,
-      );
-
       blocksStorage.set(BLOCKED_IDS_KEY, JSON.stringify(merged));
     }
   },

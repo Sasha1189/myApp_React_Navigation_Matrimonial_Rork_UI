@@ -40,8 +40,6 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
       isFetchingRef.current = true;
 
       try {
-        console.log(`[useFeedLatest] Loading fresh latest feed for ${uid}...`);
-
         const initialData = await feedRepository.getLatestProfiles(
           FETCH_PAGE_SIZE_LATEST,
         );
@@ -105,7 +103,6 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
     setIsLoadingMore(true);
 
     try {
-      console.log(`[useFeedLatest] Fetching next batch after ua: ${lastUa}`);
       const nextProfiles = await feedRepository.getMoreLatestProfiles(
         lastUa,
         FETCH_PAGE_SIZE_LATEST,
@@ -134,10 +131,6 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
 
       // MEMORY PURGE: Check if memory limit is reached
       if (index >= MAX_MEMORY_LIMIT) {
-        console.log(
-          `[useFeedLatest] Reached memory limit (${index}). Purging stack and reloading latest...`,
-        );
-
         const currentProfiles = profilesRef.current;
         const currentProfile = currentProfiles[index];
         const lastUa = Number(currentProfile?.ua);

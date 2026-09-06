@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { likesStorage } from "@/cacheMMKV/cacheConfig";
 import { LikesCache, LikesReceivedCache } from "../cache/likesCache";
-import { feedRepository } from "@/features/home/services/feedRepository";
+import { feedRepository } from "@/db/services/dbFeedServices";
 import { Profile } from "@/features/profile/types/profile";
 
 //...................
@@ -55,8 +55,8 @@ export function useLikeReceived(
     setIsLoading(true);
     try {
       const list = LikesReceivedCache.getList();
-      const ids = list.map(({ uid }) => uid);
-      const data = await feedRepository.fetchProfilesByUids(ids);
+      const uids = list.map(({ uid }) => uid);
+      const data = await feedRepository.fetchProfilesByUids(uids);
       setProfiles(data);
     } catch (error) {
       console.error("[useLikeReceived] Failed to load profiles:", error);

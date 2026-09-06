@@ -25,10 +25,10 @@ import { formatStatusTime } from "../../../utils/dateUtils";
 import { useTranslation } from "react-i18next";
 
 export function useChatSession(
-  roomId: string,
+  rId: string,
   myUid: string,
   sender: { name?: string; photo?: string },
-  otherUser: { uid: string; name?: string; photo?: string },
+  ou: { uid: string; name?: string; photo?: string },
 ) {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const { t } = useTranslation();
@@ -69,7 +69,7 @@ export function useChatSession(
     setHasNewAtBottom(false);
 
     // Modular Query: Passing rtdb instance as the first argument
-    const msgQuery = query(ref(rtdb, `messages/${roomId}`), limitToLast(50));
+    const msgQuery = query(ref(rtdb, `messages/${rId}`), limitToLast(50));
     // 1. Initial Load (One-time cost)
     get(msgQuery).then((snap) => {
       const data = snap.val() || {};
@@ -91,7 +91,7 @@ export function useChatSession(
       const unread = list.filter((m) => m.s !== myUid && !m.r);
       if (unread.length > 0) {
         const updates: any = {};
-        unread.forEach((m) => (updates[`messages/${roomId}/${m.id}/r`] = true));
+        unread.forEach((m) => (updates[`messages/${rId}/${m.id}/r`] = true));
         update(ref(rtdb, "/"), updates);
       }
     });
@@ -108,7 +108,7 @@ export function useChatSession(
 
       // Mark single new message as read if it's not mine
       if (newMsg.s !== myUid && !newMsg.r) {
-        update(ref(rtdb, `messages/${roomId}/${newMsg.id}`), { r: true });
+        update(ref(rtdb, `messages/${rId}/${newMsg.id}`), { r: true });
       }
     });
 
@@ -131,23 +131,23 @@ export function useChatSession(
       unsubChanged();
       unsubRemoved();
     };
-  }, [roomId, myUid, stopListeners]);
+  }, [rId, myUid, stopListeners]);
 
   const clearUnreadBadge = useCallback(() => {
-    update(ref(rtdb, `inbox/${myUid}/${roomId}`), { u: null });
-  }, [myUid, roomId]);
+    update(ref(rtdb, `inbox/${myUid}/${rId}`), { u: null });
+  }, [myUid, rId]);
 
   useFocusEffect(
     useCallback(() => {
-      const otherUid = otherUser?.uid;
-      if (!roomId || !myUid || !otherUid) return;
+      const otherUid = ou?.uid;
+      if (!rId || !myUid || !otherUid) return;
 
       clearUnreadBadge();
 
       startLiveMessages();
 
       const statusRef = ref(rtdb, `status/${otherUid}`);
-      const otherTypingRef = ref(rtdb, `typing/${roomId}/${otherUid}`);
+      const otherTypingRef = ref(rtdb, `typing/${rId}/${otherUid}`);
 
       const unsubStatus = onValue(statusRef, (snap) =>
         setOtherStatus(snap.val()),
@@ -161,13 +161,13 @@ export function useChatSession(
         stopListeners();
         unsubStatus();
         unsubTyping();
-        remove(ref(rtdb, `typing/${roomId}/${myUid}`));
+        remove(ref(rtdb, `typing/${rId}/${myUid}`));
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       };
     }, [
-      roomId,
+      rId,
       myUid,
-      otherUser?.uid,
+      ou?.uid,
       startLiveMessages,
       stopListeners,
       clearUnreadBadge,
@@ -181,10 +181,7 @@ export function useChatSession(
       setIsLive(false);
       stopListeners();
 
-      const lastMsgQuery = query(
-        ref(rtdb, `messages/${roomId}`),
-        limitToLast(1),
-      );
+      const lastMsgQuery = query(ref(rtdb, `messages/${rId}`), limitToLast(1));
       newMsgUnsubscribe.current = onChildAdded(lastMsgQuery, (snap) => {
         if (snap.val()?.s !== myUid) setHasNewAtBottom(true);
       });
@@ -192,9 +189,8 @@ export function useChatSession(
 
     setIsLoadingEarlier(true);
     try {
-      // Functional Querying replaces .orderByChild() calls
       const earlierQuery = query(
-        ref(rtdb, `messages/${roomId}`),
+        ref(rtdb, `messages/${rId}`),
         orderByChild("ts"),
         endAt(oldestLoadedTs.current - 1),
         limitToLast(50),
@@ -222,18 +218,18 @@ export function useChatSession(
     } finally {
       setIsLoadingEarlier(false);
     }
-  }, [roomId, isLive, isLoadingEarlier, hasMore, myUid, stopListeners]);
+  }, [rId, isLive, isLoadingEarlier, hasMore, myUid, stopListeners]);
 
   const sendMessage = useCallback(
     async (text: string) => {
       const cleanText = text?.trim();
-      if (!cleanText || !otherUser?.uid || !myUid) return;
+      if (!cleanText || !ou?.uid || !myUid) return;
 
       const ts = serverTimestamp();
-      const msgId = push(ref(rtdb, `messages/${roomId}`)).key;
+      const msgId = push(ref(rtdb, `messages/${rId}`)).key;
 
       const updates: Record<string, any> = {};
-      updates[`messages/${roomId}/${msgId}`] = {
+      updates[`messages/${rId}/${msgId}`] = {
         id: msgId,
         s: myUid,
         t: cleanText,
@@ -241,47 +237,42 @@ export function useChatSession(
         r: false,
       };
 
-      const common = { lastMessage: cleanText, updatedAt: ts, roomId };
-      updates[`inbox/${myUid}/${roomId}`] = {
+      const common = { lm: cleanText, ua: ts, rId };
+      updates[`inbox/${myUid}/${rId}`] = {
         ...common,
-        otherUser: {
-          uid: otherUser.uid,
-          name: otherUser.name || "User",
-          photo: otherUser.photo || "",
+        ou: {
+          uid: ou.uid,
         },
       };
-      updates[`inbox/${otherUser.uid}/${roomId}`] = {
+      updates[`inbox/${ou.uid}/${rId}`] = {
         ...common,
-        otherUser: {
+        ou: {
           uid: myUid,
-          name: sender.name || "User",
-          photo: sender.photo || "",
         },
         u: true, // <--- The "Unread" flag
       };
-
       return update(ref(rtdb, "/"), updates);
     },
-    [roomId, myUid, sender, otherUser],
+    [rId, myUid, sender, ou],
   );
 
   const deleteMessage = useCallback(
     async (messageItem: IMessage) => {
-      if (!roomId || !myUid || !messageItem?.id || !otherUser?.uid) return;
+      if (!rId || !myUid || !messageItem?.id || !ou?.uid) return;
 
       try {
         const deletionTime = Date.now();
         const updates: Record<string, any> = {};
 
         // 1. Compliance Archive Path: Stores data for audits with a separate deletion time
-        const archivePath = `archive/${roomId}/${messageItem.s}/${messageItem.id}`;
+        const archivePath = `archive/${rId}/${messageItem.s}/${messageItem.id}`;
         updates[archivePath] = {
           ...messageItem,
           deletedAt: deletionTime, // Distinct compliance timestamp anchor
         };
 
         // 2. Production Removal Path: Deletes the active bubble node instance
-        const liveMessagePath = `messages/${roomId}/${messageItem.id}`;
+        const liveMessagePath = `messages/${rId}/${messageItem.id}`;
         updates[liveMessagePath] = null; // Removing the node completely in RTB
 
         // 3. Inbox Patch Update: Evaluate if the deleted item was the latest message
@@ -298,20 +289,18 @@ export function useChatSession(
                 ? fallbackMsg.ts
                 : deletionTime;
 
-            updates[`inbox/${myUid}/${roomId}/lastMessage`] = fallbackText;
-            updates[`inbox/${myUid}/${roomId}/updatedAt`] = fallbackTs;
+            updates[`inbox/${myUid}/${rId}/lm`] = fallbackText;
+            updates[`inbox/${myUid}/${rId}/ua`] = fallbackTs;
 
-            updates[`inbox/${otherUser.uid}/${roomId}/lastMessage`] =
-              fallbackText;
-            updates[`inbox/${otherUser.uid}/${roomId}/updatedAt`] = fallbackTs;
+            updates[`inbox/${ou.uid}/${rId}/lm`] = fallbackText;
+            updates[`inbox/${ou.uid}/${rId}/ua`] = fallbackTs;
           } else {
             // No other messages left in the chat room. Clear out the previews cleanly.
-            updates[`inbox/${myUid}/${roomId}/lastMessage`] = "";
-            updates[`inbox/${myUid}/${roomId}/updatedAt`] = deletionTime;
+            updates[`inbox/${myUid}/${rId}/lm`] = "";
+            updates[`inbox/${myUid}/${rId}/ua`] = deletionTime;
 
-            updates[`inbox/${otherUser.uid}/${roomId}/lastMessage`] = "";
-            updates[`inbox/${otherUser.uid}/${roomId}/updatedAt`] =
-              deletionTime;
+            updates[`inbox/${ou.uid}/${rId}/lm`] = "";
+            updates[`inbox/${ou.uid}/${rId}/ua`] = deletionTime;
           }
         }
 
@@ -321,7 +310,7 @@ export function useChatSession(
         throw err; // Re-throw to handle UI alerting fallbacks gracefully
       }
     },
-    [roomId, myUid, messages, otherUser?.uid], // Added messages and otherUser.uid to dependencies
+    [rId, myUid, messages, ou?.uid], // Added messages and otherUser.uid to dependencies
   );
 
   const setMyTyping = useCallback(
@@ -330,7 +319,7 @@ export function useChatSession(
       if (isTyping === lastTypingState.current) return;
       lastTypingState.current = isTyping;
 
-      const tPath = `typing/${roomId}/${myUid}`;
+      const tPath = `typing/${rId}/${myUid}`;
       const tRef = ref(rtdb, tPath);
 
       if (isTyping) {
@@ -345,7 +334,7 @@ export function useChatSession(
         }
       }
     },
-    [roomId, myUid],
+    [rId, myUid],
   );
 
   const getStatusLabel = useCallback(() => {

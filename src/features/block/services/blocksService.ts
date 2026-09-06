@@ -46,7 +46,6 @@ export const toggleBlock = async (
     return !isCurrentlyBlocked;
   } catch (err) {
     BlocksCache.update(targetUid, isCurrentlyBlocked ? "add" : "remove");
-    console.log("block error:", err);
     throw err;
   }
 };

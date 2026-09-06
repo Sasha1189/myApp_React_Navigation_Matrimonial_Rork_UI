@@ -15,8 +15,6 @@ import {
   Zap,
   HeartIcon,
 } from "lucide-react-native";
-
-import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useSectionEditor } from "../../hooks/useSectionEditor";
 import { SECTION_CONFIG, isFieldLocked } from "../form/profileValidation";

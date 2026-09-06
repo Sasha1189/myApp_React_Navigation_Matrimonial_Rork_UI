@@ -49,10 +49,6 @@ export function useSearchFeed(
       isFetchingRef.current = true;
 
       try {
-        console.log(
-          `[useFeedSearch] Executing search for query: "${cleanQuery}"`,
-        );
-
         const parsed = await feedRepository.searchProfiles(
           cleanQuery,
           FETCH_PAGE_SIZE_SEARCH,
@@ -116,10 +112,6 @@ export function useSearchFeed(
 
     try {
       const nextOffset = profiles.length;
-      console.log(
-        `[useFeedSearch] Fetching next search page (offset: ${nextOffset}, limit: ${FETCH_PAGE_SIZE_SEARCH})...`,
-      );
-
       const parsed = await feedRepository.searchProfiles(
         cleanQuery,
         FETCH_PAGE_SIZE_SEARCH,
@@ -149,9 +141,6 @@ export function useSearchFeed(
 
       // MEMORY PURGE: Check if memory limit is reached
       if (index >= MAX_MEMORY_LIMIT) {
-        console.log(
-          `[useFeedSearch] Reached memory limit (${index}). Purging stack and re-executing search...`,
-        );
         // Reset tracking ref and reload fresh batch from top (index 0)
         initialLoadedRef.current = false;
 

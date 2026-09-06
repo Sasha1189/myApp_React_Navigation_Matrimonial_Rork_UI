@@ -1,33 +1,3 @@
-// import { useEffect } from "react";
-// import { useMyProfile } from "@/features/profile/context/ProfileContext";
-// import { checkUserVerification } from "@/features/sync/services/verificationService";
-
-// export const useIsVerifiedSync = (uid?: string, enabled: boolean = false) => {
-//   const { myProfile, setMyProfile } = useMyProfile();
-//   const isVerified = myProfile?.iv;
-
-//   useEffect(() => {
-//     if (!enabled || !uid || isVerified) return;
-
-//     const syncVerification = async () => {
-//       try {
-//         const isVerifiedRTDB = await checkUserVerification(uid);
-
-//         if (isVerifiedRTDB) {
-//           setMyProfile({ ...myProfile, iv: isVerifiedRTDB });
-//         }
-//       } catch (error) {
-//         console.error(
-//           "[useIsVerifiedSync] Failed to sync user verification status:",
-//           error,
-//         );
-//       }
-//     };
-
-//     syncVerification();
-//   }, [uid, enabled]);
-// };
-
 import { useEffect, useRef, useState } from "react";
 import { useMyProfile } from "@/features/profile/context/ProfileContext";
 import { checkUserVerification } from "@/features/sync/services/verificationService";
@@ -40,7 +10,6 @@ export const useIsVerifiedSync = (uid?: string, enabled: boolean = false) => {
   const isVerified = Boolean(myProfile?.iv);
 
   useEffect(() => {
-    // 1. Guard against unready state, disabled flag, already verified, or active sync
     if (!enabled || !uid || isVerified || isSyncRunningRef.current) return;
 
     let isMounted = true;

@@ -1,26 +1,3 @@
-// import { useEffect } from "react";
-// import { useAuth } from "@/context/AuthContext";
-// import { useMyProfile } from "@/features/profile/context/ProfileContext";
-// import { deactivateUserProfile } from "../services/tierExpirationService";
-// import { Profile } from "@/features/profile/types/profile";
-
-// export const useTierExpirationSync = () => {
-//   const { user, tier } = useAuth();
-//   const { myProfile, setMyProfile } = useMyProfile();
-
-//   useEffect(() => {
-//     // If tier has expired to 'none', but profile is still active
-//     if (user?.uid && tier === "none" && myProfile?.ia === true) {
-//       const userGender = user.displayName?.trim().toLowerCase();
-
-//       deactivateUserProfile(user.uid, userGender).then(() => {
-//         // Safely update React profile state after DB update succeeds
-//         setMyProfile((prev: Profile) => ({ ...prev, ia: false }));
-//       });
-//     }
-//   }, [user?.uid, tier, myProfile?.ia, setMyProfile]);
-// };
-
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useMyProfile } from "@/features/profile/context/ProfileContext";
