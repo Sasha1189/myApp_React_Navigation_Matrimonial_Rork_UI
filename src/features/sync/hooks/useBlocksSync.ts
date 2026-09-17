@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, useEntitlement } from "@/context";
 import { syncBlocks } from "../services/blocksSyncService";
 
 export const useBlocksSync = (enabled: boolean = false) => {
   const { user } = useAuth();
+  const { isPaid } = useEntitlement();
+
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
 
   const uid = user?.uid;
 
   useEffect(() => {
-    // 1. Guard against unready state, disabled flag, or active sync
-    if (!enabled || !uid || isSyncRunningRef.current) return;
+    // 1. Guard against unready state, disabled flag, unpaid entitlement, or active sync
+    if (!enabled || !uid || !isPaid || isSyncRunningRef.current) return;
 
     let isMounted = true;
 
@@ -20,7 +22,7 @@ export const useBlocksSync = (enabled: boolean = false) => {
       setIsSyncing(true);
 
       try {
-        await syncBlocks(uid);
+        await syncBlocks(uid, { isPaid });
       } catch (error) {
         if (isMounted) {
           console.error(
@@ -41,7 +43,7 @@ export const useBlocksSync = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, uid]);
+  }, [enabled, uid, isPaid]);
 
   return { isSyncing };
 };

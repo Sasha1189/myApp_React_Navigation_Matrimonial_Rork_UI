@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import { getUniqueId } from "react-native-device-info";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, useEntitlement } from "@/context";
 import {
   getDBDeviceIdCache,
   setDBDeviceIdCache,
@@ -14,21 +14,19 @@ import {
 } from "../services/deviceBindingService";
 
 export const useDeviceBinding = (enabled: boolean = false) => {
-  const { user, tier } = useAuth();
+  const { user, setAuthLoading } = useAuth();
+  const { isPaid, isPaidTier } = useEntitlement();
+
   const isVerifyingRef = useRef<boolean>(false);
 
   const uid = user?.uid;
   const displayName = user?.displayName;
-  const isPaidUser = tier === "basic" || tier === "premium";
 
   useEffect(() => {
-    // 1. Guard against unready state, disabled flag, or non-paid tier
-    if (!enabled || !uid || !displayName || !isPaidUser) return;
+    if (!enabled || !isPaid || !isPaidTier || !uid || !displayName) return;
 
-    // 2. Bypass hardware check for reviewer accounts
-    if (GOOGLE_REVIEWER_UIDS.includes(uid)) return;
+    if ((GOOGLE_REVIEWER_UIDS ?? []).includes(uid)) return;
 
-    // 3. Prevent parallel execution if a check is already in-flight
     if (isVerifyingRef.current) return;
 
     let isMounted = true;
@@ -40,7 +38,6 @@ export const useDeviceBinding = (enabled: boolean = false) => {
         const currentHardwareId = await getUniqueId();
         const cachedId = getDBDeviceIdCache();
 
-        // Fast-path: Skip network query if MMKV cache matches current device
         if (cachedId === currentHardwareId) return;
 
         const dbId = await getUserDeviceId(uid);
@@ -64,7 +61,7 @@ export const useDeviceBinding = (enabled: boolean = false) => {
             [
               {
                 text: "Logout",
-                onPress: () => logoutUser(uid),
+                onPress: () => logoutUser({ uid, setAuthLoading }),
               },
             ],
             { cancelable: false },
@@ -87,5 +84,5 @@ export const useDeviceBinding = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, uid, displayName, isPaidUser]);
+  }, [enabled, uid, isPaid, isPaidTier]);
 };

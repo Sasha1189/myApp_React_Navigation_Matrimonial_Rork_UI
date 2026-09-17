@@ -1,4 +1,3 @@
-import React from "react";
 import { useEffect } from "react";
 import { Alert } from "react-native";
 import { NavigationProp } from "@react-navigation/native";

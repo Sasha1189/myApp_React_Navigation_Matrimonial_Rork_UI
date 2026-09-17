@@ -8,9 +8,10 @@ import {
 import { FieldValues, useForm } from "react-hook-form";
 import { X, Save } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { isDeepEqual } from "@/utils/deepEqual";
+import { isDeepEqual } from "@/features/profile/utils/deepEqual";
 import { isFieldLocked } from "../components/form/profileValidation";
 import { useTranslation } from "react-i18next";
+import { Profile } from "../types/profile";
 
 export function useSectionEditor<T extends FieldValues>(
   profile: T | any,
@@ -106,10 +107,8 @@ export function useSectionEditor<T extends FieldValues>(
           changedFields[key] = newValue;
         });
 
-        // Only ping your endpoint if real updates occurred
         if (Object.keys(changedFields).length > 0) {
           await updateProfile(changedFields);
-          reset(data);
         }
         navigation.goBack();
       } catch (err: any) {

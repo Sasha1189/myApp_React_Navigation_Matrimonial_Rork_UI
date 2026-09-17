@@ -1,4 +1,8 @@
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import {
+  getIdTokenResult,
+  FirebaseAuthTypes,
+} from "@react-native-firebase/auth";
+import { appStorage, TIER_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
 import { UserTier } from "../types/auth.types";
 
 const TIER_MAPPING: Record<string, UserTier> = {
@@ -41,3 +45,26 @@ export function calculateUserTier(
     isExpired,
   };
 }
+
+/**
+ * Helper to fetch token claims from Firebase, calculate tier, and sync MMKV cache.
+ */
+export const fetchAndSyncUserTier = async (
+  user: FirebaseAuthTypes.User | null,
+  forceRefresh = false,
+): Promise<UserTier | undefined> => {
+  if (!user) return undefined;
+
+  try {
+    const idTokenResult = await getIdTokenResult(user, forceRefresh);
+    const { activeTier } = calculateUserTier(idTokenResult);
+
+    // Sync local storage cache
+    appStorage.set(TIER_CACHE_KEY, activeTier);
+
+    return activeTier;
+  } catch (error) {
+    console.error("[authTierUtils] Failed to retrieve token claims:", error);
+    return undefined;
+  }
+};

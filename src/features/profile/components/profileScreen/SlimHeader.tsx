@@ -34,7 +34,6 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
   const offset = circumference - (circumference * completionPercent) / 100;
 
   const age = profile?.db ? formatDOB(profile.db, "age") : "18";
-  console.log("SlimHeader profile.db:", profile?.db, "age:", age);
 
   const imageUri = resolveThumbUri(profile?.tn, profile?.uid) || "";
 

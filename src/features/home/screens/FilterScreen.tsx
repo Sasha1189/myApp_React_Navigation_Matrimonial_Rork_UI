@@ -26,8 +26,7 @@ import { FeedCache } from "../cache/feedCache";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
 import PickerField from "../../profile/components/form/PickerField";
-import { LOOKUPS } from "../../utils/profileLookups"; // Ensure this matches your actual schema file location
-import { districtOptions } from "../../profile/components/form/profileOptions"; // Kept since district handles a custom separate list
+import { LOOKUPS } from "../../utils/profileLookups";
 
 const INITIAL_FILTERS = {
   maxAge: "",
@@ -185,7 +184,7 @@ export default function FilterScreen() {
             <PickerField
               placeholder={t("filters.placeholders.district")}
               value={filters.np}
-              options={districtOptions}
+              options={transformLookupToOptions("ct")}
               onSelect={(val) => setFilters((p) => ({ ...p, np: val }))}
             />,
           )}

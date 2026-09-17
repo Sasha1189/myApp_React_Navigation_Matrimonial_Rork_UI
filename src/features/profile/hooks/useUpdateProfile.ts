@@ -1,52 +1,40 @@
-import { appStorage, PROFILE_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
+import { Dispatch, SetStateAction } from "react";
+import { setCachedProfile } from "@/cacheMMKV/cacheConfig";
 import { Profile } from "../types/profile";
 import { apiUpdateProfile } from "../api/profileApi";
-import { sanitizePayload } from "../../../utils/sanitizePayload";
 
 export const useUpdateProfile = (
   user: any,
-  myProfile: Profile,
-  setMyProfile: (p: Profile) => void,
+  setMyProfile: Dispatch<SetStateAction<Profile>>,
   tier: string,
 ) => {
   return async (newData: Partial<Profile>) => {
-    const gender = myProfile?.gender || user?.displayName;
-
+    const gender = user?.displayName;
     if (!user?.uid || !gender) return;
 
-    const isPaidUser = tier === "basic" || tier === "premium";
-
-    // 1. Sanitize incoming section updates immediately
-    const cleanNewData = sanitizePayload(newData);
-
-    // 2. Build the updated profile blueprint for local memory
-    const rawUpdatedProfile = {
-      ...myProfile,
-      ...cleanNewData,
-      uid: user.uid,
-      gender: gender,
-    };
-
-    // 3. Clean the local profile memory copy to strip out any existing blank keys
-    const fullySanitizedProfile = sanitizePayload(rawUpdatedProfile) as Profile;
+    const effectiveTier = newData.tier || tier;
+    const isPaidUser = effectiveTier === "basic" || effectiveTier === "premium";
 
     try {
-      // 4. Server-Write Path (Strictly limited to Paid users per business logic)
-      if (isPaidUser) {
-        // Paid tiers push only their sanitized changes to the cloud database
-        if (Object.keys(cleanNewData).length > 0) {
-          await apiUpdateProfile({
-            uid: user.uid,
-            gender: gender,
-            ...cleanNewData,
-          });
-        }
+      if (isPaidUser && Object.keys(newData).length > 0) {
+        await apiUpdateProfile({
+          uid: user.uid,
+          gender: user.displayName,
+          ...newData,
+        });
       }
 
-      // 5. Sync Local State & MMKV Storage Cache cleanly
-      setMyProfile(fullySanitizedProfile);
-      appStorage.set(PROFILE_CACHE_KEY, JSON.stringify(fullySanitizedProfile));
+      setMyProfile((prevProfile: Profile) => {
+        const mergedProfile = {
+          ...prevProfile,
+          ...newData,
+          uid: user.uid,
+        };
+        setCachedProfile(mergedProfile);
+        return mergedProfile;
+      });
     } catch (error) {
+      console.error("[useUpdateProfile] Update failed:", error);
       throw error;
     }
   };

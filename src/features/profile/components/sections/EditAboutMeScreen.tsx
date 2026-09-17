@@ -1,7 +1,6 @@
 import React from "react";
 import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { Controller } from "react-hook-form";
-import { useAuth } from "@/context/AuthContext";
 import { useAppTheme } from "@/theme/ThemeContext";
 import {
   Target,
@@ -49,7 +48,7 @@ export default function EditAboutMeScreen({ navigation }: any) {
         automaticallyAdjustKeyboardInsets={true}
         showsVerticalScrollIndicator={true}
       >
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: theme.spacing.xs }}>
           {/* Short Bio */}
           <Controller
             control={control}
@@ -107,7 +106,6 @@ export default function EditAboutMeScreen({ navigation }: any) {
                   onChangeText={onChange}
                   placeholder={t("details.placeholders.beliefs")}
                   maxLength={150}
-                  multiline
                   editable={!isLocked}
                   locked={isLocked}
                   icon={Church}

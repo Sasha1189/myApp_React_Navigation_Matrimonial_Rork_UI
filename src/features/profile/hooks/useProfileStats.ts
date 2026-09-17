@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../../context/AuthContext";
+import { useEntitlement } from "../../../context";
 import {
   LikesCache,
   LikesReceivedCache,
@@ -15,25 +15,11 @@ export interface ProfileStats {
 }
 
 export function useProfileStats(uid: string | undefined): ProfileStats {
-  const { tier } = useAuth();
-
-  // Returns true if user has any active subscription
-  const isSubscribed = Boolean(
-    tier && (tier === "basic" || tier === "premium"),
-  );
+  const { isPaid } = useEntitlement();
+  const isSubscribed = Boolean(isPaid);
 
   const calculateLocalStats = (): ProfileStats => {
-    if (!uid) {
-      return {
-        matchesCount: 0,
-        sentCount: 0,
-        receivedCount: 0,
-        isLoading: true,
-        isSubscribed: false,
-      };
-    }
-
-    if (!isSubscribed) {
+    if (!uid || !isSubscribed) {
       return {
         sentCount: 0,
         receivedCount: 0,
@@ -43,14 +29,12 @@ export function useProfileStats(uid: string | undefined): ProfileStats {
       };
     }
 
-    // Load arrays directly from MMKV cache
     const sentIds = LikesCache.getIds() || [];
     const receivedList = LikesReceivedCache.getList() || [];
     const receivedIds = receivedList
       .map((item: any) => item.uid)
       .filter(Boolean);
 
-    // Mutual matches calculation
     const sentSet = new Set(sentIds);
     const mutualMatches = receivedIds.filter((id) => sentSet.has(id));
 
@@ -77,7 +61,7 @@ export function useProfileStats(uid: string | undefined): ProfileStats {
     setStats(calculateLocalStats());
 
     return () => listener.remove();
-  }, [uid, tier, isSubscribed]);
+  }, [uid, isSubscribed]);
 
   return stats;
 }

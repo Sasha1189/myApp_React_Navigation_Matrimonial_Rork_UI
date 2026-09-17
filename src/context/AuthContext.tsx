@@ -4,64 +4,70 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from "react";
 import {
   getAuth,
   onAuthStateChanged,
-  getIdTokenResult,
   FirebaseAuthTypes,
 } from "@react-native-firebase/auth";
 import { AuthContextType, UserTier } from "./types/auth.types";
-import { calculateUserTier } from "./utils/authTierUtils";
+import { fetchAndSyncUserTier } from "./utils/authTierUtils";
 import { appStorage, TIER_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export interface ExtendedAuthContextType extends AuthContextType {
+  refreshToken: (forceRefresh?: boolean) => Promise<UserTier | undefined>;
+}
+
+const AuthContext = createContext<ExtendedAuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [tier, setTier] = useState<UserTier>(() => {
     const cached = appStorage.getString(TIER_CACHE_KEY);
-    return (cached as any) || "none";
+    return (cached as UserTier) || "none";
   });
 
+  const refreshToken = useCallback(async (forceRefresh = false) => {
+    const currentUser = getAuth().currentUser;
+    const activeTier = await fetchAndSyncUserTier(currentUser, forceRefresh);
+    if (activeTier) setTier(activeTier);
+    return activeTier;
+  }, []);
+
   useEffect(() => {
+    console.log("🔍 [AUTH 1/3] Attaching onAuthStateChanged listener...");
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) {
-        setTier("none");
-        setUser(null);
-        setAuthLoading(false);
-        return;
-      }
-
-      setUser(firebaseUser);
-      setAuthLoading(false);
-
-      if (firebaseUser) {
-        try {
-          const idTokenResult = await getIdTokenResult(firebaseUser, false);
-          const { activeTier } = calculateUserTier(idTokenResult);
-          setTier((currentTier) => {
-            if (currentTier !== activeTier) {
-              appStorage.set(TIER_CACHE_KEY, activeTier);
-              return activeTier;
-            }
-            return currentTier;
-          });
-        } catch (error) {
-          console.error(
-            "[AuthContext] Failed to retrieve token claims:",
-            error,
-          );
+      console.log(
+        "🔍 [AUTH 2/3] Auth state resolved | UID:",
+        firebaseUser?.uid ?? "LOGGED_OUT",
+      );
+      try {
+        if (!firebaseUser) {
+          setTier("none");
+          setUser(null);
+          setAuthLoading(false);
+          return;
         }
+
+        setUser(firebaseUser);
+        await refreshToken(false);
+        setAuthLoading(false);
+      } catch (error) {
+        console.error("[AuthInit Error]:", error);
+      } finally {
+        console.log("🔍 [AUTH 3/3] Setting authLoading -> false");
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [refreshToken]);
 
   const value = useMemo(
     () => ({
@@ -69,15 +75,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       authLoading,
       tier,
       setUser,
+      setAuthLoading,
       setTier,
+      refreshToken,
     }),
-    [user, authLoading, tier],
+    [user, authLoading, tier, refreshToken],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = (): ExtendedAuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");

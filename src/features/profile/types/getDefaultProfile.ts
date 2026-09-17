@@ -10,16 +10,17 @@ export const getDefaultProfile = (): Profile => ({
   // Compressed Basic Information
   photos: [], // photos array -> ph
   tn: "", // thumbnail URL -> tb
-  ca: new Date().toISOString(), // createdAt -> ca (using ISO string standard)
-  ua: new Date().toISOString(), // updatedAt -> ua
+  ca: null, // createdAt -> ca
+  ua: null, // updatedAt -> ua
   iv: false, // isVerified -> iv
+  ia: false, // isActive
   pid: "", // profileId -> pid
 
   // Compressed Personal & Birth Information-12
   fn: "", // firstName -> fn
   ln: "", // lastName -> ln
   db: null, // dateOfBirth -> db
-  tob: "", // timeOfBirth -> tob
+  tob: null, // timeOfBirth -> tob
   pb: "", // placeOfBirth -> pb
   ms: 0, // maritalStatus enum index -> ms
   ht: "", // height -> ht

@@ -1,23 +1,19 @@
 import { useState, useEffect } from "react";
 import { Alert, Platform } from "react-native";
 import { useIAP, ErrorCode, Purchase } from "react-native-iap";
-import { getIdToken } from "@/config/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { apiSubscribe } from "../apis/subscriptionApi";
 import { useTranslation } from "react-i18next";
-import { appStorage, PROFILE_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
-import { apiUpdateProfile } from "@/features/profile/api/profileApi";
 import { useAppNavigation } from "@/navigation/hooks";
-import { sanitizePayload } from "@/utils/sanitizePayload";
-import { generateTimeBasedSuffix } from "@/utils/IDGenerater";
-import { Profile } from "@/features/profile/types/profile";
+import { generateTimeBasedSuffix } from "@/features/profile/utils/IDGenerater";
 import { useMyProfile } from "@/features/profile/context/ProfileContext";
+import { sanitizePayload } from "@/features/profile/utils/sanitizePayload";
 
 const SKUS = ["basic_membership_1y", "premium_membership_1y"];
 
 export const useSubscription = () => {
-  const { user, tier } = useAuth();
-  const { myProfile, setMyProfile } = useMyProfile();
+  const { user, tier, refreshToken } = useAuth();
+  const { myProfile, updateMyProfile } = useMyProfile();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const navigation = useAppNavigation();
@@ -47,59 +43,34 @@ export const useSubscription = () => {
 
         await finishTransaction({ purchase, isConsumable: true });
 
-        if (user) await getIdToken(user, true);
+        await refreshToken(true);
 
-        if (user && result.newTier) {
+        if (user?.uid && result.newTier) {
           try {
-            if (myProfile) {
-              let finalPid = myProfile?.pid || "";
-              if (!finalPid || finalPid.trim() === "") {
-                finalPid = generateTimeBasedSuffix(); // Generates "LYC-XXXX" once
-              }
-
-              const hasActiveTier =
-                myProfile.tier === "basic" || myProfile.tier === "premium";
-
-              let profileForSync: Profile = myProfile;
-
-              if (!myProfile.tier || !hasActiveTier) {
-                profileForSync = {
-                  ...myProfile,
-                  photos: [],
-                  tn: "",
-                };
-              }
-
-              const rawCloudPayload = {
-                ...profileForSync,
-                uid: user?.uid,
-                gender: user?.displayName,
-                tier: result.newTier,
-                pid: finalPid,
-              };
-
-              const optimizedPayload = sanitizePayload(rawCloudPayload);
-
-              optimizedPayload.uid = user?.uid;
-              optimizedPayload.gender = user?.displayName;
-              optimizedPayload.tier = result.newTier;
-              optimizedPayload.pid = finalPid;
-              optimizedPayload.ia = true;
-
-              await apiUpdateProfile(optimizedPayload);
-
-              setMyProfile(optimizedPayload as Profile);
-
-              appStorage.set(
-                PROFILE_CACHE_KEY,
-                JSON.stringify(optimizedPayload),
-              );
-            }
-          } catch (syncErr) {
-            console.error(
-              "❌ [POST-PAYMENT SYNC ERROR]: Non-fatal profile upload error caught safely:",
-              syncErr,
+            const pid = myProfile.pid?.trim() || generateTimeBasedSuffix();
+            const validThumbnail = myProfile.tn ? myProfile.tn : "";
+            const validRemotePhotos = (myProfile.photos || []).filter(
+              (p) => !p.downloadURL,
             );
+            console.log(
+              "[useSubscription]Payload:",
+              pid,
+              result.newTier,
+              validRemotePhotos,
+              validThumbnail,
+            );
+            const rawPayload = sanitizePayload(myProfile);
+            const cleanPayload = {
+              ...rawPayload,
+              pid,
+              tier: result.newTier,
+              photos: validRemotePhotos,
+              tn: validThumbnail,
+              ia: true,
+            };
+            await updateMyProfile(cleanPayload);
+          } catch (syncErr) {
+            console.error("[POST-PAYMENT SYNC ERROR]:", syncErr);
           }
         }
 
@@ -117,6 +88,7 @@ export const useSubscription = () => {
         setIsProcessing(false);
       }
     },
+
     onPurchaseError: (error) => {
       setIsProcessing(false);
       if (error.code !== ErrorCode.UserCancelled) {

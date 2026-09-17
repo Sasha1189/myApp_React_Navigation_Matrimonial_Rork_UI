@@ -1,8 +1,3 @@
-// ==========================================
-// BLOCKS DOMAIN CACHE (Feed Filter & UI)
-// Strategy- real-time update rtdb on block but fetch on app boot everytime app opened and
-// on unblock set ts to 1 when other user detects it then changes his local cache and  delets entry
-
 import { DataSnapshot } from "@react-native-firebase/database";
 import { blocksStorage } from "@/cacheMMKV/cacheConfig";
 
@@ -20,20 +15,36 @@ const safeParse = <T>(data: string | undefined, fallback: T): T => {
 };
 
 export const BlocksCache = {
-  getMergedIds: (): string[] =>
-    safeParse<string[]>(blocksStorage.getString(BLOCKED_IDS_KEY), []),
+  getMergedIds: (): string[] => {
+    const parsed = safeParse<string[]>(
+      blocksStorage.getString(BLOCKED_IDS_KEY),
+      [],
+    );
+    return Array.isArray(parsed) ? parsed : [];
+  },
 
-  getMyIds: (): string[] =>
-    safeParse<string[]>(blocksStorage.getString(MY_BLOCKED_IDS_KEY), []),
+  getMyIds: (): string[] => {
+    const parsed = safeParse<string[]>(
+      blocksStorage.getString(MY_BLOCKED_IDS_KEY),
+      [],
+    );
+    return Array.isArray(parsed) ? parsed : [];
+  },
 
   sync: (mine: string[], merged: string[]): void => {
-    blocksStorage.set(MY_BLOCKED_IDS_KEY, JSON.stringify(mine));
-    blocksStorage.set(BLOCKED_IDS_KEY, JSON.stringify(merged));
+    const safeMine = Array.isArray(mine) ? mine : [];
+    const safeMerged = Array.isArray(merged) ? merged : [];
+
+    blocksStorage.set(MY_BLOCKED_IDS_KEY, JSON.stringify(safeMine));
+    blocksStorage.set(BLOCKED_IDS_KEY, JSON.stringify(safeMerged));
   },
 
   update: (targetUid: string, action: "add" | "remove"): void => {
+    if (!targetUid || typeof targetUid !== "string") return;
+
     const mutateKey = (key: string): void => {
-      const current = safeParse<string[]>(blocksStorage.getString(key), []);
+      const raw = safeParse<string[]>(blocksStorage.getString(key), []);
+      const current = Array.isArray(raw) ? raw : [];
       let updated: string[];
 
       if (action === "add") {
@@ -55,25 +66,25 @@ export const BlocksCache = {
    * Applies snapshot deltas to MMKV cache only.
    */
   applyDelta: (
-    unblocksSnap: DataSnapshot,
-    newBlocksSnap: DataSnapshot,
+    unblocksSnap?: DataSnapshot | null,
+    newBlocksSnap?: DataSnapshot | null,
   ): void => {
     const theirsRemove: string[] = [];
     const theirsAdd: string[] = [];
 
     // 1. Extract unblocked UIDs
-    if (unblocksSnap.exists()) {
+    if (unblocksSnap?.exists?.()) {
       unblocksSnap.forEach((child) => {
-        if (child.key) theirsRemove.push(child.key);
+        if (child?.key) theirsRemove.push(child.key);
         return undefined;
       });
     }
 
     // 2. Extract newly blocked UIDs
-    if (newBlocksSnap.exists()) {
+    if (newBlocksSnap?.exists?.()) {
       newBlocksSnap.forEach((child) => {
         const val = child.val();
-        if (child.key && typeof val === "number" && val > 1) {
+        if (child?.key && typeof val === "number" && val > 1) {
           theirsAdd.push(child.key);
         }
         return undefined;

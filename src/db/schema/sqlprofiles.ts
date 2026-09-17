@@ -13,7 +13,7 @@ const baseFeedColumns = {
   ln: text("ln"), // lastName
 
   // Filter Matrix Columns
-  db: integer("db"), // dateOfBirth (ms timestamp for range queries)
+  db: integer("db"),
   ht: integer("ht"), // height
   np: text("np"), // nativePlace
   ai: integer("ai"), // annualIncome

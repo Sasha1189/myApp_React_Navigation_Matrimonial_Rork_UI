@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, useEntitlement } from "@/context";
 import { usePresence } from "@/features/sync/hooks/usePresence";
 import { useDeviceBinding } from "@/features/sync/hooks/useDeviceBinding";
 import { useFeedDbSync } from "@/features/sync/hooks/useFeedDbSync";
@@ -10,20 +10,31 @@ import { useIsVerifiedSync } from "@/features/sync/hooks/useIsVerifiedSync";
 export const AppSyncListeners: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { user, tier } = useAuth();
+  const { user } = useAuth();
+  const { isPaid, isPaidTier } = useEntitlement();
 
   const hasUser = Boolean(user?.uid && user?.displayName);
-  const isPaid = tier === "basic" || tier === "premium";
-  const isPaidUser = hasUser && isPaid;
 
-  // 1. Paid-Only Features & Security Syncs
-  useDeviceBinding(isPaidUser);
-  useLikesSync(isPaidUser);
-  useBlocksSync(isPaidUser);
-  usePresence(isPaidUser);
-  useIsVerifiedSync(user?.uid, isPaidUser);
+  const isFullyEntitled = hasUser && isPaid;
 
-  // 2. All-User Sync (Runs for Free, Paid, Verified, and Unverified users)
+  const canSyncVerification = hasUser && isPaidTier;
+
+  console.log(
+    "🔄 [APP SYNC] State | hasUser:",
+    hasUser,
+    "| isFullyEntitled:",
+    isFullyEntitled,
+    "| canSyncVerification:",
+    canSyncVerification,
+  );
+
+  useDeviceBinding(isFullyEntitled);
+  useLikesSync(isFullyEntitled);
+  useBlocksSync(isFullyEntitled);
+  usePresence(isFullyEntitled);
+
+  useIsVerifiedSync(user?.uid ?? "", canSyncVerification);
+
   useFeedDbSync(hasUser);
 
   return <>{children}</>;

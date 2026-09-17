@@ -3,7 +3,7 @@ import { FeedStatusCard } from "./FeedStatusCard";
 import { FeedHookResult } from "../type/type";
 import { useTranslation } from "react-i18next";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { useAuth } from "../../../context/AuthContext";
+import { useEntitlement } from "@/context";
 
 interface FeedStatusContentProps {
   feed: FeedHookResult;
@@ -31,9 +31,8 @@ export function FeedStatusContent({
 
   const { t } = useTranslation();
   const navigation = useAppNavigation();
-  const { tier } = useAuth();
+  const { isPaid } = useEntitlement();
 
-  const isRestricted = tier === "none";
   const isAtLastCard =
     profiles && profiles.length > 0 && currentIndex >= profiles.length - 1;
 
@@ -61,7 +60,7 @@ export function FeedStatusContent({
   // 2. Paywall interceptor for restricted users (only when on empty feed or reached the end)
   if (
     !isLoading &&
-    isRestricted &&
+    !isPaid &&
     (profiles?.length === 0 || (isFooter && isAtLastCard))
   ) {
     console.log("[FeedStatus] Showing Paywall Interceptor");

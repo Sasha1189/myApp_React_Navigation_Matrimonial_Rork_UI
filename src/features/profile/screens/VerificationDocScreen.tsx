@@ -95,10 +95,7 @@ export default function VerificationDocScreen() {
                 style={styles.uploadButton}
               >
                 <View style={styles.content1}>
-                  // 3. Idle State
-                  <Text style={styles.buttonText}>
-                    {isUploaded ? t("doc.VerPending") : t("doc.Uploaddoc")}
-                  </Text>
+                  <Text style={styles.buttonText}>Verify Me</Text>
                 </View>
               </TouchableOpacity>
             </>

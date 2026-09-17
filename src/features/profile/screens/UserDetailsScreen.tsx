@@ -41,7 +41,7 @@ import {
   Brain,
   Heart,
 } from "lucide-react-native";
-import { useAuth } from "@/context/AuthContext";
+import { useEntitlement } from "@/context";
 import { useMyProfile } from "../context/ProfileContext";
 import { useAppNavigation } from "@/navigation/hooks";
 import { Profile } from "@/features/profile/types/profile";
@@ -51,7 +51,8 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 
-import { formatDOB, formatTime } from "../../../utils/dateUtils";
+import { formatDOB } from "../../../utils/dateUtils";
+import { formatHeight } from "../components/form/height";
 import { ProfileCarousel } from "../components/photos/ProfileCarousel";
 import {
   DetailSection,
@@ -71,16 +72,16 @@ export default function UserDetailsScreen({ route }: any) {
   const styles = useStyles(createStyles);
 
   const navigation = useAppNavigation();
-  const { tier } = useAuth();
+  const { isPaid } = useEntitlement();
   const { myProfile } = useMyProfile();
   const profile = route.params?.profile as Profile;
-  usePreventScreenCapture();
+  // usePreventScreenCapture();
 
   const isSelf = myProfile?.uid === profile?.uid;
 
-  const canViewContact = isSelf || tier === "basic" || tier === "premium";
+  const canViewContact = isSelf || isPaid;
 
-  const canBlock = tier === "basic" || tier === "premium";
+  const canBlock = isPaid;
 
   const HOBBIES_LOOKUP = [
     "Reading",
@@ -147,7 +148,7 @@ export default function UserDetailsScreen({ route }: any) {
           />
           <DetailRow
             label={t("details.labels.height")}
-            value={profile.ht}
+            value={formatHeight(profile.ht)}
             icon={Ruler}
           />
           <DetailRow

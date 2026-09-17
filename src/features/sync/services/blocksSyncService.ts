@@ -14,25 +14,35 @@ import {
 } from "@react-native-firebase/database";
 import { blocksStorage } from "@/cacheMMKV/cacheConfig";
 
+export interface SyncOptions {
+  isPaid?: boolean;
+}
+
 /**
- * Sync Entry Point: Runs on every app cold boot
+ * Sync Entry Point: Runs on every app cold boot (Paid users only)
  */
-export const syncBlocks = async (myUid: string) => {
-  if (!myUid) return;
+export const syncBlocks = async (myUid: string, options: SyncOptions = {}) => {
+  if (!myUid || !options.isPaid) return;
 
   const lastSyncTs = blocksStorage.getNumber(BLOCKS_LAST_SYNC_KEY) || 0;
-  const isCacheEmpty =
-    BlocksCache.getMyIds().length === 0 &&
-    BlocksCache.getMergedIds().length === 0;
+
+  // Safe array fallback checks
+  const myIds = BlocksCache.getMyIds() ?? [];
+  const mergedIds = BlocksCache.getMergedIds() ?? [];
+  const isCacheEmpty = myIds.length === 0 && mergedIds.length === 0;
 
   if (lastSyncTs === 0 || isCacheEmpty) {
-    await performFullSync(myUid);
+    await performFullSyncRtdb(myUid, options);
   } else {
-    await performDeltaSync(myUid, lastSyncTs);
+    await performDeltaSyncRtdb(myUid, lastSyncTs, options);
   }
 };
 
-const performFullSync = async (myUid: string) => {
+const performFullSyncRtdb = async (
+  myUid: string,
+  options: SyncOptions = {},
+) => {
+  if (!options.isPaid) return;
   const syncStartTime = Date.now();
 
   try {
@@ -45,7 +55,7 @@ const performFullSync = async (myUid: string) => {
     const activeTheirs: string[] = [];
     const cleanups: Record<string, any> = {};
 
-    if (mineSnap.exists()) {
+    if (mineSnap?.exists()) {
       mineSnap.forEach((child) => {
         const val = child.val();
         if (child.key && typeof val === "number") {
@@ -57,7 +67,7 @@ const performFullSync = async (myUid: string) => {
       });
     }
 
-    if (theirsSnap.exists()) {
+    if (theirsSnap?.exists()) {
       theirsSnap.forEach((child) => {
         const val = child.val();
         if (child.key && typeof val === "number") {
@@ -83,31 +93,26 @@ const performFullSync = async (myUid: string) => {
   }
 };
 
-export const performDeltaSync = async (
+export const performDeltaSyncRtdb = async (
   myUid: string,
   lastSyncTs: number,
+  options: SyncOptions = {},
 ): Promise<void> => {
+  if (!options.isPaid) return;
   const newSyncStartTime = Date.now();
-  //  for now sync on every appboot
-  lastSyncTs = newSyncStartTime;
 
   try {
     const theirsRef = ref(rtdb, `blocksTheirs/${myUid}`);
 
-    // Parallel queries:
-    // 1. Get all pending unblocks (val === 1)
-    // 2. Get all new blocks created since lastSyncTs (val > lastSyncTs)
     const [unblocksSnap, newBlocksSnap] = await Promise.all([
       get(query(theirsRef, orderByValue(), equalTo(1))),
       get(query(theirsRef, orderByValue(), startAt(lastSyncTs + 1))),
     ]);
 
-    // 1. Update MMKV local cache via helper
     BlocksCache.applyDelta(unblocksSnap, newBlocksSnap);
 
-    // 2. Perform RTDB tombstone cleanup independently using unblocksSnap
     const cleanups: Record<string, null> = {};
-    if (unblocksSnap.exists()) {
+    if (unblocksSnap?.exists()) {
       unblocksSnap.forEach((child) => {
         if (child.key) {
           cleanups[`blocksTheirs/${myUid}/${child.key}`] = null;
@@ -120,7 +125,7 @@ export const performDeltaSync = async (
       await update(ref(rtdb, "/"), cleanups);
     }
 
-    blocksStorage.set(BLOCKS_LAST_SYNC_KEY, lastSyncTs);
+    blocksStorage.set(BLOCKS_LAST_SYNC_KEY, newSyncStartTime);
   } catch (error) {
     console.error("Delta blocks sync failed:", error);
   }

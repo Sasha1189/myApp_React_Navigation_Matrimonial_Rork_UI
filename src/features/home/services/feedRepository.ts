@@ -14,8 +14,6 @@ import {
   inArray,
 } from "drizzle-orm";
 import { Profile } from "@/features/profile/types/profile";
-import { UserTier } from "@/context/types/auth.types";
-import { appStorage, TIER_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
 import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
 import { BlocksCache } from "@/features/block/cache/blockCache";
 import { LikesCache } from "@/features/likes/cache/likesCache";
@@ -39,25 +37,10 @@ export interface InitialFeedResult {
 }
 export type FeedTable = typeof freeUserFeeds | typeof paidUserFeeds;
 
-/**
- * Resolves active feed table based on user tier in storage.
- */
-export const resolveFeedTable = (overrideIsFree?: boolean): FeedTable => {
-  if (typeof overrideIsFree === "boolean") {
-    return overrideIsFree ? freeUserFeeds : paidUserFeeds;
-  }
-
-  const cachedTier = appStorage.getString(TIER_CACHE_KEY) as
-    | UserTier
-    | undefined;
-  const isPaid = cachedTier === "basic" || cachedTier === "premium";
-
-  return isPaid ? freeUserFeeds : freeUserFeeds;
+export const resolveFeedTable = (isPaid?: boolean): FeedTable => {
+  return isPaid ? paidUserFeeds : freeUserFeeds;
 };
-/**
- * Reusable ingestion filter: Excludes blocked users and annotates liked status
- * synchronously using local MMKV cache at fetch time.
- */
+
 export const processFeedProfiles = (profiles: Profile[]): Profile[] => {
   if (!profiles || profiles.length === 0) return [];
 
@@ -96,11 +79,12 @@ export const feedRepository = {
    */
   async getInitialFeed(
     lastCa?: string | Date | number | null,
+    isPaid?: boolean,
     pastLimit: number = PAST_BATCH_SIZE,
     futureLimit: number = FUTURE_BATCH_SIZE,
     overrideIsFree?: boolean,
   ): Promise<InitialFeedResult> {
-    const table = resolveFeedTable(overrideIsFree);
+    const table = resolveFeedTable(isPaid);
 
     try {
       const normalizedCa =
@@ -160,7 +144,7 @@ export const feedRepository = {
       return { profiles: combinedProfiles, initialIndex };
     } catch (error) {
       console.error("[feedRepository] Error loading initial feed:", error);
-      throw error;
+      return { profiles: [], initialIndex: 0 };
     }
   },
 
@@ -169,12 +153,13 @@ export const feedRepository = {
    */
   async getNextFeedPage(
     lastCa?: string | Date | number | null,
+    isPaid?: boolean,
     limit: number = FUTURE_BATCH_SIZE,
     overrideIsFree?: boolean,
   ): Promise<Profile[]> {
     try {
       if (!lastCa) return [];
-      const table = resolveFeedTable(overrideIsFree);
+      const table = resolveFeedTable(isPaid);
 
       const normalizedCa =
         lastCa instanceof Date
@@ -196,23 +181,35 @@ export const feedRepository = {
       return processFeedProfiles(rows.map(parseProfileRow));
     } catch (error) {
       console.error("[feedRepository] Error fetching next feed page:", error);
-      throw error;
+      return [];
     }
   },
 
   /**
    * Fetch initial batch of profiles ordered by updated_at (ua) descending
    */
-  getLatestProfiles: (limit: number = 50, overrideIsFree?: boolean) => {
-    const table = resolveFeedTable(overrideIsFree);
-    const rows = db
-      .select()
-      .from(table)
-      .orderBy(desc(table.ua))
-      .limit(limit)
-      .all();
+  getLatestProfiles: (
+    limit: number = 50,
+    isPaid: boolean,
+    overrideIsFree?: boolean,
+  ) => {
+    try {
+      const table = resolveFeedTable(isPaid);
+      const rows = db
+        .select()
+        .from(table)
+        .orderBy(desc(table.ua))
+        .limit(limit)
+        .all();
 
-    return processFeedProfiles(rows.map(parseProfileRow));
+      return processFeedProfiles(rows.map(parseProfileRow));
+    } catch (error) {
+      console.warn(
+        "[feedRepository] getLatestProfiles suppressed error:",
+        error,
+      );
+      return [];
+    }
   },
 
   /**
@@ -220,19 +217,28 @@ export const feedRepository = {
    */
   getMoreLatestProfiles: (
     lastUa: number,
+    isPaid: boolean,
     limit: number = 50,
     overrideIsFree?: boolean,
   ) => {
-    const table = resolveFeedTable(overrideIsFree);
-    const rows = db
-      .select()
-      .from(table)
-      .where(lt(table.ua, lastUa))
-      .orderBy(desc(table.ua))
-      .limit(limit)
-      .all();
+    try {
+      const table = resolveFeedTable(isPaid);
+      const rows = db
+        .select()
+        .from(table)
+        .where(lt(table.ua, lastUa))
+        .orderBy(desc(table.ua))
+        .limit(limit)
+        .all();
 
-    return processFeedProfiles(rows.map(parseProfileRow));
+      return processFeedProfiles(rows.map(parseProfileRow));
+    } catch (error) {
+      console.warn(
+        "[feedRepository] getLatestProfiles suppressed error:",
+        error,
+      );
+      return [];
+    }
   },
 
   /**
@@ -278,18 +284,26 @@ export const feedRepository = {
     offset: number = 0,
     overrideIsFree?: boolean,
   ) => {
-    const table = resolveFeedTable(overrideIsFree);
-    const conditions = feedRepository.buildFilterConditions(filters);
+    try {
+      const table = resolveFeedTable(overrideIsFree);
+      const conditions = feedRepository.buildFilterConditions(filters);
 
-    const rows = db
-      .select()
-      .from(table)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .limit(limit)
-      .offset(offset)
-      .all();
+      const rows = db
+        .select()
+        .from(table)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .limit(limit)
+        .offset(offset)
+        .all();
 
-    return processFeedProfiles(rows.map(parseProfileRow));
+      return processFeedProfiles(rows.map(parseProfileRow));
+    } catch (error) {
+      console.warn(
+        "[feedRepository] getFilteredProfiles suppressed error:",
+        error,
+      );
+      return [];
+    }
   },
 
   /**
@@ -301,21 +315,26 @@ export const feedRepository = {
     offset: number = 0,
     overrideIsFree?: boolean,
   ) => {
-    const cleanQuery = query?.trim();
-    if (!cleanQuery) return [];
+    try {
+      const cleanQuery = query?.trim();
+      if (!cleanQuery) return [];
 
-    const table = resolveFeedTable(overrideIsFree);
-    const searchPattern = `${cleanQuery}%`;
+      const table = resolveFeedTable(overrideIsFree);
+      const searchPattern = `${cleanQuery}%`;
 
-    const rows = db
-      .select()
-      .from(table)
-      .where(or(like(table.fn, searchPattern), like(table.ln, searchPattern)))
-      .limit(limit)
-      .offset(offset)
-      .all();
+      const rows = db
+        .select()
+        .from(table)
+        .where(or(like(table.fn, searchPattern), like(table.ln, searchPattern)))
+        .limit(limit)
+        .offset(offset)
+        .all();
 
-    return processFeedProfiles(rows.map(parseProfileRow));
+      return processFeedProfiles(rows.map(parseProfileRow));
+    } catch (error) {
+      console.warn("[feedRepository] searchProfiles suppressed error:", error);
+      return [];
+    }
   },
 };
 

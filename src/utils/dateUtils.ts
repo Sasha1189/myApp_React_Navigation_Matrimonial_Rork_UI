@@ -1,16 +1,34 @@
-type DOBDisplayMode = "age" | "dob" | "both" | "form" | "tob"; // 🌟 Added "form" mode variant
-type DOBInput = string | Date | null | undefined;
+export type DOBDisplayMode = "age" | "dob" | "both" | "form" | "tob";
+export type DOBInput = number | string | Date | null | undefined;
 
 export const formatDOB = (
-  dobStr: DOBInput,
+  dobInput: DOBInput,
   mode: DOBDisplayMode = "both",
 ): string => {
-  if (!dobStr || String(dobStr).trim() === "") return "";
+  if (dobInput === null || dobInput === undefined || dobInput === "") return "";
 
-  const dob = new Date(dobStr);
+  let dob: Date;
+
+  // 1. Convert input (number timestamp, string, or Date) to a JS Date instance
+  if (dobInput instanceof Date) {
+    dob = dobInput;
+  } else if (typeof dobInput === "number") {
+    dob = new Date(dobInput);
+  } else if (typeof dobInput === "string") {
+    const trimmed = dobInput.trim();
+    if (!trimmed) return "";
+
+    // Check if the string is a stringified timestamp (e.g. "1700000000000")
+    const numericVal = Number(trimmed);
+    dob = !isNaN(numericVal) ? new Date(numericVal) : new Date(trimmed);
+  } else {
+    return "";
+  }
+
+  // Validate Date instance
   if (isNaN(dob.getTime())) return "";
 
-  // 1. New Time Formatting Logic ("05:20 AM")
+  // 2. Time Mode ("tob") -> "05:20 AM"
   if (mode === "tob") {
     const hours = dob.getHours();
     const minutes = dob.getMinutes();
@@ -19,7 +37,7 @@ export const formatDOB = (
     return `${h}:${String(minutes).padStart(2, "0")} ${ampm}`;
   }
 
-  // Calculate age
+  // 3. Calculate Age
   const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
 
@@ -29,11 +47,11 @@ export const formatDOB = (
 
   if (!hasBirthdayPassedThisYear) age--;
 
-  // Standard string parts extraction
+  // 4. Formats
   const yyyy = dob.getFullYear();
   const mm = String(dob.getMonth() + 1).padStart(2, "0");
   const dd = String(dob.getDate()).padStart(2, "0");
-  const rawFormSafeDate = `${yyyy}-${mm}-${dd}`; // 🌟 "2026-06-03"
+  const rawFormSafeDate = `${yyyy}-${mm}-${dd}`;
 
   const formattedDOB = dob.toLocaleDateString("en-US", {
     year: "numeric",
@@ -42,7 +60,7 @@ export const formatDOB = (
   });
 
   switch (mode) {
-    case "form": // 🌟 ALWAYS pass this to your text inputs and controllers!
+    case "form":
       return rawFormSafeDate;
     case "age":
       return age >= 0 ? `${age}` : "";

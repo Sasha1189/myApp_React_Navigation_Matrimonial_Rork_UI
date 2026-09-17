@@ -6,14 +6,9 @@ import { useLatestFeed } from "./useLatestFeed";
 import { useSearchFeed } from "./useSearchFeed";
 import { useFilterFeed } from "./useFilterFeed";
 import { useBlockedSet } from "@/features/block/hook/useBlockedSet";
+import { useEntitlement } from "@/context";
 
 export function useActiveFeed(uid: string) {
-  // Track component render frequency
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  console.log(`[useActiveFeed] Render #${renderCount.current}`);
-
-  // 1. Initial MMKV state hydration
   const [mode, setMode] = useState<FeedMode>(
     () => FeedCache.getMode(uid) || "default",
   );
@@ -25,6 +20,8 @@ export function useActiveFeed(uid: string) {
   );
 
   const blockedSet = useBlockedSet();
+
+  const { isPaid } = useEntitlement();
 
   // 2. Targeted MMKV Listener Guard
   useEffect(() => {
@@ -53,8 +50,8 @@ export function useActiveFeed(uid: string) {
   }, [uid]);
 
   // 3. Sub-hooks (ensure sub-hooks return STABLE_EMPTY_FEED when enabled is false)
-  const defaultFeed = useDefaultFeed(uid, mode === "default");
-  const latestFeed = useLatestFeed(uid, mode === "latest");
+  const defaultFeed = useDefaultFeed(uid, mode === "default", isPaid);
+  const latestFeed = useLatestFeed(uid, mode === "latest", isPaid);
   const searchFeed = useSearchFeed(uid, mode === "search", searchQuery);
   const filterFeed = useFilterFeed(uid, mode === "filter", filterParams);
 

@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, useEntitlement } from "@/context";
 import { syncLikes } from "../services/likesSyncService";
 
 export const useLikesSync = (enabled: boolean = false) => {
   const { user } = useAuth();
+  const { isPaid } = useEntitlement();
+
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
 
   const uid = user?.uid;
 
   useEffect(() => {
-    // 1. Guard against unready state, disabled flag, or active sync
-    if (!enabled || !uid || isSyncRunningRef.current) return;
+    if (!enabled || !uid || !isPaid || isSyncRunningRef.current) return;
 
     let isMounted = true;
 
@@ -20,7 +21,7 @@ export const useLikesSync = (enabled: boolean = false) => {
       setIsSyncing(true);
 
       try {
-        await syncLikes(uid);
+        await syncLikes(uid, { isPaid });
       } catch (error) {
         if (isMounted) {
           console.error("[useLikesSync] Likes background sync failed:", error);
@@ -38,7 +39,7 @@ export const useLikesSync = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, uid]);
+  }, [enabled, uid, isPaid]);
 
   return { isSyncing };
 };

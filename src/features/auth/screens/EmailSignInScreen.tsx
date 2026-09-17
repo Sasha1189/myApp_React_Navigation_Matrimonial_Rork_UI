@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useForm } from "react-hook-form";
+// import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useTranslation } from "react-i18next";
@@ -31,7 +32,12 @@ export default function PhoneSignInScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useAuthNavigation();
 
-  const { isLoading, executeLogin, handleForgotPassword } = useLoginEmail();
+  const {
+    isLoading,
+    executeLogin,
+    // executeGoogleLogin,
+    handleForgotPassword,
+  } = useLoginEmail();
 
   const {
     control,
@@ -76,6 +82,25 @@ export default function PhoneSignInScreen() {
                     {t("auth.verifyTitleLogin")}
                   </Text>
                 </View>
+                {/* 🟢 1. GOOGLE SIGN-IN FOR RETURNING USERS */}
+                {/* <GoogleSigninButton
+                  size={GoogleSigninButton.Size.Wide}
+                  color={GoogleSigninButton.Color.Dark}
+                  onPress={executeGoogleLogin}
+                  disabled={isLoading}
+                  style={styles.googleButton}
+                /> */}
+
+                <View style={styles.googleButton}>
+                  <Text>Continue with Google</Text>
+                </View>
+
+                {/* 🟢 2. VISUAL DIVIDER */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
 
                 <EmailInputField control={control} errors={errors} />
                 <PasswordInputField
@@ -85,7 +110,6 @@ export default function PhoneSignInScreen() {
                   labelKey="auth.fieldLabelPassword"
                   placeholderKey="auth.placeholderPassword"
                 />
-
                 <TouchableOpacity
                   onPress={() => handleForgotPassword(watchEmail)}
                   activeOpacity={0.7}
@@ -102,8 +126,7 @@ export default function PhoneSignInScreen() {
                 finalButtonDisabled={finalButtonDisabled}
                 handleAuthSubmit={handleAuthSubmit}
                 insets={insets}
-                buttonText={t("auth.submitLogin", "Login")} // 🎯 Sets button copy to Login
-                showCheckbox={false} // 🎯 Hides signup legal rules
+                buttonText={t("auth.submitLogin", "Login")}
               >
                 <NewAccountRedirectCard
                   onPress={() => navigation.navigate("EmailSignUp")}
@@ -172,5 +195,26 @@ export const createStyles = (theme: AppTheme) =>
       width: "100%",
       backgroundColor: theme.colors.card, // Adapts seamlessly to Dark Theme
       marginTop: theme.spacing.md, // 16px - 20px margin tracking consistency
+    },
+    googleButton: {
+      width: "100%",
+      height: 48,
+      borderRadius: theme.borderRadius.md,
+    },
+    dividerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: theme.spacing.lg,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
+    dividerText: {
+      marginHorizontal: theme.spacing.sm,
+      color: theme.colors.textLight || theme.colors.text,
+      fontSize: theme.fontSize.sm,
+      fontWeight: "500",
     },
   });

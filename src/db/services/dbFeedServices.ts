@@ -2,7 +2,7 @@ import { db } from "@/db/client";
 import { parseProfileRow } from "@/db/utils/parseProfile";
 import { eq, inArray } from "drizzle-orm";
 import { Profile } from "@/features/profile/types/profile";
-import { resolveFeedTable } from "@/features/home/services/feedRepository"; // Adjust path to your helper
+import { resolveFeedTable } from "@/features/home/services/feedRepository";
 
 export const feedRepository = {
   async fetchProfileByUid(
@@ -12,8 +12,7 @@ export const feedRepository = {
     if (!uid) return null;
 
     try {
-      // 1. Resolve table based on tier/override
-      const primaryTable = resolveFeedTable(overrideIsFree);
+      const primaryTable = resolveFeedTable(true);
 
       let [row] = await db
         .select()

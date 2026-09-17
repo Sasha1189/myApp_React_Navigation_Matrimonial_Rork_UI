@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,112 +7,88 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { ChevronDown, X, Check } from "lucide-react-native";
+import { Ruler, ChevronDown, X, Check } from "lucide-react-native";
+import { cmToFeetInches, HEIGHT_OPTIONS } from "./height";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 
-export interface PickerOption {
-  label: string;
-  value: string | number;
-}
-
-interface PickerFieldProps {
+interface HeightPickerFieldProps {
   label?: string;
-  value: string | number;
-  placeholder: string;
-  options: readonly PickerOption[] | readonly string[];
-  onSelect: (value: any) => void;
-  icon?: any;
-  editable?: boolean;
+  value?: number; // Height stored in CM
+  onChange: (cmValue: number) => void;
+  placeholder?: string;
+  error?: string;
   required?: boolean;
-  locked?: boolean;
 }
 
-const PickerField: React.FC<PickerFieldProps> = ({
-  label,
+export const HeightPickerField: React.FC<HeightPickerFieldProps> = ({
+  label = "Height",
   value,
-  options,
-  onSelect,
-  placeholder,
-  icon: Icon,
-  editable = true,
+  onChange,
+  placeholder = "Select Height",
+  error,
   required = false,
-  locked = false,
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Normalize options array dynamically
-  const normalizedOptions = React.useMemo<readonly PickerOption[]>(() => {
-    return options.map((opt) =>
-      typeof opt === "string" ? { label: opt, value: opt } : opt,
-    );
-  }, [options]);
+  const selectedInfo = cmToFeetInches(value);
+  const isValueEmpty = !value || value === 0;
 
-  // Determine if the current state value counts as an empty schema assignment (0, "", null, undefined)
-  const isValueEmpty =
-    value === "" || value === undefined || value === null || value === 0;
-
-  // Resolve active display label text
-  const selectedLabel = React.useMemo(() => {
-    if (isValueEmpty) return "";
-    const found = normalizedOptions.find((opt) => opt.value === value);
-    return found ? found.label : String(value);
-  }, [value, normalizedOptions, isValueEmpty]);
-
-  const handleOpen = () => {
-    if (editable && !locked) setModalVisible(true);
-  };
+  // Calculate index of selected height for auto-scrolling
+  const selectedIndex = useMemo(() => {
+    if (!value) return -1;
+    return HEIGHT_OPTIONS.findIndex((item) => item.cm === value);
+  }, [value]);
 
   return (
     <View style={styles.container}>
-      {/* 1. Header with Tinted Icon */}
-      <View style={styles.labelRow}>
-        <View style={styles.labelLeft}>
-          {Icon && (
+      {/* 1. Header Label with Tinted Icon */}
+      {label && (
+        <View style={styles.labelRow}>
+          <View style={styles.labelLeft}>
             <View style={styles.iconWrapper}>
-              <Icon size={14} color={theme.colors.primary} />
+              <Ruler size={14} color={theme.colors.primary} />
             </View>
-          )}
-          <Text style={styles.label}>
-            {label}
-            {required && <Text style={styles.requiredStar}> *</Text>}
-          </Text>
+            <Text style={styles.label}>
+              {label}
+              {required && <Text style={styles.requiredStar}> *</Text>}
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
 
-      {/* 2. Selection Trigger Input Field box */}
+      {/* 2. Selection Trigger Input Field Box */}
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={handleOpen}
-        style={[
-          styles.trigger,
-          locked && styles.lockedTrigger,
-          !editable && styles.disabledTrigger,
-        ]}
+        onPress={() => setModalVisible(true)}
+        style={[styles.trigger, error ? styles.triggerError : null]}
       >
         <Text
           style={[
             styles.valueText,
-            (isValueEmpty || !editable) && { color: theme.colors.textLight },
+            isValueEmpty && { color: theme.colors.textLight },
           ]}
         >
-          {selectedLabel || placeholder || `Select ${label}`}
+          {selectedInfo.label || placeholder}
         </Text>
-
-        {!locked && editable && (
-          <View style={styles.chevronWrapper}>
-            <ChevronDown size={16} color={theme.colors.textLight} />
-          </View>
-        )}
+        <ChevronDown size={16} color={theme.colors.textLight} />
       </TouchableOpacity>
 
-      {/* 3. Selection Modal Sheet List */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {/* 3. Selection Modal Sheet */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            {/* Modal Header with Title & Close X Icon */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{label}</Text>
               <TouchableOpacity
@@ -123,42 +99,41 @@ const PickerField: React.FC<PickerFieldProps> = ({
               </TouchableOpacity>
             </View>
 
+            {/* Heights List */}
             <FlatList
-              data={normalizedOptions}
-              keyExtractor={(item) => String(item.value)}
+              data={HEIGHT_OPTIONS}
+              keyExtractor={(item) => item.cm.toString()}
               contentContainerStyle={styles.listPadding}
+              initialScrollIndex={selectedIndex > -1 ? selectedIndex : 0}
+              getItemLayout={(_, index) => ({
+                length: 44,
+                offset: 44 * index,
+                index,
+              })}
               renderItem={({ item }) => {
-                const isSelected = value === item.value;
-                // 🎯 FIXED BUG 2: Detects if this item option row is the clear placeholder block (index 0 or "")
-                const isOptionPlaceholder =
-                  item.value === 0 || item.value === "";
+                const isSelected = value === item.cm;
 
                 return (
                   <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => {
-                      onSelect(item.value);
+                      onChange(item.cm);
                       setModalVisible(false);
                     }}
                   >
-                    <View style={{ width: 20 }} />
+                    <View style={{ width: 24 }} />
                     <Text
                       style={[
                         styles.optionText,
                         isSelected && styles.selectedOptionText,
-                        // Tint placeholder clear option row dim so user understands it resets selection
-                        isOptionPlaceholder && {
-                          color: theme.colors.textLight,
-                          fontStyle: "italic",
-                        },
                       ]}
                     >
-                      {/* If the option's label is literal blank empty text, display clear hint layout text */}
-                      {item.label === "" ? "Clear Selection" : item.label}
+                      {item.feet} ft {item.inches} in
                     </Text>
-                    <View style={{ width: 20, alignItems: "center" }}>
-                      {isSelected && !isOptionPlaceholder && (
-                        <Check size={20} color={theme.colors.primary} />
+
+                    <View style={styles.chevronWrapper}>
+                      {isSelected && (
+                        <ChevronDown size={16} color={theme.colors.textLight} />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -211,9 +186,9 @@ const createStyles = (theme: AppTheme) =>
       position: "relative",
       marginTop: theme.spacing.xs,
     },
-    lockedTrigger: { backgroundColor: `${theme.colors.background}80` },
-    disabledTrigger: { opacity: 0.6 },
+    triggerError: { borderColor: theme.colors.danger },
     valueText: {
+      flex: 1,
       textAlign: "center",
       fontSize: theme.fontSize.sm,
       color: theme.colors.text,
@@ -221,6 +196,11 @@ const createStyles = (theme: AppTheme) =>
     chevronWrapper: {
       position: "absolute", // 👈 Keeps chevron on the right without affecting text centering
       right: theme.spacing.md,
+    },
+    errorText: {
+      color: theme.colors.danger,
+      fontSize: 12,
+      marginTop: 4,
     },
     // Modal Styles
     modalOverlay: {
@@ -251,19 +231,23 @@ const createStyles = (theme: AppTheme) =>
     listPadding: { paddingBottom: 40 },
     optionItem: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
-      padding: theme.spacing.sm,
+      justifyContent: "center",
+      minHeight: 40,
+      paddingHorizontal: theme.spacing.sm,
       borderBottomWidth: 0.5,
       borderBottomColor: theme.colors.border,
     },
     optionText: {
       flex: 1,
       textAlign: "center",
-      fontSize: theme.fontSize.md,
+      fontSize: theme.fontSize.sm,
       color: theme.colors.text,
     },
-    selectedOptionText: { color: theme.colors.primary, fontWeight: "700" },
+    selectedOptionText: {
+      color: theme.colors.primary,
+      fontWeight: "700",
+    },
   });
 
-export default PickerField;
+export default HeightPickerField;

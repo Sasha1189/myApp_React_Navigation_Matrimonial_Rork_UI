@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { File, Paths } from "expo-file-system";
 import { Profile, Photo } from "../types/profile";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth, useEntitlement } from "../../../context";
 import { useMyProfile } from "../context/ProfileContext";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,7 +16,8 @@ import {
 const MAX_PHOTOS = 4;
 
 export function usePhotoManager(profile: Profile | null) {
-  const { user, tier } = useAuth();
+  const { user } = useAuth();
+  const { isPaid } = useEntitlement();
   const { updateMyProfile } = useMyProfile();
   const { t } = useTranslation();
   const uid = user?.uid;
@@ -25,7 +26,6 @@ export function usePhotoManager(profile: Profile | null) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
-  const isPaid = tier === "basic" || tier === "premium";
 
   // keep photos in sync with profile updates
   useEffect(() => {

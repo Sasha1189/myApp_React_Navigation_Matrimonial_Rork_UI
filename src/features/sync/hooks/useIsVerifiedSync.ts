@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useMyProfile } from "@/features/profile/context/ProfileContext";
 import { checkUserVerification } from "@/features/sync/services/verificationService";
 
-export const useIsVerifiedSync = (uid?: string, enabled: boolean = false) => {
-  const { myProfile, setMyProfile } = useMyProfile();
+export const useIsVerifiedSync = (uid: string, enabled: boolean = false) => {
+  const { myProfile, updateMyProfile, setMyProfile } = useMyProfile();
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
 
@@ -20,12 +20,8 @@ export const useIsVerifiedSync = (uid?: string, enabled: boolean = false) => {
 
       try {
         const isVerifiedRTDB = await checkUserVerification(uid);
-
         if (isMounted && isVerifiedRTDB) {
-          // Use functional updater to prevent overwriting concurrent profile changes
-          setMyProfile((prevProfile) =>
-            prevProfile ? { ...prevProfile, iv: isVerifiedRTDB } : prevProfile,
-          );
+          await updateMyProfile({ iv: isVerifiedRTDB });
         }
       } catch (error) {
         if (isMounted) {

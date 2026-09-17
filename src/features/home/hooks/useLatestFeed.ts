@@ -7,7 +7,11 @@ import {
 import { Profile } from "@/features/profile/types/profile";
 import { FeedHookResult } from "../type/type";
 
-export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
+export function useLatestFeed(
+  uid: string,
+  isActive: boolean,
+  isPaid: boolean,
+): FeedHookResult {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -42,6 +46,7 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
       try {
         const initialData = await feedRepository.getLatestProfiles(
           FETCH_PAGE_SIZE_LATEST,
+          isPaid,
         );
 
         setProfiles(initialData);
@@ -74,7 +79,6 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
       setCurrentIndex(0);
       fetchLatestProfiles();
     } else if (!isActive) {
-      // Reset ref when user leaves tab so next visit triggers a fresh index 0 load
       initialLoadedRef.current = false;
       setCurrentIndex(0);
       setProfiles([]);
@@ -105,6 +109,7 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
     try {
       const nextProfiles = await feedRepository.getMoreLatestProfiles(
         lastUa,
+        isPaid,
         FETCH_PAGE_SIZE_LATEST,
       );
 
@@ -144,6 +149,7 @@ export function useLatestFeed(uid: string, isActive: boolean): FeedHookResult {
           // 1. MUST await async API call
           const nextProfiles = await feedRepository.getMoreLatestProfiles(
             lastUa,
+            isPaid,
             FETCH_PAGE_SIZE_LATEST,
           );
 

@@ -7,13 +7,14 @@ import {
   StyleSheet,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Lock } from "lucide-react-native";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 
 const formatDisplayDate = (date: Date) => {
-  return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+  return `${String(date.getDate()).padStart(2, "0")}/${String(
+    date.getMonth() + 1,
+  ).padStart(2, "0")}/${date.getFullYear()}`;
 };
 
 const formatDisplayTime = (date: Date) => {
@@ -26,9 +27,9 @@ const formatDisplayTime = (date: Date) => {
 
 interface DateTimeProps {
   label: string;
-  value?: Date | string;
+  value?: number | Date | string;
   placeholder?: string;
-  onChange: (val?: any) => void;
+  onChange: (val?: number) => void;
   mode: "date" | "time";
   editable?: boolean;
   icon?: any;
@@ -51,28 +52,36 @@ export const DateTimePickerField: React.FC<DateTimeProps> = ({
   const styles = useStyles(createStyles);
   const [show, setShow] = useState(false);
 
-  // 1. Unified Safe Parsing for both modes
+  // 1. Safely parse input (number/timestamp, string, or Date) into a valid JS Date instance
   const parsedDate = value
-    ? value instanceof Date
-      ? value
-      : new Date(value)
+    ? typeof value === "number"
+      ? new Date(value)
+      : value instanceof Date
+        ? value
+        : new Date(value)
     : null;
 
   const isValidDate = parsedDate && !isNaN(parsedDate.getTime());
 
-  // 2. Dynamic Display Formatting based on mode
+  // 2. Format UI display text
   const display = isValidDate
     ? mode === "date"
       ? formatDisplayDate(parsedDate!)
       : formatDisplayTime(parsedDate!)
     : "";
 
-  // 3. Fallback configuration if field is empty
+  // 3. Fallback date for picker opening state
   const defaultPickerValue = isValidDate
     ? parsedDate!
     : mode === "date"
-      ? new Date(1995, 0, 1)
+      ? new Date(2000, 0, 1)
       : new Date();
+
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+
+  const fiftyYearsAgo = new Date();
+  fiftyYearsAgo.setFullYear(fiftyYearsAgo.getFullYear() - 50);
 
   const defaultPlaceholder = mode === "date" ? "DD/MM/YYYY" : "Select Time";
 
@@ -111,16 +120,10 @@ export const DateTimePickerField: React.FC<DateTimeProps> = ({
         </Text>
       </TouchableOpacity>
 
-      {locked && mode === "date" && (
-        <Text style={styles.lockNote}>
-          This verified date cannot be changed.
-        </Text>
-      )}
-
       {show && (
         <DateTimePicker
           value={defaultPickerValue}
-          mode={mode} // 👈 Direct bind ("date" or "time")
+          mode={mode}
           display={
             Platform.OS === "ios"
               ? "spinner"
@@ -128,11 +131,12 @@ export const DateTimePickerField: React.FC<DateTimeProps> = ({
                 ? "calendar"
                 : "clock"
           }
-          maximumDate={new Date()}
-          onChange={(event: any, date?: Date) => {
+          maximumDate={mode === "date" ? eighteenYearsAgo : undefined}
+          minimumDate={mode === "date" ? fiftyYearsAgo : undefined}
+          onChange={(event: any, selectedDate?: Date) => {
             setShow(false);
-            if (date) {
-              onChange(date);
+            if (selectedDate) {
+              onChange(selectedDate.getTime());
             }
           }}
         />
@@ -154,7 +158,7 @@ const createStyles = (theme: AppTheme) =>
     iconWrapper: {
       width: 28,
       height: 28,
-      borderRadius: theme.borderRadius.sm,
+      borderRadius: theme.borderRadius.xs,
       backgroundColor: `${theme.colors.primary}12`,
       alignItems: "center",
       justifyContent: "center",
@@ -167,34 +171,24 @@ const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.4,
     },
     requiredStar: { color: theme.colors.danger },
-    lockBadge: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: `${theme.colors.success}10`,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 100,
-    },
-    lockBadgeText: {
-      fontSize: 10,
-      fontWeight: "700",
-      color: theme.colors.success,
-      marginLeft: 4,
-      textTransform: "uppercase",
-    },
     trigger: {
+      alignItems: "center",
+      justifyContent: "center",
       borderWidth: 1,
       borderColor: theme.colors.border,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.sm,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.sm,
       backgroundColor: theme.colors.card,
-      minHeight: 48,
-      justifyContent: "center",
+      minHeight: 40,
+      marginTop: theme.spacing.xs,
     },
     lockedTrigger: { backgroundColor: `${theme.colors.background}80` },
     disabledTrigger: { opacity: 0.6 },
-    valueText: { fontSize: theme.fontSize.md, color: theme.colors.text },
+    valueText: {
+      textAlign: "center",
+      fontSize: theme.fontSize.sm,
+      color: theme.colors.text,
+    },
     lockNote: {
       color: theme.colors.textLight,
       marginTop: 4,

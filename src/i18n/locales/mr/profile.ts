@@ -10,8 +10,8 @@ export default {
     received: "मिळालेले लाईक",
   },
   premium: {
-    upgrade: "प्रीमियमवर अपग्रेड करा",
+    upgrade: "प्रीमियमला सहकार्य करा",
     benefits: "तुम्हाला कोणी लाईक केले ते पहा आणि अमर्यादित प्रोफाईल पहा",
   },
-  defaultName: "माझे नाव",
+  defaultName: "नाव",
 };

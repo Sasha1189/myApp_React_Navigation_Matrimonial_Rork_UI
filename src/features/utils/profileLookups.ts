@@ -51,7 +51,21 @@ export const LOOKUPS = {
   fl: ["", "Fit", "Average", "Overweight", "Athletic"],
   pt: ["", "Introvert", "Extrovert", "Ambivert"],
   bs: ["", "Spiritual", "Open-minded"],
+
   lwp: ["", "Okay", "Not okay", "Prefer separate"],
+  pir: ["", "₹UPTO 5L", "₹5L+", "₹10L+", "₹20L+"],
+  pp: [
+    "",
+    "Job",
+    "Business",
+    "Self-employed",
+    "Freelancer",
+    "Not working",
+    "Student",
+  ],
+  pe: ["", "10th", "12th", "Diploma", "Bachelor's", "Master's", "PhD", "Other"],
+  pms: ["", "Never Married", "Divorced", "Widowed"],
+
   ct: [
     "",
     "Ahmednagar",

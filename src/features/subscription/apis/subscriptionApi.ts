@@ -1,4 +1,3 @@
-// src/features/subscription/api/subscriptionApi.ts
 import { api } from "../../../services/api"; // Adjust based on your actual path
 
 export interface SubscriptionResponse {

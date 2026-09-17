@@ -4,8 +4,6 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useTranslation } from "react-i18next";
-import { useProfileStats } from "@/features/profile/hooks/useProfileStats";
-import { useAuth } from "@/context/AuthContext";
 
 interface EmptyStateProps {
   type: "chats" | "sent" | "received";
@@ -15,18 +13,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
   const styles = useStyles(createStyles);
-  const { user } = useAuth();
-
-  const { receivedCount } = useProfileStats(user?.uid);
-  const count = receivedCount || 0;
 
   if (!theme) return null;
   return (
     <View style={styles.container}>
       <View style={styles.emptyState}>
-        <Text style={styles.emptyText}>
-          {t(`chat.empty.${type}Title`, { count })}
-        </Text>
+        <Text style={styles.emptyText}>{t(`chat.empty.${type}Title`)}</Text>
         <Text style={styles.emptySubtext}>
           {t(`chat.empty.${type}Subtitle`)}
         </Text>

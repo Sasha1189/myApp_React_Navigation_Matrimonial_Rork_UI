@@ -4,7 +4,7 @@ import { LikesCache, LikesReceivedCache } from "../cache/likesCache";
 import { feedRepository } from "@/db/services/dbFeedServices";
 import { Profile } from "@/features/profile/types/profile";
 
-//...................
+//........................................................
 export function useLikeSent(myUid: string) {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -42,7 +42,7 @@ export function useLikeSent(myUid: string) {
 
   return { profiles, isLoading, refetch: loadProfiles };
 }
-//..................
+//........................................................
 export function useLikeReceived(
   myUid: string,
   tier: "none" | "basic" | "premium",

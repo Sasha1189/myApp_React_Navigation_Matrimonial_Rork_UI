@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
+  console.log("🔍 [AUTH NAV] Rendering AuthNavigator...");
   const { t } = useTranslation();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

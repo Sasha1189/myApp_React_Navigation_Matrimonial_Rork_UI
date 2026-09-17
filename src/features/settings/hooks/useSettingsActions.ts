@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useAppNavigation } from "src/navigation/hooks";
 
 export const useSettingsActions = () => {
-  const { user } = useAuth();
+  const { user, setAuthLoading } = useAuth();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const WHATSAPP_NUMBER = "918554840100";
@@ -59,7 +59,10 @@ export const useSettingsActions = () => {
           setIsProcessing(true);
 
           try {
-            logoutUser(user?.uid);
+            logoutUser({
+              uid: user?.uid,
+              setAuthLoading,
+            });
           } catch (error: any) {
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {

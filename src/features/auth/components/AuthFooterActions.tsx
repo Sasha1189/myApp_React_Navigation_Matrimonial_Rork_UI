@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { Check } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
@@ -17,12 +16,8 @@ interface AuthFooterActionsProps {
   finalButtonDisabled: boolean;
   handleAuthSubmit: () => void;
   insets: { bottom: number; top: number; left: number; right: number };
-  buttonText?: string; // 🎯 Reusable: Explicit text override (e.g., "Login")
-  showCheckbox?: boolean; // 🎯 Reusable: Hide legal blocks on the login screen
-  agreeTerms?: boolean;
-  setAgreeTerms?: (val: boolean) => void;
-  openLink?: (url: string, title: string) => void;
-  children?: React.ReactNode; // 🎯 Reusable: Slot for unique layout redirection links
+  buttonText?: string;
+  children?: React.ReactNode;
 }
 
 export const AuthFooterActions: React.FC<AuthFooterActionsProps> = ({
@@ -31,10 +26,6 @@ export const AuthFooterActions: React.FC<AuthFooterActionsProps> = ({
   handleAuthSubmit,
   insets,
   buttonText,
-  showCheckbox = false,
-  agreeTerms = false,
-  setAgreeTerms,
-  openLink,
   children,
 }) => {
   const styles = useStyles(createStyles);
@@ -50,46 +41,6 @@ export const AuthFooterActions: React.FC<AuthFooterActionsProps> = ({
         },
       ]}
     >
-      {/* ================= CONDITIONALLY RENDER REGISTRATION LEGAL BLOCKS ================= */}
-      {showCheckbox && setAgreeTerms && openLink && (
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            onPress={() => setAgreeTerms(!agreeTerms)}
-            activeOpacity={0.8}
-            style={[styles.checkboxBox, agreeTerms && styles.checkboxActive]}
-          >
-            {agreeTerms && <Check size={12} color="white" strokeWidth={3} />}
-          </TouchableOpacity>
-          <Text style={styles.checkboxLabel}>
-            {t("auth.agreePrefix")}
-            <Text
-              style={styles.linkText}
-              onPress={() =>
-                openLink(
-                  "https://sasha1189.github.io/youva-Lonari/terms.html",
-                  "Terms",
-                )
-              }
-            >
-              {t("auth.termsLinkText")}
-            </Text>
-            {t("auth.agreeConjunction")}
-            <Text
-              style={styles.linkText}
-              onPress={() =>
-                openLink(
-                  "https://sasha1189.github.io/youva-Lonari/privacy.html",
-                  "Privacy",
-                )
-              }
-            >
-              {t("auth.privacyLinkText")}
-            </Text>
-            {t("auth.agreeSuffix", ".")}
-          </Text>
-        </View>
-      )}
-
       {/* ================= PRIMARY ACTION SUBMIT BUTTON ================= */}
       <TouchableOpacity
         style={[
@@ -141,33 +92,4 @@ export const createStyles = (theme: AppTheme) =>
     },
     actionDisabledBtn: { backgroundColor: theme.colors.border },
     actionDisabledText: { color: theme.colors.textLight },
-    checkboxContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: theme.spacing.md,
-      marginBottom: theme.spacing.lg,
-      paddingRight: theme.spacing.md,
-    },
-    checkboxBox: {
-      width: 18,
-      height: 18,
-      borderWidth: 1.5,
-      borderColor: theme.colors.border,
-      borderRadius: theme.borderRadius.sm,
-      alignItems: "center",
-      // justifycontent: "center",
-    },
-    checkboxActive: {
-      backgroundColor: theme.colors.primary,
-      borderColor: theme.colors.primary,
-    },
-    checkboxLabel: {
-      fontSize: theme.fontSize.xs,
-      color: theme.colors.textLight,
-      lineHeight: 18,
-      fontWeight: "500",
-      includeFontPadding: false,
-      textAlignVertical: "center",
-    },
-    linkText: { color: theme.colors.accent || "#1c7ed6", fontWeight: "600" },
   });

@@ -25,7 +25,6 @@ import {
   useLikeReceived,
 } from "@/features/likes/hook/useLikedReceivedProfilesList";
 import { IInboxItem } from "../type/chattype";
-import { useProfileStats } from "@/features/profile/hooks/useProfileStats";
 
 export default function MessagesScreen() {
   const { user, tier } = useAuth();
@@ -38,7 +37,7 @@ export default function MessagesScreen() {
   );
   const uid = user?.uid;
   const safeUid = uid ?? "";
-  //....
+
   const {
     banners: messageBanners,
     isLive,
@@ -56,7 +55,6 @@ export default function MessagesScreen() {
     safeUid,
     tier,
   );
-  console.log("[message screen - likesReceived length]-", likesReceived.length);
 
   const { triggerTabChange } = useTabSwipe(activeTab, setActiveTab);
   const flatListRef = useRef<FlatList>(null);

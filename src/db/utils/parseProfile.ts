@@ -18,6 +18,6 @@ export function parseProfileRow(row: SqlProfileRow): Profile {
     ...fullProfile,
     uid: fullProfile?.uid || dbColumns.uid,
     ca: fullProfile?.ca ?? dbColumns.ca,
-    ua: fullProfile?.ua ?? dbColumns.ua ?? undefined,
+    ua: fullProfile?.ua ?? dbColumns.ua ?? null,
   };
 }

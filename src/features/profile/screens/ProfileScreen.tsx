@@ -154,6 +154,12 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
+    upgradeText: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: "#3B82F6",
+      textAlign: "center",
+    },
 
     premiumCard: {
       marginTop: 20,

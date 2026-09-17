@@ -9,7 +9,11 @@ import {
   MAX_MEMORY_LIMIT,
 } from "../services/feedRepository";
 
-export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
+export function useDefaultFeed(
+  uid: string,
+  isActive: boolean,
+  isPaid: boolean,
+): FeedHookResult {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -39,7 +43,7 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
         const cachedCa = FeedCache.getLastCa(uid);
 
         const { profiles: initialData, initialIndex } =
-          await feedRepository.getInitialFeed(cachedCa);
+          await feedRepository.getInitialFeed(cachedCa, isPaid);
 
         // Update dataset and target starting index together
         setProfiles(initialData ?? []);
@@ -121,6 +125,7 @@ export function useDefaultFeed(uid: string, isActive: boolean): FeedHookResult {
 
       const nextProfiles = await feedRepository.getNextFeedPage(
         lastCa,
+        isPaid,
         FETCH_PAGE_SIZE_DEFAULT,
       );
 

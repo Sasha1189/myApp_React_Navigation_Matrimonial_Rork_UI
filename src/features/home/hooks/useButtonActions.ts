@@ -3,22 +3,21 @@ import { Alert } from "react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../profile/types/profile";
 import { toggleLike } from "@/features/likes/services/likesService";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth, useEntitlement } from "../../../context";
 import { useTranslation } from "react-i18next";
 
 export function useButtonActions(profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const { t } = useTranslation();
-  const { user, tier } = useAuth();
+  const { user } = useAuth();
+  const { isPaid } = useEntitlement();
   const [isLiking, setIsLiking] = useState(false);
 
   const handleActionBtnTap = useCallback(
     async (action: "like" | "message" | "profileDetails") => {
       if (!profile?.uid) return;
 
-      const isRestricted = tier === "none";
-
-      if ((action === "message" || action === "like") && isRestricted) {
+      if ((action === "message" || action === "like") && !isPaid) {
         Alert.alert(
           t("alerts.upgradeRequired"),
           t("alerts.featureRestricted"),
@@ -83,7 +82,7 @@ export function useButtonActions(profile: Profile | undefined) {
         navigation.navigate("Details", { profile });
       }
     },
-    [profile, tier, user, isLiking, navigation, t],
+    [profile, isPaid, user, isLiking, navigation],
   );
 
   return { handleActionBtnTap };

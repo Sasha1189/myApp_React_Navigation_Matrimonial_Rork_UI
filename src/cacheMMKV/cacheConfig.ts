@@ -12,13 +12,19 @@ export const appStorage = createMMKV({ id: "cache-app" });
 const allStorages: MMKV[] = [likesStorage, blocksStorage, appStorage];
 
 // ==========================================
-// 1. MMKV KEYS
+// 2. MMKV KEYS
 // ==========================================
+
 export const TIER_CACHE_KEY = "self_tier_cache";
-
 export const PROFILE_CACHE_KEY = "self_profile_cache";
+export const IS_DOC_UPLOADED_CACHE_KEY = "isUploaded_cache";
+const DEVICE_ID_KEY = "device_id";
 
-// Universal JSON parser helper
+// ==========================================
+// 3. GENERIC HELPERS
+// ==========================================
+
+/** Safe JSON parser with strict fallback handling */
 export const safeParse = <T>(data: string | undefined, fallback: T): T => {
   if (!data) return fallback;
   try {
@@ -30,15 +36,32 @@ export const safeParse = <T>(data: string | undefined, fallback: T): T => {
 };
 
 // ==========================================
-// 1. Verification Docu KEY
-// ==========================================
-export const IS_DOC_UPLOADED_CACHE_KEY = "isUploaded_cache";
-
-// ==========================================
-// 2. DEVICE & SYSTEM CONFIG
+// 4. PROFILE CACHE HELPERS
 // ==========================================
 
-const DEVICE_ID_KEY = "device_id";
+/** Reads and parses the cached profile safely, returning the fallback if empty */
+export const getCachedProfile = <T>(fallback: T): T => {
+  const cached = appStorage.getString(PROFILE_CACHE_KEY);
+  return safeParse<T>(cached, fallback);
+};
+
+/** Serializes and saves the updated profile into MMKV */
+export const setCachedProfile = <T>(profile: T): void => {
+  try {
+    appStorage.set(PROFILE_CACHE_KEY, JSON.stringify(profile));
+  } catch (error) {
+    console.error("❌ [Cache] Failed to save profile to MMKV:", error);
+  }
+};
+
+/** Purges only the cached profile key */
+export const clearCachedProfile = (): void => {
+  appStorage.remove(PROFILE_CACHE_KEY);
+};
+
+// ==========================================
+// 5. DEVICE & SYSTEM CONFIG
+// ==========================================
 
 export const getDBDeviceIdCache = (): string => {
   return appStorage.getString(DEVICE_ID_KEY) || "";
@@ -49,7 +72,7 @@ export const setDBDeviceIdCache = (deviceId: string) => {
 };
 
 // ==========================================
-// 3. TEARDOWN & PURGE
+// 6. TEARDOWN & PURGE
 // ==========================================
 
 /**
@@ -58,7 +81,7 @@ export const setDBDeviceIdCache = (deviceId: string) => {
  */
 export async function clearCacheOnLogout() {
   try {
-    // 1. Reset SQLite tables (Drizzle / Local DB) temporerily called from client
+    // 1. Reset SQLite tables (Drizzle / Local DB)
     await resetDatabase();
 
     // 2. Clear all MMKV instances in parallel

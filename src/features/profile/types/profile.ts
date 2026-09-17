@@ -8,8 +8,8 @@ export interface Profile {
   // Compressed Basic Information
   photos: Photo[]; // photos Array
   tn?: string; // thumbnail URL
-  ca: Date | string; // createdAt
-  ua: Date | string; // updatedAt
+  ca: number | null; // createdAt
+  ua: number | null; // updatedAt
   iv: boolean; // isVerified
   ia: boolean; // isActive
   pid: string; // profileId
@@ -17,8 +17,8 @@ export interface Profile {
   // Compressed Personal & Birth Information
   fn: string; // fullName
   ln: string; // lastName
-  db: Date | string | null; // dateOfBirth
-  tob?: Date | string | null; // timeOfBirth
+  db: number | null; // dateOfBirth
+  tob?: number | null; // timeOfBirth
   pb: string; // placeOfBirth
   ms: number; // maritalStatus enum index
   ht: string; // height
@@ -60,6 +60,8 @@ export interface Profile {
   nb: string; // numberOfBrothers
   ns: string; // numberOfSisters
   sd?: string; // siblingsDetails
+  dbd?: string; // daij bhavki details
+  pd?: string; // property Details
 
   // Compressed Lifestyle & Habits
   dp: number; // dietPreferences enum index

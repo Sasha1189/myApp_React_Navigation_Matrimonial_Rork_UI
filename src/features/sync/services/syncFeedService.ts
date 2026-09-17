@@ -5,357 +5,441 @@ import {
   collection,
   queryFs,
   where,
-  orderBy,
   limit,
   Timestamp,
 } from "@/config/firebase";
-import { gunzipSync, strFromU8 } from "fflate";
 import { db } from "@/db/client";
-import { resolveFeedTable } from "@/features/home/services/feedRepository";
 import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
 import { sql, inArray } from "drizzle-orm";
 
-const CDN_BASE_URL = "https://cdn.yourdomain.com";
-const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const SQLITE_DELETE_CHUNK_SIZE = 500;
+const UPSERT_CHUNK_SIZE = 1000;
 
-/**
- * Utility: Determines target Firestore collection based on user's gender
- */
-const getTargetCollection = (gender?: string | null): string | null => {
-  if (!gender || typeof gender !== "string") return null;
-  const normalized = gender.toLowerCase().trim();
-  if (normalized === "male") return "femaleProfiles";
-  if (normalized === "female") return "maleProfiles";
-  return null;
+export interface RawProfileData {
+  uid?: string;
+  id?: string;
+  ca?: any;
+  ua?: any;
+  fn?: string;
+  ln?: string;
+  db?: any;
+  ht?: number;
+  np?: string;
+  ai?: number;
+  ms?: number;
+  ir?: string;
+  ia?: boolean;
+  [key: string]: any;
+}
+
+export interface ProfileSchemaItem {
+  uid: string;
+  ca: number;
+  ua: number | null;
+  fn: string;
+  ln: string;
+  db: number | null;
+  ht: number;
+  np: string;
+  ai: number;
+  ms: number;
+  ir: string;
+  profileData: string;
+}
+
+const COLLECTION_MAP = {
+  paid: { male: "femaleProfiles", female: "maleProfiles" },
+  free: { male: "femaleDummy", female: "maleDummy" },
+} as const;
+
+const getTargetCollectionName = (
+  gender?: string | null,
+  isFree: boolean = false,
+): string | null => {
+  if (!gender || typeof gender !== "string" || !gender.trim()) return null;
+  const normalized = gender.toLowerCase().trim() as "male" | "female";
+  const tier = isFree ? "free" : "paid";
+  return COLLECTION_MAP[tier][normalized] ?? null;
 };
 
-/**
- * Utility: Safely parses Firestore Timestamps, Date objects, or numeric millis
- */
-const parseTimestamp = (value: any): number => {
-  if (!value) return Date.now();
-  if (typeof value === "number") return value;
+const parseTimestamp = (value: any): number | null => {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number") return isNaN(value) ? null : value;
   if (typeof value?.toMillis === "function") return value.toMillis();
   if (value instanceof Date) return value.getTime();
   if (typeof value === "string") {
+    const num = Number(value);
+    if (!isNaN(num)) return num;
     const parsed = new Date(value).getTime();
-    return isNaN(parsed) ? Date.now() : parsed;
+    return isNaN(parsed) ? null : parsed;
   }
-  return 0;
+  return null;
 };
 
-/**
- * Helper: Normalizes raw object fields to match Drizzle short-key schema
- */
-const mapRawToProfileSchema = (p: any) => {
-  const parsedCreatedAt = parseTimestamp(p.createdAt ?? p.ca);
-  const parsedUpdatedAt = parseTimestamp(p.updatedAt ?? p.ua);
+const mapRawToProfileSchema = (
+  p: RawProfileData,
+): { item: ProfileSchemaItem; updatedAt: number | null } => {
+  const parsedCreatedAt = parseTimestamp(p.ca ?? null);
+  const parsedUpdatedAt = parseTimestamp(p.ua ?? null);
+  const parsedDb = parseTimestamp(p.db ?? null);
 
   return {
     item: {
-      uid: p.uid || p.id,
-      ca: parsedCreatedAt,
+      uid: (p.uid || p.id)!,
+      ca: parsedCreatedAt!,
       ua: parsedUpdatedAt,
-      fn: p.fn ?? p.fullName ?? "",
-      ln: p.ln ?? p.lastName ?? "",
-      db: p.db ? parseTimestamp(p.db) : parseTimestamp(p.dob),
-      ht: p.ht ?? p.heightCm ?? 0,
-      np: p.np ?? p.nativePlace ?? p.location ?? "",
-      ai: p.ai ?? p.annualIncome ?? 0,
-      ms: p.ms ?? p.maritalStatus ?? 0,
-      ir: p.ir ?? p.isReady ?? "",
+      fn: p.fn ?? "",
+      ln: p.ln ?? "",
+      db: parsedDb,
+      ht: p.ht ?? 0,
+      np: p.np ?? "",
+      ai: p.ai ?? 0,
+      ms: p.ms ?? 0,
+      ir: p.ir ?? "",
       profileData: JSON.stringify(p),
     },
     updatedAt: parsedUpdatedAt,
   };
 };
-
+// Reusable SQL upsert target assignments
+const UPSERT_CONFLICT_SET = {
+  ca: sql`excluded.ca`,
+  ua: sql`excluded.ua`,
+  fn: sql`excluded.fn`,
+  ln: sql`excluded.ln`,
+  db: sql`excluded.db`,
+  ht: sql`excluded.ht`,
+  np: sql`excluded.np`,
+  ai: sql`excluded.ai`,
+  ms: sql`excluded.ms`,
+  ir: sql`excluded.ir`,
+  profileData: sql`excluded.profile_data`,
+};
 /**
  * Helper: Safely purges inactive UIDs from SQLite in safe batch sizes
  */
-const purgeInactiveBatchFromTx = (tx: any, uids: string[]) => {
-  if (!uids || uids.length === 0) return;
-
-  for (let i = 0; i < uids.length; i += SQLITE_DELETE_CHUNK_SIZE) {
-    const chunk = uids.slice(i, i + SQLITE_DELETE_CHUNK_SIZE);
-    tx.delete(paidUserFeeds).where(inArray(paidUserFeeds.uid, chunk)).run();
+const purgeInactiveBatchFromTx = (tx: any, table: any, uids: string[]) => {
+  const safeUids = uids ?? [];
+  if (safeUids.length === 0) return;
+  for (let i = 0; i < safeUids.length; i += SQLITE_DELETE_CHUNK_SIZE) {
+    const chunk = safeUids.slice(i, i + SQLITE_DELETE_CHUNK_SIZE);
+    tx.delete(table).where(inArray(table.uid, chunk)).run();
   }
 };
 
+const upsertProfilesBatchFromTx = (
+  tx: any,
+  table: any,
+  items: ProfileSchemaItem[],
+) => {
+  const safeItems = items ?? [];
+  if (safeItems.length === 0) return;
+
+  tx.insert(table)
+    .values(items)
+    .onConflictDoUpdate({
+      target: table.uid,
+      set: UPSERT_CONFLICT_SET,
+    })
+    .run();
+};
+/**
+ * Helper: Standardizes raw profile chunk processing (Separates active/inactive & tracks latest timestamp)
+ */
+const processRawProfiles = (rawProfiles: RawProfileData[]) => {
+  const itemsToUpsert: ProfileSchemaItem[] = [];
+  const uidsToDelete: string[] = [];
+  let maxTimestamp = 0;
+
+  const safeProfiles = rawProfiles ?? [];
+  for (const p of safeProfiles) {
+    const uid = p.uid || p.id;
+    if (!uid) continue;
+
+    if (p.ia === false) {
+      uidsToDelete.push(uid);
+      continue;
+    }
+
+    const { item, updatedAt } = mapRawToProfileSchema(p);
+
+    if (item.ca === null) {
+      console.warn(
+        `[Sync] Skipping profile ${uid} due to missing 'ca' timestamp.`,
+      );
+      continue;
+    }
+
+    if (updatedAt !== null && updatedAt > maxTimestamp) {
+      maxTimestamp = updatedAt;
+    }
+
+    itemsToUpsert.push(item);
+  }
+
+  return { itemsToUpsert, uidsToDelete, maxTimestamp };
+};
 /**
  * Main Sync Entry Point
  */
 export const syncFeedProfiles = async (
   isPaid: boolean,
-  isVerified: boolean,
-  userGender?: string | null,
+  userGender: string,
 ): Promise<number> => {
-  const targetCollection = getTargetCollection(userGender);
-  if (!targetCollection) return 0;
-
-  if (isPaid && isVerified) {
-    //for time being testing
-    await handleFreeTierSync(targetCollection);
+  if (isPaid) {
+    const targetCollection = getTargetCollectionName(userGender, false);
+    if (!targetCollection) return 0;
     return await handlePaidBulkSync(targetCollection);
   } else {
-    return await handleFreeTierSync(targetCollection);
+    const targetCollectionFree = getTargetCollectionName(userGender, true);
+    if (!targetCollectionFree) return 0;
+    return await handleFreeTierSync(targetCollectionFree);
   }
 };
-
 /**
- * Paid User Flow: Dynamic Sharded CDN Gzip Download
+ * Paid User Flow: Fetch initial bulk profiles directly from Firestore
  */
 const handlePaidBulkSync = async (
   targetCollection: string,
   overrideIsFree?: boolean,
 ): Promise<number> => {
-  const isCompleted = appStorage.getBoolean(
-    `is_initial_sync_done_${targetCollection}`,
+  const syncKey = `is_initial_sync_done_${targetCollection}`;
+  if (appStorage.getBoolean(syncKey)) return 0;
+
+  const paidQuery = queryFs(collection(firestore, targetCollection), limit(50));
+  const snapshot = await getDocsFromServer(paidQuery);
+  if (snapshot.empty) return 0;
+
+  const safeDocs = snapshot?.docs ?? [];
+  const rawProfiles: RawProfileData[] = safeDocs.map(
+    (docSnap: { id: string; data: () => Record<string, any> }) => ({
+      uid: docSnap.id,
+      ...docSnap.data(),
+    }),
   );
-  if (isCompleted) return 0;
-
-  const table = resolveFeedTable(overrideIsFree);
-  // Only proceed for paid-user feeds; otherwise skip the bulk sync.
-  if (table !== paidUserFeeds) {
-    return 0;
-  }
-
-  const bundleUrl = `${CDN_BASE_URL}/${targetCollection}_dump.json.gz`;
-  const response = await fetch(bundleUrl);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch bulk dump from ${bundleUrl}`);
-  }
-
-  const blob = await response.arrayBuffer();
-  const decompressed = gunzipSync(new Uint8Array(blob));
-  const rawProfiles = JSON.parse(strFromU8(decompressed));
 
   let maxTimestamp = 0;
 
   db.transaction((tx) => {
-    const chunkSize = 1000;
+    for (let i = 0; i < rawProfiles?.length; i += UPSERT_CHUNK_SIZE) {
+      const rawChunk = rawProfiles?.slice(i, i + UPSERT_CHUNK_SIZE);
+      const {
+        itemsToUpsert,
+        uidsToDelete,
+        maxTimestamp: chunkMaxTs,
+      } = processRawProfiles(rawChunk);
 
-    for (let i = 0; i < rawProfiles.length; i += chunkSize) {
-      const rawChunk = rawProfiles.slice(i, i + chunkSize);
-      const itemsToUpsert: any[] = [];
-      const uidsToDelete: string[] = [];
-
-      for (const p of rawChunk) {
-        const uid = p.uid || p.id;
-        if (!uid) continue;
-
-        // 🛑 Check for inactive status (ia === false)
-        if (p.ia === false) {
-          uidsToDelete.push(uid);
-        } else {
-          const { item, updatedAt } = mapRawToProfileSchema(p);
-          if (updatedAt > maxTimestamp) maxTimestamp = updatedAt;
-          itemsToUpsert.push(item);
-        }
+      if (chunkMaxTs > maxTimestamp) {
+        maxTimestamp = chunkMaxTs;
       }
 
-      // 1. Delete inactive profiles from SQLite
-      purgeInactiveBatchFromTx(tx, uidsToDelete);
-
-      // 2. Upsert valid active profiles into SQLite
-      if (itemsToUpsert.length > 0) {
-        tx.insert(table)
-          .values(itemsToUpsert)
-          .onConflictDoUpdate({
-            target: table.uid,
-            set: {
-              ca: sql`excluded.ca`,
-              ua: sql`excluded.ua`,
-              fn: sql`excluded.fn`,
-              ln: sql`excluded.ln`,
-              db: sql`excluded.db`,
-              ht: sql`excluded.ht`,
-              np: sql`excluded.np`,
-              ai: sql`excluded.ai`,
-              ms: sql`excluded.ms`,
-              ir: sql`excluded.ir`,
-              profileData: sql`excluded.profile_data`,
-            },
-          })
-          .run();
-      }
+      purgeInactiveBatchFromTx(tx, paidUserFeeds, uidsToDelete);
+      upsertProfilesBatchFromTx(tx, paidUserFeeds, itemsToUpsert);
     }
   });
 
   const now = Date.now();
   await new Promise((resolve) => setTimeout(resolve, 50));
-  appStorage.set(`is_initial_sync_done_${targetCollection}`, true);
+  appStorage.set(syncKey, true);
   appStorage.set("last_synced_at", maxTimestamp || now);
   appStorage.set(`last_delta_run_${targetCollection}`, now);
-  return rawProfiles.length;
-};
 
+  console.log("[handlePaidBulkSync] Synced records:", rawProfiles?.length);
+  return rawProfiles?.length;
+};
 /**
- * Free User Flow: Fetch recent 15 profiles from targeted shard
+ * Free User Flow: Fetch recent profiles for free-tier users
  */
 const handleFreeTierSync = async (
-  targetCollection: string,
+  targetCollectionFree: string,
 ): Promise<number> => {
-  const syncKey = `is_free_sync_done_${targetCollection}`;
-
-  // 1. MMKV GUARD: Skip network query if initial free sync was already performed
-  const isCompleted = appStorage.getBoolean(syncKey);
-  if (isCompleted) {
-    return 0;
-  }
+  const syncKey = `is_free_sync_done_${targetCollectionFree}`;
+  if (appStorage.getBoolean(syncKey)) return 0;
 
   const freeQuery = queryFs(
-    collection(firestore, targetCollection),
-    orderBy("createdAt", "desc"),
+    collection(firestore, targetCollectionFree),
     limit(15),
   );
 
   const snapshot = await getDocsFromServer(freeQuery);
+
   if (snapshot.empty) return 0;
+  const safeDocs = snapshot?.docs ?? [];
+  const rawProfiles: RawProfileData[] = safeDocs.map(
+    (docSnap: { id: string; data: () => Record<string, any> }) => ({
+      uid: docSnap.id,
+      ...docSnap.data(),
+    }),
+  );
 
-  const itemsToUpsert: any[] = [];
-  const uidsToDelete: string[] = [];
-
-  for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
-    const uid = docSnap.id;
-
-    // 🛑 Check for inactive status (ia === false)
-    if (data.ia === false) {
-      uidsToDelete.push(uid);
-    } else {
-      const { item } = mapRawToProfileSchema({ uid, ...data });
-      itemsToUpsert.push(item);
-    }
-  }
+  const { itemsToUpsert } = processRawProfiles(rawProfiles);
 
   db.transaction((tx) => {
-    // 1. Delete inactive profiles
-    purgeInactiveBatchFromTx(tx, uidsToDelete);
-
-    // 2. Upsert active profiles
-    if (itemsToUpsert.length > 0) {
-      tx.insert(freeUserFeeds)
-        .values(itemsToUpsert)
-        .onConflictDoUpdate({
-          target: freeUserFeeds.uid,
-          set: {
-            ca: sql`excluded.ca`,
-            ua: sql`excluded.ua`,
-            fn: sql`excluded.fn`,
-            ln: sql`excluded.ln`,
-            db: sql`excluded.db`,
-            ht: sql`excluded.ht`,
-            np: sql`excluded.np`,
-            ai: sql`excluded.ai`,
-            ms: sql`excluded.ms`,
-            ir: sql`excluded.ir`,
-            profileData: sql`excluded.profile_data`,
-          },
-        })
-        .run();
-    }
+    upsertProfilesBatchFromTx(tx, freeUserFeeds, itemsToUpsert);
   });
+
   await new Promise((resolve) => setTimeout(resolve, 50));
   appStorage.set(syncKey, true);
 
-  return itemsToUpsert.length;
+  console.log("[handleFreeTierSync] Synced records:", itemsToUpsert?.length);
+  return itemsToUpsert?.length;
 };
 
 /**
- * Delta Sync: Incremental update handler with 24-hour interval control
+ * Delta Sync: Incremental update handler
  */
 export const performDeltaSync = async (
   isPaid: boolean,
-  isVerified: boolean,
-  gender: string | null | undefined,
-  forceSync: boolean = false,
-  overrideIsFree?: boolean,
+  gender: string,
 ): Promise<number> => {
-  if (!(isPaid && isVerified)) return 0;
+  if (!isPaid) return 0;
 
-  const table = resolveFeedTable(overrideIsFree);
-
-  const targetCollection = getTargetCollection(gender);
+  const targetCollection = getTargetCollectionName(gender, false);
   if (!targetCollection) return 0;
 
   const now = Date.now();
-  const lastRunTime =
-    appStorage.getNumber(`last_delta_run_${targetCollection}`) || 0;
-
-  // Enforce 24-hour throttling unless forced
-  if (!forceSync && now - lastRunTime < TWENTY_FOUR_HOURS_MS) {
-    return 0;
-  }
 
   const lastSyncedAt = appStorage.getNumber("last_synced_at") || 0;
-
-  const filterTimestamp =
-    lastSyncedAt > 0
-      ? Timestamp.fromMillis(lastSyncedAt)
-      : Timestamp.fromMillis(0);
+  const filterTimestamp = Timestamp.fromMillis(lastSyncedAt);
 
   const deltaQuery = queryFs(
     collection(firestore, targetCollection),
-    where("updatedAt", ">", filterTimestamp),
+    where("ua", ">", filterTimestamp),
   );
 
   const snapshot = await getDocsFromServer(deltaQuery);
-
   appStorage.set(`last_delta_run_${targetCollection}`, now);
 
   if (snapshot.empty) return 0;
+  const safeDocs = snapshot?.docs ?? [];
+  const rawProfiles: RawProfileData[] = safeDocs.map(
+    (docSnap: { id: string; data: () => Record<string, any> }) => ({
+      uid: docSnap.id,
+      ...docSnap.data(),
+    }),
+  );
 
-  let latestTimestamp = lastSyncedAt;
-  const itemsToUpsert: any[] = [];
-  const uidsToDelete: string[] = [];
-
-  for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
-    const uid = docSnap.id;
-    const { item, updatedAt } = mapRawToProfileSchema({ uid, ...data });
-
-    // ⏱️ Always track timestamp progress so we don't re-query this record
-    if (updatedAt > latestTimestamp) latestTimestamp = updatedAt;
-
-    // 🛑 Check for inactive status (ia === false)
-    if (data.ia === false) {
-      uidsToDelete.push(uid);
-    } else {
-      itemsToUpsert.push(item);
-    }
-  }
+  const { itemsToUpsert, uidsToDelete, maxTimestamp } =
+    processRawProfiles(rawProfiles);
 
   db.transaction((tx) => {
-    // 1. Delete inactive profiles from SQLite
-    purgeInactiveBatchFromTx(tx, uidsToDelete);
-
-    // 2. Upsert updated active profiles into SQLite
-    if (itemsToUpsert.length > 0) {
-      tx.insert(table)
-        .values(itemsToUpsert)
-        .onConflictDoUpdate({
-          target: table.uid,
-          set: {
-            ca: sql`excluded.ca`,
-            ua: sql`excluded.ua`,
-            fn: sql`excluded.fn`,
-            ln: sql`excluded.ln`,
-            db: sql`excluded.db`,
-            ht: sql`excluded.ht`,
-            np: sql`excluded.np`,
-            ai: sql`excluded.ai`,
-            ms: sql`excluded.ms`,
-            ir: sql`excluded.ir`,
-            profileData: sql`excluded.profile_data`,
-          },
-        })
-        .run();
-    }
+    purgeInactiveBatchFromTx(tx, paidUserFeeds, uidsToDelete);
+    upsertProfilesBatchFromTx(tx, paidUserFeeds, itemsToUpsert);
   });
 
-  appStorage.set("last_synced_at", latestTimestamp);
-  return snapshot.docs.length;
+  if (maxTimestamp > lastSyncedAt) {
+    appStorage.set("last_synced_at", maxTimestamp);
+  }
+
+  console.log("[performDeltaSync] Processed updates:", snapshot.docs?.length);
+  return snapshot.docs?.length;
 };
+
+// const CDN_BASE_URL = "https://cdn.yourdomain.com";
+// const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+// const SQLITE_DELETE_CHUNK_SIZE = 500;
+// /**
+//  * Paid User Flow: Dynamic Sharded CDN Gzip Download
+//  */
+// //Use later once we have cdn link
+// // const handlePaidBulkSync = async (
+// //   targetCollection: string,
+// //   overrideIsFree?: boolean,
+// // ): Promise<number> => {
+// //   const isCompleted = appStorage.getBoolean(
+// //     `is_initial_sync_done_${targetCollection}`,
+// //   );
+// //   if (isCompleted) return 0;
+
+// //   const table = resolveFeedTable(overrideIsFree);
+// //   // Only proceed for paid-user feeds; otherwise skip the bulk sync.
+// //   if (table !== paidUserFeeds) {
+// //     return 0;
+// //   }
+
+// //   const bundleUrl = `${CDN_BASE_URL}/${targetCollection}_dump.json.gz`;
+// //   const response = await fetch(bundleUrl);
+
+// //   if (!response.ok) {
+// //     throw new Error(`Failed to fetch bulk dump from ${bundleUrl}`);
+// //   }
+
+// //   const blob = await response.arrayBuffer();
+// //   const decompressed = gunzipSync(new Uint8Array(blob));
+// //   const rawProfiles = JSON.parse(strFromU8(decompressed));
+
+// //   let maxTimestamp = 0;
+
+// //   db.transaction((tx) => {
+// //     const chunkSize = 1000;
+
+// //     for (let i = 0; i < rawProfiles.length; i += chunkSize) {
+// //       const rawChunk = rawProfiles.slice(i, i + chunkSize);
+// //       const itemsToUpsert: any[] = [];
+// //       const uidsToDelete: string[] = [];
+
+// //       for (const p of rawChunk) {
+// //         const uid = p.uid || p.id;
+// //         if (!uid) continue;
+
+// //         // 1. Mark inactive profiles for deletion and move to next
+// //         if (p.ia === false) {
+// //           uidsToDelete.push(uid);
+// //           continue;
+// //         }
+
+// //         const { item, updatedAt } = mapRawToProfileSchema(p);
+
+// //         // 2. Skip profiles missing mandatory 'ca' timestamp to avoid SQLite NOT NULL error
+// //         if (item.ca === null) {
+// //           console.log(
+// //             " `[BulkSync] Skipping profile ${uid} due to missing 'ca' timestamp.`",
+// //           );
+// //           continue;
+// //         }
+
+// //         // 3. Update sync timestamp tracker
+// //         if (updatedAt !== null && updatedAt > maxTimestamp) {
+// //           maxTimestamp = updatedAt;
+// //         }
+
+// //         // 4. Push valid active items for upsert
+// //         itemsToUpsert.push(item);
+// //       }
+
+// //       // 1. Delete inactive profiles from SQLite
+// //       purgeInactiveBatchFromTx(tx, table, uidsToDelete);
+
+// //       // 2. Upsert valid active profiles into SQLite
+// //       if (itemsToUpsert.length > 0) {
+// //         tx.insert(table)
+// //           .values(itemsToUpsert)
+// //           .onConflictDoUpdate({
+// //             target: table.uid,
+// //             set: {
+// //               ca: sql`excluded.ca`,
+// //               ua: sql`excluded.ua`,
+// //               fn: sql`excluded.fn`,
+// //               ln: sql`excluded.ln`,
+// //               db: sql`excluded.db`,
+// //               ht: sql`excluded.ht`,
+// //               np: sql`excluded.np`,
+// //               ai: sql`excluded.ai`,
+// //               ms: sql`excluded.ms`,
+// //               ir: sql`excluded.ir`,
+// //               profileData: sql`excluded.profile_data`,
+// //             },
+// //           })
+// //           .run();
+// //       }
+// //     }
+// //   });
+
+// //   const now = Date.now();
+// //   await new Promise((resolve) => setTimeout(resolve, 50));
+// //   appStorage.set(`is_initial_sync_done_${targetCollection}`, true);
+// //   appStorage.set("last_synced_at", maxTimestamp || now);
+// //   appStorage.set(`last_delta_run_${targetCollection}`, now);
+// //   return rawProfiles.length;
+// // };
+// /**

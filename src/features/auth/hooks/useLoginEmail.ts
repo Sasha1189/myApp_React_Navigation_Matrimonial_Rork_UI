@@ -4,7 +4,10 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithCredential,
 } from "@react-native-firebase/auth";
+// import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useTranslation } from "react-i18next";
 
 export const useLoginEmail = () => {
@@ -12,13 +15,12 @@ export const useLoginEmail = () => {
   const authInstance = getAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🎯 CONNECTS DIRECTLY TO REACT-HOOK-FORM SUBMIT
+  // 🎯 EMAIL/PASSWORD LOGIN
   const executeLogin = async (formData: any) => {
     const { email, password } = formData;
     setIsLoading(true);
 
     try {
-      // 1. Pure, native standard Firebase authentication login pass
       await signInWithEmailAndPassword(
         authInstance,
         email.toLowerCase().trim(),
@@ -27,7 +29,6 @@ export const useLoginEmail = () => {
     } catch (error: any) {
       console.log("ℹ️ [Auth Flow]: SignIn rejected. Code:", error.code);
 
-      // 2. Clear, distinct production error routing loops
       if (
         error.code === "auth/user-not-found" ||
         error.code === "auth/invalid-credential"
@@ -35,8 +36,8 @@ export const useLoginEmail = () => {
         Alert.alert(
           t("common.error", "Error"),
           t(
-            "auth.accountDoesNotExist",
-            "This account does not exist. Please Sign Up first.",
+            "auth.accountDoesNotExistOrGoogle",
+            "Incorrect credentials. If you registered with Google, please tap 'Sign in with Google'.",
           ),
         );
       } else if (error.code === "auth/wrong-password") {
@@ -60,26 +61,54 @@ export const useLoginEmail = () => {
     }
   };
 
-  // 🎯 THE FIXED FORGOT PASSWORD METHOD WITH CONFIRMATION ALERT
+  // 🎯 🟢 GOOGLE SIGN-IN FOR RETURNING USERS
+  // const executeGoogleLogin = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     await GoogleSignin.hasPlayServices({
+  //       showPlayServicesUpdateDialog: true,
+  //     });
+  //     const { idToken } = await GoogleSignin.signIn();
+
+  //     if (!idToken) {
+  //       throw new Error("Google Sign-In failed to retrieve ID token.");
+  //     }
+
+  //     const googleCredential = GoogleAuthProvider.credential(idToken);
+  //     await signInWithCredential(authInstance, googleCredential);
+  //   } catch (error: any) {
+  //     console.log("ℹ️ [Google Auth Flow]: Rejected. Code:", error.code);
+  //     if (error.code !== "SIGN_IN_CANCELLED") {
+  //       Alert.alert(
+  //         t("common.error", "Error"),
+  //         t(
+  //           "auth.googleSignInFailed",
+  //           "Google Sign-In failed. Please try again.",
+  //         ),
+  //       );
+  //     }
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // 🎯 FORGOT PASSWORD METHOD
   const handleForgotPassword = async (currentEmailValue?: string) => {
-    // 1. Core input structural check validation
     if (!currentEmailValue || !/^\S+@\S+$/i.test(currentEmailValue)) {
       Alert.alert(
         t("common.error", "Error"),
         t(
           "auth.enterValidEmailForReset",
-          "Please enter a valid email address first to reset your password."
-        )
+          "Please enter a valid email address first to reset your password.",
+        ),
       );
       return;
     }
 
     const cleanEmail = currentEmailValue.toLowerCase().trim();
 
-    // 2. 🎯 SHOW INTERACTIVE CONFIRMATION MODAL WINDOW
     Alert.alert(
       t("auth.resetConfirmTitle", "Confirm Reset"),
-      // Dynamically displays the typed email right inside the message content
       `${t("auth.resetConfirmMsg", "We will send a password reset link to:")}\n\n${cleanEmail}`,
       [
         {
@@ -88,38 +117,50 @@ export const useLoginEmail = () => {
         },
         {
           text: t("auth.helpAlertBtn", "OK"),
-          // 3. 🎯 ONLY EXECUTED IF USER CLICKS OK NATIVELY
           onPress: async () => {
             setIsLoading(true);
             try {
               await sendPasswordResetEmail(authInstance, cleanEmail);
-              
               Alert.alert(
                 t("auth.successTitle", "Success"),
                 t(
                   "auth.passwordResetSent",
-                  "A password reset link has been sent to your email inbox."
-                )
+                  "A password reset link has been sent to your email inbox.",
+                ),
               );
             } catch (error: any) {
-              console.error("Password reset failure after OK tap:", error);
-              Alert.alert(
-                t("common.error", "Error"),
-                error.message || "Failed to process password reset request."
-              );
+              if (error.code === "auth/user-not-found") {
+                Alert.alert(
+                  t("common.error", "Error"),
+                  t(
+                    "auth.accountDoesNotExist",
+                    "This account does not exist. Please check your email.",
+                  ),
+                );
+              } else {
+                Alert.alert(
+                  t("common.error", "Error"),
+                  error.message ||
+                    t(
+                      "auth.resetFailed",
+                      "Failed to process password reset request.",
+                    ),
+                );
+              }
             } finally {
               setIsLoading(false);
             }
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
   return {
     isLoading,
     executeLogin,
+    // executeGoogleLogin,
     handleForgotPassword,
   };
 };

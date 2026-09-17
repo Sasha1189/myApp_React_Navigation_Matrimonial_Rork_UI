@@ -7,5 +7,6 @@ export interface AuthContextType {
   authLoading: boolean;
   tier: UserTier;
   setUser: (user: FirebaseAuthTypes.User | null) => void;
+  setAuthLoading: (authLoading: boolean) => void;
   setTier: (tier: UserTier) => void;
 }

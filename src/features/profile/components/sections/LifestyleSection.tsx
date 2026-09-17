@@ -71,90 +71,122 @@ export default function EditLifestyleScreen({ navigation }: any) {
       keyboardShouldPersistTaps="handled"
     >
       <View style={{ gap: theme.spacing.xs }}>
-        {/* Diet Preferences */}
-        <Controller
-          control={control}
-          name="dp" // dietPreferences -> dp
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.diet")}
-              value={value}
-              placeholder={t("details.placeholders.diet")}
-              options={transformLookupToOptions("dp")}
-              onSelect={onChange}
-              icon={Coffee}
-              editable={true}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          {/* Diet Preferences */}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="dp" // dietPreferences -> dp
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.diet")}
+                  value={value}
+                  placeholder={t("details.placeholders.diet")}
+                  options={transformLookupToOptions("dp")}
+                  onSelect={onChange}
+                  icon={Coffee}
+                  editable={true}
+                />
+              )}
             />
-          )}
-        />
+          </View>
+          {/* Smoking Habit */}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="sh" // smokingHabit -> sh
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.smoking")}
+                  value={value}
+                  placeholder={t("details.placeholders.habit")}
+                  options={transformLookupToOptions("sh")}
+                  onSelect={onChange}
+                  icon={Droplets}
+                  editable={true}
+                />
+              )}
+            />
+          </View>
+        </View>
 
-        {/* Smoking Habit */}
-        <Controller
-          control={control}
-          name="sh" // smokingHabit -> sh
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.smoking")}
-              value={value}
-              placeholder={t("details.placeholders.habit")}
-              options={transformLookupToOptions("sh")}
-              onSelect={onChange}
-              icon={Droplets}
-              editable={true}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          {/* Drinking Habit */}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="dh" // drinkingHabit -> dh
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.drinking")}
+                  value={value}
+                  placeholder={t("details.placeholders.habit")}
+                  options={transformLookupToOptions("dh")}
+                  onSelect={onChange}
+                  icon={Wine}
+                  editable={true}
+                />
+              )}
             />
-          )}
-        />
+          </View>
+          {/* Exercise Routine */}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="er" // exerciseRoutine -> er
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.exercise")}
+                  value={value}
+                  placeholder={t("details.placeholders.exercise")}
+                  options={transformLookupToOptions("er")}
+                  onSelect={onChange}
+                  icon={Activity}
+                  editable={true}
+                />
+              )}
+            />
+          </View>
+        </View>
 
-        {/* Drinking Habit */}
-        <Controller
-          control={control}
-          name="dh" // drinkingHabit -> dh
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.drinking")}
-              value={value}
-              placeholder={t("details.placeholders.habit")}
-              options={transformLookupToOptions("dh")}
-              onSelect={onChange}
-              icon={Wine}
-              editable={true}
+        <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+          {/* Fitness Level */}
+          <View style={{ flex: 1 }}>
+            <Controller
+              control={control}
+              name="fl" // fitnessLevel -> fl
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.fitness")}
+                  value={value}
+                  placeholder={t("details.placeholders.fitness")}
+                  options={transformLookupToOptions("fl")}
+                  onSelect={onChange}
+                  icon={Heart}
+                  editable={true}
+                />
+              )}
             />
-          )}
-        />
-
-        {/* Exercise Routine */}
-        <Controller
-          control={control}
-          name="er" // exerciseRoutine -> er
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.exercise")}
-              value={value}
-              placeholder={t("details.placeholders.exercise")}
-              options={transformLookupToOptions("er")}
-              onSelect={onChange}
-              icon={Activity}
-              editable={true}
+          </View>
+          <View style={{ flex: 1 }}>
+            {/* Belief System */}
+            <Controller
+              control={control}
+              name="bs" // beliefSystem -> bs
+              render={({ field: { onChange, value } }) => (
+                <PickerField
+                  label={t("details.labels.beliefSystem")}
+                  value={value}
+                  placeholder={t("details.placeholders.beliefSystem")}
+                  options={transformLookupToOptions("bs")}
+                  onSelect={onChange}
+                  icon={Sparkles}
+                  editable={true}
+                />
+              )}
             />
-          )}
-        />
-
-        {/* Fitness Level */}
-        <Controller
-          control={control}
-          name="fl" // fitnessLevel -> fl
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.fitness")}
-              value={value}
-              placeholder={t("details.placeholders.fitness")}
-              options={transformLookupToOptions("fl")}
-              onSelect={onChange}
-              icon={Heart}
-              editable={true}
-            />
-          )}
-        />
+          </View>
+        </View>
 
         {/* Hobbies (MultiSelect) - Premium Chip View */}
         <Controller
@@ -167,23 +199,6 @@ export default function EditLifestyleScreen({ navigation }: any) {
               options={structuredHobbyOptions}
               onChange={onChange}
               placeholder={t("details.placeholders.multiHobbies")}
-              icon={Sparkles}
-              editable={true}
-            />
-          )}
-        />
-
-        {/* Belief System */}
-        <Controller
-          control={control}
-          name="bs" // beliefSystem -> bs
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.beliefSystem")}
-              value={value}
-              placeholder={t("details.placeholders.beliefSystem")}
-              options={transformLookupToOptions("bs")}
-              onSelect={onChange}
               icon={Sparkles}
               editable={true}
             />

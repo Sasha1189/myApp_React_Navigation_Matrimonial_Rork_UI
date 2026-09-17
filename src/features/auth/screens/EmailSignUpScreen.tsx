@@ -15,6 +15,7 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+// import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 
 import { useSignUpFlow } from "../hooks/useSignUpFlow";
 import { useAuthNavigation } from "../../../navigation/hooks";
@@ -24,15 +25,20 @@ import {
   EmailInputField,
   PasswordInputField,
 } from "../components/AuthInputFields";
+import { AuthTermsDisclaimer } from "../components/AuthTermsDisclaimer";
 
 export default function EmailSignUpScreen() {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useAuthNavigation();
-  const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const { isLoading, executeRegistration, handleBackPress } = useSignUpFlow();
+  const {
+    isLoading,
+    executeRegistration,
+    // executeGoogleSignUp,
+    handleBackPress,
+  } = useSignUpFlow();
 
   const {
     control,
@@ -58,7 +64,7 @@ export default function EmailSignUpScreen() {
     executeRegistration(data);
   });
 
-  const finalButtonDisabled = !isValid || !agreeTerms || isLoading;
+  const finalButtonDisabled = !isValid || isLoading;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -87,6 +93,26 @@ export default function EmailSignUpScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+
+                {/* 2. Google Sign-In Button (ACTIVE IMMEDIATELY) */}
+                {/* <GoogleSigninButton
+                  size={GoogleSigninButton.Size.Wide}
+                  color={GoogleSigninButton.Color.Dark}
+                  onPress={executeGoogleSignUp}
+                  disabled={isLoading}
+                  style={styles.googleButton}
+                /> */}
+                <View style={styles.googleButton}>
+                  <Text>Continue with Google</Text>
+                </View>
+
+                {/* 3. "OR" Divider */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
                 {/* 1. Standard Email field */}
                 <EmailInputField control={control} errors={errors} />
 
@@ -117,12 +143,12 @@ export default function EmailSignUpScreen() {
                 isLoading={isLoading}
                 finalButtonDisabled={finalButtonDisabled}
                 handleAuthSubmit={handleAuthSubmit}
-                openLink={openLink}
                 insets={insets}
-                agreeTerms={agreeTerms}
-                setAgreeTerms={setAgreeTerms}
-                showCheckbox={true}
-              />
+              >
+                <View style={{ marginTop: 12 }}>
+                  <AuthTermsDisclaimer openLink={openLink} />
+                </View>
+              </AuthFooterActions>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -173,5 +199,27 @@ export const createStyles = (theme: AppTheme) =>
       fontWeight: "700",
       color: theme.colors.text, // Adaptive high-contrast brand text
       letterSpacing: 0.5,
+    },
+    // 🟢 Updated Divider and Google Button Styles
+    dividerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: theme.spacing.lg, // 24px vertical space for clean visual breathing room
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
+    dividerText: {
+      marginHorizontal: theme.spacing.sm,
+      color: theme.colors.textLight || theme.colors.text,
+      fontSize: theme.fontSize.sm,
+      fontWeight: "500",
+    },
+    googleButton: {
+      width: "100%",
+      height: 48,
+      borderRadius: theme.borderRadius.md,
     },
   });

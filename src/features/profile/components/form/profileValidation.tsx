@@ -103,6 +103,8 @@ export const SECTION_CONFIG = [
       "nb", // numberOfBrothers
       "ns", // numberOfSisters
       "sd", // siblingsDetails
+      "dbd", // daij bhavki Details
+      "pd", // property Details
     ],
     screen: "EditFamily",
   },

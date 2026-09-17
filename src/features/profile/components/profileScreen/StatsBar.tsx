@@ -49,16 +49,7 @@ export const StatsBar = memo<StatsBarProps>(
           <React.Fragment key={s.id}>
             <View style={styles.statItem}>
               {!isSubscribed ? (
-                <Text
-                  style={
-                    styles.upgradeText || {
-                      fontSize: 10,
-                      fontWeight: "700",
-                      color: "#3B82F6",
-                      textAlign: "center",
-                    }
-                  }
-                >
+                <Text style={styles.upgradeText}>
                   {t("profile.stats.upgrade")}
                 </Text>
               ) : (

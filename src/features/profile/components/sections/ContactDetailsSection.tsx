@@ -19,7 +19,6 @@ export default function EditContactDetailsScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const { t } = useTranslation();
 
-  // Find config for "contact" section
   const config = SECTION_CONFIG.find((s) => s.id === "contact")!;
 
   const { control, formState } = useSectionEditor<Profile>(
@@ -95,6 +94,23 @@ export default function EditContactDetailsScreen({ navigation }: any) {
           )}
         />
 
+        {/* Preferred Contact Method */}
+        <Controller
+          control={control}
+          name="pc" // preferredContact -> pc
+          render={({ field: { onChange, value } }) => (
+            <PickerField
+              label={t("details.labels.contactPref")}
+              value={value}
+              placeholder={t("details.placeholders.contactMethod")}
+              options={transformLookupToOptions("pc")} // Maps to LOOKUPS.pc numeric indices
+              onSelect={onChange}
+              icon={Phone}
+              editable={true}
+            />
+          )}
+        />
+
         {/* Current City (District List) */}
         <Controller
           control={control}
@@ -124,23 +140,6 @@ export default function EditContactDetailsScreen({ navigation }: any) {
               options={transformLookupToOptions("ct")} // Kept flat strings as per schema rules
               onSelect={onChange}
               icon={MapPin}
-              editable={true}
-            />
-          )}
-        />
-
-        {/* Preferred Contact Method */}
-        <Controller
-          control={control}
-          name="pc" // preferredContact -> pc
-          render={({ field: { onChange, value } }) => (
-            <PickerField
-              label={t("details.labels.contactPref")}
-              value={value}
-              placeholder={t("details.placeholders.contactMethod")}
-              options={transformLookupToOptions("pc")} // Maps to LOOKUPS.pc numeric indices
-              onSelect={onChange}
-              icon={Phone}
               editable={true}
             />
           )}
