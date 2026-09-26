@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useEntitlement } from "../../../context";
+import { useAuth } from "../../../context";
 import {
   LikesCache,
   LikesReceivedCache,
@@ -15,7 +15,7 @@ export interface ProfileStats {
 }
 
 export function useProfileStats(uid: string | undefined): ProfileStats {
-  const { isPaid } = useEntitlement();
+  const { isPaid } = useAuth();
   const isSubscribed = Boolean(isPaid);
 
   const calculateLocalStats = (): ProfileStats => {

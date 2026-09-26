@@ -12,7 +12,7 @@ export const getDefaultProfile = (): Profile => ({
   tn: "", // thumbnail URL -> tb
   ca: null, // createdAt -> ca
   ua: null, // updatedAt -> ua
-  iv: false, // isVerified -> iv
+  iv: "", // isVerified -> iv
   ia: false, // isActive
   pid: "", // profileId -> pid
 

@@ -15,20 +15,27 @@ export default function HomeScreen() {
   const { isDbReady, migrationError } = useDatabase();
   const uid = user?.uid ?? "";
 
-  // usePreventScreenCapture();
+  const isFeedReady = isDbReady && !migrationError;
 
-  const userGender = user?.displayName?.trim().toLowerCase();
-  const isGenderReady = userGender === "male" || userGender === "female";
-  const isFeedReady = isGenderReady && isDbReady && !migrationError;
+  console.log("[Homescreen]- uid - isFeedReady:", uid, isFeedReady);
 
   const feed = useActiveFeed(isFeedReady ? uid : "");
+
+  const { feedKey } = feed;
 
   const containerStyle = useMemo(
     () => [styles.container, { backgroundColor: theme.colors.background }],
     [theme.colors.background],
   );
 
-  const { feedKey } = feed;
+  usePreventScreenCapture();
+
+  console.log(
+    "[Homescreen]- feed:length - loading - mode",
+    feed?.profiles?.length,
+    feed?.isLoading,
+    feed?.mode,
+  );
 
   if (migrationError) {
     return <DatabaseErrorModal />;

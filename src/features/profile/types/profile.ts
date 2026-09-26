@@ -1,7 +1,7 @@
 export interface Profile {
   // Unchanged Backend Master Keys
   uid: string;
-  gender: "" | "Male" | "Female";
+  gender: "" | "male" | "female";
   tier: "" | "basic" | "premium";
   liked?: boolean;
 
@@ -10,7 +10,7 @@ export interface Profile {
   tn?: string; // thumbnail URL
   ca: number | null; // createdAt
   ua: number | null; // updatedAt
-  iv: boolean; // isVerified
+  iv: string; // isVerified
   ia: boolean; // isActive
   pid: string; // profileId
 

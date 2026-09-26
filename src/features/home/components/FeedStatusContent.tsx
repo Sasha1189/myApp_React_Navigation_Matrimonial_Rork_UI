@@ -3,7 +3,7 @@ import { FeedStatusCard } from "./FeedStatusCard";
 import { FeedHookResult } from "../type/type";
 import { useTranslation } from "react-i18next";
 import { useAppNavigation } from "../../../navigation/hooks";
-import { useEntitlement } from "@/context";
+import { useAuth } from "@/context";
 
 interface FeedStatusContentProps {
   feed: FeedHookResult;
@@ -31,7 +31,7 @@ export function FeedStatusContent({
 
   const { t } = useTranslation();
   const navigation = useAppNavigation();
-  const { isPaid } = useEntitlement();
+  const { isPaid } = useAuth();
 
   const isAtLastCard =
     profiles && profiles.length > 0 && currentIndex >= profiles.length - 1;

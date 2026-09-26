@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { rtdb } from "../../../config/firebase";
 import {
@@ -6,11 +6,9 @@ import {
   query,
   onValue,
   onChildAdded,
-  onChildChanged,
   onChildRemoved,
   limitToLast,
-  orderByChild,
-  endAt,
+  endBefore,
   get,
   push,
   update,
@@ -18,20 +16,33 @@ import {
   remove,
   set,
   onDisconnect,
-  goOnline,
+  orderByKey,
+  startAfter,
 } from "@react-native-firebase/database";
 import { IMessage } from "../type/chattype";
 import { formatStatusTime } from "../../../utils/dateUtils";
 import { useTranslation } from "react-i18next";
+import {
+  getDailySentCount,
+  incrementDailySentCount,
+} from "@/cacheMMKV/cacheConfig";
+
+const DAILY_MESSAGE_LIMIT = 5;
+const TARGET_BATCH_SIZE = 20;
+const BATCH_SIZE = TARGET_BATCH_SIZE || 30;
 
 export function useChatSession(
   rId: string,
   myUid: string,
-  sender: { name?: string; photo?: string },
   ou: { uid: string; name?: string; photo?: string },
 ) {
-  const [messages, setMessages] = useState<IMessage[]>([]);
+  const otherUid = ou?.uid;
+  const [sentTodayCount, setSentTodayCount] = useState<number>(() =>
+    getDailySentCount(myUid),
+  );
+
   const { t } = useTranslation();
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [isLive, setIsLive] = useState(true);
   const [hasNewAtBottom, setHasNewAtBottom] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +58,42 @@ export function useChatSession(
   const msgUnsubscribe = useRef<(() => void) | null>(null);
   const newMsgUnsubscribe = useRef<(() => void) | null>(null);
 
+  // Add a ref to store a queue of message IDs waiting to be marked as read
+  const unreadQueue = useRef<string[]>([]);
+  const readReceiptTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const roomHash = useMemo(() => getRoomHash(rId), [rId]);
+
+  const canSend = useMemo(() => {
+    return sentTodayCount < DAILY_MESSAGE_LIMIT;
+  }, [sentTodayCount]);
+
+  const flushReadReceipts = useCallback(() => {
+    if (unreadQueue.current.length === 0) return;
+
+    const updates: Record<string, boolean> = {};
+    unreadQueue.current.forEach((msgId) => {
+      updates[`messages/${rId}/${msgId}/r`] = true;
+    });
+
+    update(ref(rtdb, "/"), updates)
+      .then(() => {
+        unreadQueue.current = []; // Clear queue on success
+      })
+      .catch(console.error);
+  }, [rId]);
+
+  const queueReadReceipt = useCallback(
+    (msgId: string) => {
+      if (unreadQueue.current.includes(msgId)) return;
+      unreadQueue.current.push(msgId);
+
+      if (readReceiptTimeout.current) clearTimeout(readReceiptTimeout.current);
+      readReceiptTimeout.current = setTimeout(flushReadReceipts, 1500); // Debounce write for 1.5 seconds
+    },
+    [flushReadReceipts],
+  );
+
   const stopListeners = useCallback(() => {
     if (msgUnsubscribe.current) {
       msgUnsubscribe.current();
@@ -59,176 +106,182 @@ export function useChatSession(
   }, []);
 
   const startLiveMessages = useCallback(() => {
-    try {
-      goOnline(rtdb);
-    } catch (err) {
-      console.error("Failed to re-engage active chat socket wrapper:", err);
-    }
     stopListeners();
     setIsLive(true);
     setHasNewAtBottom(false);
+    setIsLoading(true);
 
-    // Modular Query: Passing rtdb instance as the first argument
-    const msgQuery = query(ref(rtdb, `messages/${rId}`), limitToLast(50));
-    // 1. Initial Load (One-time cost)
-    get(msgQuery).then((snap) => {
-      const data = snap.val() || {};
-      const list = (Object.values(data) as IMessage[]).sort(
-        (a, b) => b.ts - a.ts,
-      );
-      setMessages(list);
+    const roomRef = ref(rtdb, `messages/${rId}`);
 
-      if (list.length > 0) {
-        const oldestInBatch = list[list.length - 1].ts;
-        if (!oldestLoadedTs.current || oldestInBatch < oldestLoadedTs.current) {
-          oldestLoadedTs.current = oldestInBatch;
+    // 1. Unified viewport query for the latest messages
+    const liveQuery = query(
+      roomRef,
+      orderByKey(),
+      limitToLast(TARGET_BATCH_SIZE),
+    );
+
+    // 2. Single listener handles initial load, new messages, edits, and deletes
+    const unsub = onValue(
+      liveQuery,
+      (snap) => {
+        let list: IMessage[] = [];
+        if (snap.exists()) {
+          const rawData: IMessage[] = [];
+          snap.forEach((child) => {
+            rawData.push(child.val() as IMessage);
+          });
+          list = sortMessagesDesc(rawData);
         }
-      }
-      setHasMore(list.length >= 50);
-      setIsLoading(false);
 
-      // Initial Read Batch
-      const unread = list.filter((m) => m.s !== myUid && !m.r);
-      if (unread.length > 0) {
-        const updates: any = {};
-        unread.forEach((m) => (updates[`messages/${rId}/${m.id}/r`] = true));
-        update(ref(rtdb, "/"), updates);
-      }
-    });
+        setMessages(list);
 
-    // 2. Listen ONLY for New Messages (Smallest possible download)
-    const unsubAdded = onChildAdded(msgQuery, (snap) => {
-      const newMsg = snap.val() as IMessage;
-      setMessages((prev) => {
-        // Prevent duplicates from initial 'get'
-        if (prev.some((m) => m.id === newMsg.id)) return prev;
-        const newList = [newMsg, ...prev].sort((a, b) => b.ts - a.ts);
-        return newList.slice(0, 50); // Keep local memory lean
-      });
+        // Track Oldest Valid Timestamp for pagination
+        const oldestMsgWithTs = [...list]
+          .reverse()
+          .find((m) => getValidTs(m) !== null);
 
-      // Mark single new message as read if it's not mine
-      if (newMsg.s !== myUid && !newMsg.r) {
-        update(ref(rtdb, `messages/${rId}/${newMsg.id}`), { r: true });
-      }
-    });
+        if (oldestMsgWithTs) {
+          const validTs = getValidTs(oldestMsgWithTs)!;
+          if (!oldestLoadedTs.current || validTs < oldestLoadedTs.current) {
+            oldestLoadedTs.current = validTs;
+          }
+        }
 
-    // 3. Listen ONLY for Changes (e.g., Read Ticks from the other user)
-    const unsubChanged = onChildChanged(msgQuery, (snap) => {
-      const updatedMsg = snap.val() as IMessage;
-      setMessages((prev) =>
-        prev.map((m) => (m.id === updatedMsg.id ? updatedMsg : m)),
-      );
-    });
+        setHasMore(list.length >= TARGET_BATCH_SIZE);
 
-    // 5. Listener: Deletions (The "Missing" Piece)
-    // This ensures that if a message is deleted, it's removed from your DISK cache too.
-    const unsubRemoved = onChildRemoved(msgQuery, (snap) => {
-      setMessages((prev) => prev.filter((m) => m.id !== snap.key));
-    });
+        // 3. Batched Read Receipts integration
+        const unread = list.filter((m) => m.s !== myUid && !m.r);
+        if (unread.length > 0) {
+          unread.forEach((m) => {
+            if (m.id) queueReadReceipt(m.id);
+          });
+        }
 
-    msgUnsubscribe.current = () => {
-      unsubAdded();
-      unsubChanged();
-      unsubRemoved();
-    };
-  }, [rId, myUid, stopListeners]);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.error("Chat viewport stream error:", err);
+        setIsLoading(false);
+      },
+    );
 
-  const clearUnreadBadge = useCallback(() => {
-    update(ref(rtdb, `inbox/${myUid}/${rId}`), { u: null });
+    msgUnsubscribe.current = unsub;
+  }, [rId, myUid, stopListeners, queueReadReceipt]);
+
+  const clearUnreadBadge = useCallback(async () => {
+    if (!myUid || !rId) return;
+
+    try {
+      const inboxRef = ref(rtdb, `inbox/${myUid}/${rId}`);
+      await update(inboxRef, { u: null });
+    } catch (err) {
+      console.error("Failed to clear unread badge:", err);
+    }
   }, [myUid, rId]);
 
   useFocusEffect(
     useCallback(() => {
-      const otherUid = ou?.uid;
       if (!rId || !myUid || !otherUid) return;
 
+      // 1. Clear unread badge & ignite live message stream
       clearUnreadBadge();
-
       startLiveMessages();
 
+      // 2. Real-time subscriptions for presence and typing state
       const statusRef = ref(rtdb, `status/${otherUid}`);
-      const otherTypingRef = ref(rtdb, `typing/${rId}/${otherUid}`);
 
-      const unsubStatus = onValue(statusRef, (snap) =>
-        setOtherStatus(snap.val()),
-      );
-      const unsubTyping = onValue(otherTypingRef, (snap) => {
-        const val = snap.val();
-        setIsOtherTyping(!!val); // If node exists, it's true. If removed, it's false.
+      const otherTypingRef = ref(rtdb, `t/${otherUid}`);
+
+      const unsubStatus = onValue(statusRef, (snap) => {
+        setOtherStatus(snap.val());
       });
 
+      const unsubTyping = onValue(otherTypingRef, (snap) => {
+        const activeTypingHash = snap.val();
+        setIsOtherTyping(activeTypingHash === roomHash);
+      });
+
+      // 3. Screen Blur / Unmount Cleanup
       return () => {
         stopListeners();
         unsubStatus();
         unsubTyping();
-        remove(ref(rtdb, `typing/${rId}/${myUid}`));
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // Reset self-typing status and timers on blur
+        remove(ref(rtdb, `t/${myUid}`)).catch(console.error);
+
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = null;
+        }
+
+        // Reset typing state ref so re-focus allows fresh typing updates
+        lastTypingState.current = false;
       };
     }, [
       rId,
       myUid,
-      ou?.uid,
+      otherUid,
       startLiveMessages,
       stopListeners,
       clearUnreadBadge,
     ]),
   );
 
-  const loadEarlier = useCallback(async () => {
-    if (isLoadingEarlier || !hasMore || !oldestLoadedTs.current) return;
+  const setMyTyping = useCallback(
+    (isTyping: boolean) => {
+      if (!rId || !myUid) return;
 
-    if (isLive) {
-      setIsLive(false);
-      stopListeners();
+      if (isTyping === lastTypingState.current) return;
+      lastTypingState.current = isTyping;
 
-      const lastMsgQuery = query(ref(rtdb, `messages/${rId}`), limitToLast(1));
-      newMsgUnsubscribe.current = onChildAdded(lastMsgQuery, (snap) => {
-        if (snap.val()?.s !== myUid) setHasNewAtBottom(true);
-      });
-    }
+      const tRef = ref(rtdb, `t/${myUid}`);
 
-    setIsLoadingEarlier(true);
-    try {
-      const earlierQuery = query(
-        ref(rtdb, `messages/${rId}`),
-        orderByChild("ts"),
-        endAt(oldestLoadedTs.current - 1),
-        limitToLast(50),
-      );
-
-      const snap = await get(earlierQuery);
-      const data = snap.val();
-
-      if (data) {
-        const older = (Object.values(data) as IMessage[]).sort(
-          (a, b) => b.ts - a.ts,
-        );
-        setMessages((prev) => {
-          const combined = [...prev, ...older];
-          // Sliding window for React 19 performance
-          return combined.length > 200 ? combined.slice(0, 200) : combined;
-        });
-        oldestLoadedTs.current = older[older.length - 1].ts;
-        setHasMore(older.length === 50);
-      } else {
-        setHasMore(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
       }
-    } catch (err) {
-      console.error("Load earlier failed", err);
-    } finally {
-      setIsLoadingEarlier(false);
-    }
-  }, [rId, isLive, isLoadingEarlier, hasMore, myUid, stopListeners]);
+
+      if (isTyping) {
+        set(tRef, roomHash).catch(console.error);
+        // Auto-clear typing indicator after 3 seconds
+        typingTimeoutRef.current = setTimeout(() => {
+          lastTypingState.current = false;
+          remove(tRef).catch(console.error);
+        }, 3000);
+      } else {
+        remove(tRef).catch(console.error);
+      }
+    },
+    [rId, myUid],
+  );
 
   const sendMessage = useCallback(
     async (text: string) => {
       const cleanText = text?.trim();
-      if (!cleanText || !ou?.uid || !myUid) return;
+      if (!cleanText || !otherUid || !myUid) return;
+
+      if (!canSend) {
+        throw new Error("DAILY_LIMIT_REACHED");
+      }
+
+      setMyTyping(false);
 
       const ts = serverTimestamp();
-      const msgId = push(ref(rtdb, `messages/${rId}`)).key;
+      const roomRef = ref(rtdb, `messages/${rId}`);
+      const msgRef = push(roomRef);
+      const msgId = msgRef.key;
+
+      if (!msgId) {
+        throw new Error("FAILED_TO_GENERATE_MESSAGE_ID");
+      }
 
       const updates: Record<string, any> = {};
+
+      const truncatedText =
+        cleanText.length > 30 ? cleanText.substring(0, 30) + "..." : cleanText;
+
+      // 1. Flat Message Node
       updates[`messages/${rId}/${msgId}`] = {
         id: msgId,
         s: myUid,
@@ -237,119 +290,175 @@ export function useChatSession(
         r: false,
       };
 
-      const common = { lm: cleanText, ua: ts, rId };
+      // 2. Sender Inbox Metadata
       updates[`inbox/${myUid}/${rId}`] = {
-        ...common,
-        ou: {
-          uid: ou.uid,
-        },
+        lm: truncatedText,
+        ua: ts,
       };
-      updates[`inbox/${ou.uid}/${rId}`] = {
-        ...common,
-        ou: {
-          uid: myUid,
-        },
-        u: true, // <--- The "Unread" flag
+
+      // 3. Recipient Inbox Metadata (with unread flag)
+      updates[`inbox/${otherUid}/${rId}`] = {
+        lm: truncatedText,
+        ua: ts,
+        u: true,
       };
-      return update(ref(rtdb, "/"), updates);
+
+      await update(ref(rtdb, "/"), updates);
+      // Increment MMKV and update local state synchronously
+      const updatedCount = incrementDailySentCount(myUid);
+      setSentTodayCount(updatedCount);
+      return;
     },
-    [rId, myUid, sender, ou],
+    [rId, myUid, otherUid, canSend],
   );
 
   const deleteMessage = useCallback(
     async (messageItem: IMessage) => {
-      if (!rId || !myUid || !messageItem?.id || !ou?.uid) return;
+      if (!rId || !myUid || !otherUid || !messageItem?.id) return;
 
       try {
         const deletionTime = Date.now();
         const updates: Record<string, any> = {};
 
-        // 1. Compliance Archive Path: Stores data for audits with a separate deletion time
+        // 1. Archive deleted message metadata
         const archivePath = `archive/${rId}/${messageItem.s}/${messageItem.id}`;
         updates[archivePath] = {
           ...messageItem,
-          deletedAt: deletionTime, // Distinct compliance timestamp anchor
+          dAt: deletionTime, //deletedAT
         };
 
-        // 2. Production Removal Path: Deletes the active bubble node instance
+        // 2. Flat Path deletion (remove month-based sub-path)
         const liveMessagePath = `messages/${rId}/${messageItem.id}`;
-        updates[liveMessagePath] = null; // Removing the node completely in RTB
+        updates[liveMessagePath] = null;
 
-        // 3. Inbox Patch Update: Evaluate if the deleted item was the latest message
+        // 3. Inbox Last Message Update (index 0 is the newest in desc-sorted state)
         const isLatestMessage = messages[0]?.id === messageItem.id;
 
         if (isLatestMessage) {
-          const fallbackMsg = messages[1]; // Get the next newest available message
+          const fallbackMsg = messages[1];
 
           if (fallbackMsg) {
-            // Rollback inbox preview to the previous message content
             const fallbackText = fallbackMsg.t || "";
-            const fallbackTs =
-              typeof fallbackMsg.ts === "number"
-                ? fallbackMsg.ts
-                : deletionTime;
+            const fallbackTs = getValidTs(fallbackMsg) || deletionTime;
 
-            updates[`inbox/${myUid}/${rId}/lm`] = fallbackText;
-            updates[`inbox/${myUid}/${rId}/ua`] = fallbackTs;
+            updates[`inbox/${myUid}/${rId}`] = {
+              lm: fallbackText.substring(0, 60) + "...",
+              ua: fallbackTs,
+            };
 
-            updates[`inbox/${ou.uid}/${rId}/lm`] = fallbackText;
-            updates[`inbox/${ou.uid}/${rId}/ua`] = fallbackTs;
+            updates[`inbox/${otherUid}/${rId}`] = {
+              lm: fallbackText.substring(0, 60) + "...",
+              ua: fallbackTs,
+            };
           } else {
-            // No other messages left in the chat room. Clear out the previews cleanly.
-            updates[`inbox/${myUid}/${rId}/lm`] = "";
-            updates[`inbox/${myUid}/${rId}/ua`] = deletionTime;
+            // Room is now empty after this deletion
+            updates[`inbox/${myUid}/${rId}`] = {
+              lm: "",
+              ua: deletionTime,
+            };
 
-            updates[`inbox/${ou.uid}/${rId}/lm`] = "";
-            updates[`inbox/${ou.uid}/${rId}/ua`] = deletionTime;
+            updates[`inbox/${otherUid}/${rId}`] = {
+              lm: "",
+              ua: deletionTime,
+            };
           }
         }
 
-        // 4. Atomic Multi-Path Execution
         await update(ref(rtdb, "/"), updates);
       } catch (err) {
-        throw err; // Re-throw to handle UI alerting fallbacks gracefully
+        console.error("Failed to delete message:", err);
+        throw err;
       }
     },
-    [rId, myUid, messages, ou?.uid], // Added messages and otherUser.uid to dependencies
+    [rId, myUid, otherUid, messages],
   );
 
-  const setMyTyping = useCallback(
-    (isTyping: boolean) => {
-      // Guard: Prevents spamming the DB with the same state
-      if (isTyping === lastTypingState.current) return;
-      lastTypingState.current = isTyping;
+  const loadEarlier = useCallback(async () => {
+    if (isLoadingEarlier || !hasMore) return;
 
-      const tPath = `typing/${rId}/${myUid}`;
-      const tRef = ref(rtdb, tPath);
+    const roomRef = ref(rtdb, `messages/${rId}`);
 
-      if (isTyping) {
-        // SET state to true and tell server to REMOVE it if I disconnect
-        set(tRef, true);
-        onDisconnect(tRef).remove();
-      } else {
-        remove(tRef);
-        if (typingTimeoutRef.current) {
-          clearTimeout(typingTimeoutRef.current);
-          typingTimeoutRef.current = null;
-        }
+    // 1. Pause live stream when scrolling back into history
+    if (isLive) {
+      setIsLive(false);
+      stopListeners();
+      // Listen only for new incoming messages at the bottom to notify user
+      const newestMsgId = messages[0]?.id;
+      if (newestMsgId) {
+        const newMsgQuery = query(
+          roomRef,
+          orderByKey(),
+          startAfter(newestMsgId),
+        );
+        newMsgUnsubscribe.current = onChildAdded(newMsgQuery, (snap) => {
+          const msg = snap.val() as IMessage;
+          if (msg && msg.s !== myUid) {
+            setHasNewAtBottom(true);
+          }
+        });
       }
-    },
-    [rId, myUid],
-  );
-
-  const getStatusLabel = useCallback(() => {
-    if (isOtherTyping) return t("chat.typing");
-
-    if (otherStatus?.state === "online") return t("chat.online");
-
-    if (otherStatus?.lastChanged) {
-      return t("chat.lastSeen", {
-        time: formatStatusTime(otherStatus.lastChanged),
-      });
     }
 
+    // 2. Locate the oldest valid message anchor currently in state
+    const oldestMsg = [...messages].reverse().find((m) => Boolean(m?.id));
+    if (!oldestMsg?.id) return;
+
+    setIsLoadingEarlier(true);
+
+    try {
+      // 3. Key-anchored query: fetch items strictly BEFORE the oldest loaded Push ID
+      const earlierQuery = query(
+        roomRef,
+        orderByKey(),
+        endBefore(oldestMsg.id),
+        limitToLast(BATCH_SIZE),
+      );
+
+      const snap = await get(earlierQuery);
+      let older: IMessage[] = [];
+
+      if (snap.exists()) {
+        const rawData: IMessage[] = [];
+        snap.forEach((child) => {
+          rawData.push(child.val() as IMessage);
+        });
+        older = sortMessagesDesc(rawData);
+      }
+
+      // 4. Update State & Anchors
+      if (older.length > 0) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const uniqueOlder = older.filter((m) => !existingIds.has(m.id));
+          return [...prev, ...uniqueOlder];
+        });
+        const newOldest = older[older.length - 1];
+        const newOldestTs = getValidTs(newOldest);
+        if (newOldestTs) {
+          oldestLoadedTs.current = newOldestTs;
+        }
+        // If we received fewer items than requested, we've reached the end of history
+        setHasMore(older.length >= BATCH_SIZE);
+      } else {
+        setHasMore(false); // Reached end of RTDB history
+      }
+    } catch (err) {
+      console.error("Failed to load earlier messages:", err);
+    } finally {
+      setIsLoadingEarlier(false);
+    }
+  }, [rId, isLive, isLoadingEarlier, hasMore, messages, myUid, stopListeners]);
+
+  const statusLabel = useMemo(() => {
+    if (isOtherTyping) return t("chat.typing");
+    if (otherStatus?.st === "on") return t("chat.online");
+    if (otherStatus?.lc) {
+      return t("chat.lastSeen", {
+        time: formatStatusTime(otherStatus.lc),
+      });
+    }
     return "";
-  }, [isOtherTyping, otherStatus, t]);
+  }, [isOtherTyping, otherStatus?.st, otherStatus?.lc]);
 
   return {
     messages,
@@ -360,11 +469,64 @@ export function useChatSession(
     hasMore,
     isLive,
     hasNewAtBottom,
+    canSend,
+    sentTodayCount,
     loadEarlier,
     sendMessage,
     deleteMessage,
     setMyTyping,
-    getStatusLabel,
+    statusLabel,
     resetToLive: startLiveMessages,
   };
 }
+
+// 1. Strict Timestamp Validator (Returns number or null)
+const getValidTs = (msg?: IMessage): number | null => {
+  return typeof msg?.ts === "number" && !Number.isNaN(msg.ts) ? msg.ts : null;
+};
+
+// 2. Safe Sorting (Timestamp-first, Push Key fallback)
+const sortMessagesDesc = (msgs: IMessage[]): IMessage[] => {
+  return [...msgs].sort((a, b) => {
+    const tsA = getValidTs(a);
+    const tsB = getValidTs(b);
+
+    if (tsA !== null && tsB !== null) {
+      return tsB - tsA; // Descending numerical order
+    }
+
+    // If ts is missing on either, fall back to lexicographical Push Key comparison
+    if (a.id && b.id) {
+      return b.id.localeCompare(a.id);
+    }
+
+    return 0;
+  });
+};
+
+const getRoomHash = (roomId: string): string => {
+  let hash = 0;
+  for (let i = 0; i < roomId.length; i++) {
+    hash = (hash << 5) - hash + roomId.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36); // Yields an ultra-short base36 string
+};
+// Inside your ChatScreen.tsx component:
+// const handleSend = async () => {
+//   if (!canSend) {
+//     Alert.alert(
+//       "Daily Limit Reached 🌙",
+//       "You've hit your message limit for today. Don't worry, your quota will reset at midnight!",
+//       [{ text: "Okay" }]
+//     );
+//     return;
+//   }
+
+//   try {
+//     await sendMessage(inputText);
+//     setInputText("");
+//   } catch (error) {
+//     console.error("Failed to send message:", error);
+//   }
+// };

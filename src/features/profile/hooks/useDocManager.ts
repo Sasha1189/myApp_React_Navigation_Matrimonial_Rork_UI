@@ -1,183 +1,108 @@
-import { useState, useEffect } from "react";
-import { storage, refStorage, putFile, deleteObject } from "@/config/firebase";
+import { useState } from "react";
+import { storage, refStorage, putFile } from "@/config/firebase";
 import { Alert } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as ImageManipulator from "expo-image-manipulator";
-import { File } from "expo-file-system";
-import { Profile, Photo } from "../types/profile";
+import * as DocumentPicker from "expo-document-picker";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { appStorage, IS_DOC_UPLOADED_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
-import { setDocPath } from "../api/docSetPathService";
+import { setUserVerification } from "../api/setUserVerification";
 
-const MAX_PHOTOS = 1;
+export interface SelectedDoc {
+  uri: string;
+  name: string;
+  mimeType?: string;
+}
 
-export function useDocManager(profile: Profile | null) {
-  const { user } = useAuth();
+export function useDocManager() {
+  const { user, isVerified, updateVerificationStatus } = useAuth();
   const { t } = useTranslation();
   const uid = user?.uid;
 
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [selectedDoc, setSelectedDoc] = useState<SelectedDoc | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
-  const [isUploaded, setIsUploaded] = useState<boolean>(() => {
-    const cachedVer = appStorage.getBoolean(IS_DOC_UPLOADED_CACHE_KEY);
-    return (cachedVer as boolean) || false;
-  });
 
-  useEffect(() => {
-    if (profile?.iv) {
-      setIsVerified(profile.iv);
-    }
-  }, [profile]);
-
-  const addPhoto = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(t("photos.permissionTitle"), t("photos.permissionMsg"));
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 1,
-    });
-
-    if (result.canceled) return;
-
-    const uri = result.assets?.[0]?.uri;
-    if (!uri) return;
+  // 1. Pick a single document
+  const pickDocument = async () => {
+    if (isVerified !== "false") return; // Prevent picking if pending/verified
 
     try {
-      const newItem: Photo = {
-        id: `local-${Date.now()}`,
-        localUrl: uri,
-        isPrimary: true,
-      };
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/pdf", "image/*"], // Accept PDFs and images
+        copyToCacheDirectory: true,
+      });
 
-      setPhotos([newItem]);
+      if (result.canceled || !result.assets || result.assets.length === 0)
+        return;
+
+      const asset = result.assets[0];
+      setSelectedDoc({
+        uri: asset.uri,
+        name: asset.name,
+        mimeType: asset.mimeType,
+      });
     } catch (err) {
-      console.error("Failed to add photo:", err);
-      Alert.alert(t("photos.errorTitle"), t("photos.addError"));
+      console.error("Failed to pick document:", err);
+      Alert.alert(t("common.error"), "Failed to pick document.");
     }
   };
 
-  const deletePhoto = async (photoId?: string) => {
-    if (!uid || isVerified) return;
-
-    Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"), [
-      {
-        text: t("common.cancel", "Cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("common.delete", "Yes"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            setLoading(true);
-
-            const storagePath = `users/${uid}/ver_doc/vdoc_photo.jpg`;
-            const photoRef = refStorage(storage, storagePath);
-
-            await deleteObject(photoRef).catch(() => {});
-
-            setPhotos([]);
-            appStorage.set(IS_DOC_UPLOADED_CACHE_KEY, false);
-            setIsUploaded(false);
-          } catch (err) {
-            console.error("Delete failed:", err);
-            Alert.alert(t("photos.errorTitle"), t("photos.deleteError"));
-          } finally {
-            setLoading(false);
-          }
-        },
-      },
-    ]);
+  // 2. Remove document (Allowed ONLY before upload)
+  const removeDocument = () => {
+    if (isVerified !== "false") return;
+    setSelectedDoc(null);
   };
 
-  // 🔹 Upload single photo directly to Firebase Storage
-  const uploadPhotos = async () => {
-    const targetPhoto = photos[0];
-    if (!targetPhoto?.localUrl) {
-      Alert.alert(t("doc.addDocTitle"), t("doc.addDocMsg"));
+  // 3. Upload directly to Firebase Storage without compression
+  const uploadDocument = async () => {
+    if (!selectedDoc) {
+      Alert.alert(
+        t("doc.addDocTitle", "Missing Document"),
+        t("doc.addDocMsg", "Please select a document first."),
+      );
       return;
     }
 
-    const processed = await processImage(targetPhoto?.localUrl);
-
     if (!uid) {
-      Alert.alert(t("photos.errorTitle"), "User not authenticated.");
+      Alert.alert(t("common.error"), "User not authenticated.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const storagePath = `users/${uid}/ver_doc/vdoc_photo.jpg`;
+      // Extract extension or fallback to pdf
+      const extension = selectedDoc.name.split(".").pop() || "pdf";
+      const storagePath = `users/${uid}/ver_doc/vdoc_document.${extension}`;
       const reference = refStorage(storage, storagePath);
 
-      // Upload file directly to Storage
-      const task = putFile(reference, processed);
+      // Upload file directly
+      await putFile(reference, selectedDoc.uri);
 
-      await task;
+      // Update backend / Firestore document path
+      await setUserVerification(uid);
 
-      appStorage.set(IS_DOC_UPLOADED_CACHE_KEY, true);
-      setIsUploaded(true);
-      setDocPath(uid);
+      // Instantly flip AuthContext to pending
+      if (updateVerificationStatus) {
+        updateVerificationStatus("pending");
+      }
 
-      Alert.alert(t("photos.successTitle"), t("photos.updateMsg"));
+      Alert.alert(
+        t("doc.successTitle", "Success"),
+        t("doc.updateMsg", "Document uploaded for review."),
+      );
     } catch (err) {
       console.error("Upload failed:", err);
-      Alert.alert(t("photos.errorTitle"), t("photos.uploadError"));
+      Alert.alert(t("common.error"), "Document upload failed.");
     } finally {
       setLoading(false);
     }
   };
 
   return {
-    photos,
-    setPhotos,
+    selectedDoc,
     loading,
-    maxPhotos: MAX_PHOTOS,
-    addPhoto,
-    deletePhoto,
-    uploadPhotos,
-    isVerified,
-    isUploaded,
+    isVerified, // "true" | "pending" | "false"
+    pickDocument,
+    removeDocument,
+    uploadDocument,
   };
 }
-
-/* ------------------ Helpers ------------------ */
-
-const MAX_SIZE_BYTES = 0.5 * 1024 * 1024; // 0.5 MB (524,288 Bytes)
-
-const processImage = async (uri: string): Promise<string> => {
-  const fileInfo = new File(uri);
-
-  if (!fileInfo.exists) return uri;
-
-  const currentSize = "size" in fileInfo ? fileInfo.size : 0;
-
-  if (currentSize > 0 && currentSize <= MAX_SIZE_BYTES) {
-    return uri;
-  }
-
-  const ratio = MAX_SIZE_BYTES / currentSize;
-
-  const dimensionScale = Math.sqrt(ratio) * 0.9;
-  const targetWidth = Math.max(360, Math.floor(1080 * dimensionScale));
-
-  const compressQuality = Math.min(0.8, Math.max(0.3, ratio * 0.85));
-
-  const processed = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: targetWidth } }],
-    {
-      compress: compressQuality,
-      format: ImageManipulator.SaveFormat.JPEG,
-    },
-  );
-
-  return processed.uri;
-};

@@ -11,11 +11,13 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { useForm, Controller } from "react-hook-form";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/context";
 
 import { GenericInputField } from "../components/AuthInputFields";
 import { useUserInfoFlow } from "../hooks/useUserInfoFlow";
@@ -23,13 +25,14 @@ import { useUserInfoFlow } from "../hooks/useUserInfoFlow";
 interface UserInfoFormData {
   fullName: string;
   mobileNumber: string;
-  gender: "Male" | "Female" | "";
+  gender: "male" | "female" | "";
 }
 
 export default function UserInfoScreen() {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   const { isLoading, executeProfileSetup } = useUserInfoFlow();
 
@@ -40,7 +43,7 @@ export default function UserInfoScreen() {
   } = useForm<UserInfoFormData>({
     mode: "onChange",
     defaultValues: {
-      fullName: "",
+      fullName: user?.displayName || "",
       mobileNumber: "",
       gender: "",
     },
@@ -51,6 +54,13 @@ export default function UserInfoScreen() {
   });
 
   const finalButtonDisabled = !isValid || isLoading;
+
+  const userInitials = (user?.displayName || "U")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -63,23 +73,40 @@ export default function UserInfoScreen() {
           <ScrollView
             contentContainerStyle={[
               styles.scrollContainer,
-              { paddingTop: insets.top + 20 },
+              {
+                paddingTop: insets.top + 20,
+                paddingBottom: insets.bottom + 20,
+              },
             ]}
             bounces={false}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             {/* Modal Card wrapper style container */}
             <View style={styles.modalCardWrapper}>
-              <View style={styles.bodySection}>
-                <View style={styles.formHeaderRow}>
-                  <Text style={styles.formHeadline}>
-                    {t("userInfo.screenTitle")}
-                  </Text>
-                </View>
-                <Text style={styles.contextHelperText}>
-                  {t("userInfo.helperText")}
+              {/* Header with Google Avatar/Initials */}
+              <View style={styles.avatarHeaderSection}>
+                {user?.photoURL ? (
+                  <Image
+                    source={{ uri: user.photoURL }}
+                    style={styles.avatarImage}
+                  />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarText}>{userInitials}</Text>
+                  </View>
+                )}
+                <Text style={styles.formHeadline}>
+                  {t("userInfo.screenTitle", "Complete Your Profile")}
                 </Text>
-
+                <Text style={styles.contextHelperText}>
+                  {t(
+                    "userInfo.helperText",
+                    "Please confirm your details to continue setting up your account.",
+                  )}
+                </Text>
+              </View>
+              <View style={styles.bodySection}>
                 {/* Full Name Mandatory Field */}
                 <GenericInputField
                   name="fullName"
@@ -135,14 +162,14 @@ export default function UserInfoScreen() {
                           activeOpacity={0.8}
                           style={[
                             styles.genderOptionButton,
-                            value === "Male" && styles.genderMaleActive,
+                            value === "male" && styles.genderMaleActive,
                           ]}
-                          onPress={() => onChange("Male")}
+                          onPress={() => onChange("male")}
                         >
                           <Text
                             style={[
                               styles.genderBtnText,
-                              value === "Male" && styles.textActiveWhite,
+                              value === "male" && styles.textActiveWhite,
                             ]}
                           >
                             {t("userInfo.male")}
@@ -153,14 +180,14 @@ export default function UserInfoScreen() {
                           activeOpacity={0.8}
                           style={[
                             styles.genderOptionButton,
-                            value === "Female" && styles.genderFemaleActive,
+                            value === "female" && styles.genderFemaleActive,
                           ]}
-                          onPress={() => onChange("Female")}
+                          onPress={() => onChange("female")}
                         >
                           <Text
                             style={[
                               styles.genderBtnText,
-                              value === "Female" && styles.textActiveWhite,
+                              value === "female" && styles.textActiveWhite,
                             ]}
                           >
                             {t("userInfo.female")}
@@ -212,7 +239,6 @@ export default function UserInfoScreen() {
 
 const createStyles = (theme: AppTheme) => {
   const isDarkTheme = theme.colors.background === "#0A0A1F";
-
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -237,6 +263,34 @@ const createStyles = (theme: AppTheme) => {
       shadowOpacity: isDarkTheme ? 0.4 : 0.1,
       shadowRadius: 12,
       elevation: 5,
+    },
+    avatarHeaderSection: {
+      alignItems: "center",
+      marginBottom: theme.spacing.lg,
+    },
+    avatarImage: {
+      width: 68,
+      height: 68,
+      borderRadius: 34,
+      marginBottom: theme.spacing.md,
+      borderWidth: 2,
+      borderColor: theme.colors.primary,
+    },
+    avatarPlaceholder: {
+      width: 68,
+      height: 68,
+      borderRadius: 34,
+      backgroundColor: theme.colors.primary + "15",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: theme.spacing.md,
+      borderWidth: 2,
+      borderColor: theme.colors.primary,
+    },
+    avatarText: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: theme.colors.primary,
     },
     bodySection: {
       width: "100%",

@@ -41,7 +41,7 @@ import {
   Brain,
   Heart,
 } from "lucide-react-native";
-import { useEntitlement } from "@/context";
+import { useAuth } from "@/context";
 import { useMyProfile } from "../context/ProfileContext";
 import { useAppNavigation } from "@/navigation/hooks";
 import { Profile } from "@/features/profile/types/profile";
@@ -72,10 +72,10 @@ export default function UserDetailsScreen({ route }: any) {
   const styles = useStyles(createStyles);
 
   const navigation = useAppNavigation();
-  const { isPaid } = useEntitlement();
+  const { isPaid } = useAuth();
   const { myProfile } = useMyProfile();
   const profile = route.params?.profile as Profile;
-  // usePreventScreenCapture();
+  usePreventScreenCapture();
 
   const isSelf = myProfile?.uid === profile?.uid;
 

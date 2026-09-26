@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
-// import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 
 import { useSignUpFlow } from "../hooks/useSignUpFlow";
 import { useAuthNavigation } from "../../../navigation/hooks";
@@ -36,7 +36,7 @@ export default function EmailSignUpScreen() {
   const {
     isLoading,
     executeRegistration,
-    // executeGoogleSignUp,
+    executeGoogleSignUp,
     handleBackPress,
   } = useSignUpFlow();
 
@@ -94,28 +94,8 @@ export default function EmailSignUpScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* 2. Google Sign-In Button (ACTIVE IMMEDIATELY) */}
-                {/* <GoogleSigninButton
-                  size={GoogleSigninButton.Size.Wide}
-                  color={GoogleSigninButton.Color.Dark}
-                  onPress={executeGoogleSignUp}
-                  disabled={isLoading}
-                  style={styles.googleButton}
-                /> */}
-                <View style={styles.googleButton}>
-                  <Text>Continue with Google</Text>
-                </View>
-
-                {/* 3. "OR" Divider */}
-                <View style={styles.dividerContainer}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
                 {/* 1. Standard Email field */}
                 <EmailInputField control={control} errors={errors} />
-
                 {/* 2. Standard Password field */}
                 <PasswordInputField
                   control={control}
@@ -124,7 +104,6 @@ export default function EmailSignUpScreen() {
                   labelKey="auth.fieldLabelPassword"
                   placeholderKey="auth.placeholderPassword"
                 />
-
                 {/* 3. Reused Confirm Password field with dynamic mismatch rule validation */}
                 <PasswordInputField
                   control={control}
@@ -137,6 +116,30 @@ export default function EmailSignUpScreen() {
                     t("auth.passwordMismatch", "Passwords do not match")
                   }
                 />
+                {/* 3. "OR" Divider */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* 2. Google Sign-In Button (ACTIVE IMMEDIATELY) */}
+                <TouchableOpacity
+                  onPress={() => {
+                    executeGoogleSignUp();
+                  }}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  <View pointerEvents="none">
+                    <GoogleSigninButton
+                      size={GoogleSigninButton.Size.Wide}
+                      color={GoogleSigninButton.Color.Light}
+                      onPress={executeGoogleSignUp}
+                      disabled={isLoading}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
 
               <AuthFooterActions
@@ -172,13 +175,14 @@ export const createStyles = (theme: AppTheme) =>
       overflow: "hidden",
     },
     scrollContainer: {
-      flexGrow: 1,
+      flex: 1,
     },
     sheetInnerContent: {
-      flexGrow: 1,
-      paddingHorizontal: theme.spacing.lg, // 24px core grid padding
-      paddingTop: theme.spacing.md, // 16px vertical padding
-      justifyContent: "space-between",
+      flex: 1,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.lg,
+      paddingBottom: theme.spacing.sm,
+      // justifyContent: "space-between",
     },
     bodySection: {
       width: "100%",
@@ -204,7 +208,7 @@ export const createStyles = (theme: AppTheme) =>
     dividerContainer: {
       flexDirection: "row",
       alignItems: "center",
-      marginVertical: theme.spacing.lg, // 24px vertical space for clean visual breathing room
+      marginVertical: theme.spacing.md,
     },
     dividerLine: {
       flex: 1,
@@ -216,10 +220,5 @@ export const createStyles = (theme: AppTheme) =>
       color: theme.colors.textLight || theme.colors.text,
       fontSize: theme.fontSize.sm,
       fontWeight: "500",
-    },
-    googleButton: {
-      width: "100%",
-      height: 48,
-      borderRadius: theme.borderRadius.md,
     },
   });

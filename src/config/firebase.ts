@@ -16,7 +16,6 @@ export const app = getApp();
 export const auth = getAuth(app);
 
 async function initializeFirebaseServices() {
-  // Initialize Firestore with persistence off
   await initializeFirestore(app, {
     persistence: false, // disable offline persistence
   });
@@ -95,4 +94,9 @@ export {
   Timestamp,
 } from "@react-native-firebase/firestore";
 
-export { getIdToken, updateProfile, reload } from "@react-native-firebase/auth";
+export {
+  getIdToken,
+  updateProfile,
+  reload,
+  signOut,
+} from "@react-native-firebase/auth";

@@ -36,9 +36,6 @@ export type AppStackParamList = {
   Search: undefined;
   Settings: undefined;
   WebView: { url: string; title?: string };
-  HelpSupport: undefined;
-  SafetyPrivacy: undefined;
-  Upgrade: undefined;
   EditAboutMe: undefined;
   EditPersonal: undefined;
   EditContact: undefined;

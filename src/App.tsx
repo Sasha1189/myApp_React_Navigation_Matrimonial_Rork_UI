@@ -5,35 +5,36 @@ import { ThemeProvider } from "./theme/ThemeContext";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { DatabaseProvider } from "@/db/context/DatabaseContext";
 import { ProfileProvider } from "@/features/profile/context/ProfileContext";
-import { AppSyncListeners } from "@/components/AppSyncListeners";
-// import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import RootNavigator from "./navigation/RootNavigator";
 
-// Replace with your Web Client ID from Google Cloud Console / Firebase Console
-// const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
+const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   /* ignore error */
 });
 
-import RootNavigator from "./navigation/RootNavigator";
-
 export default function App() {
-  console.log("🔍 [APP] App root rendering...");
-  // useEffect(() => {
-  //   GoogleSignin.configure({
-  //     webClientId: GOOGLE_WEB_CLIENT_ID,
-  //     offlineAccess: false, // Set to true if you need server-side auth tokens
-  //   });
-  // }, []);
+  useEffect(() => {
+    try {
+      GoogleSignin.configure({
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        offlineAccess: false,
+      });
+    } catch (configError) {
+      console.error(
+        "❌ [GoogleAuth Init] Failed to configure GoogleSignin:",
+        configError,
+      );
+    }
+  }, []);
   return (
     <SafeAreaProvider>
       <DatabaseProvider>
         <AuthProvider>
           <ProfileProvider>
             <ThemeProvider>
-              <AppSyncListeners>
-                <RootNavigator />
-              </AppSyncListeners>
+              <RootNavigator />
             </ThemeProvider>
           </ProfileProvider>
         </AuthProvider>

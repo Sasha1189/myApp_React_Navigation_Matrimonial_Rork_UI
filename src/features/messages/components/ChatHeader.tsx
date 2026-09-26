@@ -9,17 +9,9 @@ interface ChatHeaderProps {
   name: string;
   photo?: string;
   statusLabel: string;
-  isTyping: boolean;
-  isOnline: boolean;
 }
 
-export const ChatHeader = ({
-  name,
-  photo,
-  statusLabel,
-  isTyping,
-  isOnline,
-}: ChatHeaderProps) => {
+export const ChatHeader = ({ name, photo, statusLabel }: ChatHeaderProps) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   if (!theme) return null;

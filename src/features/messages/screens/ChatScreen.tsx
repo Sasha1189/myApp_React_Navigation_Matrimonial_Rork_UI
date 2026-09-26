@@ -66,9 +66,9 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     setMyTyping,
     sendMessage,
     deleteMessage,
-    getStatusLabel,
+    statusLabel,
     resetToLive,
-  } = useChatSession(rId, uid, sender, ou);
+  } = useChatSession(rId, uid, ou);
 
   const helper = ChatListHelper({
     isLive,
@@ -89,16 +89,10 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     if (!ou?.uid) return;
     navigation.setOptions({
       headerTitle: () => (
-        <ChatHeader
-          name={ou.name}
-          photo={ou.photo}
-          statusLabel={getStatusLabel()}
-          isTyping={isOtherTyping}
-          isOnline={otherStatus?.state === "online"}
-        />
+        <ChatHeader name={ou.name} photo={ou.photo} statusLabel={statusLabel} />
       ),
     });
-  }, [navigation, ou, isOtherTyping, otherStatus, getStatusLabel, theme]);
+  }, [navigation, ou, isOtherTyping, otherStatus, statusLabel]);
 
   // 2. Define the pop-up menu trigger function:
   const handleMessageLongPress = (messageItem: IMessage) => {

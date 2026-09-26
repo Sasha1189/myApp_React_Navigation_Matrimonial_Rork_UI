@@ -4,23 +4,21 @@ import { useMyProfile } from "@/features/profile/context/ProfileContext";
 import { deactivateUserProfile } from "../services/tierExpirationService";
 
 export const useTierExpirationSync = (enabled: boolean = false) => {
-  const { user, tier } = useAuth();
+  const { user, gender, tier } = useAuth();
   const { myProfile, setMyProfile } = useMyProfile();
 
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
 
   const uid = user?.uid;
-  const displayName = user?.displayName;
   const isProfileActive = myProfile?.ia === true;
   const isExpiredTier = tier === "none";
 
   useEffect(() => {
-    // 1. Guard against unready state, disabled flag, non-expired status, or active sync
     if (
       !enabled ||
       !uid ||
-      !displayName ||
+      !gender ||
       !isExpiredTier ||
       !isProfileActive ||
       isSyncRunningRef.current
@@ -29,14 +27,13 @@ export const useTierExpirationSync = (enabled: boolean = false) => {
     }
 
     let isMounted = true;
-    const userGender = displayName.trim().toLowerCase();
 
     const handleTierExpiration = async () => {
       isSyncRunningRef.current = true;
       setIsSyncing(true);
 
       try {
-        await deactivateUserProfile(uid, userGender);
+        await deactivateUserProfile(uid, gender);
 
         if (isMounted) {
           // Functional update to preserve any concurrent profile updates
@@ -62,7 +59,7 @@ export const useTierExpirationSync = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, uid, displayName, isExpiredTier, isProfileActive, setMyProfile]);
+  }, [enabled, uid, gender, isExpiredTier, isProfileActive, setMyProfile]);
 
   return { isSyncing };
 };

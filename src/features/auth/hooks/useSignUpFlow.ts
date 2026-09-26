@@ -6,7 +6,11 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
 } from "@react-native-firebase/auth";
-// import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { useTranslation } from "react-i18next";
 import { useAuthNavigation } from "../../../navigation/hooks";
 
@@ -21,76 +25,72 @@ export function useSignUpFlow() {
 
     try {
       const firebaseAuth = getAuth();
-
-      // Pure, native Firebase registration
       await createUserWithEmailAndPassword(firebaseAuth, email, password);
-
       Alert.alert(
         t("auth.successTitle", "Success"),
         t("auth.registrationComplete"),
       );
     } catch (error: any) {
-      console.error("Pure email registration failure: ", error);
       let msg = error.message;
-
       if (error.code === "auth/email-already-in-use") {
         msg = t(
           "auth.duplicateEmailError",
           "This email address is already registered.",
         );
       }
-
       Alert.alert("Registration Failed", msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 🟢 ADD Google Sign-Up handler inside useSignUpFlow
-  // const executeGoogleSignUp = async () => {
-  //   setIsLoading(true);
+  const executeGoogleSignUp = async () => {
+    setIsLoading(true);
 
-  //   try {
-  //     // 1. Check if Play Services are available (Android requirement)
-  //     await GoogleSignin.hasPlayServices({
-  //       showPlayServicesUpdateDialog: true,
-  //     });
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      const signInResult = await GoogleSignin.signIn();
 
-  //     // 2. Open Google Auth modal and retrieve token
-  //     const signInResult = await GoogleSignin.signIn();
-  //     const idToken = signInResult.data?.idToken;
+      let idToken: string | undefined | null = null;
 
-  //     if (!idToken) {
-  //       throw new Error("No ID Token returned from Google Sign-In.");
-  //     }
+      if (isSuccessResponse(signInResult)) {
+        idToken = signInResult.data.idToken;
+      }
 
-  //     // 3. Create Firebase credential using Google ID Token
-  //     const googleCredential = GoogleAuthProvider.credential(idToken);
+      if (!idToken) {
+        throw new Error("No ID Token returned from Google Sign-In.");
+      }
 
-  //     // 4. Complete Firebase Authentication
-  //     const firebaseAuth = getAuth();
-  //     await signInWithCredential(firebaseAuth, googleCredential);
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const firebaseAuth = getAuth();
 
-  //     Alert.alert(
-  //       t("auth.successTitle", "Success"),
-  //       t(
-  //         "auth.registrationComplete",
-  //         "Account created successfully with Google.",
-  //       ),
-  //     );
-  //   } catch (error: any) {
-  //     console.error("Google registration failure: ", error);
-  //     // Ignore user cancellation errors (code 12501 or status 'canceled')
-  //     if (error.code !== "12501" && error.statusCodes?.SIGN_IN_CANCELLED) {
-  //       Alert.alert(
-  //         "Google Sign-In Failed",
-  //         error.message || "Failed to sign up with Google.",
-  //       );
-  //     }
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+      await signInWithCredential(firebaseAuth, googleCredential);
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled silently, do nothing
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // Already in progress silently, do nothing
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert(
+          t("auth.error", "Google Sign-In Failed"),
+          t(
+            "auth.playServicesError",
+            "Google Play Services are not available or outdated.",
+          ),
+        );
+      } else {
+        Alert.alert(
+          t("auth.error", "Google Sign-In Failed"),
+          error.message ||
+            t("auth.genericError", "Failed to sign up with Google."),
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -99,7 +99,7 @@ export function useSignUpFlow() {
   return {
     isLoading,
     executeRegistration,
-    // executeGoogleSignUp,
+    executeGoogleSignUp,
     handleBackPress,
   };
 }

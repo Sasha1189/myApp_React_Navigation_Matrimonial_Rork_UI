@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth, useEntitlement } from "@/context";
+import { useAuth } from "@/context";
 import { syncBlocks } from "../services/blocksSyncService";
 
 export const useBlocksSync = (enabled: boolean = false) => {
-  const { user } = useAuth();
-  const { isPaid } = useEntitlement();
+  const { user, isPaid } = useAuth();
 
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);

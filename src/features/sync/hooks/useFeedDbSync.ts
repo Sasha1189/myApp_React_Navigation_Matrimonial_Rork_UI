@@ -1,19 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth, useEntitlement } from "@/context";
+import { useAuth } from "@/context";
 import {
   syncFeedProfiles,
   performDeltaSync,
 } from "../services/syncFeedService";
 
-export const useFeedDbSync = (enabled: boolean = false) => {
-  const { user } = useAuth();
-  const { isPaid } = useEntitlement();
+export const useFeedDBSync = (enabled: boolean = false) => {
+  const { user, gender, isPaid } = useAuth();
 
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
 
   const userId = user?.uid;
-  const gender = user?.displayName ?? "";
 
   useEffect(() => {
     if (!enabled || !userId || !gender.trim() || isSyncRunningRef.current) {
@@ -22,7 +20,7 @@ export const useFeedDbSync = (enabled: boolean = false) => {
 
     let isMounted = true;
 
-    const runFeedDbSync = async () => {
+    const runFeedDBSync = async () => {
       isSyncRunningRef.current = true;
       setIsSyncing(true);
 
@@ -39,7 +37,7 @@ export const useFeedDbSync = (enabled: boolean = false) => {
       }
     };
 
-    runFeedDbSync();
+    runFeedDBSync();
     return () => {
       isMounted = false;
     };

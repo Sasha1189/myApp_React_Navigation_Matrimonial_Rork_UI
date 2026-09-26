@@ -17,27 +17,12 @@ export default function ProfileScreen({ navigation }: any) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { user } = useAuth();
-  const { myProfile } = useMyProfile();
+  const { myProfile, refreshMyProfile } = useMyProfile();
   const { t } = useTranslation();
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // 1. ADDED HERE: Derived hook utilities inside the parent layout
   const completionPercent = useProfileCompletion(myProfile);
   const { matchesCount, sentCount, receivedCount, isLoading, isSubscribed } =
     useProfileStats(user?.uid);
-
-  // 3. ADDED HERE: Refresh interaction handler function (Fixed syntax error)
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      // await refreshProfile?.();
-    } catch (e) {
-      Alert.alert("Error", "Could not refresh profile");
-    } finally {
-      // Fixed typo: changed 'compression' back to standard native 'finally'
-      setIsRefreshing(false);
-    }
-  };
 
   return (
     <ScrollView
@@ -49,8 +34,7 @@ export default function ProfileScreen({ navigation }: any) {
         <SlimHeader
           profile={myProfile}
           completionPercent={completionPercent}
-          isRefreshing={isRefreshing}
-          onRefresh={handleRefresh}
+          onRefresh={refreshMyProfile}
           theme={theme}
           styles={styles}
         />

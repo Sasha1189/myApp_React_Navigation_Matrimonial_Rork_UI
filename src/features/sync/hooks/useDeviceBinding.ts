@@ -1,29 +1,26 @@
 import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import { getUniqueId } from "react-native-device-info";
-import { useAuth, useEntitlement } from "@/context";
+import { useAuth } from "@/context";
 import {
   getDBDeviceIdCache,
   setDBDeviceIdCache,
 } from "@/cacheMMKV/cacheConfig";
 import { GOOGLE_REVIEWER_UIDS } from "../../../config/securityConfig";
-import { logoutUser } from "@/context/services/logoutUser";
 import {
   getUserDeviceId,
   updateUserDeviceId,
 } from "../services/deviceBindingService";
 
 export const useDeviceBinding = (enabled: boolean = false) => {
-  const { user, setAuthLoading } = useAuth();
-  const { isPaid, isPaidTier } = useEntitlement();
+  const { user, isPaid } = useAuth();
 
   const isVerifyingRef = useRef<boolean>(false);
 
   const uid = user?.uid;
-  const displayName = user?.displayName;
 
   useEffect(() => {
-    if (!enabled || !isPaid || !isPaidTier || !uid || !displayName) return;
+    if (!enabled || !uid || !isPaid) return;
 
     if ((GOOGLE_REVIEWER_UIDS ?? []).includes(uid)) return;
 
@@ -61,7 +58,7 @@ export const useDeviceBinding = (enabled: boolean = false) => {
             [
               {
                 text: "Logout",
-                onPress: () => logoutUser({ uid, setAuthLoading }),
+                // onPress: () => logoutUser({ uid, setAuthLoading }),
               },
             ],
             { cancelable: false },
@@ -84,5 +81,5 @@ export const useDeviceBinding = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, uid, isPaid, isPaidTier]);
+  }, [enabled, uid, isPaid]);
 };

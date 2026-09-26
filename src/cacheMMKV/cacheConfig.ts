@@ -92,3 +92,32 @@ export async function clearCacheOnLogout() {
     console.error("⚠️ Cache purge error on logout:", storageError);
   }
 }
+
+//.................................................................
+
+// Generates local YYYY-MM-DD string
+const getTodayDateStr = (): string => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+export const getTodayStorageKey = (uid: string): string => {
+  return `daily_msg_count_${uid}_${getTodayDateStr()}`;
+};
+
+export const getDailySentCount = (uid: string): number => {
+  if (!uid) return 0;
+  return appStorage.getNumber(getTodayStorageKey(uid)) ?? 0;
+};
+
+export const incrementDailySentCount = (uid: string): number => {
+  if (!uid) return 0;
+  const key = getTodayStorageKey(uid);
+  const current = appStorage.getNumber(key) ?? 0;
+  const next = current + 1;
+  appStorage.set(key, next);
+  return next;
+};

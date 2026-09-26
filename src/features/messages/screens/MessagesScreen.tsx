@@ -49,6 +49,8 @@ export default function MessagesScreen() {
     isLoading: chatsLoading,
   } = useMessageInbox(safeUid);
 
+  console.log("[MessagesScreen]:messageBanners-", messageBanners);
+
   const { profiles: likesSent, isLoading: sentLoading } = useLikeSent(safeUid);
 
   const { profiles: likesReceived, isLoading: recLoading } = useLikeReceived(

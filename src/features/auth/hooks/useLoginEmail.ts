@@ -7,7 +7,11 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
 } from "@react-native-firebase/auth";
-// import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { useTranslation } from "react-i18next";
 
 export const useLoginEmail = () => {
@@ -61,36 +65,53 @@ export const useLoginEmail = () => {
     }
   };
 
-  // 🎯 🟢 GOOGLE SIGN-IN FOR RETURNING USERS
-  // const executeGoogleLogin = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     await GoogleSignin.hasPlayServices({
-  //       showPlayServicesUpdateDialog: true,
-  //     });
-  //     const { idToken } = await GoogleSignin.signIn();
+  const executeGoogleLogin = async () => {
+    setIsLoading(true);
 
-  //     if (!idToken) {
-  //       throw new Error("Google Sign-In failed to retrieve ID token.");
-  //     }
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      const signInResult = await GoogleSignin.signIn();
 
-  //     const googleCredential = GoogleAuthProvider.credential(idToken);
-  //     await signInWithCredential(authInstance, googleCredential);
-  //   } catch (error: any) {
-  //     console.log("ℹ️ [Google Auth Flow]: Rejected. Code:", error.code);
-  //     if (error.code !== "SIGN_IN_CANCELLED") {
-  //       Alert.alert(
-  //         t("common.error", "Error"),
-  //         t(
-  //           "auth.googleSignInFailed",
-  //           "Google Sign-In failed. Please try again.",
-  //         ),
-  //       );
-  //     }
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+      let idToken: string | undefined | null = null;
+
+      if (isSuccessResponse(signInResult)) {
+        idToken = signInResult.data.idToken;
+      }
+
+      if (!idToken) {
+        throw new Error("No ID Token returned from Google Sign-In.");
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const firebaseAuth = getAuth();
+
+      await signInWithCredential(firebaseAuth, googleCredential);
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled silently, do nothing
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // Already in progress silently, do nothing
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert(
+          t("auth.error", "Google Sign-In Failed"),
+          t(
+            "auth.playServicesError",
+            "Google Play Services are not available or outdated.",
+          ),
+        );
+      } else {
+        Alert.alert(
+          t("auth.error", "Google Sign-In Failed"),
+          error.message ||
+            t("auth.genericError", "Failed to sign up with Google."),
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 🎯 FORGOT PASSWORD METHOD
   const handleForgotPassword = async (currentEmailValue?: string) => {
@@ -160,7 +181,7 @@ export const useLoginEmail = () => {
   return {
     isLoading,
     executeLogin,
-    // executeGoogleLogin,
+    executeGoogleLogin,
     handleForgotPassword,
   };
 };

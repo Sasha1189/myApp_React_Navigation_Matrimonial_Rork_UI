@@ -25,7 +25,7 @@ export const MessageBanner = React.memo(
 
     //....
     const handlePress = () => {
-      if (!item.ou) return;
+      if (!otherUid) return;
       navigation.navigate("Chat", {
         rId: item.rId,
         uid: uid,
@@ -45,7 +45,7 @@ export const MessageBanner = React.memo(
       >
         <View style={styles.imageWrapper}>
           <Image
-            source={{ uri: imageUri }}
+            source={imageUri ? { uri: imageUri } : null}
             placeholder={require("../../../../assets/images/profile.webp")}
             style={styles.activityImage}
             contentFit="cover"
@@ -71,7 +71,7 @@ export const MessageBanner = React.memo(
               style={[styles.msg, item?.u && styles.unreadMsgText]}
               numberOfLines={1}
             >
-              {item.lm}
+              {item.lm || "No messages yet"}
             </Text>
 
             {item.u && <View style={styles.unreadDot} />}
@@ -80,6 +80,14 @@ export const MessageBanner = React.memo(
       </TouchableOpacity>
     );
   },
+  (prev, next) =>
+    prev.item.rId === next.item.rId &&
+    prev.item.lm === next.item.lm &&
+    prev.item.ua === next.item.ua &&
+    prev.item.u === next.item.u &&
+    prev.item.ou?.name === next.item.ou?.name &&
+    prev.item.ou?.photo === next.item.ou?.photo &&
+    prev.uid === next.uid,
 );
 
 export const createStyles = (theme: AppTheme) =>

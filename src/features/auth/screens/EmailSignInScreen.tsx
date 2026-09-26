@@ -11,7 +11,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useForm } from "react-hook-form";
-// import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useTranslation } from "react-i18next";
@@ -32,12 +32,8 @@ export default function PhoneSignInScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useAuthNavigation();
 
-  const {
-    isLoading,
-    executeLogin,
-    // executeGoogleLogin,
-    handleForgotPassword,
-  } = useLoginEmail();
+  const { isLoading, executeLogin, executeGoogleLogin, handleForgotPassword } =
+    useLoginEmail();
 
   const {
     control,
@@ -64,7 +60,6 @@ export default function PhoneSignInScreen() {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <AuthHeaderBanner />
-
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.sheetContainer}
@@ -82,27 +77,9 @@ export default function PhoneSignInScreen() {
                     {t("auth.verifyTitleLogin")}
                   </Text>
                 </View>
-                {/* 🟢 1. GOOGLE SIGN-IN FOR RETURNING USERS */}
-                {/* <GoogleSigninButton
-                  size={GoogleSigninButton.Size.Wide}
-                  color={GoogleSigninButton.Color.Dark}
-                  onPress={executeGoogleLogin}
-                  disabled={isLoading}
-                  style={styles.googleButton}
-                /> */}
-
-                <View style={styles.googleButton}>
-                  <Text>Continue with Google</Text>
-                </View>
-
-                {/* 🟢 2. VISUAL DIVIDER */}
-                <View style={styles.dividerContainer}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
-                  <View style={styles.dividerLine} />
-                </View>
 
                 <EmailInputField control={control} errors={errors} />
+
                 <PasswordInputField
                   control={control}
                   errors={errors}
@@ -118,6 +95,30 @@ export default function PhoneSignInScreen() {
                   <Text style={styles.forgotPasswordText}>
                     {t("auth.forgotPassword", "Forgot Password?")}
                   </Text>
+                </TouchableOpacity>
+
+                {/* 🟢 2. VISUAL DIVIDER */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* 2. Google Sign-In Button (ACTIVE IMMEDIATELY) */}
+                <TouchableOpacity
+                  onPress={() => {
+                    executeGoogleLogin();
+                  }}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  <View pointerEvents="none">
+                    <GoogleSigninButton
+                      size={GoogleSigninButton.Size.Wide}
+                      color={GoogleSigninButton.Color.Light}
+                      disabled={isLoading}
+                    />
+                  </View>
                 </TouchableOpacity>
               </View>
 
@@ -158,7 +159,7 @@ export const createStyles = (theme: AppTheme) =>
       flexGrow: 1,
     },
     sheetInnerContent: {
-      flex: 1,
+      flexGrow: 1,
       paddingHorizontal: theme.spacing.lg, // 24px core layout columns spacing
       paddingTop: theme.spacing.lg,
       paddingBottom: theme.spacing.sm, // 8px structural layout padding
@@ -181,7 +182,7 @@ export const createStyles = (theme: AppTheme) =>
     },
     forgotPasswordContainer: {
       alignSelf: "flex-end",
-      marginTop: theme.spacing.sm, // 8px proximity text placement spacing
+      marginTop: theme.spacing.xs,
       paddingVertical: 4,
     },
     forgotPasswordText: {
@@ -191,20 +192,16 @@ export const createStyles = (theme: AppTheme) =>
       letterSpacing: 0.5,
     },
     footerSection: {
-      justifyContent: "flex-end",
+      // justifyContent: "flex-end",
       width: "100%",
       backgroundColor: theme.colors.card, // Adapts seamlessly to Dark Theme
       marginTop: theme.spacing.md, // 16px - 20px margin tracking consistency
     },
-    googleButton: {
-      width: "100%",
-      height: 48,
-      borderRadius: theme.borderRadius.md,
-    },
+
     dividerContainer: {
       flexDirection: "row",
       alignItems: "center",
-      marginVertical: theme.spacing.lg,
+      marginVertical: theme.spacing.md,
     },
     dividerLine: {
       flex: 1,

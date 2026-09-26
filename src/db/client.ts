@@ -1,18 +1,9 @@
 import { openDatabaseSync } from "expo-sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import * as schema from "./schema/sqlprofiles";
-console.log("🔍 [INIT 1/4] Loading db.ts module...");
 export const expoDb = openDatabaseSync("matrimonial.db");
 
-// // Apply performance PRAGMAs for fast reads & writes
-// expoDb.execSync(`
-//   PRAGMA journal_mode = WAL;
-//   PRAGMA synchronous = NORMAL;
-//   PRAGMA busy_timeout = 5000;
-// `);
-
 export const initDatabase = () => {
-  console.log("🔍 [INIT 2/4] Running PRAGMAs and schema checks...");
   try {
     expoDb.execSync(`
       PRAGMA journal_mode = WAL;

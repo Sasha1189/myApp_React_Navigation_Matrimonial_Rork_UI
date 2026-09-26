@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Alert, Linking } from "react-native";
-import { useAuth } from "@/context";
-import { logoutUser } from "@/context/services/logoutUser";
 import { useTranslation } from "react-i18next";
 import { useAppNavigation } from "src/navigation/hooks";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { clearCacheOnLogout } from "@/cacheMMKV/cacheConfig";
+import { auth, signOut } from "@/config/firebase";
 
 export const useSettingsActions = () => {
-  const { user, setAuthLoading } = useAuth();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const WHATSAPP_NUMBER = "918554840100";
@@ -59,10 +59,22 @@ export const useSettingsActions = () => {
           setIsProcessing(true);
 
           try {
-            logoutUser({
-              uid: user?.uid,
-              setAuthLoading,
-            });
+            await clearCacheOnLogout();
+            try {
+              const hasPlayServices = await GoogleSignin.hasPlayServices();
+              if (hasPlayServices) {
+                const currentUser = await GoogleSignin.getCurrentUser();
+                if (currentUser) {
+                  await GoogleSignin.signOut();
+                }
+              }
+            } catch (googleError) {
+              console.warn(
+                "⚠️ Google sign-out skipped or failed:",
+                googleError,
+              );
+            }
+            await signOut(auth);
           } catch (error: any) {
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {

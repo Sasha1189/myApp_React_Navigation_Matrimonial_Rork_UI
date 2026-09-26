@@ -1,5 +1,11 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { Image } from "expo-image";
 import Svg, { Circle } from "react-native-svg";
 import { RefreshCw } from "lucide-react-native";
@@ -11,8 +17,7 @@ import { Profile } from "@/features/profile/types/profile";
 interface SlimHeaderProps {
   profile: Profile;
   completionPercent: number;
-  isRefreshing: boolean;
-  onRefresh: () => void;
+  onRefresh: () => Promise<void>;
   theme: any;
   styles: any;
 }
@@ -20,7 +25,6 @@ interface SlimHeaderProps {
 export const SlimHeader: React.FC<SlimHeaderProps> = ({
   profile,
   completionPercent,
-  isRefreshing,
   onRefresh,
   theme,
   styles,
@@ -32,10 +36,23 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (circumference * completionPercent) / 100;
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const age = profile?.db ? formatDOB(profile.db, "age") : "18";
 
   const imageUri = resolveThumbUri(profile?.tn, profile?.uid) || "";
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } catch (e) {
+      console.error("❌ [SLIM_HEADER_REFRESH_ERROR]:", e);
+      Alert.alert("Error", "Could not refresh profile");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <View style={styles.headerCard}>
@@ -72,7 +89,7 @@ export const SlimHeader: React.FC<SlimHeaderProps> = ({
         />
         <TouchableOpacity
           style={styles.refreshBtn}
-          onPress={onRefresh}
+          onPress={handleRefresh}
           disabled={isRefreshing}
         >
           {isRefreshing ? (

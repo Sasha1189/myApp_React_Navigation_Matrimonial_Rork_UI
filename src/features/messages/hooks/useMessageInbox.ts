@@ -7,19 +7,16 @@ import {
   orderByChild,
   limitToLast,
   onChildAdded,
-  onChildChanged,
-  onChildRemoved,
+  onValue,
   get,
   endAt,
-  goOnline,
 } from "@react-native-firebase/database";
 import { IInboxItem } from "../type/chattype";
-import { useBlockedSet } from "@/features/block/hook/useBlockedSet"; // Adjust path to your hook
-import { feedRepository } from "@/db/services/dbFeedServices"; // Adjust path to your feed repository
+import { useBlockedSet } from "@/features/block/hook/useBlockedSet";
+import { feedRepository } from "@/db/services/dbFeedServices";
 import { Profile } from "@/features/profile/types/profile";
 
 const PAGE_SIZE = 20;
-const MAX_LIMIT = 100;
 
 export const useMessageInbox = (uid: string) => {
   const [rawBanners, setRawBanners] = useState<IInboxItem[]>([]);
@@ -83,7 +80,7 @@ export const useMessageInbox = (uid: string) => {
           ...item,
           ou: {
             ...item.ou,
-            name: profile?.fn ?? "",
+            name: profile?.fn ?? "User",
             photo: profile?.photos?.[0]?.downloadURL ?? null,
           },
         };
@@ -108,83 +105,66 @@ export const useMessageInbox = (uid: string) => {
   // ---------------------------------------------------------------------------
   // RTDB Sync Logic
   // ---------------------------------------------------------------------------
-  const startLive = useCallback(async () => {
+
+  const startLive = useCallback(() => {
     if (!uid) return;
     stopListeners();
     setIsLive(true);
     setHasNewAtTop(false);
 
+    // 1. Align query key with security rules index (.indexOn: ["ua"]) to prevent high-cost client-side sorting
     const inboxQuery = query(
       ref(rtdb, `inbox/${uid}`),
-      orderByChild("updatedAt"),
+      orderByChild("ua"),
       limitToLast(PAGE_SIZE),
     );
 
-    // 1. Initial Fetch
-    try {
-      const snap = await get(inboxQuery);
-      const data = snap.val() || {};
-      const sorted = (Object.values(data) as IInboxItem[]).sort(
-        (a, b) => b.ua - a.ua,
-      );
+    // 2. Single onValue listener completely replaces initial get() + three individual child listeners
+    const unsub = onValue(
+      inboxQuery,
+      (snap) => {
+        const data = snap.val() || {};
 
-      setRawBanners(sorted);
-      if (sorted.length > 0) {
-        oldestTsRef.current = sorted[sorted.length - 1].ua;
-        latestSeenTsRef.current = sorted[0].ua;
-      }
-      setHasMore(sorted.length === PAGE_SIZE);
-    } catch (err) {
-      console.error("Inbox initial fetch failed", err);
-    } finally {
-      setIsLoading(false);
-    }
+        // Map entries to inject rId (the child key) and otherUid (split from rId)
+        const sorted = Object.entries(data)
+          .map(([key, val]) => {
+            const item = val as IInboxItem;
+            const extractedOtherUid =
+              key.split("_").find((id) => id !== uid) || "";
+            return {
+              ...item,
+              rId: key,
+              ou: { uid: extractedOtherUid, name: "", photo: null },
+            };
+          })
+          .sort((a, b) => b.ua - a.ua);
 
-    // 2. Realtime Listeners
-    const unsubAdded = onChildAdded(inboxQuery, (snap) => {
-      const newItem = snap.val() as IInboxItem;
-      setRawBanners((prev) => {
-        if (prev.some((item) => item.rId === newItem.rId)) return prev;
-        const newList = [newItem, ...prev].sort((a, b) => b.ua - a.ua);
-        return newList.slice(0, PAGE_SIZE);
-      });
-    });
+        setRawBanners(sorted);
 
-    const unsubChanged = onChildChanged(inboxQuery, (snap) => {
-      const updatedItem = snap.val() as IInboxItem;
-      setRawBanners((prev) =>
-        prev
-          .map((item) => (item.rId === updatedItem.rId ? updatedItem : item))
-          .sort((a, b) => b.ua - a.ua),
-      );
-    });
+        // Keep track of pagination markers
+        if (sorted.length > 0) {
+          oldestTsRef.current = sorted[sorted.length - 1].ua;
+          latestSeenTsRef.current = sorted[0].ua;
+        }
 
-    const unsubRemoved = onChildRemoved(inboxQuery, (snap) => {
-      const deletedRoomId = snap.key;
-      setRawBanners((prev) =>
-        prev.filter((item) => item.rId !== deletedRoomId),
-      );
-    });
+        setHasMore(sorted.length === PAGE_SIZE);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.error("Inbox synchronization failed", err);
+        setIsLoading(false);
+      },
+    );
 
-    msgUnsubscribe.current = () => {
-      unsubAdded();
-      unsubChanged();
-      unsubRemoved();
-    };
+    // Store the unsubscribe function directly to clean up on unmount or refocus
+    msgUnsubscribe.current = unsub;
   }, [uid, stopListeners]);
 
   //----------------------------------------------------------------------------
 
   useFocusEffect(
     useCallback(() => {
-      try {
-        goOnline(rtdb);
-      } catch (err) {
-        console.error("Failed to re-engage inbox socket layer:", err);
-      }
-
       startLive();
-
       return () => {
         stopListeners();
       };
@@ -219,9 +199,20 @@ export const useMessageInbox = (uid: string) => {
       const data = snap.val();
 
       if (data) {
-        const batch = (Object.values(data) as IInboxItem[]).sort(
-          (a, b) => b.ua - a.ua,
-        );
+        // Hydrate rId and otherUid client-side
+        const batch = Object.entries(data)
+          .map(([key, val]) => {
+            const item = val as IInboxItem;
+            const extractedOtherUid =
+              key.split("_").find((id) => id !== uid) || "";
+            return {
+              ...item,
+              rId: key,
+              ou: { uid: extractedOtherUid, name: "", photo: null },
+            };
+          })
+          .sort((a, b) => b.ua - a.ua);
+
         oldestTsRef.current = batch[batch.length - 1].ua;
 
         setRawBanners((prev) => {
@@ -230,9 +221,7 @@ export const useMessageInbox = (uid: string) => {
             new Map(combined.map((item) => [item.rId, item])).values(),
           ).sort((a, b) => b.ua - a.ua);
 
-          return unique.length > MAX_LIMIT
-            ? unique.slice(0, MAX_LIMIT)
-            : unique;
+          return unique;
         });
         setHasMore(batch.length === PAGE_SIZE);
       } else {
@@ -256,3 +245,5 @@ export const useMessageInbox = (uid: string) => {
     reset: startLive,
   };
 };
+
+// const otherUid = rId.split("_").find((id) => id !== myUid);

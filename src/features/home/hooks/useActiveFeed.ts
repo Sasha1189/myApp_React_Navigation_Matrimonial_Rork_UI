@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { appStorage } from "@/cacheMMKV/cacheConfig";
 import { FeedCache, FeedMode } from "../cache/feedCache";
 import { useDefaultFeed } from "./useDefaultFeed";
@@ -6,7 +6,7 @@ import { useLatestFeed } from "./useLatestFeed";
 import { useSearchFeed } from "./useSearchFeed";
 import { useFilterFeed } from "./useFilterFeed";
 import { useBlockedSet } from "@/features/block/hook/useBlockedSet";
-import { useEntitlement } from "@/context";
+import { useAuth } from "@/context";
 
 export function useActiveFeed(uid: string) {
   const [mode, setMode] = useState<FeedMode>(
@@ -21,8 +21,9 @@ export function useActiveFeed(uid: string) {
 
   const blockedSet = useBlockedSet();
 
-  const { isPaid } = useEntitlement();
+  const { isPaid } = useAuth();
 
+  console.log("[useActiveFeed]- mode:", mode);
   // 2. Targeted MMKV Listener Guard
   useEffect(() => {
     if (!uid) return;

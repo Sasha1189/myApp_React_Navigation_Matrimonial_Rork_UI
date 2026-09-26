@@ -12,11 +12,10 @@ import { useTranslation } from "react-i18next";
 
 interface Props {
   loading: boolean;
-  isUploaded: boolean;
   onPress: () => void;
 }
 
-export default function UploadButton({ loading, isUploaded, onPress }: Props) {
+export default function UploadButton({ loading, onPress }: Props) {
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
 
@@ -30,12 +29,13 @@ export default function UploadButton({ loading, isUploaded, onPress }: Props) {
         {loading ? (
           <View style={styles.row}>
             <ActivityIndicator size="small" color="white" />
-            <Text style={styles.buttonText}>{t("doc.uploading")}</Text>
+            <Text style={styles.buttonText}>
+              {t("doc.uploading", "Uploading...")}
+            </Text>
           </View>
         ) : (
-          // 3. Idle State
           <Text style={styles.buttonText}>
-            {isUploaded ? t("doc.VerPending") : t("doc.Uploaddoc")}
+            {t("doc.Uploaddoc", "Upload Document")}
           </Text>
         )}
       </View>
@@ -51,7 +51,6 @@ export const createStyles = (theme: AppTheme) =>
       borderRadius: theme.borderRadius.lg,
       justifyContent: "center",
       alignItems: "center",
-      overflow: "hidden",
       shadowColor: theme.colors.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.2,
@@ -60,14 +59,8 @@ export const createStyles = (theme: AppTheme) =>
       marginHorizontal: theme.spacing.md,
       marginBottom: theme.spacing.lg,
     },
-    content: {
-      zIndex: 2, // Keeps text above the progress bar
-    },
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: theme.spacing.sm,
-    },
+    content: { zIndex: 2 },
+    row: { flexDirection: "row", alignItems: "center", gap: theme.spacing.sm },
     buttonText: {
       color: theme.colors.card,
       fontSize: theme.fontSize.md,

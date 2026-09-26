@@ -64,7 +64,6 @@ export const AuthFooterActions: React.FC<AuthFooterActionsProps> = ({
         )}
       </TouchableOpacity>
 
-      {/* ================= CUSTOM CARD LINK REDIRECTION ELEMENT SLOT ================= */}
       {children}
     </View>
   );
@@ -76,7 +75,7 @@ export const createStyles = (theme: AppTheme) =>
       justifyContent: "flex-end",
       width: "100%",
       backgroundColor: theme.colors.card,
-      marginTop: theme.spacing.lg,
+      marginTop: theme.spacing.xs,
     },
     actionSubmitBtn: {
       backgroundColor: theme.colors.primary,
@@ -88,7 +87,7 @@ export const createStyles = (theme: AppTheme) =>
     actionSubmitText: {
       color: "white",
       fontSize: theme.fontSize.sm,
-      fontWeight: "700",
+      fontWeight: "600",
     },
     actionDisabledBtn: { backgroundColor: theme.colors.border },
     actionDisabledText: { color: theme.colors.textLight },

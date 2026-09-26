@@ -8,53 +8,40 @@ import AppNavigator from "./AppNavigator";
 import AuthNavigator from "./AuthNavigator";
 import UserInfoScreen from "../features/auth/screens/UserInfoScreen";
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-console.log("🔍 [NAV FILE] RootNavigator.tsx module loaded");
-
 export default function RootNavigator() {
-  console.log("🔍 [NAV COMPONENT] RootNavigator component executing");
-  const { user, authLoading } = useAuth();
-
-  console.log(
-    "🔍 [NAV 1/3] Render RootNavigator | authLoading:",
-    authLoading,
-    "| user:",
-    user?.uid ?? "null",
-  );
+  const { user, gender, authLoading } = useAuth();
 
   useEffect(() => {
-    async function hide() {
+    async function hideSplash() {
       if (!authLoading) {
-        console.log("🔍 [NAV 2/3] Triggering SplashScreen.hideAsync()...");
         setTimeout(async () => {
           try {
             await SplashScreen.hideAsync();
-            console.log("🔍 [NAV 3/3] SplashScreen hidden successfully.");
           } catch (e) {
             console.error("❌ [NAV ERROR] Splash hide failed:", e);
           }
         }, 100);
       }
     }
-    hide();
+    hideSplash();
   }, [authLoading]);
 
   if (authLoading) {
-    console.log("⚠️ [NAV STUCK] Blocking render because authLoading is TRUE");
     return null;
   }
 
-  const isProfileIncomplete = user && !user.displayName;
-
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false, animation: "fade" }}
+      >
         {!user ? (
           <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : isProfileIncomplete ? (
+        ) : !gender ? (
           <Stack.Screen name="UserInfo" component={UserInfoScreen} />
         ) : (
           <Stack.Screen name="App" component={AppNavigator} />

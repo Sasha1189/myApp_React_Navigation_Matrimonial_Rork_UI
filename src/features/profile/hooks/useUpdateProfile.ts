@@ -2,24 +2,26 @@ import { Dispatch, SetStateAction } from "react";
 import { setCachedProfile } from "@/cacheMMKV/cacheConfig";
 import { Profile } from "../types/profile";
 import { apiUpdateProfile } from "../api/profileApi";
+import { genderType } from "@/context";
 
 export const useUpdateProfile = (
   user: any,
   setMyProfile: Dispatch<SetStateAction<Profile>>,
   tier: string,
+  gender: genderType,
 ) => {
   return async (newData: Partial<Profile>) => {
-    const gender = user?.displayName;
     if (!user?.uid || !gender) return;
 
+    //for first time after payment immediate tier
     const effectiveTier = newData.tier || tier;
-    const isPaidUser = effectiveTier === "basic" || effectiveTier === "premium";
+    const isPaid = effectiveTier === "basic" || effectiveTier === "premium";
 
     try {
-      if (isPaidUser && Object.keys(newData).length > 0) {
+      if (isPaid && Object.keys(newData).length > 0) {
         await apiUpdateProfile({
           uid: user.uid,
-          gender: user.displayName,
+          gender: gender,
           ...newData,
         });
       }
@@ -28,6 +30,7 @@ export const useUpdateProfile = (
         const mergedProfile = {
           ...prevProfile,
           ...newData,
+          gender: gender,
           uid: user.uid,
         };
         setCachedProfile(mergedProfile);

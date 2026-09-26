@@ -3,14 +3,13 @@ import { Alert } from "react-native";
 import { useAppNavigation } from "../../../navigation/hooks";
 import { Profile } from "../../profile/types/profile";
 import { toggleLike } from "@/features/likes/services/likesService";
-import { useAuth, useEntitlement } from "../../../context";
+import { useAuth } from "@/context";
 import { useTranslation } from "react-i18next";
 
 export function useButtonActions(profile: Profile | undefined) {
   const navigation = useAppNavigation();
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const { isPaid } = useEntitlement();
+  const { user, isPaid } = useAuth();
   const [isLiking, setIsLiking] = useState(false);
 
   const handleActionBtnTap = useCallback(

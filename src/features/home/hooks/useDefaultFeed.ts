@@ -46,6 +46,10 @@ export function useDefaultFeed(
           await feedRepository.getInitialFeed(cachedCa, isPaid);
 
         // Update dataset and target starting index together
+        console.log(
+          "[useFeedDefault] initial profiles length:",
+          initialData?.length,
+        );
         setProfiles(initialData ?? []);
         setCurrentIndex(initialIndex ?? 0);
         setHasMore((initialData?.length ?? 0) > 0);

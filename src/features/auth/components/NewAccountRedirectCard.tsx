@@ -64,6 +64,7 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: theme.borderRadius.sm,
       alignItems: "center",
       justifyContent: "center",
+      marginRight: theme.spacing.xs,
       backgroundColor: theme.colors.primary,
     },
   });
