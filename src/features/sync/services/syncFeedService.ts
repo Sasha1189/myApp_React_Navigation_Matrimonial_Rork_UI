@@ -244,7 +244,6 @@ const handlePaidBulkSync = async (
   appStorage.set("last_synced_at", maxTimestamp || now);
   appStorage.set(`last_delta_run_${targetCollection}`, now);
 
-  console.log("[handlePaidBulkSync] Synced records:", rawProfiles?.length);
   return rawProfiles?.length;
 };
 /**

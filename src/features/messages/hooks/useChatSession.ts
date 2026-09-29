@@ -64,6 +64,13 @@ export function useChatSession(
 
   const roomHash = useMemo(() => getRoomHash(rId), [rId]);
 
+  const currentMonthStr = useRef(
+    (() => {
+      const date = new Date();
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    })(),
+  ).current;
+
   const canSend = useMemo(() => {
     return sentTodayCount < DAILY_MESSAGE_LIMIT;
   }, [sentTodayCount]);
@@ -262,7 +269,7 @@ export function useChatSession(
       if (!cleanText || !otherUid || !myUid) return;
 
       if (!canSend) {
-        throw new Error("DAILY_LIMIT_REACHED");
+        return;
       }
 
       setMyTyping(false);
@@ -302,6 +309,8 @@ export function useChatSession(
         ua: ts,
         u: true,
       };
+
+      updates[`active_rooms/${currentMonthStr}/${rId}`] = true;
 
       await update(ref(rtdb, "/"), updates);
       // Increment MMKV and update local state synchronously
@@ -512,21 +521,3 @@ const getRoomHash = (roomId: string): string => {
   }
   return Math.abs(hash).toString(36); // Yields an ultra-short base36 string
 };
-// Inside your ChatScreen.tsx component:
-// const handleSend = async () => {
-//   if (!canSend) {
-//     Alert.alert(
-//       "Daily Limit Reached 🌙",
-//       "You've hit your message limit for today. Don't worry, your quota will reset at midnight!",
-//       [{ text: "Okay" }]
-//     );
-//     return;
-//   }
-
-//   try {
-//     await sendMessage(inputText);
-//     setInputText("");
-//   } catch (error) {
-//     console.error("Failed to send message:", error);
-//   }
-// };

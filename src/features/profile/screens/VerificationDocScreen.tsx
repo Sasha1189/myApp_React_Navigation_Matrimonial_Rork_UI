@@ -131,6 +131,8 @@ export const createStyles = (theme: AppTheme) =>
     },
     textContainer: {
       flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
     },
     titleText: {
       fontSize: 14,

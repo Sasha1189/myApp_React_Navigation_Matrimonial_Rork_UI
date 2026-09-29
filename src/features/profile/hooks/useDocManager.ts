@@ -1,16 +1,21 @@
 import { useState } from "react";
-import { storage, refStorage, putFile } from "@/config/firebase";
 import { Alert } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { setUserVerification } from "../api/setUserVerification";
+import { apiGenerateDocUploadUrl } from "../api/docApi";
 
 export interface SelectedDoc {
   uri: string;
   name: string;
+  size?: number;
   mimeType?: string;
 }
+
+// 👉 FILE SIZE CONFIGURATION (e.g., 5 MB max limit)
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export function useDocManager() {
   const { user, isVerified, updateVerificationStatus } = useAuth();
@@ -34,9 +39,23 @@ export function useDocManager() {
         return;
 
       const asset = result.assets[0];
+
+      // 👉 FILE SIZE VALIDATION: Reject files larger than MAX_FILE_SIZE_MB
+      if (asset.size && asset.size > MAX_FILE_SIZE_BYTES) {
+        Alert.alert(
+          t("doc.fileTooLargeTitle", "File Too Large"),
+          t(
+            "doc.fileTooLargeMsg",
+            `Please select a document smaller than ${MAX_FILE_SIZE_MB}MB.`,
+          ),
+        );
+        return;
+      }
+
       setSelectedDoc({
         uri: asset.uri,
         name: asset.name,
+        size: asset.size,
         mimeType: asset.mimeType,
       });
     } catch (err) {
@@ -69,13 +88,40 @@ export function useDocManager() {
     setLoading(true);
 
     try {
-      // Extract extension or fallback to pdf
-      const extension = selectedDoc.name.split(".").pop() || "pdf";
-      const storagePath = `users/${uid}/ver_doc/vdoc_document.${extension}`;
-      const reference = refStorage(storage, storagePath);
+      // 👉 Step A: Convert local document URI into binary Blob
+      const localRes = await fetch(selectedDoc.uri);
+      const blob = await localRes.blob();
 
-      // Upload file directly
-      await putFile(reference, selectedDoc.uri);
+      // 👉 Secondary size validation check before starting upload
+      if (blob.size > MAX_FILE_SIZE_BYTES) {
+        Alert.alert(
+          t("doc.fileTooLargeTitle", "File Too Large"),
+          t(
+            "doc.fileTooLargeMsg",
+            `Document size exceeds ${MAX_FILE_SIZE_MB}MB limit.`,
+          ),
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 👉 Step B: Request presigned upload URL from your API endpoint
+      const { uploadUrl, finalDocUrl } = await apiGenerateDocUploadUrl();
+
+      // 👉 Step C: Upload binary blob directly to Cloudflare R2
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": selectedDoc.mimeType || "application/pdf",
+        },
+        body: blob,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(
+          `R2 upload failed with HTTP status ${uploadRes.status}`,
+        );
+      }
 
       // Update backend / Firestore document path
       await setUserVerification(uid);

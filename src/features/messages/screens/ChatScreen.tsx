@@ -22,19 +22,12 @@ import { ChatListHelper } from "../components/ChatListHelper";
 import { ChatHeader } from "../components/ChatHeader";
 import { AppStackScreenProps } from "src/navigation/types";
 import { IMessage } from "../type/chattype";
-import { useMyProfile } from "@/features/profile/context/ProfileContext";
 
 export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
   const { rId, uid, ou } = route.params;
-  const { myProfile } = useMyProfile();
-  const sender = {
-    uid,
-    name: myProfile?.fn || "User",
-    photo: myProfile?.tn,
-  };
   const flatListRef = useRef<FlatList>(null);
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
@@ -62,6 +55,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     hasMore,
     isLive,
     hasNewAtBottom,
+    canSend,
     loadEarlier,
     setMyTyping,
     sendMessage,
@@ -122,7 +116,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "padding"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 90}
       style={styles.container}
     >
       <View style={styles.inner}>
@@ -200,6 +194,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
             });
           }}
           onType={(isTyping) => setMyTyping(isTyping)}
+          canSend={canSend}
         />
       </View>
     </KeyboardAvoidingView>

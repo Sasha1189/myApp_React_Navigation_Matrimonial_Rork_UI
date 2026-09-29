@@ -1,4 +1,4 @@
-import { api } from "../../../services/api"; // Adjust import path to your api file
+import { api } from "@/services/api";
 
 export interface PresignedUrlResponse {
   uploadUrl: string;

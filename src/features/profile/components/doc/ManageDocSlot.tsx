@@ -6,7 +6,7 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { Plus, X, FileText } from "lucide-react-native";
+import { Plus, X, FileCheck } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
@@ -47,7 +47,7 @@ export default function ManageDocSlot({
     return (
       <View style={styles.docContainer}>
         <View style={styles.docInfo}>
-          <FileText size={48} color={theme.colors.primary} />
+          <FileCheck size={48} color={theme.colors.primary} />
           <Text style={styles.docName} numberOfLines={1} ellipsizeMode="middle">
             {doc ? doc.name : "Uploaded Document"}
           </Text>
@@ -69,7 +69,7 @@ export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     emptySlot: {
       width: width - theme.spacing.lg * 2,
-      height: width,
+      height: width * 1.2,
       borderRadius: theme.borderRadius.lg,
       borderWidth: 2,
       borderColor: theme.colors.border,
@@ -87,7 +87,7 @@ export const createStyles = (theme: AppTheme) =>
     },
     docContainer: {
       width: width - theme.spacing.lg * 2,
-      height: width,
+      height: width * 1.2,
       borderRadius: theme.borderRadius.lg,
       backgroundColor: theme.colors.card,
       borderWidth: 1,
