@@ -1,0 +1,46 @@
+name: Test Node 24 Migration & EAS Build
+
+on:
+  push:
+    branches:
+      - feature/node24-eas-migration
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS Profile (preview = APK | production = AAB)'
+        required: true
+        default: 'preview'
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node 24 Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Setup Expo & EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Test Dependency Resolution under Node 24
+        run: npm ci
+
+      - name: Run Expo Doctor (Check Breaking Packages)
+        run: npx expo-doctor
+
+      - name: Trigger EAS Build (Node 24 Remote Worker)
+        if: github.event_name == 'push'
+        run: eas build --platform android --profile preview --non-interactive
+
+      - name: Trigger Manual EAS Build
+        if: github.event_name == 'workflow_dispatch'
+        run: eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive
