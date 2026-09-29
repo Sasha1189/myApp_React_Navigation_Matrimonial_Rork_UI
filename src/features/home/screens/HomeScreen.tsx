@@ -17,8 +17,6 @@ export default function HomeScreen() {
 
   const isFeedReady = isDbReady && !migrationError;
 
-  console.log("[Homescreen]- uid - isFeedReady:", uid, isFeedReady);
-
   const feed = useActiveFeed(isFeedReady ? uid : "");
 
   const { feedKey } = feed;
