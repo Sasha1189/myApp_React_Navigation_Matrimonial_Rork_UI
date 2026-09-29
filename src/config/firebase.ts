@@ -27,8 +27,8 @@ export const firestore = getFirestore(app);
 export const storage = getStorage(app);
 
 // 2. Realtime Database Setup
-const DB_URL =
-  "https://smooth-pivot-453409-f7-default-rtdb.asia-southeast1.firebasedatabase.app/";
+const DB_URL = process.env.EXPO_PUBLIC_FIREBASE_RTDB_URL;
+
 export const rtdb = getDatabase(app, DB_URL);
 
 // Apply persistence settings to the rtdb instance

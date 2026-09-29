@@ -1,17 +1,28 @@
 {
+  "cli": {
+    "version": ">= 12.0.0"
+  },
   "build": {
-    "production": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "node": "24.21.0"
+    },
+    "preview": {
+      "distribution": "internal",
+      "node": "24.21.0",
       "android": {
-        "buildType": "apk",
+        "buildType": "apk"
+      },
+      "channel": "production-apk1"
+    },
+    "production": {
+      "node": "24.21.0",
+      "android": {
+        "buildType": "app-bundle",
         "autoIncrement": true
       },
-      "channel": "production-apk1",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://lonari-firebase-v2-295491417988.asia-south1.run.app"
-      }
+      "channel": "production-aab1"
     }
-  },
-  "cli": {
-    "appVersionSource": "local"
   }
 }
