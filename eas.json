@@ -14,10 +14,7 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "production-apk1",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://lonari-firebase-v2-295491417988.asia-south1.run.app"
-      }
+      "channel": "production-apk1"
     },
     "production": {
       "node": "24.21.0",
@@ -25,10 +22,7 @@
         "buildType": "app-bundle",
         "autoIncrement": true
       },
-      "channel": "production-aab1",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://lonari-firebase-v2-295491417988.asia-south1.run.app"
-      }
+      "channel": "production-aab1"
     }
   }
 }
