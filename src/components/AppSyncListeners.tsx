@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "@/context";
 import { usePresence } from "@/features/sync/hooks/usePresence";
 import { useDeviceBinding } from "@/features/sync/hooks/useDeviceBinding";
-import { useFeedDBSync } from "@/features/sync/hooks/useFeedDBS";
+import { useFeedDBSync } from "@/features/sync/hooks/useFeedDBSync";
 import { useLikesSync } from "@/features/sync/hooks/useLikesSync";
 import { useBlocksSync } from "@/features/sync/hooks/useBlocksSync";
 
