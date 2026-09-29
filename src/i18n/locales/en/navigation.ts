@@ -6,6 +6,7 @@ export default {
   details: "PROFILE DETAILS",
   editProfile: "EDIT PROFILE",
   managePhotos: "ADD PHOTOS",
+  manageverdoc: "VERIFICATION",
   settings: "SETTINGS",
   editAbout: "Edit About Me",
   editPersonal: "Personal Information",

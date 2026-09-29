@@ -14,9 +14,8 @@ import {
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { useAuth } from "src/context/AuthContext";
 import { useChatSession } from "../hooks/useChatSession";
-import { MessageBubble } from "../components/MessageBubble";
+import { ChatBubble } from "../components/ChatBubble";
 import { ChatInput } from "../components/ChatInput";
 import { useAppNavigation } from "src/navigation/hooks";
 import { ChatListHelper } from "../components/ChatListHelper";
@@ -28,13 +27,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
-  const { roomId, otherUser, uid } = route.params;
-  const { myProfile } = useAuth();
-  const sender = {
-    uid,
-    name: myProfile?.fullName || "User",
-    photo: myProfile?.thumbnail,
-  };
+  const { rId, uid, ou } = route.params;
   const flatListRef = useRef<FlatList>(null);
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
@@ -62,13 +55,14 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     hasMore,
     isLive,
     hasNewAtBottom,
+    canSend,
     loadEarlier,
     setMyTyping,
     sendMessage,
     deleteMessage,
-    getStatusLabel,
+    statusLabel,
     resetToLive,
-  } = useChatSession(roomId, uid, sender, otherUser);
+  } = useChatSession(rId, uid, ou);
 
   const helper = ChatListHelper({
     isLive,
@@ -77,35 +71,22 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
     isLoadingMore: isLoadingEarlier,
     hasNewContent: hasNewAtBottom,
     onLoadMore: loadEarlier,
+    mode: "chat",
+    styles,
     onReset: () => {
       resetToLive();
       flatListRef.current?.scrollToOffset({ offset: 0 });
     },
-    mode: "chat",
-    styles,
   });
 
   useLayoutEffect(() => {
-    if (!otherUser?.uid) return;
+    if (!ou?.uid) return;
     navigation.setOptions({
       headerTitle: () => (
-        <ChatHeader
-          name={otherUser.name}
-          photo={otherUser.photo}
-          statusLabel={getStatusLabel()}
-          isTyping={isOtherTyping}
-          isOnline={otherStatus?.state === "online"}
-        />
+        <ChatHeader name={ou.name} photo={ou.photo} statusLabel={statusLabel} />
       ),
     });
-  }, [
-    navigation,
-    otherUser,
-    isOtherTyping,
-    otherStatus,
-    getStatusLabel,
-    theme,
-  ]);
+  }, [navigation, ou, isOtherTyping, otherStatus, statusLabel]);
 
   // 2. Define the pop-up menu trigger function:
   const handleMessageLongPress = (messageItem: IMessage) => {
@@ -135,7 +116,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "padding"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 20}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 90}
       style={styles.container}
     >
       <View style={styles.inner}>
@@ -180,7 +161,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
                 );
               }
               return (
-                <MessageBubble
+                <ChatBubble
                   message={item}
                   isMe={item.s === uid}
                   onLongPress={handleMessageLongPress}
@@ -213,6 +194,7 @@ export default function ChatScreen({ route }: AppStackScreenProps<"Chat">) {
             });
           }}
           onType={(isTyping) => setMyTyping(isTyping)}
+          canSend={canSend}
         />
       </View>
     </KeyboardAvoidingView>

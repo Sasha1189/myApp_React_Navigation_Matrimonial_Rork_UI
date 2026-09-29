@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 
 import type {
@@ -13,7 +13,7 @@ import type {
 // 🔹 Root stack
 //
 export function useRootNavigation() {
-  return useNavigation<StackNavigationProp<RootStackParamList>>();
+  return useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 }
 export function useRootRoute<T extends keyof RootStackParamList>() {
   return useRoute<{ key: string; name: T; params: RootStackParamList[T] }>();
@@ -23,7 +23,7 @@ export function useRootRoute<T extends keyof RootStackParamList>() {
 // 🔹 Auth stack
 //
 export function useAuthNavigation() {
-  return useNavigation<StackNavigationProp<AuthStackParamList>>();
+  return useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 }
 export function useAuthRoute<T extends keyof AuthStackParamList>() {
   return useRoute<{ key: string; name: T; params: AuthStackParamList[T] }>();
@@ -33,7 +33,7 @@ export function useAuthRoute<T extends keyof AuthStackParamList>() {
 // 🔹 App stack
 //
 export function useAppNavigation() {
-  return useNavigation<StackNavigationProp<AppStackParamList>>();
+  return useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 }
 export function useAppRoute<T extends keyof AppStackParamList>() {
   return useRoute<{ key: string; name: T; params: AppStackParamList[T] }>();

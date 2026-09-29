@@ -1,0 +1,111 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { Image } from "expo-image";
+import Svg, { Circle } from "react-native-svg";
+import { RefreshCw } from "lucide-react-native";
+import { formatDOB } from "@/utils/dateUtils";
+import { useTranslation } from "react-i18next";
+import { resolveThumbUri } from "@/utils/photoUtils";
+import { Profile } from "@/features/profile/types/profile";
+
+interface SlimHeaderProps {
+  profile: Profile;
+  completionPercent: number;
+  onRefresh: () => Promise<void>;
+  theme: any;
+  styles: any;
+}
+
+export const SlimHeader: React.FC<SlimHeaderProps> = ({
+  profile,
+  completionPercent,
+  onRefresh,
+  theme,
+  styles,
+}) => {
+  const { t } = useTranslation();
+  const size = 85;
+  const strokeWidth = 3;
+  const center = size / 2;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (circumference * completionPercent) / 100;
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const age = profile?.db ? formatDOB(profile.db, "age") : "18";
+
+  const imageUri = resolveThumbUri(profile?.tn, profile?.uid) || "";
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } catch (e) {
+      console.error("❌ [SLIM_HEADER_REFRESH_ERROR]:", e);
+      Alert.alert("Error", "Could not refresh profile");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  return (
+    <View style={styles.headerCard}>
+      <View style={styles.imageContainer}>
+        <Svg width={size} height={size} style={styles.progressSvg}>
+          <Circle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke={theme.colors.border}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+          <Circle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke={theme.colors.primary}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            fill="transparent"
+            transform={`rotate(-90 ${center} ${center})`}
+          />
+        </Svg>
+        <Image
+          source={{ uri: imageUri }}
+          placeholder={require("../../../../../assets/images/profile.webp")}
+          placeholderContentFit="cover"
+          style={styles.profileImage}
+          contentFit="cover"
+          cachePolicy="disk"
+        />
+        <TouchableOpacity
+          style={styles.refreshBtn}
+          onPress={handleRefresh}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <RefreshCw size={16} color="white" />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.nameText}>
+        {profile?.fn || "My Name"}, {age}
+      </Text>
+      <Text style={styles.completionText}>
+        {t("profile.completion", { percent: completionPercent })}
+      </Text>
+    </View>
+  );
+};

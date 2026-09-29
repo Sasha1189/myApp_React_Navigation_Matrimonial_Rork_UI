@@ -1,11 +1,7 @@
 import { getAuth, getIdToken } from "@react-native-firebase/auth";
 
-// const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-// const API_URL = "https://homopolar-chantell-unscoring.ngrok-free.dev/api/v1";
-
-const API_URL =
-  "https://lonari-firebase-v2-295491417988.asia-south1.run.app/api/v1";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "";
+const API_URL = `${BASE_URL}/api/v1`;
 
 class ApiError extends Error {
   constructor(
@@ -28,7 +24,6 @@ async function getAuthToken(): Promise<string | null> {
   try {
     return await getIdToken(user, false);
   } catch (error) {
-    console.error("Failed to get ID token:", error);
     return null;
   }
 }

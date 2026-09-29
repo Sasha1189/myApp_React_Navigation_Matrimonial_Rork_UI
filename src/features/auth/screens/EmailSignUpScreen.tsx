@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -10,17 +10,22 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
+import { useForm } from "react-hook-form";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { GoogleSigninButton } from "@react-native-google-signin/google-signin";
 
-// Import your subcomponents
 import { useSignUpFlow } from "../hooks/useSignUpFlow";
 import { useAuthNavigation } from "../../../navigation/hooks";
 import { AuthHeaderBanner } from "../components/AuthHeaderBanner";
 import { AuthFooterActions } from "../components/AuthFooterActions";
-import { PhoneInputStep } from "../components/PhoneInputStep";
+import {
+  EmailInputField,
+  PasswordInputField,
+} from "../components/AuthInputFields";
+import { AuthTermsDisclaimer } from "../components/AuthTermsDisclaimer";
 
 export default function EmailSignUpScreen() {
   const styles = useStyles(createStyles);
@@ -28,50 +33,44 @@ export default function EmailSignUpScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useAuthNavigation();
 
-  const [agreeTerms, setAgreeTerms] = useState(false);
-
-  // 👑 UPDATE 1: Destructured the streamlined single-step signature hooks parameters cleanly
   const {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
     isLoading,
-    handleSignUpSubmit,
+    executeRegistration,
+    executeGoogleSignUp,
     handleBackPress,
-    isButtonDisabled,
   } = useSignUpFlow();
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const passwordValue = watch("password");
 
   const openLink = (url: string, title: string) => {
     navigation.navigate("WebView", { url, title });
   };
 
-  // 👑 UPDATE 2: Submission button state triggers your direct registration thread execution loop
-  const handleAuthSubmit = () => {
-    handleSignUpSubmit();
-  };
+  const handleAuthSubmit = handleSubmit((data) => {
+    executeRegistration(data);
+  });
 
-  const finalButtonDisabled = isButtonDisabled || !agreeTerms || isLoading;
-
-  // Unified prop payload payload mapping cleanly down to your input layouts component
-  const phoneProps = {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
-  };
+  const finalButtonDisabled = !isValid || isLoading;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        {/* ================= SECTION 1: TOP IMAGE BANNER ================= */}
         <AuthHeaderBanner />
 
-        {/* ================= SECTION 2: WHITE SHEET BLOCK ================= */}
         <KeyboardAvoidingView
           style={styles.sheetContainer}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -90,26 +89,69 @@ export default function EmailSignUpScreen() {
                     style={styles.backTouchArea}
                   >
                     <Text style={styles.formHeadline}>
-                      {t("auth.signUpTitlePhone")}
+                      {t("auth.signUpTitleEmail")}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* 👑 UPDATE 3: Displays input wrappers directly as a cohesive single screen step */}
-                <PhoneInputStep {...phoneProps} />
+                {/* 1. Standard Email field */}
+                <EmailInputField control={control} errors={errors} />
+                {/* 2. Standard Password field */}
+                <PasswordInputField
+                  control={control}
+                  errors={errors}
+                  name="password"
+                  labelKey="auth.fieldLabelPassword"
+                  placeholderKey="auth.placeholderPassword"
+                />
+                {/* 3. Reused Confirm Password field with dynamic mismatch rule validation */}
+                <PasswordInputField
+                  control={control}
+                  errors={errors}
+                  name="confirmPassword"
+                  labelKey="auth.fieldLabelConfirmPassword"
+                  placeholderKey="auth.placeholderConfirmPassword"
+                  validateRule={(val) =>
+                    val === passwordValue ||
+                    t("auth.passwordMismatch", "Passwords do not match")
+                  }
+                />
+                {/* 3. "OR" Divider */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t("auth.or", "OR")}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* 2. Google Sign-In Button (ACTIVE IMMEDIATELY) */}
+                <TouchableOpacity
+                  onPress={() => {
+                    executeGoogleSignUp();
+                  }}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  <View pointerEvents="none">
+                    <GoogleSigninButton
+                      size={GoogleSigninButton.Size.Wide}
+                      color={GoogleSigninButton.Color.Light}
+                      onPress={executeGoogleSignUp}
+                      disabled={isLoading}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
 
-              {/* 🔹 Form Absolute Footer Control Area */}
               <AuthFooterActions
-                step="PHONE_INPUT" // Static identifier fallback mapping for structural compatibility
                 isLoading={isLoading}
                 finalButtonDisabled={finalButtonDisabled}
                 handleAuthSubmit={handleAuthSubmit}
-                openLink={openLink}
                 insets={insets}
-                agreeTerms={agreeTerms}
-                setAgreeTerms={setAgreeTerms}
-              />
+              >
+                <View style={{ marginTop: 12 }}>
+                  <AuthTermsDisclaimer openLink={openLink} />
+                </View>
+              </AuthFooterActions>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -122,24 +164,25 @@ export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#F2F4F7",
+      backgroundColor: theme.colors.background, // Adaptive brand background token
     },
     sheetContainer: {
       flex: 1,
-      backgroundColor: "white",
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      backgroundColor: theme.colors.card, // Adaptive dark/light card background
+      borderTopLeftRadius: theme.borderRadius.lg, // 16px standard token
+      borderTopRightRadius: theme.borderRadius.lg,
       marginTop: -20,
       overflow: "hidden",
     },
     scrollContainer: {
-      flexGrow: 1,
+      flex: 1,
     },
     sheetInnerContent: {
-      flexGrow: 1,
-      paddingHorizontal: 24,
-      paddingTop: 16,
-      justifyContent: "space-between",
+      flex: 1,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.lg,
+      paddingBottom: theme.spacing.sm,
+      // justifyContent: "space-between",
     },
     bodySection: {
       width: "100%",
@@ -148,8 +191,34 @@ export const createStyles = (theme: AppTheme) =>
     formHeaderRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: theme.spacing.md, // 16px row space
     },
-    backTouchArea: { flexDirection: "row", alignItems: "center", gap: 12 },
-    formHeadline: { fontSize: 18, fontWeight: "700", color: "#111" },
+    backTouchArea: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: theme.spacing.sm, // 8px horizontal layout spacing
+    },
+    formHeadline: {
+      fontSize: theme.fontSize.lg, // 18px text standard
+      fontWeight: "700",
+      color: theme.colors.text, // Adaptive high-contrast brand text
+      letterSpacing: 0.5,
+    },
+    // 🟢 Updated Divider and Google Button Styles
+    dividerContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginVertical: theme.spacing.md,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
+    dividerText: {
+      marginHorizontal: theme.spacing.sm,
+      color: theme.colors.textLight || theme.colors.text,
+      fontSize: theme.fontSize.sm,
+      fontWeight: "500",
+    },
   });

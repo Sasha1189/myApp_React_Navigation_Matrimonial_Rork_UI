@@ -1,16 +1,19 @@
 export default {
-  editProfile: "CREATE PROFILE",
-  viewPreview: "PREVIEW PROFILE",
-  managePhotos: "ADD PHOTOS",
+  editProfile: "Create Profile",
+  editAbout: "Edit",
+  viewPreview: "Preview Profile",
+  managePhotos: "Add Photos",
+  addVerDoc: "Add Verification Document",
   completion: "{{percent}}% Profile Completed",
   stats: {
-    matches: "Matches",
+    matches: "Like Matches",
     sent: "Like Sent",
     received: "Like Recv",
+    upgrade: "Support to see",
   },
   premium: {
-    upgrade: "Upgrade to Premium",
-    benefits: "See who likes you & Unlimited Swipes",
+    upgrade: "Upgrade to Support Us!",
+    benefits: "See who likes you & Unlimited profile views..",
   },
-  defaultName: "My Name",
+  defaultName: "Name",
 };

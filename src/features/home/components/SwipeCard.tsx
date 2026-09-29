@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Image } from "expo-image";
 import {
   FlatList,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Platform,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from "react-native";
@@ -20,15 +21,19 @@ import {
   GraduationCap,
   Sparkles,
   MapPin,
+  IdCard,
 } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { Profile } from "../../../types/profile";
+import { Profile } from "../../profile/types/profile";
 import { formatDOB } from "../../../utils/dateUtils";
 import { ActionButtons } from "../components/ActionButtons";
 import { useButtonActions } from "../hooks/useButtonActions";
 import { useTranslation } from "react-i18next";
+import { getDisplayValue } from "@/features/utils/profileLookups";
+import { resolvePhotoUri } from "@/utils/photoUtils";
+import { useIsProfileLiked } from "@/features/likes/hook/useIsProfileLiked";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -39,9 +44,223 @@ interface SwipeCardProps {
   itemFullSize: number;
   itemSize: number;
   spacing: number;
+  isLiked?: boolean;
 }
 
-export const SwipeCard: React.FC<SwipeCardProps> = ({
+// -----------------------------------------------------------------------------
+// 1. ISOLATED PHOTO GALLERY (Contains photo activeIndex state to avoid card re-renders)
+// -----------------------------------------------------------------------------
+interface PhotoGalleryProps {
+  photos?: any[];
+  profileUid: string;
+  cardWidth: number;
+  styles: ReturnType<typeof createStyles>;
+}
+
+const CardPhotoGalleryComponent: React.FC<PhotoGalleryProps> = ({
+  photos,
+  profileUid,
+  cardWidth,
+  styles,
+}) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const onScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const photoIndex = Math.round(
+        event.nativeEvent.contentOffset.x / cardWidth,
+      );
+      if (photoIndex !== activeIndex) {
+        setActiveIndex(photoIndex);
+      }
+    },
+    [cardWidth, activeIndex],
+  );
+
+  const getItemLayout = useCallback(
+    (_: any, idx: number) => ({
+      length: cardWidth,
+      offset: cardWidth * idx,
+      index: idx,
+    }),
+    [cardWidth],
+  );
+
+  const keyExtractor = useCallback(
+    (item: any, idx: number) =>
+      item?.downloadURL || `${profileUid}-photo-${idx}`,
+    [profileUid],
+  );
+
+  const renderPhotoItem = useCallback(
+    ({ item }: { item: any }) => {
+      const imageUri = resolvePhotoUri(item?.downloadURL, profileUid) || "";
+      return (
+        <View style={[styles.slideFrame, { width: cardWidth }]}>
+          <Image
+            source={{ uri: imageUri }}
+            placeholder={require("../../../../assets/images/profile.webp")}
+            placeholderContentFit="cover"
+            style={styles.image}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={150}
+            recyclingKey={imageUri}
+          />
+        </View>
+      );
+    },
+    [cardWidth, profileUid, styles],
+  );
+
+  const photoList = photos && photos.length > 0 ? photos : [null];
+
+  return (
+    <>
+      <View style={styles.imageContainer}>
+        <FlatList
+          data={photoList}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={keyExtractor}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          renderItem={renderPhotoItem}
+          getItemLayout={getItemLayout}
+          initialNumToRender={1}
+          maxToRenderPerBatch={1}
+          windowSize={2}
+          removeClippedSubviews={Platform.OS === "android"}
+          decelerationRate="fast"
+          snapToInterval={cardWidth}
+          snapToAlignment="center"
+        />
+      </View>
+
+      <View style={styles.imageIndicators}>
+        {photoList.map((_, idx) => (
+          <View
+            key={idx}
+            style={[
+              styles.indicator,
+              idx === activeIndex && styles.activeIndicator,
+            ]}
+          />
+        ))}
+      </View>
+    </>
+  );
+};
+
+const CardPhotoGallery = React.memo(
+  CardPhotoGalleryComponent,
+  (prev, next) =>
+    prev.photos === next.photos &&
+    prev.profileUid === next.profileUid &&
+    prev.cardWidth === next.cardWidth,
+);
+
+// -----------------------------------------------------------------------------
+// 2. ISOLATED CARD DETAILS (Memoized static content & badges)
+// -----------------------------------------------------------------------------
+interface CardDetailsProps {
+  profile: Profile;
+  styles: ReturnType<typeof createStyles>;
+  theme: AppTheme;
+}
+
+const CardDetailsComponent: React.FC<CardDetailsProps> = ({
+  profile,
+  styles,
+  theme,
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.cardContent} pointerEvents="box-none">
+      <View style={styles.nameAgeRow}>
+        <View style={styles.nameWrapper}>
+          <Text style={styles.name} numberOfLines={1}>
+            {`${profile?.fn || ""} ${profile?.ln || ""}`.trim() || "User Name"}
+          </Text>
+        </View>
+
+        <Text style={styles.age}>{formatDOB(profile?.db, "age")}</Text>
+
+        <View
+          style={[
+            styles.readyPill,
+            { backgroundColor: `${theme.colors.primary}12` },
+          ]}
+        >
+          <Sparkles size={10} color="white" />
+          <Text style={styles.readyPillText}>
+            {getDisplayValue("ir", profile.ir)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.badgeRow}>
+        {typeof profile?.oc === "number" && profile.oc > 0 && (
+          <View style={styles.glassBadge}>
+            <Briefcase size={12} color="rgba(255,255,255,0.9)" />
+            <Text style={styles.badgeText}>
+              {getDisplayValue("oc", profile.oc)}
+            </Text>
+          </View>
+        )}
+        {typeof profile?.fs === "number" && profile.fs > 0 && (
+          <View style={styles.glassBadge}>
+            <GraduationCap size={12} color="rgba(255,255,255,0.9)" />
+            <Text style={styles.badgeText}>
+              {getDisplayValue("fs", profile.fs)}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.badgeRow}>
+        {!!profile?.cc && (
+          <View style={styles.glassBadge}>
+            <MapPin size={12} color="white" />
+            <Text style={styles.badgeText}>
+              {getDisplayValue("ct" as any, profile.cc)}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.badgeRow}>
+        {!!profile?.pid && (
+          <View style={styles.glassBadge}>
+            <IdCard size={12} color="white" />
+            <Text style={styles.badgeText}>{profile.pid}</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+};
+
+const CardDetails = React.memo(
+  CardDetailsComponent,
+  (prev, next) =>
+    prev.profile.uid === next.profile.uid &&
+    prev.profile.fn === next.profile.fn &&
+    prev.profile.ln === next.profile.ln &&
+    prev.profile.db === next.profile.db &&
+    prev.profile.ir === next.profile.ir &&
+    prev.profile.oc === next.profile.oc &&
+    prev.profile.fs === next.profile.fs &&
+    prev.profile.cc === next.profile.cc &&
+    prev.profile.pid === next.profile.pid,
+);
+
+// -----------------------------------------------------------------------------
+// 3. MAIN SWIPE CARD COMPONENT
+// -----------------------------------------------------------------------------
+const SwipeCardComponent: React.FC<SwipeCardProps> = ({
   profile,
   index,
   scrollY,
@@ -50,25 +269,16 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 }) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const { t } = useTranslation();
+  const isLiked = useIsProfileLiked(profile.uid);
+  const { handleActionBtnTap } = useButtonActions(profile);
+
+  const cardWidth = useMemo(() => screenWidth - spacing * 2, [spacing]);
 
   const cardAnimatedStyle = useAnimatedStyle(() => {
     const inputRange = [index - 1, index, index + 1];
 
-    const opacity = interpolate(
-      scrollY.value,
-      inputRange,
-      [0.5, 1, 0.5],
-      //   Extrapolation.CLAMP,
-    );
-
-    const scale = interpolate(
-      scrollY.value,
-      inputRange,
-      [0.92, 1, 0.92],
-      //   Extrapolation.CLAMP,
-    );
+    const opacity = interpolate(scrollY.value, inputRange, [0.5, 1, 0.5]);
+    const scale = interpolate(scrollY.value, inputRange, [0.92, 1, 0.92]);
 
     return {
       transform: [{ scale }],
@@ -76,17 +286,21 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     };
   });
 
-  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const cardWidth = screenWidth - spacing * 2; // Dynamically accounts for outer vertical list boundaries
-    const photoIndex = Math.round(
-      event.nativeEvent.contentOffset.x / cardWidth,
-    );
-    setActiveIndex(photoIndex);
-  };
-
-  const { handleActionBtnTap } = useButtonActions(profile);
+  const handleLike = useCallback(
+    () => handleActionBtnTap("like"),
+    [handleActionBtnTap],
+  );
+  const handleMessage = useCallback(
+    () => handleActionBtnTap("message"),
+    [handleActionBtnTap],
+  );
+  const handleProfileDetails = useCallback(
+    () => handleActionBtnTap("profileDetails"),
+    [handleActionBtnTap],
+  );
 
   if (!theme) return null;
+
   return (
     <Animated.View
       style={[
@@ -95,118 +309,30 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         { height: itemSize, marginTop: index === 0 ? spacing : 0 },
       ]}
     >
-      <View style={styles.imageContainer}>
-        <FlatList
-          data={profile?.photos || [null]}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(_, index) => index.toString()}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          renderItem={({ item }) => (
-            <View style={styles.slideFrame}>
-              <Image
-                source={
-                  item?.downloadURL
-                    ? { uri: item.downloadURL }
-                    : require("../../../../assets/images/profile.webp")
-                }
-                placeholder={require("../../../../assets/images/profile.webp")}
-                placeholderContentFit="cover"
-                style={styles.image}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={200}
-              />
-            </View>
-          )}
-        />
-      </View>
+      <CardPhotoGallery
+        photos={profile?.photos}
+        profileUid={profile.uid}
+        cardWidth={cardWidth}
+        styles={styles}
+      />
 
-      {/* 2. SMOOTH GRADIENT OVERLAY */}
       <LinearGradient
         colors={["transparent", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.9)"]}
         style={styles.gradient}
         pointerEvents="none"
       />
 
-      {/* CLEAN INDICATORS AT BOTTOM */}
-      <View style={styles.imageIndicators}>
-        {profile?.photos?.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.indicator,
-              index === activeIndex && styles.activeIndicator,
-            ]}
-          />
-        ))}
-      </View>
+      <CardDetails profile={profile} styles={styles} theme={theme} />
 
-      {/* 3. PREMIUM CONTENT LAYOUT */}
-      <View style={styles.cardContent}>
-        <View style={styles.nameAgeRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {profile?.fullName}
-          </Text>
-          <Text style={styles.age}>
-            {formatDOB(profile.dateOfBirth, "age")}
-          </Text>
-          {/* NEW: READY PILL POSITIONED NEXT TO AGE */}
-          <View
-            style={[
-              styles.readyPill,
-              {
-                backgroundColor: `${theme.colors.primary}12`,
-              },
-            ]}
-          >
-            <Sparkles size={10} color="white" />
-            <Text style={styles.readyPillText}>
-              {profile?.isReady === "Ready"
-                ? t("card.ready")
-                : t("card.studying")}
-            </Text>
-          </View>
-        </View>
-
-        {/* GLASSMORPHISM BADGES */}
-        <View style={styles.badgeRow}>
-          {profile?.occupation && (
-            <View style={styles.glassBadge}>
-              <Briefcase size={12} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.badgeText}>{profile.occupation}</Text>
-            </View>
-          )}
-          {profile?.fieldOfStudy && (
-            <View style={styles.glassBadge}>
-              <GraduationCap size={12} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.badgeText}>{profile.fieldOfStudy}</Text>
-            </View>
-          )}
-        </View>
-        {/* PARALLEL GLASS BADGES (CITY & STUDY) */}
-        <View style={styles.badgeRow}>
-          {profile?.currentCity && (
-            <View style={styles.glassBadge}>
-              <MapPin size={12} color="white" />
-              <Text style={styles.badgeText}>{profile.currentCity}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* 4. FLOATING ACTION BUTTONS */}
       <View style={styles.floatingActions}>
         <ActionButtons
-          onLike={() => handleActionBtnTap("like")}
-          onMessage={() => handleActionBtnTap("message")}
-          onProfileDetails={() => handleActionBtnTap("profileDetails")}
-          liked={profile?.liked}
+          liked={isLiked}
+          onLike={handleLike}
+          onMessage={handleMessage}
+          onProfileDetails={handleProfileDetails}
         />
       </View>
-      {/* PREMIUM/BASIC BANNER */}
+
       {(profile?.tier === "basic" || profile?.tier === "premium") && (
         <View
           style={[
@@ -215,7 +341,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
               backgroundColor:
                 profile?.tier === "premium"
                   ? theme.colors.primary
-                  : theme.colors.textLight, // Semi-transparent for basic users
+                  : theme.colors.textLight,
             },
           ]}
         >
@@ -227,6 +353,22 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     </Animated.View>
   );
 };
+
+export const SwipeCard = React.memo(
+  SwipeCardComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.profile.uid === nextProps.profile.uid &&
+      prevProps.profile.liked === nextProps.profile.liked &&
+      prevProps.profile.tier === nextProps.profile.tier &&
+      prevProps.profile.photos === nextProps.profile.photos &&
+      prevProps.index === nextProps.index &&
+      prevProps.itemSize === nextProps.itemSize &&
+      prevProps.spacing === nextProps.spacing &&
+      prevProps.scrollY === nextProps.scrollY
+    );
+  },
+);
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
@@ -246,12 +388,11 @@ export const createStyles = (theme: AppTheme) =>
     slideFrame: { width: screenWidth - 12 * 2, height: "100%" },
     image: { width: "100%", height: "100%" },
 
-    // INDICATORS AT TOP
     imageIndicators: {
       position: "absolute",
       bottom: 12,
       left: 20,
-      right: 20, // Leave room for actions
+      right: 20,
       flexDirection: "row",
       gap: 4,
     },
@@ -268,25 +409,16 @@ export const createStyles = (theme: AppTheme) =>
       bottom: 0,
       left: 0,
       right: 0,
-      height: "60%", // Taller gradient for better text legibility
+      height: "60%",
     },
 
     cardContent: {
       position: "absolute",
-      bottom: 10,
+      bottom: 0,
       left: 0,
       right: 60,
       padding: 20,
     },
-
-    // GLASSMORPHISM BADGES
-    bio: {
-      color: "rgba(255,255,255,0.8)",
-      fontSize: 14,
-      lineHeight: 20,
-      letterSpacing: 0.3,
-    },
-
     floatingActions: {
       position: "absolute",
       right: 12,
@@ -296,20 +428,23 @@ export const createStyles = (theme: AppTheme) =>
     },
     nameAgeRow: {
       flexDirection: "row",
-      alignItems: "center", // Perfectly centers the Pill with the Text
+      alignItems: "baseline",
       marginBottom: 10,
-      flexWrap: "wrap", // Prevents overflow if name is long
+      gap: 6,
+    },
+    nameWrapper: {
+      maxWidth: "55%",
     },
     name: {
-      fontSize: 22,
+      fontSize: theme.fontSize.lg,
       fontWeight: "800",
       color: "white",
       letterSpacing: 0.5,
     },
     age: {
-      fontSize: 20,
+      fontSize: theme.fontSize.xs,
+      fontWeight: "500",
       color: "rgba(255,255,255,0.9)",
-      marginHorizontal: 8,
     },
     readyPill: {
       flexDirection: "row",
@@ -317,11 +452,11 @@ export const createStyles = (theme: AppTheme) =>
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 6,
-      // No more far-right positioning
+      alignSelf: "center",
     },
     readyPillText: {
-      fontSize: 9,
-      fontWeight: "900",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "500",
       color: "white",
       marginLeft: 4,
       letterSpacing: 0.5,
@@ -335,16 +470,16 @@ export const createStyles = (theme: AppTheme) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "rgba(255,255,255,0.15)",
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: 5,
+      paddingVertical: 3,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.2)",
     },
     badgeText: {
       color: "white",
-      fontSize: 11,
-      fontWeight: "600",
+      fontSize: theme.fontSize.xs,
+      fontWeight: "400",
       marginLeft: 6,
     },
     premiumBanner: {

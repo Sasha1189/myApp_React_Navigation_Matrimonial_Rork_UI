@@ -1,15 +1,18 @@
 import { firestore, doc, setDoc, getDoc } from "../../../config/firebase";
-import { Profile } from "../../../types/profile";
+import { Profile } from "../types/profile";
+
+// Helper to sanitize and get collection name
+const getProfileCollection = (gender: string): string => {
+  return `${gender.toLowerCase().trim()}Profiles`;
+};
 
 export async function getProfile(
   uid: string,
   gender: string,
 ): Promise<Profile | undefined> {
-  if (!gender) return;
+  if (!uid || !gender || typeof gender !== "string") return undefined;
 
-  if (typeof gender !== "string") return;
-
-  const collectionName = `${gender.toLowerCase()}Profiles`;
+  const collectionName = getProfileCollection(gender);
   const docRef = doc(firestore, collectionName, uid);
 
   try {
@@ -20,28 +23,40 @@ export async function getProfile(
     return undefined;
   }
 }
-
+/**
+ * Updates or creates a user profile using pure Unix millisecond timestamps (`Date.now()`).
+ */
 export async function apiUpdateProfile(
   payload: Partial<Profile> & { uid: string; gender: string },
 ): Promise<Profile> {
   const { uid, gender, ...data } = payload;
 
-  const collectionName = `${gender.toLowerCase()}Profiles`;
+  if (!uid || !gender) {
+    throw new Error("Missing required uid or gender for profile update.");
+  }
 
+  const collectionName = getProfileCollection(gender);
   const docRef = doc(firestore, collectionName, uid);
+  const now = Date.now();
 
-  await setDoc(
-    docRef,
-    {
-      ...data,
-      uid,
-      gender,
-      updatedAt: new Date(),
-    },
-    { merge: true },
-  );
+  let createdAt = data.ca;
 
-  // Fetch the latest version back (from cache)
-  const snap = await getDoc(docRef);
-  return snap.data() as Profile;
+  if (!createdAt) {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      createdAt = (docSnap.data() as Profile).ca;
+    }
+  }
+
+  const updatedProfile: Profile = {
+    ...(data as Profile),
+    uid,
+    gender,
+    ca: createdAt || now,
+    ua: now,
+  };
+
+  await setDoc(docRef, updatedProfile, { merge: true });
+
+  return updatedProfile;
 }

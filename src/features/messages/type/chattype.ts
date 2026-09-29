@@ -1,10 +1,4 @@
-import { Profile } from "../../../types/profile";
-
-export interface ChatUser {
-  uid: string;
-  name: string;
-  photo: string;
-}
+import { Profile } from "../../profile/types/profile";
 
 export interface IMessage {
   id: string; // Message ID (RTDB Key)
@@ -12,22 +6,20 @@ export interface IMessage {
   t: string; // Text content
   ts: number; // Timestamp (milliseconds)
   r?: boolean; // Read status (RTDB 'r' field)
-  pending?: boolean; // Optimistic UI flag for pending messages
+  p?: boolean; // Optimistic UI flag for pending messages
+}
+
+export interface ChatUser {
+  uid: string;
+  name?: string; //used for inline push
+  photo?: string | null; // used for inline push
 }
 
 export interface IInboxItem {
-  roomId: string;
-  participants: string[];
-  lastMessage: string;
-  updatedAt: number;
-  otherUser: ChatUser;
-  u?: Boolean;
-}
-
-export interface UserBannerItem {
-  id: string; // roomId for chats, uid for likes
-  name: string;
-  photo?: string | null;
-  age?: string;
-  profile?: Profile;
+  rId: string; // Room ID (RTDB Key)
+  pt: string[]; // Array of participant UIDs
+  lm: string; // Last message text
+  ua: number; // Timestamp of the last message (milliseconds)
+  ou: ChatUser; // The other user participant in the chat (for one-on-one chats)
+  u?: Boolean; // Unread status (RTDB 'u' field)
 }

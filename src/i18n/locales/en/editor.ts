@@ -8,4 +8,6 @@ export default {
   discard: "Discard",
   saveError:
     "Could not save your profile. Please check your connection and try again.",
+  validationErrorMsg:
+    "Name, Date of birth and Marriage status are required fields.",
 };

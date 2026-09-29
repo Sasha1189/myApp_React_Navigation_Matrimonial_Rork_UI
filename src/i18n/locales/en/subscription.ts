@@ -6,8 +6,8 @@ export default {
   mostPopular: "Most Loved", // Warmer than "Popular"
   startTrial: "Experience Premium for ₹1",
   payGoogle: "Contribute & Join", // Less transactional
-  currentPlan: "Your Current Contribution",
-  free: "Guest",
+  currentPlan: "Active",
+  expired: "Expired",
   plans: {
     basic: {
       name: "Community Supporter", // Emotional label
@@ -48,8 +48,20 @@ export default {
     legacy: "Ensure this platform remains a gift for the next generation.",
     usp: "Message directly to find your soul partner, without any barriers.",
   },
-  activated: "Subscription activated successfully!",
+  activated:
+    "🎉 Your subscription is active 🎉.\n\n📸 Save Photos to the server again.",
   selectionRequired: "Selection Required",
   selectPlanMsg: "Please select a subscription plan to continue.",
   payError: "Could not process subscription. Please try again.",
+  processingPayment: "Processing Payment.. please wait...",
+
+  //...
+  choosePlan: "Choose a Plan",
+
+  onceYear: "yr",
+
+  loadingStore: "Fetching items from Play Store...",
+  loadFailed: "Unable to load pricing options",
+
+  verifyError: "Could not process subscription. Please try again.",
 };

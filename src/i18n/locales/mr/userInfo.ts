@@ -1,0 +1,20 @@
+export default {
+  screenTitle: "तुमची माहिती",
+  helperText: "तुमची प्रोफाइल सेट करण्यासाठी फक्त काही तपशील भरा.",
+  labelFullName: "पूर्ण नाव :",
+  placeholderFullName: "तुमचे पूर्ण नाव टाका",
+  labelMobile: "मोबाईल नंबर :",
+  placeholderMobile: "उदा. 9999888800",
+  labelGender: "मी :",
+  male: "पुरुष",
+  female: "स्त्री",
+  done: "यशस्वी",
+  successMsg: "प्रोफाइल माहिती यशस्वीरित्या जतन केली गेली आहे!",
+  updateError: "डेटाबेसमध्ये माहिती जतन करता आली नाही.",
+  errFullNameRequired: "पूर्ण नाव टाकणे आवश्यक आहे",
+  errMobileRequired: "मोबाईल नंबर टाकणे आवश्यक आहे",
+  errMobileInvalid: "कृपया वैध मोबाईल नंबर प्रविष्ट करा",
+  errGenderRequired: "स्त्री / पुरुष निवडणे बंधनकारक आहे",
+
+  submit: "अपडेट करा",
+};

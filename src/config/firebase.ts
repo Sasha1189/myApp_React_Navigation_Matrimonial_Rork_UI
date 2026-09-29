@@ -1,6 +1,9 @@
 import { getApp } from "@react-native-firebase/app";
 import { getAuth } from "@react-native-firebase/auth";
-import { getFirestore } from "@react-native-firebase/firestore";
+import {
+  getFirestore,
+  initializeFirestore,
+} from "@react-native-firebase/firestore";
 import { getStorage } from "@react-native-firebase/storage";
 import {
   getDatabase,
@@ -12,11 +15,14 @@ import {
 export const app = getApp();
 export const auth = getAuth(app);
 
+async function initializeFirebaseServices() {
+  await initializeFirestore(app, {
+    persistence: false, // disable offline persistence
+  });
+}
+initializeFirebaseServices();
+
 export const firestore = getFirestore(app);
-firestore.settings({
-  persistence: true,
-  cacheSizeBytes: 500 * 1024 * 1024,
-});
 
 export const storage = getStorage(app);
 
@@ -84,6 +90,13 @@ export {
   getFirestore,
   terminate,
   clearIndexedDbPersistence,
+  serverTimestamp as firestoreServerTimestamp,
+  Timestamp,
 } from "@react-native-firebase/firestore";
 
-export { getIdToken, updateProfile, reload } from "@react-native-firebase/auth";
+export {
+  getIdToken,
+  updateProfile,
+  reload,
+  signOut,
+} from "@react-native-firebase/auth";

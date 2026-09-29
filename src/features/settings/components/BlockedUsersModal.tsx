@@ -6,31 +6,32 @@ import {
   StyleSheet,
   Pressable,
   FlatList,
-  Image,
+  ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { X } from "lucide-react-native";
-import { BlockedUserMinimal } from "../../../types/profile";
 import { useTranslation } from "react-i18next";
+import { Profile } from "@/features/profile/types/profile";
+import { useAuth } from "@/context/AuthContext";
+import { useBlockedList } from "@/features/block/hook/useBlockedProfilesList";
+import { toggleBlock } from "@/features/block/services/blocksService";
+import { resolvePhotoUri } from "@/utils/photoUtils";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  users: BlockedUserMinimal[];
-  onUnblock: (user: BlockedUserMinimal) => void;
 }
 
-export default function BlockedUsersModal({
-  visible,
-  onClose,
-  users,
-  onUnblock,
-}: Props) {
+export default function BlockedUsersModal({ visible, onClose }: Props) {
+  const { user } = useAuth();
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   const { t } = useTranslation();
+
+  const { profiles, isLoading } = useBlockedList(user?.uid || "");
 
   const renderInitials = (name: string) => {
     const safeName = name || "";
@@ -40,36 +41,48 @@ export default function BlockedUsersModal({
     return (first + second).toUpperCase() || "Username";
   };
 
-  const Item = ({ item }: { item: BlockedUserMinimal }) => (
-    <View style={styles.row}>
-      <View style={styles.left}>
-        {item?.thumbnail ? (
-          <Image source={{ uri: item.thumbnail }} style={styles.avatarImg} />
-        ) : (
-          <View style={styles.avatarFallback}>
-            <Text style={styles.avatarFallbackText}>
-              {renderInitials(item?.fullName)}
+  const Item = ({ item }: { item: Profile }) => {
+    const Uid = item?.uid;
+    const photo = item?.tn;
+    const imageUri = resolvePhotoUri(photo ?? undefined, Uid) || "";
+    return (
+      <View style={styles.row}>
+        <View style={styles.left}>
+          {item?.tn ? (
+            <Image
+              source={{ uri: imageUri }}
+              placeholder={require("../../../../assets/images/profile.webp")}
+              style={styles.avatarImg}
+              contentFit="cover"
+              cachePolicy="disk"
+            />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarFallbackText}>
+                {renderInitials(item?.fn)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.meta}>
+            <Text style={styles.name} numberOfLines={1}>
+              {item?.fn}
             </Text>
           </View>
-        )}
-        <View style={styles.meta}>
-          <Text style={styles.name} numberOfLines={1}>
-            {item?.fullName}
-          </Text>
         </View>
-      </View>
 
-      <Pressable
-        onPress={() => onUnblock(item)}
-        style={({ pressed }) => [
-          styles.unblockBtn,
-          pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-        ]}
-      >
-        <Text style={styles.unblockText}>{t("settings.unblock")}</Text>
-      </Pressable>
-    </View>
-  );
+        <Pressable
+          onPress={() => toggleBlock(user?.uid!, item.uid)}
+          style={({ pressed }) => [
+            styles.unblockBtn,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+          ]}
+        >
+          <Text style={styles.unblockText}>{t("settings.unblock")}</Text>
+        </Pressable>
+      </View>
+    );
+  };
+
   if (!theme) return null;
   return (
     <Modal
@@ -95,14 +108,18 @@ export default function BlockedUsersModal({
           </View>
 
           {/* List */}
-          {users?.length === 0 ? (
+          {isLoading ? (
+            <View style={styles.center}>
+              <ActivityIndicator color={theme.colors.primary} size="small" />
+            </View>
+          ) : profiles?.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>{t("settings.noBlocked")}</Text>
               <Text style={styles.emptySub}>{t("settings.noBlockedSub")}</Text>
             </View>
           ) : (
             <FlatList
-              data={users}
+              data={profiles}
               keyExtractor={(u) => u.uid}
               renderItem={Item}
               ItemSeparatorComponent={() => <View style={styles.sep} />}
@@ -214,4 +231,9 @@ export const createStyles = (theme: AppTheme) =>
       marginBottom: 4,
     },
     emptySub: { color: theme.colors.textLight },
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
   });

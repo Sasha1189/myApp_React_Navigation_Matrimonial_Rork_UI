@@ -9,28 +9,16 @@ interface ChatHeaderProps {
   name: string;
   photo?: string;
   statusLabel: string;
-  isTyping: boolean;
-  isOnline: boolean;
 }
 
-export const ChatHeader = ({
-  name,
-  photo,
-  statusLabel,
-  isTyping,
-  isOnline,
-}: ChatHeaderProps) => {
+export const ChatHeader = ({ name, photo, statusLabel }: ChatHeaderProps) => {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
   if (!theme) return null;
   return (
     <TouchableOpacity style={styles.headerContainer} activeOpacity={0.7}>
       <Image
-        source={
-          photo
-            ? { uri: photo }
-            : require("../../../../assets/images/profile.webp")
-        }
+        source={{ uri: photo }}
         placeholder={require("../../../../assets/images/profile.webp")}
         placeholderContentFit="cover"
         contentFit="cover"

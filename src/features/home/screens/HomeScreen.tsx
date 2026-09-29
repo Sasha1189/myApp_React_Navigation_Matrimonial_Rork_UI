@@ -1,73 +1,69 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
+import { StyleSheet, ActivityIndicator } from "react-native";
 import { usePreventScreenCapture } from "expo-screen-capture";
 import { View, StatusBar } from "react-native";
-import GenderModal from "../components/GenderModal";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useAuth } from "../../../context/AuthContext";
-import { useAppNavigation } from "../../../navigation/hooks";
+import { useDatabase } from "@/db/context/DatabaseContext";
+import { DatabaseErrorModal } from "@/db/recovery/DatabaseErrorModal";
 import { useActiveFeed } from "../hooks/useActiveFeed";
 import { VerticalSwipeList } from "../components/VerticalSwipeList";
 
 export default function HomeScreen() {
   const { theme } = useAppTheme();
   const { user } = useAuth();
-  const uid = user?.uid as string;
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const navigation = useAppNavigation();
+  const { isDbReady, migrationError } = useDatabase();
+  const uid = user?.uid ?? "";
+
+  const isFeedReady = isDbReady && !migrationError;
+
+  console.log("[Homescreen]- uid - isFeedReady:", uid, isFeedReady);
+
+  const feed = useActiveFeed(isFeedReady ? uid : "");
+
+  const { feedKey } = feed;
+
+  const containerStyle = useMemo(
+    () => [styles.container, { backgroundColor: theme.colors.background }],
+    [theme.colors.background],
+  );
+
   usePreventScreenCapture();
 
-  // 🎯 Check if the logged-in user possesses a structurally valid gender setting
-  const isGenderReady =
-    user?.displayName === "Male" || user?.displayName === "Female";
+  console.log(
+    "[Homescreen]- feed:length - loading - mode",
+    feed?.profiles?.length,
+    feed?.isLoading,
+    feed?.mode,
+  );
 
-  useEffect(() => {
-    if (user && !isGenderReady) {
-      setShowModal(true);
-    } else {
-      setShowModal(false);
-    }
-  }, [user, isGenderReady]);
+  if (migrationError) {
+    return <DatabaseErrorModal />;
+  }
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
-      if (showModal) {
-        e.preventDefault();
-      }
-    });
-    return unsubscribe;
-  }, [navigation, showModal]);
-
-  const feed = useActiveFeed(isGenderReady ? uid : "");
-
-  const { profiles, isLoading } = feed;
-
-  if (!isGenderReady) {
+  if (!isDbReady) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <StatusBar
-          translucent={false}
-          backgroundColor={theme.colors.background}
-          barStyle="light-content"
-        />
-        <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
-        {/* You can optionally add a clean logo or an background brand wallpaper component frame here */}
+      <View style={[containerStyle, styles.center]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={containerStyle}>
       <StatusBar
         translucent={false}
         backgroundColor={theme.colors.background}
         barStyle="light-content"
       />
-      <GenderModal visible={showModal} onClose={() => setShowModal(false)} />
-      <VerticalSwipeList
-        profiles={profiles}
-        isLoading={isLoading}
-        feed={feed}
-      />
+      <VerticalSwipeList key={feedKey} feed={feed} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+});

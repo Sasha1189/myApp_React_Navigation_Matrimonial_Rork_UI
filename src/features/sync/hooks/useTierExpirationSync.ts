@@ -1,0 +1,65 @@
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useMyProfile } from "@/features/profile/context/ProfileContext";
+import { deactivateUserProfile } from "../services/tierExpirationService";
+
+export const useTierExpirationSync = (enabled: boolean = false) => {
+  const { user, gender, tier } = useAuth();
+  const { myProfile, setMyProfile } = useMyProfile();
+
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const isSyncRunningRef = useRef<boolean>(false);
+
+  const uid = user?.uid;
+  const isProfileActive = myProfile?.ia === true;
+  const isExpiredTier = tier === "none";
+
+  useEffect(() => {
+    if (
+      !enabled ||
+      !uid ||
+      !gender ||
+      !isExpiredTier ||
+      !isProfileActive ||
+      isSyncRunningRef.current
+    ) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const handleTierExpiration = async () => {
+      isSyncRunningRef.current = true;
+      setIsSyncing(true);
+
+      try {
+        await deactivateUserProfile(uid, gender);
+
+        if (isMounted) {
+          // Functional update to preserve any concurrent profile updates
+          setMyProfile((prev) => (prev ? { ...prev, ia: false } : prev));
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error(
+            "[useTierExpirationSync] Failed to deactivate user profile:",
+            error,
+          );
+        }
+      } finally {
+        isSyncRunningRef.current = false;
+        if (isMounted) {
+          setIsSyncing(false);
+        }
+      }
+    };
+
+    handleTierExpiration();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [enabled, uid, gender, isExpiredTier, isProfileActive, setMyProfile]);
+
+  return { isSyncing };
+};

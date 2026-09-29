@@ -8,9 +8,10 @@ import {
 import { FieldValues, useForm } from "react-hook-form";
 import { X, Save } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { isDeepEqual } from "@/utils/deepEqual";
+import { isDeepEqual } from "@/features/profile/utils/deepEqual";
 import { isFieldLocked } from "../components/form/profileValidation";
 import { useTranslation } from "react-i18next";
+import { Profile } from "../types/profile";
 
 export function useSectionEditor<T extends FieldValues>(
   profile: T | any,
@@ -27,10 +28,12 @@ export function useSectionEditor<T extends FieldValues>(
     control,
     handleSubmit,
     reset,
-    formState: { isDirty },
+    formState, // Extract errors mapping array here
   } = useForm<T>({
     defaultValues: profile || {},
   });
+
+  const { isDirty } = formState;
 
   // Handle Discard Alert
   const handleBack = useCallback(() => {
@@ -69,7 +72,7 @@ export function useSectionEditor<T extends FieldValues>(
         const changedFields: Partial<T> = {};
 
         sectionFields.forEach((key) => {
-          const newValue = data[key];
+          let newValue = data[key];
           const oldValue = profile?.[key];
 
           // 1. Skip if value hasn't changed at all
@@ -77,13 +80,26 @@ export function useSectionEditor<T extends FieldValues>(
 
           // 2. Skip if field is immutable and already locked down on server
           if (isFieldLocked(profile, key as any)) return;
+          if (newValue === 0 && key !== "nb" && key !== "ns") {
+            newValue = "" as any;
+          }
 
-          // 3. Skip if the value is blank garbage (empty string, whitespace, null, or undefined)
+          // 3. Skip if the value is blank garbage text, null, or undefined
           if (
             newValue === null ||
             newValue === undefined ||
             (typeof newValue === "string" && newValue.trim() === "")
           ) {
+            // However, if the old value was populated and user manually cleared it,
+            // pass "" onward to trigger an explicit field clear in database cloud rows
+            if (
+              oldValue !== undefined &&
+              oldValue !== null &&
+              oldValue !== 0 &&
+              oldValue !== ""
+            ) {
+              changedFields[key] = "" as any;
+            }
             return;
           }
 
@@ -91,10 +107,8 @@ export function useSectionEditor<T extends FieldValues>(
           changedFields[key] = newValue;
         });
 
-        // Only ping your endpoint if real updates occurred
         if (Object.keys(changedFields).length > 0) {
           await updateProfile(changedFields);
-          reset(data);
         }
         navigation.goBack();
       } catch (err: any) {
@@ -104,16 +118,11 @@ export function useSectionEditor<T extends FieldValues>(
       }
     },
     (validationErrors) => {
-      console.log("❌ Form Validation Failed Fields:", validationErrors);
-      Alert.alert(
-        t("common.error"),
-        t("editor.validationErrorMsg") ||
-          "Please fulfill all required fields before saving.",
-      );
+      Alert.alert(t("common.error"), t("editor.validationErrorMsg"));
     },
   );
 
-  // 4. Header Injection (Demo Aesthetic)
+  // 4. Header Injection
   useEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -157,5 +166,5 @@ export function useSectionEditor<T extends FieldValues>(
     });
   }, [navigation, isSaving, isDirty, theme, handleBack, onSave, title]);
 
-  return { control };
+  return { control, formState };
 }

@@ -2,7 +2,7 @@ import auth from "./auth";
 import common from "./common";
 import settings from "./settings";
 import card from "./card";
-import genderModal from "./genderModal";
+import userInfo from "./userInfo";
 import feed from "./feed";
 import chat from "./chat";
 import details from "./details";
@@ -15,12 +15,13 @@ import editor from "./editor";
 import alerts from "./alerts";
 import filters from "./filters";
 import search from "./search";
+import doc from "./doc";
 
 export default {
   auth,
   settings,
   card,
-  genderModal,
+  userInfo,
   feed,
   chat,
   details,
@@ -34,4 +35,5 @@ export default {
   common,
   filters,
   search,
+  doc,
 };

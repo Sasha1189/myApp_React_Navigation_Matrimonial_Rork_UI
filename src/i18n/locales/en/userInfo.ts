@@ -1,0 +1,20 @@
+export default {
+  screenTitle: "Your Info",
+  helperText: "Just a few more details to set up your account.",
+  labelFullName: "Full Name :",
+  placeholderFullName: "Enter your full name",
+  labelMobile: "Mobile Number :",
+  placeholderMobile: "e.g. 9999888800",
+  labelGender: "I am :",
+  male: "Male",
+  female: "Female",
+  done: "Success",
+  successMsg: "Profile created successfully!",
+  updateError: "Failed to save records directly to database.",
+  errFullNameRequired: "Full name is required",
+  errMobileRequired: "Mobile number is required",
+  errMobileInvalid: "Enter a valid phone number",
+  errGenderRequired: "Gender selection is required",
+
+  submit: "Update",
+};

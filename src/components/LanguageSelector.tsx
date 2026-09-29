@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
-import { storage } from "../cache/cacheConfig";
+import { appStorage } from "../cacheMMKV/cacheConfig";
 
 export const LanguageSelector = () => {
   const { i18n } = useTranslation();
@@ -9,7 +9,7 @@ export const LanguageSelector = () => {
 
   const handleLanguageChange = (lang: string) => {
     i18n.changeLanguage(lang);
-    storage.set("user_language", lang);
+    appStorage.set("user_language", lang);
   };
 
   return (

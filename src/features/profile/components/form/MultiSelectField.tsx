@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,11 +13,16 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { AppTheme } from "@/theme/theme";
 
+export interface MultiSelectOption {
+  label: string;
+  value: string | number; // Supports both string IDs and numeric enum indices
+}
+
 interface MultiSelectProps {
   label: string;
-  options: readonly string[];
-  value: string[];
-  onChange: (selected: string[]) => void;
+  options: readonly MultiSelectOption[] | readonly string[];
+  value: (string | number)[];
+  onChange: (selected: any[]) => void;
   editable?: boolean;
   icon?: any;
   placeholder?: string;
@@ -36,10 +41,18 @@ const MultiSelectField: React.FC<MultiSelectProps> = ({
   const styles = useStyles(createStyles);
   const [open, setOpen] = useState(false);
 
-  const toggleOption = (opt: string) => {
-    const next = value.includes(opt)
-      ? value.filter((v) => v !== opt)
-      : [...value, opt];
+  // 1. REFAC REFACTOR: Normalize layout variations into safe structural item shapes
+  const normalizedOptions = useMemo<readonly MultiSelectOption[]>(() => {
+    return options.map((opt) =>
+      typeof opt === "string" ? { label: opt, value: opt } : opt,
+    );
+  }, [options]);
+
+  // 2. REFAC REFACTOR: Toggle elements using the clean generalized value property parameter
+  const toggleOption = (optValue: string | number) => {
+    const next = value.includes(optValue)
+      ? value.filter((v) => v !== optValue)
+      : [...value, optValue];
     onChange(next);
   };
 
@@ -63,11 +76,21 @@ const MultiSelectField: React.FC<MultiSelectProps> = ({
       >
         <View style={styles.chipContainer}>
           {value.length > 0 ? (
-            value.map((item) => (
-              <View key={item} style={styles.chip}>
-                <Text style={styles.chipText}>{item}</Text>
-              </View>
-            ))
+            value.map((val) => {
+              // 3. REFAC REFACTOR: Safely lookup index labels to avoid printing raw numbers as tags
+              const matchingOpt = normalizedOptions.find(
+                (o) => o.value === val,
+              );
+              const displayLabel = matchingOpt
+                ? matchingOpt.label
+                : String(val);
+
+              return (
+                <View key={String(val)} style={styles.chip}>
+                  <Text style={styles.chipText}>{displayLabel}</Text>
+                </View>
+              );
+            })
           ) : (
             <Text style={styles.placeholder}>
               {placeholder || `Select ${label}`}
@@ -92,14 +115,14 @@ const MultiSelectField: React.FC<MultiSelectProps> = ({
             </View>
 
             <FlatList
-              data={options}
-              keyExtractor={(item) => item}
+              data={normalizedOptions}
+              keyExtractor={(item) => String(item.value)} // 4. REFAC REFACTOR: Ensures unique identification key tags
               contentContainerStyle={styles.listPadding}
               renderItem={({ item }) => {
-                const isSelected = value.includes(item);
+                const isSelected = value.includes(item.value); // 5. REFAC REFACTOR: Validates exact primitive match variables
                 return (
                   <Pressable
-                    onPress={() => toggleOption(item)}
+                    onPress={() => toggleOption(item.value)}
                     style={styles.optionRow}
                   >
                     <Text
@@ -108,7 +131,7 @@ const MultiSelectField: React.FC<MultiSelectProps> = ({
                         isSelected && styles.selectedOptionText,
                       ]}
                     >
-                      {item}
+                      {item.label}
                     </Text>
                     <View
                       style={[

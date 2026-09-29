@@ -12,12 +12,10 @@ import {
 import { useAppTheme } from "@/theme/ThemeContext";
 import { useStyles } from "@/theme/useStyles";
 import { useSettingsActions } from "../hooks/useSettingsActions";
-import { useBlockedUsers } from "../hooks/useBlockedUsers";
 import SettingRow from "../components/SettingRow";
 import BlockedUsersModal from "../components/BlockedUsersModal";
 import { LanguageSelector } from "../../../components/LanguageSelector";
 import { useTranslation } from "react-i18next";
-import { BlockedUserMinimal } from "../../../types/profile";
 
 export default function SettingsScreen() {
   const { mode, toggleTheme } = useAppTheme();
@@ -27,8 +25,6 @@ export default function SettingsScreen() {
   const isDark = mode === "dark";
 
   const { openLink, composeWhatsApp, handleLogout } = useSettingsActions();
-
-  const { blockedList, handleUnblock } = useBlockedUsers();
 
   return (
     <>
@@ -147,10 +143,6 @@ export default function SettingsScreen() {
       <BlockedUsersModal
         visible={blockedOpen}
         onClose={() => setBlockedOpen(false)}
-        users={blockedList}
-        onUnblock={(user) => {
-          handleUnblock(user as BlockedUserMinimal);
-        }}
       />
     </>
   );

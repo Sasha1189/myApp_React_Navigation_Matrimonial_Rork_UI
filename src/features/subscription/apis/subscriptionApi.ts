@@ -1,4 +1,3 @@
-// src/features/subscription/api/subscriptionApi.ts
 import { api } from "../../../services/api"; // Adjust based on your actual path
 
 export interface SubscriptionResponse {
@@ -13,8 +12,6 @@ export async function apiSubscribe(payload: {
   packageName: string;
   method: string;
 }): Promise<SubscriptionResponse> {
-  console.log("[API] Verifying subscription with backend...", payload);
-
   const res = await api.post<SubscriptionResponse>(
     `/subscription/update-subscription`,
     payload,

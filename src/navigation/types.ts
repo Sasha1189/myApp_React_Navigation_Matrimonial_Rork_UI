@@ -1,11 +1,11 @@
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { NavigatorScreenParams } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack"; // Use NativeStack
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import { Profile } from "src/types/profile";
+import { Profile } from "@/features/profile/types/profile";
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
+  UserInfo: undefined;
   App: NavigatorScreenParams<AppStackParamList>;
 };
 
@@ -20,9 +20,9 @@ export type AuthStackParamList = {
 export type AppStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList>;
   Chat: {
-    roomId: string;
+    rId: string;
     uid: string;
-    otherUser: {
+    ou: {
       uid: string;
       name: string;
       photo: string;
@@ -31,13 +31,11 @@ export type AppStackParamList = {
   Details: { profile: Profile } | { userId: string } | { self: true };
   EditProfile: undefined;
   ManagePhotos: undefined;
+  ManageVerDoc: undefined;
   Filter: undefined;
   Search: undefined;
   Settings: undefined;
   WebView: { url: string; title?: string };
-  HelpSupport: undefined;
-  SafetyPrivacy: undefined;
-  Upgrade: undefined;
   EditAboutMe: undefined;
   EditPersonal: undefined;
   EditContact: undefined;

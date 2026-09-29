@@ -3,68 +3,90 @@ import { Alert } from "react-native";
 import {
   getAuth,
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential,
 } from "@react-native-firebase/auth";
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { useTranslation } from "react-i18next";
 import { useAuthNavigation } from "../../../navigation/hooks";
 
 export function useSignUpFlow() {
   const { t } = useTranslation();
   const navigation = useAuthNavigation();
-
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUpSubmit = async () => {
-    if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
-      Alert.alert(
-        t("common.error"),
-        "Please enter a valid 10-digit phone number",
-      );
-      return;
-    }
-    if (password !== confirmPassword) {
-      Alert.alert(
-        t("common.error"),
-        t("auth.passwordMismatch", "Passwords do not match."),
-      );
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert(
-        t("common.error"),
-        t("auth.passwordTooShort", "Password must be at least 6 characters."),
-      );
-      return;
-    }
-
+  const executeRegistration = async (formData: any) => {
+    const { email, password } = formData;
     setIsLoading(true);
-    const dummyEmail = `+91${phoneNumber}@lonariyuvaconnect.com`;
 
     try {
-      // 👑 UPDATE 2: Fetch the active auth instance module
       const firebaseAuth = getAuth();
-
-      // 👑 UPDATE 3: Execute using clean modular function boundaries
-      await createUserWithEmailAndPassword(firebaseAuth, dummyEmail, password);
-
+      await createUserWithEmailAndPassword(firebaseAuth, email, password);
       Alert.alert(
         t("auth.successTitle", "Success"),
-        t("auth.registrationComplete", "Registration completed successfully!"),
+        t("auth.registrationComplete"),
       );
     } catch (error: any) {
-      console.error("Account registration failure: ", error);
       let msg = error.message;
-
       if (error.code === "auth/email-already-in-use") {
         msg = t(
           "auth.duplicateEmailError",
-          "This mobile number is already registered.",
+          "This email address is already registered.",
         );
       }
-
       Alert.alert("Registration Failed", msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const executeGoogleSignUp = async () => {
+    setIsLoading(true);
+
+    try {
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
+      const signInResult = await GoogleSignin.signIn();
+
+      let idToken: string | undefined | null = null;
+
+      if (isSuccessResponse(signInResult)) {
+        idToken = signInResult.data.idToken;
+      }
+
+      if (!idToken) {
+        throw new Error("No ID Token returned from Google Sign-In.");
+      }
+
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const firebaseAuth = getAuth();
+
+      await signInWithCredential(firebaseAuth, googleCredential);
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled silently, do nothing
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // Already in progress silently, do nothing
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert(
+          t("auth.error", "Google Sign-In Failed"),
+          t(
+            "auth.playServicesError",
+            "Google Play Services are not available or outdated.",
+          ),
+        );
+      } else {
+        Alert.alert(
+          t("auth.error", "Google Sign-In Failed"),
+          error.message ||
+            t("auth.genericError", "Failed to sign up with Google."),
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -74,22 +96,10 @@ export function useSignUpFlow() {
     navigation.goBack();
   };
 
-  const isButtonDisabled =
-    phoneNumber.length < 10 ||
-    password.length < 6 ||
-    confirmPassword.length < 6 ||
-    isLoading;
-
   return {
-    phoneNumber,
-    setPhoneNumber,
-    password,
-    setPassword,
-    confirmPassword,
-    setConfirmPassword,
     isLoading,
-    handleSignUpSubmit,
+    executeRegistration,
+    executeGoogleSignUp,
     handleBackPress,
-    isButtonDisabled,
   };
 }

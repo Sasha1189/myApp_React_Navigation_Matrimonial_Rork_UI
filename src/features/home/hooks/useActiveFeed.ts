@@ -1,99 +1,90 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useFeedDefault } from "./useFeedDefault";
-import { useFeedLatest } from "./useFeedLatest";
-import { useFeedSearch } from "./useFeedSearch";
-import { useFeedFilter } from "./useFeedFilter";
-import { useLikeBlockCache } from "./useLikeBlockCache";
-import { storage } from "../../../cache/cacheConfig";
-import { FeedHookResult } from "../type/type";
+import { useState, useEffect, useMemo } from "react";
+import { appStorage } from "@/cacheMMKV/cacheConfig";
+import { FeedCache, FeedMode } from "../cache/feedCache";
+import { useDefaultFeed } from "./useDefaultFeed";
+import { useLatestFeed } from "./useLatestFeed";
+import { useSearchFeed } from "./useSearchFeed";
+import { useFilterFeed } from "./useFilterFeed";
+import { useBlockedSet } from "@/features/block/hook/useBlockedSet";
+import { useAuth } from "@/context";
 
-export function useActiveFeed(uid: string): FeedHookResult {
-  const [mode, setMode] = useState(
-    () => storage.getString(`active_mode_${uid}`) || "default",
+export function useActiveFeed(uid: string) {
+  const [mode, setMode] = useState<FeedMode>(
+    () => FeedCache.getMode(uid) || "default",
   );
-  const [searchField, setSearchField] = useState(
-    () => storage.getString(`search_field_${uid}`) || "name",
+  const [searchQuery, setSearchQuery] = useState(() =>
+    FeedCache.getSearchQuery(uid),
   );
-  const [searchQuery, setSearchQuery] = useState(
-    () => storage.getString(`search_query_${uid}`) || "",
+  const [filterParams, setFilterParams] = useState(() =>
+    FeedCache.getFilterParams(uid),
   );
-  const [filterParams, setFilterParams] = useState(() => {
-    const saved = storage.getString(`active_filter_params_${uid}`);
-    return saved ? JSON.parse(saved) : null;
-  });
 
-  // 2. The Storage "Watcher"
+  const blockedSet = useBlockedSet();
+
+  const { isPaid } = useAuth();
+
+  console.log("[useActiveFeed]- mode:", mode);
+  // 2. Targeted MMKV Listener Guard
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
-      if (key === `active_mode_${uid}`) {
-        setMode(storage.getString(key) || "default");
-      }
-      if (key === `search_field_${uid}`) {
-        setSearchField(storage.getString(key) || "name");
-      }
-      if (key === `search_query_${uid}`) {
-        setSearchQuery(storage.getString(key) || "");
-      }
-      // 🔹 Watch for Filter changes
-      if (key === `active_filter_params_${uid}`) {
-        const saved = storage.getString(key);
-        setFilterParams(saved ? JSON.parse(saved) : null);
+    if (!uid) return;
+
+    const keys = FeedCache.getKeys(uid);
+    const trackedKeys = new Set([
+      keys.mode,
+      keys.searchQuery,
+      keys.filterParams,
+    ]);
+
+    const listener = appStorage.addOnValueChangedListener((key) => {
+      if (!trackedKeys.has(key)) return;
+
+      if (key === keys.mode) {
+        setMode(FeedCache.getMode(uid) || "default");
+      } else if (key === keys.searchQuery) {
+        setSearchQuery(FeedCache.getSearchQuery(uid));
+      } else if (key === keys.filterParams) {
+        setFilterParams(FeedCache.getFilterParams(uid));
       }
     });
+
     return () => listener.remove();
   }, [uid]);
 
-  console.log("useActivefeed:", mode, searchField, searchQuery, filterParams);
+  // 3. Sub-hooks (ensure sub-hooks return STABLE_EMPTY_FEED when enabled is false)
+  const defaultFeed = useDefaultFeed(uid, mode === "default", isPaid);
+  const latestFeed = useLatestFeed(uid, mode === "latest", isPaid);
+  const searchFeed = useSearchFeed(uid, mode === "search", searchQuery);
+  const filterFeed = useFilterFeed(uid, mode === "filter", filterParams);
 
-  // 3. Initialize Shards (Clean & Reactive)
-  const defaultFeed = useFeedDefault(uid, mode === "default");
-  const latestFeed = useFeedLatest(uid, mode === "latest");
-  const searchFeed = useFeedSearch(
-    uid,
-    mode === "search",
-    searchField,
-    searchQuery,
-  );
-  const filterFeed = useFeedFilter(uid, mode === "filter", filterParams);
-
-  // 4. Selection & Merge Logic (Rest of your existing code...)
+  // 4. Resolve active feed based directly on mode
   const activeFeed = useMemo(() => {
-    if (mode === "search") return searchFeed;
-    if (mode === "latest") return latestFeed;
-    if (mode === "filter") return filterFeed;
-    return defaultFeed;
-  }, [mode, filterFeed, searchFeed, latestFeed, defaultFeed]);
+    switch (mode) {
+      case "search":
+        return searchFeed;
+      case "latest":
+        return latestFeed;
+      case "filter":
+        return filterFeed;
+      default:
+        return defaultFeed;
+    }
+  }, [mode, defaultFeed, latestFeed, searchFeed, filterFeed]);
 
-  // 5. Get the reactive likes/blocks
-  const { likedSet, blockedSet } = useLikeBlockCache();
+  // 5. O(1) Block filtering with memoized outputs
+  const visibleProfiles = useMemo(() => {
+    const rawProfiles = activeFeed.profiles || [];
+    if (!blockedSet || blockedSet.size === 0) return rawProfiles;
+    return rawProfiles.filter((profile) => !blockedSet.has(profile.uid));
+  }, [activeFeed.profiles, blockedSet]);
 
-  // 6. Merge Logic
-  const finalProfiles = useMemo(() => {
-    const raw = activeFeed.profiles || [];
-    if (!raw?.length) return [];
-
-    return raw
-      .filter((p: any) => p?.uid && !blockedSet.has(p.uid))
-      .map((p: any) => ({
-        ...p,
-        liked: likedSet.has(p.uid),
-      }));
-  }, [activeFeed.profiles, likedSet, blockedSet]);
-
-  const updateIndex = useCallback(
-    (val: number) => {
-      activeFeed.updateIndex(val);
-    },
-    [activeFeed],
+  return useMemo(
+    () => ({
+      ...activeFeed,
+      profiles: visibleProfiles,
+      isLoading: Boolean(activeFeed.isLoading),
+      error: activeFeed.error || null,
+      mode,
+    }),
+    [activeFeed, visibleProfiles, mode],
   );
-
-  return {
-    ...activeFeed,
-    profiles: finalProfiles,
-    resetFeed: activeFeed.resetFeed,
-    refetch: activeFeed.refetch,
-    updateIndex,
-    isLoading: activeFeed.isLoading,
-    mode,
-  };
 }

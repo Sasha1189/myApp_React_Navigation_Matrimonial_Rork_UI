@@ -1,6 +1,6 @@
 export default {
   title: "Manage Photos",
-  tip: "Tap star to set primary. Tap X to delete.",
+  tip: "Tap star to set first photo. Tap X to delete.",
   upload: "Upload Photos",
   saving: "Saving...",
   success: "Saved Successfully!",

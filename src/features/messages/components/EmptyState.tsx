@@ -16,27 +16,43 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
 
   if (!theme) return null;
   return (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyText}>{t(`chat.empty.${type}Title`)}</Text>
-      <Text style={styles.emptySubtext}>{t(`chat.empty.${type}Subtitle`)}</Text>
+    <View style={styles.container}>
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyText}>{t(`chat.empty.${type}Title`)}</Text>
+        <Text style={styles.emptySubtext}>
+          {t(`chat.empty.${type}Subtitle`)}
+        </Text>
+      </View>
     </View>
   );
 };
 
 export const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    emptyState: {
+    container: {
       flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    emptyState: {
       justifyContent: "center",
       alignItems: "center",
+      paddingVertical: theme.spacing.md,
+      marginTop: theme.spacing.xxl,
+      marginHorizontal: theme.spacing.md,
+      backgroundColor: theme.colors.card,
+      borderRadius: 12,
+      overflow: "hidden",
+      elevation: 2,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
     },
     emptyText: {
-      fontSize: 18,
+      fontSize: 14,
       fontWeight: "bold",
       color: theme.colors.text,
     },
     emptySubtext: {
-      fontSize: 14,
+      fontSize: 12,
       color: theme.colors.textLight,
       textAlign: "center",
     },

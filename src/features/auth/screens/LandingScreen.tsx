@@ -3,26 +3,25 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
-  TouchableOpacity,
   Dimensions,
-  ViewToken,
+  TouchableOpacity,
+  StyleSheet,
   ActivityIndicator,
+  ViewToken,
 } from "react-native";
-import { Image } from "expo-image";
-import { LanguageSelector } from "../../../components/LanguageSelector";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuthNavigation } from "../../../navigation/hooks";
-import { ArrowLeft } from "lucide-react-native";
-import { AppTheme } from "@/theme/theme";
+import { WebView } from "react-native-webview";
+import { Image } from "expo-image";
+import { useTranslation } from "react-i18next";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { useTranslation } from "react-i18next";
-import { WebView } from "react-native-webview";
+import { useAuthNavigation } from "../../../navigation/hooks";
+import { AppTheme } from "@/theme/theme";
+import { LanguageSelector } from "../../../components/LanguageSelector";
+import { CarouselPagination } from "../components/CarouselPagination";
 
 const { width, height } = Dimensions.get("window");
 
-// Static carousel data definition
 const CAROUSEL_DATA = [
   {
     id: "1",
@@ -42,11 +41,30 @@ const CAROUSEL_DATA = [
     subtitleKey: "welcome.slide3.subtitle",
     image: require("../../../../assets/images/p1.webp"),
   },
-  {
-    id: "4",
-    isWebSlide: true,
-  },
+  { id: "4", isWebSlide: true }, // Placeholder node to hold layout page space
 ];
+
+const BULLETPROOF_INJECTED_JS = `
+  (function() {
+    let startX = 0;
+    let startY = 0;
+
+    document.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+      const deltaX = e.changedTouches[0].clientX - startX;
+      const deltaY = e.changedTouches[0].clientY - startY;
+
+      if (deltaX > 60 && Math.abs(deltaX) > Math.abs(deltaY) && startX < 60) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'EDGE_SWIPE_BACK' }));
+      }
+    }, { passive: true });
+  })();
+  true;
+`;
 
 export default function LandingScreen() {
   const { t } = useTranslation();
@@ -60,7 +78,12 @@ export default function LandingScreen() {
 
   const isLastSlide = activeIndex === CAROUSEL_DATA.length - 1;
 
-  // Track active slide index safely
+  const getItemLayout = (_: any, index: number) => ({
+    length: width,
+    offset: width * index,
+    index,
+  });
+
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
@@ -69,7 +92,22 @@ export default function LandingScreen() {
     },
   ).current;
 
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
+
+  const handleWebViewMessage = (event: any) => {
+    try {
+      const messageData = JSON.parse(event.nativeEvent.data);
+      if (messageData.type === "EDGE_SWIPE_BACK") {
+        // Explicitly forces FlatList navigation to index 2 (Slide 3)
+        flatListRef.current?.scrollToIndex({
+          index: 2,
+          animated: true,
+        });
+      }
+    } catch (e) {
+      console.warn("Failed parsing WebView message payload", e);
+    }
+  };
 
   const handleMainAction = () => {
     if (isLastSlide) {
@@ -89,102 +127,78 @@ export default function LandingScreen() {
       <View style={styles.topBar}>
         <LanguageSelector />
       </View>
+
       <View style={styles.carouselContainer}>
-        {activeIndex === 3 ? (
-          <View style={styles.webViewWrapper}>
-            <WebView
-              source={{ uri: "https://sasha1189.github.io/youva-Lonari/about" }}
-              style={styles.webview}
-              domStorageEnabled={true}
-              javaScriptEnabled={true}
-              showsVerticalScrollIndicator={true}
-              onLoadStart={() => setWebLoading(true)}
-              onLoadEnd={() => setWebLoading(false)}
-            />
-            {webLoading && (
-              <View style={styles.loaderOverlay}>
-                <ActivityIndicator
-                  size="large"
-                  color={theme.colors.primary || "#1A1A4B"} // Uses Nexa Blue
-                />
-              </View>
-            )}
-          </View>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={CAROUSEL_DATA}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onViewableItemsChanged={onViewableItemsChanged}
-            viewabilityConfig={viewabilityConfig}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              if (item.isWebSlide) return <View style={{ width: width }} />;
+        <FlatList
+          ref={flatListRef}
+          data={CAROUSEL_DATA}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          getItemLayout={getItemLayout}
+          keyExtractor={(item) => item.id}
+          removeClippedSubviews={false} // Crucial: Keeps your hidden track nodes alive
+          scrollEnabled={true}
+          renderItem={({ item }) => {
+            if (item.isWebSlide) {
               return (
-                <View style={styles.slide}>
-                  <View style={styles.slideHeader}>
-                    <Text style={styles.welcomeText}>
-                      {t("welcome.welcome")}
-                    </Text>
-                    <Text style={styles.brandText}>
-                      {t("welcome.brandName")}
-                    </Text>
-                  </View>
-                  <Image
-                    source={item.image}
-                    style={styles.heroImage}
-                    contentFit="contain"
-                    transition={150}
-                    cachePolicy="disk"
+                <View style={{ width: width, flex: 1 }}>
+                  <WebView
+                    source={{
+                      uri: "https://sasha1189.github.io/youva-Lonari/about",
+                    }}
+                    style={[styles.webview, { flex: 1 }]}
+                    domStorageEnabled={true}
+                    javaScriptEnabled={true}
+                    injectedJavaScript={BULLETPROOF_INJECTED_JS}
+                    onMessage={handleWebViewMessage} // Listens for bridge event execution
+                    nestedScrollEnabled={true}
+                    onLoadStart={() => setWebLoading(true)}
+                    onLoadEnd={() => setWebLoading(false)}
                   />
-                  <View style={styles.textGroup}>
-                    <Text style={styles.slideTitle}>{t(item.titleKey)}</Text>
-                    <Text style={styles.slideSubtitle}>
-                      {t(item.subtitleKey)}
-                    </Text>
-                  </View>
+                  {webLoading && (
+                    <View style={styles.loaderOverlay}>
+                      <ActivityIndicator
+                        size="large"
+                        color={theme.colors.primary}
+                      />
+                    </View>
+                  )}
                 </View>
               );
-            }}
-          />
-        )}
+            }
+            return (
+              <View style={styles.slide}>
+                <View style={styles.slideHeader}>
+                  <Text style={styles.welcomeText}>{t("welcome.welcome")}</Text>
+                  <Text style={styles.brandText}>{t("welcome.brandName")}</Text>
+                </View>
+                <Image
+                  source={item.image}
+                  style={styles.heroImage}
+                  contentFit="contain"
+                  transition={150}
+                  cachePolicy="disk"
+                />
+                <View style={styles.textGroup}>
+                  <Text style={styles.slideTitle}>{t(item.titleKey)}</Text>
+                  <Text style={styles.slideSubtitle}>
+                    {t(item.subtitleKey)}
+                  </Text>
+                </View>
+              </View>
+            );
+          }}
+        />
       </View>
-      <View style={styles.paginationRow}>
-        {activeIndex === 3 && (
-          <TouchableOpacity
-            style={[
-              styles.inlineBackButton,
-              { backgroundColor: theme.colors.primary || "#1A1A4B" },
-            ]}
-            activeOpacity={0.8}
-            onPress={() => {
-              setActiveIndex(2);
-              flatListRef.current?.scrollToIndex({ index: 2, animated: true });
-            }}
-          >
-            <ArrowLeft size={22} color="#F8F8F8" />
-          </TouchableOpacity>
-        )}
-        <Text style={styles.fractionText}>
-          {activeIndex + 1}/{CAROUSEL_DATA.length}
-        </Text>
-        <View style={styles.dotsRow}>
-          {CAROUSEL_DATA.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor:
-                    i === activeIndex ? theme.colors.text : theme.colors.border,
-                },
-              ]}
-            />
-          ))}
-        </View>
-      </View>
+
+      {/* ================= REUSABLE PAGINATION SUB-COMPONENT ================= */}
+      <CarouselPagination
+        activeIndex={activeIndex}
+        totalSlides={CAROUSEL_DATA.length}
+      />
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.loginButton} onPress={handleMainAction}>
@@ -211,6 +225,7 @@ export const createStyles = (theme: AppTheme) =>
     },
     carouselContainer: {
       flex: 1,
+      position: "relative", // 🎯 Stacking context anchor for background pre-rendering WebView
     },
     webViewWrapper: {
       flex: 1,
@@ -221,9 +236,11 @@ export const createStyles = (theme: AppTheme) =>
       backgroundColor: "transparent",
     },
     loaderOverlay: {
+      ...StyleSheet.absoluteFillObject,
       backgroundColor: theme.colors.background || "#F8F8F8",
       justifyContent: "center",
       alignItems: "center",
+      zIndex: 10,
     },
     slide: {
       width: width,
@@ -269,48 +286,7 @@ export const createStyles = (theme: AppTheme) =>
       marginTop: 8,
       textAlign: "center",
     },
-    paginationRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 12,
-      marginBottom: 30,
-      position: "relative", // 🎯 Establishes the anchor context for the absolute button layout
-      width: "100%",
-    },
-    inlineBackButton: {
-      position: "absolute",
-      left: 24, // ↔️ Anchors it strictly to the left edge of the page frame
-      width: 40, // 📐 Compact and professional layout size
-      height: 40,
-      borderRadius: 16, // 🎯 Perfect round circle mapping
-      justifyContent: "center",
-      alignItems: "center",
-      elevation: 2, // Android shadow depth tracking
-      shadowColor: "#000", // iOS shadow configurations
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 1.41,
-      zIndex: 10, // Ensures it stays touch-responsive over background canvas layers
-    },
-    fractionText: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: theme.colors.textLight,
-      backgroundColor: theme.colors.border + "50",
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 10,
-    },
-    dotsRow: {
-      flexDirection: "row",
-      gap: 6,
-    },
-    dot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
+    // ================= EXCHANGING EXACT EXISTING PAGINATION LAYOUTS =================
     footer: {
       paddingHorizontal: theme.spacing.xl,
       paddingBottom: 40,
