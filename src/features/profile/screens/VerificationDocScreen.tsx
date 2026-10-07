@@ -17,7 +17,7 @@ export default function VerificationDocScreen() {
   const {
     selectedDoc,
     loading,
-    isVerified, // Now safely inferred as "true" | "pending" | "false"
+    currentVerified,
     pickDocument,
     removeDocument,
     uploadDocument,
@@ -28,17 +28,15 @@ export default function VerificationDocScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
-        {/* 3. Document Slot renders in all states. 
-            (ManageDocSlot restricts clicking/deleting internally if not 'false') */}
         <ManageDocSlot
           doc={selectedDoc}
-          isVerified={isVerified}
+          verified={currentVerified}
           onAdd={pickDocument}
           onDelete={removeDocument}
         />
 
         {/* 1. Verified State */}
-        {isVerified === "true" && (
+        {currentVerified === "true" && (
           <View style={styles.bannerContainer}>
             <CheckCircle2 size={24} color="#15803D" style={styles.icon} />
             <View style={styles.textContainer}>
@@ -53,7 +51,7 @@ export default function VerificationDocScreen() {
         )}
 
         {/* 2. Pending State */}
-        {isVerified === "pending" && (
+        {currentVerified === "pending" && (
           <View style={[styles.bannerContainer, styles.pendingBanner]}>
             <Clock size={24} color="#B45309" style={styles.icon} />
             <View style={styles.textContainer}>
@@ -68,7 +66,7 @@ export default function VerificationDocScreen() {
         )}
 
         {/* 4. Upload UI (Only show if NOT verified and NOT pending) */}
-        {isVerified === "false" && (
+        {currentVerified === "false" && (
           <>
             <View style={styles.tipCard}>
               <Edit3 size={20} color={theme.colors.accent} />

@@ -23,6 +23,7 @@ export default function SubscriptionScreen() {
     setSelectedPlanId,
     handlePay,
     isProcessing,
+    processingStep,
     isSubmitDisabled,
     availablePlans,
     isLoadingPlans,
@@ -116,6 +117,7 @@ export default function SubscriptionScreen() {
       <SubscriptionFooter
         selectedPlanId={selectedPlanId}
         isProcessing={isProcessing}
+        processingStep={processingStep}
         isSubmitDisabled={isSubmitDisabled}
         handlePay={handlePay}
       />

@@ -19,12 +19,15 @@ import {
   VerificationStatus,
 } from "./types/auth.types";
 import { fetchAndSyncUserTier } from "./utils/authTierUtils";
-import { appStorage, TIER_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
-import { useVerificationSync } from "@/features/sync/hooks/useVerificationSync";
-import { getUser } from "@/features/auth/services/userService";
-
-export const VERIFIED_CACHE_KEY = "is_verified";
-export const GENDER_CACHE_KEY = "gender";
+import {
+  getVerifiedCache,
+  getGenderCache,
+  setGenderCache,
+  getTierCache,
+  setVerifiedCache,
+  setCachedProfile,
+} from "@/cacheMMKV/cacheConfig";
+import { getUser } from "@/features/auth/api/userApi";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -33,39 +36,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authLoading, setAuthLoading] = useState<boolean>(true);
 
   const [tier, setTier] = useState<UserTier>(() => {
-    return (appStorage.getString(TIER_CACHE_KEY) as UserTier) || "none";
+    return getTierCache() || "none";
   });
-
-  const [isVerified, setIsVerified] = useState<VerificationStatus>(() => {
-    return (
-      (appStorage.getString(VERIFIED_CACHE_KEY) as VerificationStatus) ||
-      "false"
-    );
+  const [verified, setVerified] = useState<VerificationStatus>(() => {
+    return getVerifiedCache() || "false";
   });
-
-  const [gender, setGenderState] = useState<genderType>(() => {
-    return (appStorage.getString(GENDER_CACHE_KEY) as genderType) || "";
+  const [gender, setGender] = useState<genderType>(() => {
+    return getGenderCache() || "";
   });
-
-  // 2. Combined Setter: Updates State + MMKV together
-  const setGender = useCallback((newGender: genderType) => {
-    setGenderState(newGender);
-    if (newGender) {
-      appStorage.set(GENDER_CACHE_KEY, newGender);
-    } else {
-      appStorage.remove(GENDER_CACHE_KEY);
-    }
-  }, []);
-
-  const updateVerificationStatus = useCallback((status: VerificationStatus) => {
-    appStorage.set(VERIFIED_CACHE_KEY, status);
-    setIsVerified(status);
-  }, []);
 
   const isPaid = tier === "basic" || tier === "premium";
   const isFullyEntitled = useMemo(
-    () => isPaid && isVerified === "true",
-    [isPaid, isVerified],
+    () => isPaid && verified === "true",
+    [isPaid, verified],
   );
 
   const refreshToken = useCallback(async (forceRefresh = false) => {
@@ -75,61 +58,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return activeTier;
   }, []);
 
-  // 3. Simple Auth & Gender Bootstrapping
   useEffect(() => {
     const auth = getAuth();
     return onAuthStateChanged(auth, async (firebaseUser) => {
+      setAuthLoading(true);
       try {
         if (!firebaseUser) {
           setUser(null);
           setTier("none");
-          setIsVerified("false");
-          setGender(""); // Clears state + MMKV
+          setVerified("false");
+          setGender("");
           return;
         }
 
-        setUser(firebaseUser);
-        await refreshToken(false);
+        const cachedGender = getGenderCache();
 
-        const cachedGender = appStorage.getString(
-          GENDER_CACHE_KEY,
-        ) as genderType;
         if (cachedGender) {
-          setGenderState(cachedGender);
+          refreshToken(false).catch((err) =>
+            console.error("[Token Refresh Error]:", err),
+          );
+          setGender(cachedGender);
         } else {
-          const remoteUser = await getUser(firebaseUser.uid);
-          setGender((remoteUser?.gender as genderType) || "");
-          if (
-            remoteUser.isVerified === "true" ||
-            remoteUser.isVerified === "pending"
-          ) {
-            updateVerificationStatus(remoteUser.isVerified);
+          const [_, userData] = await Promise.allSettled([
+            refreshToken(true),
+            getUser(firebaseUser.uid),
+          ]);
+          if (userData.status === "fulfilled" && userData.value?.gender) {
+            setGenderCache(userData.value.gender as genderType);
+            setGender(userData.value.gender as genderType);
+            if (userData.value?.verified) {
+              setVerified(userData.value.verified as VerificationStatus);
+              setVerifiedCache(userData.value.verified as VerificationStatus);
+            }
           }
         }
-        console.log(
-          "[Auth Context]:uid-gender-isverified-tier-authloading",
-          user?.uid,
-          gender,
-          isVerified,
-          tier,
-          authLoading,
-        );
+        setUser(firebaseUser);
       } catch (error) {
         console.error("[AuthInit Error]:", error);
       } finally {
         setAuthLoading(false);
       }
     });
-  }, [refreshToken, setGender]);
-
-  useVerificationSync(user?.uid, isPaid, isVerified, updateVerificationStatus);
+  }, [refreshToken]);
 
   const value = useMemo(
     () => ({
       user,
       authLoading,
       tier,
-      isVerified,
+      verified,
       isFullyEntitled,
       isPaid,
       gender,
@@ -138,19 +115,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAuthLoading,
       setTier,
       refreshToken,
-      updateVerificationStatus,
     }),
     [
       user,
       authLoading,
       tier,
-      isVerified,
+      verified,
       isFullyEntitled,
       isPaid,
       gender,
-      setGender,
       refreshToken,
-      updateVerificationStatus,
     ],
   );
 

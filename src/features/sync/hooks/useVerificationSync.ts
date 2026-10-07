@@ -1,23 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { checkUserVerification } from "../services/verificationService";
 import { VerificationStatus } from "@/context/types/auth.types";
+import { setVerifiedCache } from "@/cacheMMKV/cacheConfig";
 
 export const useVerificationSync = (
   uid: string | undefined,
   isPaid: boolean,
-  currentVerifiedStatus: VerificationStatus,
-  updateVerificationStatus: (status: VerificationStatus) => void,
+  currentVerifiedStatus: boolean,
 ) => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (
-      !uid ||
-      !isPaid ||
-      currentVerifiedStatus !== "pending" ||
-      isSyncRunningRef.current
-    ) {
+    if (!uid || !isPaid || !currentVerifiedStatus || isSyncRunningRef.current) {
       return;
     }
 
@@ -28,15 +23,12 @@ export const useVerificationSync = (
       setIsSyncing(true);
 
       try {
-        // Fetch from Firestore instead of RTDB
         const serverStatus = await checkUserVerification(uid);
-
-        // If the server status exists and is different from local "pending", update it
         if (
           isMounted &&
           (serverStatus === "true" || serverStatus === "false")
         ) {
-          updateVerificationStatus(serverStatus as VerificationStatus);
+          setVerifiedCache(serverStatus as VerificationStatus);
         }
       } catch (error) {
         if (isMounted) {
@@ -58,7 +50,7 @@ export const useVerificationSync = (
     return () => {
       isMounted = false;
     };
-  }, [uid, isPaid, currentVerifiedStatus, updateVerificationStatus]);
+  }, [uid, isPaid, currentVerifiedStatus]);
 
   return { isSyncing };
 };

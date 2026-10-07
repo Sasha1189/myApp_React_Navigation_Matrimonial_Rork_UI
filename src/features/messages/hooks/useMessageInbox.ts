@@ -81,7 +81,7 @@ export const useMessageInbox = (uid: string) => {
           ou: {
             ...item.ou,
             name: profile?.fn ?? "User",
-            photo: profile?.photos?.[0]?.downloadURL ?? null,
+            photo: profile?.tn ?? null,
           },
         };
       });

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
-import { setUserVerification } from "../api/setUserVerification";
+import { updateUser } from "@/features/auth/api/userApi";
 import { apiGenerateDocUploadUrl } from "../api/docApi";
+import { setVerifiedCache } from "@/cacheMMKV/cacheConfig";
 
 export interface SelectedDoc {
   uri: string;
@@ -13,21 +14,23 @@ export interface SelectedDoc {
   mimeType?: string;
 }
 
-// 👉 FILE SIZE CONFIGURATION (e.g., 5 MB max limit)
-const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_MB = 2;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export function useDocManager() {
-  const { user, isVerified, updateVerificationStatus } = useAuth();
+  const { user, verified } = useAuth();
   const { t } = useTranslation();
   const uid = user?.uid;
 
   const [selectedDoc, setSelectedDoc] = useState<SelectedDoc | null>(null);
+  const [currentVerified, setCurrentVerified] = useState<
+    "true" | "pending" | "false"
+  >(verified);
   const [loading, setLoading] = useState(false);
 
   // 1. Pick a single document
   const pickDocument = async () => {
-    if (isVerified !== "false") return; // Prevent picking if pending/verified
+    if (currentVerified !== "false") return;
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -66,7 +69,7 @@ export function useDocManager() {
 
   // 2. Remove document (Allowed ONLY before upload)
   const removeDocument = () => {
-    if (isVerified !== "false") return;
+    if (currentVerified !== "false") return;
     setSelectedDoc(null);
   };
 
@@ -123,13 +126,13 @@ export function useDocManager() {
         );
       }
 
-      // Update backend / Firestore document path
-      await setUserVerification(uid);
+      // Update on backend user state to "pending" verification
+      await updateUser({
+        verified: "pending",
+      });
 
-      // Instantly flip AuthContext to pending
-      if (updateVerificationStatus) {
-        updateVerificationStatus("pending");
-      }
+      setVerifiedCache("pending");
+      setCurrentVerified("pending");
 
       Alert.alert(
         t("doc.successTitle", "Success"),
@@ -146,7 +149,7 @@ export function useDocManager() {
   return {
     selectedDoc,
     loading,
-    isVerified, // "true" | "pending" | "false"
+    currentVerified, // "true" | "pending" | "false"
     pickDocument,
     removeDocument,
     uploadDocument,

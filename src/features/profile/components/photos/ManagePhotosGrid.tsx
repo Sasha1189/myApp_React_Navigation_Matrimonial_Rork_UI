@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -11,12 +11,11 @@ import { Plus, Star, X } from "lucide-react-native";
 import { AppTheme } from "@/theme/theme";
 import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
-import { Photo } from "../../types/profile";
 
 const { width } = Dimensions.get("window");
 
 interface Props {
-  photos: Photo[];
+  photos?: (string | unknown)[];
   maxPhotos: number;
   onAdd: () => void;
   onDelete: (photoId: string) => void;
@@ -24,7 +23,7 @@ interface Props {
 }
 
 export default function ManagePhotosGrid({
-  photos,
+  photos = [],
   maxPhotos,
   onAdd,
   onDelete,
@@ -32,35 +31,43 @@ export default function ManagePhotosGrid({
 }: Props) {
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
+
+  const validPhotos = useMemo(() => {
+    if (!Array.isArray(photos)) return [];
+    return photos.filter(
+      (photo): photo is string =>
+        typeof photo === "string" && photo.trim().length > 0,
+    );
+  }, [photos]);
+
+  const emptySlots = Math.max(0, maxPhotos - validPhotos.length);
+
   if (!theme) return null;
 
-  const emptySlots = Math.max(0, maxPhotos - photos.length);
-
-  const renderPhotoSlot = (photo?: Photo, index?: number) => {
-    if (!photo) {
-      return (
-        <TouchableOpacity
-          key={`empty-${index}`}
-          style={styles.emptyPhotoSlot}
-          onPress={onAdd}
-        >
-          <Plus size={32} color={theme.colors.textLight} />
-          <Text style={styles.addPhotoText}>Add Photo</Text>
-        </TouchableOpacity>
-      );
-    }
-
+  const renderEmptySlot = (index: number) => (
+    <TouchableOpacity
+      key={`empty-slot-${index}`}
+      style={styles.emptyPhotoSlot}
+      onPress={onAdd}
+      activeOpacity={0.7}
+    >
+      <Plus size={32} color={theme.colors.textLight} />
+      <Text style={styles.addPhotoText}>Add Photo</Text>
+    </TouchableOpacity>
+  );
+  const renderPhotoSlot = (photo: string, index: number) => {
+    const isPrimary = index === 0;
     return (
-      <View key={photo.id} style={styles.photoContainer}>
+      <View key={`${photo}-${index}`} style={styles.photoContainer}>
         <Image
-          source={photo.downloadURL || photo.localUrl}
+          source={{ uri: photo }}
           style={styles.photo}
           contentFit="cover"
           cachePolicy="disk"
           transition={200}
         />
 
-        {photo.isPrimary && (
+        {isPrimary && (
           <View style={styles.primaryBadge}>
             <Star size={16} color="white" fill="white" />
             <Text style={styles.primaryText}>Primary</Text>
@@ -70,17 +77,19 @@ export default function ManagePhotosGrid({
         <View style={styles.photoActions}>
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => onSetPrimary(photo.id)}
+            onPress={() => onSetPrimary(photo)}
+            activeOpacity={0.7}
           >
             <Star
               size={20}
-              color={photo.isPrimary ? theme.colors.warning : "white"}
-              fill={photo.isPrimary ? theme.colors.warning : "transparent"}
+              color={isPrimary ? theme.colors.warning : "white"}
+              fill={isPrimary ? theme.colors.warning : "transparent"}
             />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => onDelete(photo.id)}
+            onPress={() => onDelete(photo)}
+            activeOpacity={0.7}
           >
             <X size={20} color="white" />
           </TouchableOpacity>
@@ -91,10 +100,8 @@ export default function ManagePhotosGrid({
 
   return (
     <View style={styles.photosGrid}>
-      {photos.map((photo, i) => renderPhotoSlot(photo, i))}
-      {Array.from({ length: emptySlots }, (_, index) =>
-        renderPhotoSlot(undefined, index),
-      )}
+      {validPhotos.map((photo, index) => renderPhotoSlot(photo, index))}
+      {Array.from({ length: emptySlots }, (_, index) => renderEmptySlot(index))}
     </View>
   );
 }

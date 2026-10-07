@@ -26,6 +26,8 @@ export default function HomeScreen() {
     [theme.colors.background],
   );
 
+  console.log("[HomeScreen hit]");
+
   usePreventScreenCapture();
 
   console.log(

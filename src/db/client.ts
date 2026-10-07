@@ -27,23 +27,23 @@ export { schema };
 
 export const resetDatabase = () => {
   try {
-    // 1. Temporarily disable foreign key constraints during wipe
     expoDb.execSync("PRAGMA foreign_keys = OFF;");
 
-    // 2. Fetch all user table names (excluding internal SQLite system tables)
+    // Fetch all user tables EXCEPT sqlite system tables AND Drizzle migration table
     const tables = expoDb.getAllSync<{ name: string }>(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'android_%';",
+      `SELECT name FROM sqlite_master 
+       WHERE type='table' 
+       AND name NOT LIKE 'sqlite_%' 
+       AND name NOT LIKE 'android_%' 
+       AND name NOT LIKE '__drizzle_%';`,
     );
 
-    // 3. Clear data from each table (leaves table schemas intact)
+    // Clear user data only
     for (const table of tables) {
       expoDb.execSync(`DELETE FROM "${table.name}";`);
     }
 
-    // 4. Re-enable foreign key constraints
     expoDb.execSync("PRAGMA foreign_keys = ON;");
-
-    // 5. Reclaim unused disk space
     expoDb.execSync("VACUUM;");
   } catch (e) {
     console.error("Failed to clear database data:", e);

@@ -23,6 +23,7 @@ export const useLoginEmail = () => {
   const executeLogin = async (formData: any) => {
     const { email, password } = formData;
     setIsLoading(true);
+    console.log("[executeLogin hit]");
 
     try {
       await signInWithEmailAndPassword(

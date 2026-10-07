@@ -49,6 +49,42 @@ export const useSettingsActions = () => {
     }
   };
 
+  // const handleLogout = () => {
+  //   Alert.alert(t("settings.logoutTitle"), t("settings.logoutConfirm"), [
+  //     { text: t("common.cancel"), style: "cancel" },
+  //     {
+  //       text: t("settings.logout"),
+  //       style: "destructive",
+  //       onPress: async () => {
+  //         setIsProcessing(true);
+
+  //         try {
+  //           await clearCacheOnLogout();
+  //           try {
+  //             const hasPlayServices = await GoogleSignin.hasPlayServices();
+  //             if (hasPlayServices) {
+  //               const currentUser = await GoogleSignin.getCurrentUser();
+  //               if (currentUser) {
+  //                 await GoogleSignin.signOut();
+  //               }
+  //             }
+  //           } catch (googleError) {
+  //             console.warn(
+  //               "⚠️ Google sign-out skipped or failed:",
+  //               googleError,
+  //             );
+  //           }
+  //           await signOut(auth);
+  //         } catch (error: any) {
+  //           Alert.alert(t("common.error"), t("settings.logoutError"));
+  //         } finally {
+  //           setIsProcessing(false);
+  //         }
+  //       },
+  //     },
+  //   ]);
+  // };
+
   const handleLogout = () => {
     Alert.alert(t("settings.logoutTitle"), t("settings.logoutConfirm"), [
       { text: t("common.cancel"), style: "cancel" },
@@ -59,7 +95,10 @@ export const useSettingsActions = () => {
           setIsProcessing(true);
 
           try {
-            await clearCacheOnLogout();
+            // 1. Sign out from Firebase FIRST so UI unmounts authenticated screens
+            await signOut(auth);
+
+            // 2. Sign out Google
             try {
               const hasPlayServices = await GoogleSignin.hasPlayServices();
               if (hasPlayServices) {
@@ -74,7 +113,9 @@ export const useSettingsActions = () => {
                 googleError,
               );
             }
-            await signOut(auth);
+
+            // 3. Clear storage and DB AFTER user is logged out
+            await clearCacheOnLogout();
           } catch (error: any) {
             Alert.alert(t("common.error"), t("settings.logoutError"));
           } finally {
@@ -84,6 +125,5 @@ export const useSettingsActions = () => {
       },
     ]);
   };
-
   return { openLink, composeWhatsApp, handleLogout, isProcessing };
 };

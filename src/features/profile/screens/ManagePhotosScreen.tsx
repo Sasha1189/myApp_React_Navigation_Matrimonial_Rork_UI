@@ -10,7 +10,6 @@ import ManagePhotosGrid from "../components/photos/ManagePhotosGrid";
 import UploadButton from "../components/photos/UploadButton";
 import { useTranslation } from "react-i18next";
 import { resolvePhotoUri } from "@/utils/photoUtils";
-import { Photo } from "@/features/profile/types/profile";
 
 export default function ManagePhotosScreen() {
   const { theme } = useAppTheme();
@@ -39,10 +38,9 @@ export default function ManagePhotosScreen() {
 
   const userUid = myProfile?.uid || "";
 
-  const formattedPhotos: Photo[] = (photos || []).map((photo) => ({
-    ...photo,
-    downloadURL: resolvePhotoUri(photo?.downloadURL, userUid),
-  }));
+  const formattedPhotos: string[] = (photos || []).map(
+    (photo) => resolvePhotoUri(photo, userUid) || "",
+  );
 
   if (!theme) return null;
   return (

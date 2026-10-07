@@ -11,9 +11,17 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTheme } from "@/theme/theme";
 
+export type SubscriptionStep =
+  | "idle"
+  | "initiating"
+  | "verifying"
+  | "syncing_profile"
+  | "success";
+
 interface SubscriptionFooterProps {
   selectedPlanId: string;
   isProcessing: boolean;
+  processingStep?: SubscriptionStep;
   isSubmitDisabled: boolean;
   handlePay: () => void;
 }
@@ -21,6 +29,7 @@ interface SubscriptionFooterProps {
 export const SubscriptionFooter = ({
   selectedPlanId,
   isProcessing,
+  processingStep = "idle",
   isSubmitDisabled,
   handlePay,
 }: SubscriptionFooterProps) => {
@@ -30,6 +39,25 @@ export const SubscriptionFooter = ({
 
   // 1. Generate the theme stylesheet directly inside the component execution loop
   const styles = createStyles(theme);
+  // 👈 Helper function to get text based on the exact progress step
+  const getProcessingText = () => {
+    switch (processingStep) {
+      case "initiating":
+        return t("subscription.initiating", "Connecting to Store...");
+      case "verifying":
+        return t("subscription.verifying", "Verifying Payment...");
+      case "syncing_profile":
+        // 👈 Payment is confirmed ONLY here (after backend apiSubscribe succeeds)
+        return t(
+          "subscription.syncingProfile",
+          "Payment Confirmed! Syncing Profile...",
+        );
+      case "success":
+        return t("subscription.activatedAndLive", "Profile Active & Live!");
+      default:
+        return t("subscription.processingPayment", "Processing Payment...");
+    }
+  };
 
   return (
     <View
@@ -60,9 +88,7 @@ export const SubscriptionFooter = ({
         {isProcessing ? (
           <View style={styles.processingRow}>
             <ActivityIndicator color="white" size="small" animating={true} />
-            <Text style={styles.processingText}>
-              {t("subscription.processingPayment")}
-            </Text>
+            <Text style={styles.processingText}>{getProcessingText()}</Text>
           </View>
         ) : (
           <Text

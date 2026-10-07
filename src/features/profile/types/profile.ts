@@ -1,16 +1,17 @@
+import { UserTier, genderType } from "@/context/types/auth.types";
 export interface Profile {
   // Unchanged Backend Master Keys
   uid: string;
-  gender: "" | "male" | "female";
-  tier: "" | "basic" | "premium";
+  gender: genderType;
+  tier: UserTier;
   liked?: boolean;
 
   // Compressed Basic Information
-  photos: Photo[]; // photos Array
-  tn?: string; // thumbnail URL
+  photos: string[]; // photos Array
+  tn?: string | number; // thumbnail URL
   ca: number | null; // createdAt
   ua: number | null; // updatedAt
-  iv: string; // isVerified
+  iv: string; // Verified
   ia: boolean; // isActive
   pid: string; // profileId
 
@@ -99,22 +100,9 @@ export interface Message {
   read: boolean;
 }
 
-export interface Photo {
-  id: string;
-  localUrl?: string;
-  downloadURL?: string;
-  isPrimary: boolean;
-}
-
-export interface DBPhoto {
-  id: string;
-  downloadURL: string;
-  isPrimary: boolean;
-}
-
 export interface ProfileContextType {
-  myProfile: Profile | null;
-  isLoadingProfile: boolean;
-  updateMyProfile: (partialProfile: Partial<Profile>) => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  myProfile: Profile;
+  setMyProfile: React.Dispatch<React.SetStateAction<Profile>>;
+  updateMyProfile: (data: Partial<Profile>) => Promise<void>;
+  refreshMyProfile: () => Promise<void>;
 }

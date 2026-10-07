@@ -1,34 +1,57 @@
 const R2_DOMAIN = process.env.EXPO_PUBLIC_R2_DOMAIN || "";
 
 /**
- * Replaces a short filename stored in downloadURL with the full R2 CDN URL.
+ * Replaces a short filename with the full R2 CDN URL.
  */
-export const resolvePhotoUri = (
-  downloadURL: string | undefined,
-  uid: string,
-): string => {
-  if (!downloadURL) return "";
 
-  // If downloadURL is already a full URL, leave it untouched
-  if (downloadURL.startsWith("http://") || downloadURL.startsWith("https://")) {
-    return downloadURL;
+export const resolvePhotoUri = (photoUri: unknown, uid: string): string => {
+  // Return empty string if missing, not a string, or an empty string
+  if (!photoUri || typeof photoUri !== "string") {
+    return "";
   }
 
-  // Construct full CDN URL from filename
-  return `${R2_DOMAIN}/u/${uid}/${downloadURL}`;
+  // 1. If it's a local file path or an already fully-qualified http(s) URL, return as-is
+  if (
+    photoUri.startsWith("file://") ||
+    photoUri.startsWith("ph://") ||
+    photoUri.startsWith("content://") ||
+    photoUri.startsWith("http://") ||
+    photoUri.startsWith("https://")
+  ) {
+    return photoUri;
+  }
+
+  // 2. Safeguard R2 Domain and User UID
+  if (!R2_DOMAIN || !uid) return "";
+
+  // 3. Otherwise, treat as R2 filename and construct full CDN URL
+  return `${R2_DOMAIN}/u/${uid}/p/${photoUri}`;
 };
 
 export const resolveThumbUri = (
-  downloadURL: string | undefined,
+  tv: string | number | undefined,
   uid: string,
 ): string => {
-  if (!downloadURL) return "";
+  if (!uid) return "";
 
-  // If downloadURL is already a full URL, leave it untouched
-  if (downloadURL.startsWith("http://") || downloadURL.startsWith("https://")) {
-    return downloadURL;
+  // 1. If tv is a full HTTP(S) URL (e.g. legacy/fallback URL)
+  if (
+    typeof tv === "string" &&
+    (tv.startsWith("http://") || tv.startsWith("https://"))
+  ) {
+    return tv;
   }
 
-  // Construct full CDN URL from filename
-  return `${R2_DOMAIN}/u/${uid}/thumbnails/${downloadURL}`;
+  // 2. Safeguard R2 Domain and User UID
+  if (!R2_DOMAIN || !uid) return "";
+
+  return `${R2_DOMAIN}/u/${uid}/t/thumb.jpg?v=${tv}`;
 };
+
+// 💡 Helper to check if item is a local URI
+export const isLocalUrl = (path: string) =>
+  path.startsWith("file://") ||
+  path.startsWith("ph://") ||
+  path.startsWith("content://") ||
+  path.startsWith("http://") ||
+  path.startsWith("https://");

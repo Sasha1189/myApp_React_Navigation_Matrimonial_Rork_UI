@@ -8,34 +8,35 @@ import React, {
 } from "react";
 import { getCachedProfile, setCachedProfile } from "@/cacheMMKV/cacheConfig";
 import { useAuth } from "@/context/AuthContext";
-import { Profile } from "../types/profile";
+import { Profile, ProfileContextType } from "../types/profile";
 import { getDefaultProfile } from "../types/getDefaultProfile";
 import { useUpdateProfile } from "../hooks/useUpdateProfile";
-import { getProfile } from "../api/profileService";
-
-interface ProfileContextType {
-  myProfile: Profile;
-  setMyProfile: React.Dispatch<React.SetStateAction<Profile>>;
-  updateMyProfile: (data: Partial<Profile>) => Promise<void>;
-  refreshMyProfile: () => Promise<void>;
-}
+import { getProfile } from "../api/profileApi";
+import { genderType } from "@/context";
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const { user, gender, tier } = useAuth();
+  const { user, gender, isPaid } = useAuth();
 
   const [myProfile, setMyProfile] = useState<Profile>(() => {
-    return getCachedProfile<Profile>(getDefaultProfile());
+    const cached = getCachedProfile<Profile>(getDefaultProfile());
+    const updated = {
+      ...cached,
+      uid: user?.uid || cached.uid,
+      gender: (gender as genderType) || cached.gender,
+    };
+    return updated;
   });
 
-  const updateMyProfile = useUpdateProfile(user, setMyProfile, tier, gender);
+  const updateMyProfile = useUpdateProfile(user, setMyProfile, isPaid, gender);
 
   const refreshMyProfile = useCallback(async () => {
     const uid = user?.uid;
-    if (!uid || !gender) return;
+    if (!uid || !gender || !isPaid) return;
     try {
       const remoteProfile = await getProfile(uid, gender);
+      console.log("remotedata:", remoteProfile);
       if (remoteProfile) {
         setMyProfile((prev) => {
           const updated = { ...prev, ...remoteProfile };
