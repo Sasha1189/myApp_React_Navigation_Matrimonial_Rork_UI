@@ -1,13 +1,13 @@
 import { appStorage } from "@/cacheMMKV/cacheConfig";
-import {
-  firestore,
-  getDocsFromServer,
-  collection,
-  queryFs,
-  where,
-  limit,
-  Timestamp,
-} from "@/config/firebase";
+// import {
+//   firestore,
+//   getDocsFromServer,
+//   collection,
+//   queryFs,
+//   where,
+//   limit,
+//   Timestamp,
+// } from "@/config/firebase";
 import { db } from "@/db/client";
 import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
 import { sql, inArray } from "drizzle-orm";
@@ -203,47 +203,49 @@ const handlePaidBulkSync = async (
   targetCollection: string,
   overrideIsFree?: boolean,
 ): Promise<number> => {
-  const syncKey = `is_initial_sync_done_${targetCollection}`;
-  if (appStorage.getBoolean(syncKey)) return 0;
+  // const syncKey = `is_initial_sync_done_${targetCollection}`;
+  // if (appStorage.getBoolean(syncKey)) return 0;
 
-  const paidQuery = queryFs(collection(firestore, targetCollection), limit(50));
-  const snapshot = await getDocsFromServer(paidQuery);
-  if (snapshot.empty) return 0;
+  // const paidQuery = queryFs(collection(firestore, targetCollection), limit(50));
+  // const snapshot = await getDocsFromServer(paidQuery);
+  // if (snapshot.empty) return 0;
 
-  const safeDocs = snapshot?.docs ?? [];
-  const rawProfiles: RawProfileData[] = safeDocs.map(
-    (docSnap: { id: string; data: () => Record<string, any> }) => ({
-      uid: docSnap.id,
-      ...docSnap.data(),
-    }),
-  );
+  // const safeDocs = snapshot?.docs ?? [];
+  // const rawProfiles: RawProfileData[] = safeDocs.map(
+  //   (docSnap: { id: string; data: () => Record<string, any> }) => ({
+  //     uid: docSnap.id,
+  //     ...docSnap.data(),
+  //   }),
+  // );
 
-  let maxTimestamp = 0;
+  // let maxTimestamp = 0;
 
-  db.transaction((tx) => {
-    for (let i = 0; i < rawProfiles?.length; i += UPSERT_CHUNK_SIZE) {
-      const rawChunk = rawProfiles?.slice(i, i + UPSERT_CHUNK_SIZE);
-      const {
-        itemsToUpsert,
-        uidsToDelete,
-        maxTimestamp: chunkMaxTs,
-      } = processRawProfiles(rawChunk);
+  // db.transaction((tx) => {
+  //   for (let i = 0; i < rawProfiles?.length; i += UPSERT_CHUNK_SIZE) {
+  //     const rawChunk = rawProfiles?.slice(i, i + UPSERT_CHUNK_SIZE);
+  //     const {
+  //       itemsToUpsert,
+  //       uidsToDelete,
+  //       maxTimestamp: chunkMaxTs,
+  //     } = processRawProfiles(rawChunk);
 
-      if (chunkMaxTs > maxTimestamp) {
-        maxTimestamp = chunkMaxTs;
-      }
+  //     if (chunkMaxTs > maxTimestamp) {
+  //       maxTimestamp = chunkMaxTs;
+  //     }
 
-      purgeInactiveBatchFromTx(tx, paidUserFeeds, uidsToDelete);
-      upsertProfilesBatchFromTx(tx, paidUserFeeds, itemsToUpsert);
-    }
-  });
+  //     purgeInactiveBatchFromTx(tx, paidUserFeeds, uidsToDelete);
+  //     upsertProfilesBatchFromTx(tx, paidUserFeeds, itemsToUpsert);
+  //   }
+  // });
 
-  const now = Date.now();
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  appStorage.set(syncKey, true);
-  appStorage.set("last_synced_at", maxTimestamp || now);
-  appStorage.set(`last_delta_run_${targetCollection}`, now);
+  // const now = Date.now();
+  // await new Promise((resolve) => setTimeout(resolve, 50));
+  // appStorage.set(syncKey, true);
+  // appStorage.set("last_synced_at", maxTimestamp || now);
+  // appStorage.set(`last_delta_run_${targetCollection}`, now);
 
+  //dunny raw
+  const rawProfiles = [];
   return rawProfiles?.length;
 };
 /**
@@ -252,35 +254,36 @@ const handlePaidBulkSync = async (
 const handleFreeTierSync = async (
   targetCollectionFree: string,
 ): Promise<number> => {
-  const syncKey = `is_free_sync_done_${targetCollectionFree}`;
-  if (appStorage.getBoolean(syncKey)) return 0;
+  // const syncKey = `is_free_sync_done_${targetCollectionFree}`;
+  // if (appStorage.getBoolean(syncKey)) return 0;
 
-  const freeQuery = queryFs(
-    collection(firestore, targetCollectionFree),
-    limit(15),
-  );
+  // const freeQuery = queryFs(
+  //   collection(firestore, targetCollectionFree),
+  //   limit(15),
+  // );
 
-  const snapshot = await getDocsFromServer(freeQuery);
+  // const snapshot = await getDocsFromServer(freeQuery);
 
-  if (snapshot.empty) return 0;
-  const safeDocs = snapshot?.docs ?? [];
-  const rawProfiles: RawProfileData[] = safeDocs.map(
-    (docSnap: { id: string; data: () => Record<string, any> }) => ({
-      uid: docSnap.id,
-      ...docSnap.data(),
-    }),
-  );
+  // if (snapshot.empty) return 0;
+  // const safeDocs = snapshot?.docs ?? [];
+  // const rawProfiles: RawProfileData[] = safeDocs.map(
+  //   (docSnap: { id: string; data: () => Record<string, any> }) => ({
+  //     uid: docSnap.id,
+  //     ...docSnap.data(),
+  //   }),
+  // );
 
-  const { itemsToUpsert } = processRawProfiles(rawProfiles);
+  // const { itemsToUpsert } = processRawProfiles(rawProfiles);
 
-  db.transaction((tx) => {
-    upsertProfilesBatchFromTx(tx, freeUserFeeds, itemsToUpsert);
-  });
+  // db.transaction((tx) => {
+  //   upsertProfilesBatchFromTx(tx, freeUserFeeds, itemsToUpsert);
+  // });
 
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  appStorage.set(syncKey, true);
+  // await new Promise((resolve) => setTimeout(resolve, 50));
+  // appStorage.set(syncKey, true);
 
-  console.log("[handleFreeTierSync] Synced records:", itemsToUpsert?.length);
+  // console.log("[handleFreeTierSync] Synced records:", itemsToUpsert?.length);
+  const itemsToUpsert = [];
   return itemsToUpsert?.length;
 };
 
@@ -291,45 +294,46 @@ export const performDeltaSync = async (
   isPaid: boolean,
   gender: string,
 ): Promise<number> => {
-  if (!isPaid) return 0;
+  // if (!isPaid) return 0;
 
-  const targetCollection = getTargetCollectionName(gender, false);
-  if (!targetCollection) return 0;
+  // const targetCollection = getTargetCollectionName(gender, false);
+  // if (!targetCollection) return 0;
 
-  const now = Date.now();
+  // const now = Date.now();
 
-  const lastSyncedAt = appStorage.getNumber("last_synced_at") || 0;
-  const filterTimestamp = Timestamp.fromMillis(lastSyncedAt);
+  // const lastSyncedAt = appStorage.getNumber("last_synced_at") || 0;
+  // const filterTimestamp = Timestamp.fromMillis(lastSyncedAt);
 
-  const deltaQuery = queryFs(
-    collection(firestore, targetCollection),
-    where("ua", ">", filterTimestamp),
-  );
+  // const deltaQuery = queryFs(
+  //   collection(firestore, targetCollection),
+  //   where("ua", ">", filterTimestamp),
+  // );
 
-  const snapshot = await getDocsFromServer(deltaQuery);
-  appStorage.set(`last_delta_run_${targetCollection}`, now);
+  // const snapshot = await getDocsFromServer(deltaQuery);
+  // appStorage.set(`last_delta_run_${targetCollection}`, now);
 
-  if (snapshot.empty) return 0;
-  const safeDocs = snapshot?.docs ?? [];
-  const rawProfiles: RawProfileData[] = safeDocs.map(
-    (docSnap: { id: string; data: () => Record<string, any> }) => ({
-      uid: docSnap.id,
-      ...docSnap.data(),
-    }),
-  );
+  // if (snapshot.empty) return 0;
+  // const safeDocs = snapshot?.docs ?? [];
+  // const rawProfiles: RawProfileData[] = safeDocs.map(
+  //   (docSnap: { id: string; data: () => Record<string, any> }) => ({
+  //     uid: docSnap.id,
+  //     ...docSnap.data(),
+  //   }),
+  // );
 
-  const { itemsToUpsert, uidsToDelete, maxTimestamp } =
-    processRawProfiles(rawProfiles);
+  // const { itemsToUpsert, uidsToDelete, maxTimestamp } =
+  //   processRawProfiles(rawProfiles);
 
-  db.transaction((tx) => {
-    purgeInactiveBatchFromTx(tx, paidUserFeeds, uidsToDelete);
-    upsertProfilesBatchFromTx(tx, paidUserFeeds, itemsToUpsert);
-  });
+  // db.transaction((tx) => {
+  //   purgeInactiveBatchFromTx(tx, paidUserFeeds, uidsToDelete);
+  //   upsertProfilesBatchFromTx(tx, paidUserFeeds, itemsToUpsert);
+  // });
 
-  if (maxTimestamp > lastSyncedAt) {
-    appStorage.set("last_synced_at", maxTimestamp);
-  }
+  // if (maxTimestamp > lastSyncedAt) {
+  //   appStorage.set("last_synced_at", maxTimestamp);
+  // }
 
-  console.log("[performDeltaSync] Processed updates:", snapshot.docs?.length);
-  return snapshot.docs?.length;
+  // console.log("[performDeltaSync] Processed updates:", snapshot.docs?.length);
+  // return snapshot.docs?.length;
+  return 0;
 };
