@@ -10,12 +10,11 @@ export interface AuthContextType {
   authLoading: boolean;
   tier: UserTier;
   isPaid: boolean;
+  setGender: (gender: genderType) => void;
   setUser: (user: FirebaseAuthTypes.User | null) => void;
-  setGender: (newGender: genderType) => void;
   setAuthLoading: (authLoading: boolean) => void;
   setTier: (tier: UserTier) => void;
-  isVerified: VerificationStatus;
+  verified: VerificationStatus;
   isFullyEntitled: boolean;
   refreshToken: (forceRefresh?: boolean) => Promise<UserTier | undefined>;
-  updateVerificationStatus: (status: VerificationStatus) => void;
 }

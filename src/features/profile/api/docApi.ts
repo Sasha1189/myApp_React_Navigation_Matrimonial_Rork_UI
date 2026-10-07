@@ -7,5 +7,5 @@ export interface PresignedDocUrlResponse {
 
 // 🔹 Request presigned URL for Doc
 export async function apiGenerateDocUploadUrl(): Promise<PresignedDocUrlResponse> {
-  return await api.post<PresignedDocUrlResponse>("/docs/generate-upload-url");
+  return await api.post<PresignedDocUrlResponse>("/doc/doc-upload-url");
 }

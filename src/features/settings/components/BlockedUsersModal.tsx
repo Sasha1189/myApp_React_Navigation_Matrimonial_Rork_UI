@@ -44,7 +44,8 @@ export default function BlockedUsersModal({ visible, onClose }: Props) {
   const Item = ({ item }: { item: Profile }) => {
     const Uid = item?.uid;
     const photo = item?.tn;
-    const imageUri = resolvePhotoUri(photo ?? undefined, Uid) || "";
+    const imageUri =
+      resolvePhotoUri(typeof photo === "string" ? photo : undefined, Uid) || "";
     return (
       <View style={styles.row}>
         <View style={styles.left}>

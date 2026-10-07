@@ -3,6 +3,8 @@ import { getAuth, getIdToken } from "@react-native-firebase/auth";
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || "";
 const API_URL = `${BASE_URL}/api/v1`;
 
+// const API_URL = `https://homopolar-chantell-unscoring.ngrok-free.dev/api/v1`;
+
 class ApiError extends Error {
   constructor(
     public status: number,

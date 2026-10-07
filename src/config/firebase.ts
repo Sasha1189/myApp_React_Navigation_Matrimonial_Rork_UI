@@ -4,7 +4,6 @@ import {
   getFirestore,
   initializeFirestore,
 } from "@react-native-firebase/firestore";
-import { getStorage } from "@react-native-firebase/storage";
 import {
   getDatabase,
   setPersistenceEnabled,
@@ -24,16 +23,11 @@ initializeFirebaseServices();
 
 export const firestore = getFirestore(app);
 
-export const storage = getStorage(app);
-
 // 2. Realtime Database Setup
 const DB_URL = process.env.EXPO_PUBLIC_FIREBASE_RTDB_URL;
-
 export const rtdb = getDatabase(app, DB_URL);
-
-// Apply persistence settings to the rtdb instance
 setPersistenceEnabled(rtdb, true);
-setPersistenceCacheSizeBytes(rtdb, 50 * 1024 * 1024); //50 MB cache
+setPersistenceCacheSizeBytes(rtdb, 50 * 1024 * 1024);
 
 // 3. RTDB Exports
 export {
@@ -56,15 +50,6 @@ export {
   goOffline,
   keepSynced,
 } from "@react-native-firebase/database";
-
-// 4. Storage Exports
-export {
-  ref as refStorage,
-  getDownloadURL,
-  deleteObject,
-  putFile,
-  refFromURL,
-} from "@react-native-firebase/storage";
 
 // 5. Firestore Exports (Modular)
 export {

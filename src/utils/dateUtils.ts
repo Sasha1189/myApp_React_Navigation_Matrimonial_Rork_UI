@@ -82,7 +82,7 @@ export const formatTime = (
 ): string => {
   if (!timestamp) return "";
 
-  // 1. Convert any input (ISO, Number, Firestore Timestamp) to a Date object
+  // 1. Convert any input (ISO, Number, ) to a Date object
   const date = new Date(
     typeof timestamp === "object" && "toMillis" in timestamp
       ? (timestamp as any).toMillis()

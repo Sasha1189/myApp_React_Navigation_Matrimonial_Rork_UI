@@ -16,14 +16,14 @@ const { width } = Dimensions.get("window");
 
 interface Props {
   doc: SelectedDoc | null;
-  isVerified: "true" | "pending" | "false";
+  verified: "true" | "pending" | "false";
   onAdd: () => void;
   onDelete: () => void;
 }
 
 export default function ManageDocSlot({
   doc,
-  isVerified,
+  verified,
   onAdd,
   onDelete,
 }: Props) {
@@ -31,9 +31,9 @@ export default function ManageDocSlot({
   const styles = useStyles(createStyles);
 
   // Can only delete if the document hasn't been uploaded yet
-  const canDelete = isVerified === "false";
+  const canDelete = verified === "false";
 
-  if (!doc && isVerified === "false") {
+  if (!doc && verified === "false") {
     return (
       <TouchableOpacity style={styles.emptySlot} onPress={onAdd}>
         <Plus size={32} color={theme.colors.textLight} />
@@ -43,7 +43,7 @@ export default function ManageDocSlot({
   }
 
   // If a doc is selected locally, OR if it's already pending/verified on the server
-  if (doc || isVerified !== "false") {
+  if (doc || verified !== "false") {
     return (
       <View style={styles.docContainer}>
         <View style={styles.docInfo}>

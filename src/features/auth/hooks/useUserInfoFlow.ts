@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useTranslation } from "react-i18next";
-import { saveUser } from "../services/userService";
+import { createUser, CreateUserPayload } from "../api/userApi";
 import { useAuth } from "@/context/AuthContext";
-import { useMyProfile } from "@/features/profile/context/ProfileContext";
+import { setGenderCache } from "@/cacheMMKV/cacheConfig";
 
 interface UserInfoFormData {
   fullName: string;
@@ -14,17 +14,24 @@ interface UserInfoFormData {
 export const useUserInfoFlow = () => {
   const { t } = useTranslation();
   const { user, setGender } = useAuth();
-  const { setMyProfile } = useMyProfile();
   const [isLoading, setIsLoading] = useState(false);
 
   const executeProfileSetup = async (data: UserInfoFormData) => {
-    if (!user?.uid) return;
+    if (!user?.uid || !data.gender || !data.mobileNumber) return;
     setIsLoading(true);
 
     try {
-      await saveUser(user.uid, data);
+      const payload: CreateUserPayload = {
+        uid: user.uid,
+        fullName: data.fullName,
+        mobileNumber: data.mobileNumber,
+        gender: data.gender,
+        email: user.email ?? "",
+      };
 
-      setMyProfile((prev) => ({ ...prev, gender: data.gender }));
+      await createUser(payload);
+
+      setGenderCache(data.gender);
 
       setGender(data.gender);
 
@@ -33,13 +40,9 @@ export const useUserInfoFlow = () => {
         t("userInfo.successMsg", "Profile created successfully!"),
       );
     } catch (error) {
-      console.error("❌ [USER_INFO_DIRECT_FIRESTORE_ERROR]:", error);
       Alert.alert(
         t("common.error"),
-        t(
-          "userInfo.updateError",
-          "Failed to save records directly to database.",
-        ),
+        t("userInfo.updateError", "Failed to save records to database."),
       );
     } finally {
       setIsLoading(false);

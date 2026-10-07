@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { File, Paths } from "expo-file-system";
-import { Profile, Photo } from "../types/profile";
+import { Profile } from "../types/profile";
 import { useAuth } from "@/context";
 import { useMyProfile } from "../context/ProfileContext";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import {
   apiGenerateUploadUrl,
   apiGenerateThumbUrl,
 } from "../api/photoApis";
+import { resolveThumbUri, isLocalUrl } from "@/utils/photoUtils";
 
 const MAX_PHOTOS = 4;
 
@@ -19,14 +20,13 @@ export function usePhotoManager(profile: Profile | null) {
   const { user, isPaid } = useAuth();
   const { updateMyProfile } = useMyProfile();
   const { t } = useTranslation();
-  const uid = user?.uid;
-  const [photos, setPhotos] = useState<Photo[]>(profile?.photos || []);
+  const [photos, setPhotos] = useState<string[]>(profile?.photos || []);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
+  const userId = user?.uid || "";
 
-  // keep photos in sync with profile updates
   useEffect(() => {
     if (profile?.photos) {
       setPhotos(profile.photos);
@@ -53,14 +53,7 @@ export function usePhotoManager(profile: Profile | null) {
 
     try {
       const processedUri = await processImage(uri);
-      const newItem: Photo = {
-        id: `local-${Date.now()}`,
-        localUrl: processedUri,
-        downloadURL: "",
-        isPrimary: photos.length === 0,
-      };
-
-      setPhotos((prev) => [...prev, newItem].slice(0, MAX_PHOTOS));
+      setPhotos((prev) => [...prev, processedUri].slice(0, MAX_PHOTOS));
       setIsEditing(true);
     } catch (err) {
       Alert.alert(t("photos.errorTitle"), t("photos.addError"));
@@ -68,9 +61,9 @@ export function usePhotoManager(profile: Profile | null) {
   };
 
   // 🔹 Delete photo (storage + db) -> UPDATED FOR R2 WITH CONFIRMATION
-  const deletePhoto = async (photoId: string) => {
-    const toDelete = photos.find((p) => p.id === photoId);
-    if (!toDelete) return;
+  const deletePhoto = async (targetPhoto: string) => {
+    const photoIndex = photos.indexOf(targetPhoto);
+    if (photoIndex === -1) return;
 
     Alert.alert(t("photos.deleteTitle"), t("photos.deleteMsg"), [
       {
@@ -81,40 +74,18 @@ export function usePhotoManager(profile: Profile | null) {
         text: t("common.delete", "Yes"),
         style: "destructive",
         onPress: async () => {
-          // Case: Only exists locally (not uploaded yet)
-          if (toDelete.localUrl && !toDelete.downloadURL) {
-            setPhotos(photos.filter((p) => p.id !== photoId));
+          if (isLocalUrl(targetPhoto)) {
+            setPhotos((prev) => prev.filter((p) => p !== targetPhoto));
             return;
           }
 
           try {
-            // 1. Modular Delete from R2 via Backend
-            if (toDelete.downloadURL) {
-              await apiDeletePhoto(toDelete.downloadURL);
-            }
+            await apiDeletePhoto(targetPhoto);
 
-            // 2. Filter local list
-            const updated = photos.filter((p) => p.id !== photoId);
-            let newRootThumbnail = profile?.tn || "";
+            const updated = photos.filter((p) => p !== targetPhoto);
 
-            // 3. Handle Primary Promotion
-            if (toDelete.isPrimary) {
-              if (updated.length > 0) {
-                // Promote the next photo in line as primary
-                newRootThumbnail = await syncPrimaryThumbnail(updated[0], uid!);
-              } else {
-                // No photos left
-                newRootThumbnail = "";
-              }
-            }
-
-            // 4. Update Database (Firestore/RTDB)
-            const cleanPhotosForDb = updated.map(
-              ({ localUrl, ...rest }) => rest,
-            );
             await updateMyProfile({
-              photos: cleanPhotosForDb,
-              tn: newRootThumbnail,
+              photos: updated,
             });
 
             setPhotos(updated);
@@ -129,31 +100,23 @@ export function usePhotoManager(profile: Profile | null) {
   };
 
   // 🔹 Set primary (UNCHANGED)
-  const setPrimary = async (photoId: string) => {
+  const setPrimary = async (targetPhoto: string) => {
+    const photoIndex = photos.indexOf(targetPhoto);
+    if (photoIndex <= 0) return;
+
+    const reorderedPhotos = [
+      targetPhoto,
+      ...photos.filter((p) => p !== targetPhoto),
+    ];
+
+    setPhotos(reorderedPhotos);
+    setIsEditing(true);
+
     setLoading(true);
     try {
-      const selectedPhoto = photos.find((p) => p.id === photoId);
-      if (!selectedPhoto) return;
-
-      const otherPhotos = photos.filter((p) => p.id !== photoId);
-
-      const updatedPhotos = [
-        { ...selectedPhoto, isPrimary: true }, // Put selected at index 0
-        ...otherPhotos.map((p) => ({ ...p, isPrimary: false })), // Reset others
-      ];
-
-      // 2. 🔹 CALL HELPER
-      const newThumbnail = await syncPrimaryThumbnail(updatedPhotos[0], uid!);
-
-      // 4. Update Database
-      const cleanPhotosForDb = updatedPhotos.map(
-        ({ localUrl, ...rest }) => rest,
-      );
       await updateMyProfile({
-        photos: cleanPhotosForDb,
-        tn: newThumbnail,
+        photos: reorderedPhotos,
       });
-      setPhotos(updatedPhotos);
       setIsEditing(false);
       Alert.alert(t("photos.successTitle"), t("photos.updateMsg"));
     } catch (err) {
@@ -165,7 +128,7 @@ export function usePhotoManager(profile: Profile | null) {
 
   // 🔹 Upload pending (local only) photos -> UPDATED FOR R2
   const uploadPhotos = async () => {
-    const pending = photos.filter((p) => !p.downloadURL);
+    const pending = photos.filter((p) => isLocalUrl(p));
     if (!pending.length) {
       Alert.alert(t("photos.noChangesTitle"), t("photos.noChangesMsg"));
       return;
@@ -176,7 +139,7 @@ export function usePhotoManager(profile: Profile | null) {
       try {
         await updateMyProfile({
           photos: photos,
-          tn: photos.find((p) => p.isPrimary)?.localUrl || "",
+          tn: photos[0] || "",
         });
         setIsEditing(false);
         Alert.alert(
@@ -191,29 +154,29 @@ export function usePhotoManager(profile: Profile | null) {
       return;
     }
 
-    const backupPhotos = structuredClone(photos);
+    const backupPhotos = [...photos];
     setLoading(true);
     setProgress(0);
     setSuccess(false);
 
-    // Keep full URLs in this array for the cleanup rollback step
     const uploadedUrls: string[] = [];
 
     try {
       const updatedPhotos = [...photos];
-      let rootThumbnail = profile?.tn || "";
+      let rootThumbnail = profile?.tn || 0;
       const totalFiles = pending.length;
       let filesCompleted = 0;
 
       for (let p of pending) {
-        const processed = await processImage(p.localUrl!, "photo");
+        const processed = await processImage(p);
 
         // A. Convert local image to Blob
         const localRes = await fetch(processed);
         const blob = await localRes.blob();
 
         // B. Get Presigned URL using your API client
-        const { uploadUrl, finalPhotoUrl } = await apiGenerateUploadUrl();
+        const { uploadUrl, finalPhotoUrl, fileName } =
+          await apiGenerateUploadUrl();
 
         // C. Upload Binary directly to R2
         const uploadRes = await fetch(uploadUrl, {
@@ -229,34 +192,22 @@ export function usePhotoManager(profile: Profile | null) {
         filesCompleted++;
         setProgress((filesCompleted / totalFiles) * 100);
 
-        // 🔹 EXTRACT FILENAME ONLY (e.g. "1710000000000_1.jpg")
-        const fileNameOnly = finalPhotoUrl.split("/").pop() || "";
-
         // D. Update local state array with FILENAME ONLY
-        const idx = updatedPhotos.findIndex((x) => x.id === p.id);
+        const idx = updatedPhotos.indexOf(p);
         if (idx !== -1) {
-          updatedPhotos[idx].downloadURL = fileNameOnly;
+          updatedPhotos[idx] = fileName;
 
-          if (idx === 0) {
-            const rawThumbUrl = await syncPrimaryThumbnail(
-              updatedPhotos[0],
-              uid!,
-            );
-            // Extract filename for thumbnail if you want it shortened as well
-            rootThumbnail = rawThumbUrl.split("/").pop() || rawThumbUrl;
-          }
+          // if (idx === 0) {
+          //   const tv = await syncPrimaryThumbnail(updatedPhotos[0], userId);
+          //   rootThumbnail = tv;
+          // }
         }
       }
 
       try {
-        const cleanPhotosForDb = updatedPhotos.map(
-          ({ localUrl, ...rest }) => rest,
-        );
-
-        // Save to Firestore (only containing filenames in downloadURL)
+        // Save to db (only containing filenames)
         await updateMyProfile({
-          photos: cleanPhotosForDb,
-          tn: rootThumbnail,
+          photos: updatedPhotos,
         });
 
         setPhotos(updatedPhotos);
@@ -266,13 +217,10 @@ export function usePhotoManager(profile: Profile | null) {
         setTimeout(() => setSuccess(false), 3000);
         Alert.alert(t("photos.successTitle"), t("photos.updateMsg"));
       } catch (dbErr) {
-        console.error("Firestore Update Failed. Cleaning R2...", dbErr);
-
-        // Rollback: delete full photo URLs from R2
+        console.error("db Update Failed. Cleaning R2...", dbErr);
         await Promise.all(
           uploadedUrls.map((url) => apiDeletePhoto(url).catch(() => {})),
         );
-
         throw new Error("Database Sync Failed");
       }
     } catch (err) {
@@ -305,8 +253,7 @@ export function usePhotoManager(profile: Profile | null) {
 /* ------------------ Helpers ------------------ */
 
 // 🔹 Process Image (UNCHANGED)
-const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
-  const isThumb = type === "thumb";
+const processImage = async (uri: string) => {
   const fileInfo = new File(uri);
 
   if (!fileInfo.exists) return uri;
@@ -315,9 +262,7 @@ const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
   const TARGET_SIZE_MB = 0.3;
   const TARGET_SIZE_BYTES = TARGET_SIZE_MB * 1024 * 1024;
 
-  const manipOptions = isThumb
-    ? [{ resize: { width: 150 } }]
-    : [{ resize: { width: 1080 } }];
+  const manipOptions = [{ resize: { width: 1080 } }];
 
   let finalCompress = 0.7;
   if (currentSize > TARGET_SIZE_BYTES) {
@@ -325,7 +270,7 @@ const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
     finalCompress = Math.min(Math.max(ratio, 0.5), 0.8);
   }
 
-  const compression = isThumb ? 0.5 : finalCompress;
+  const compression = finalCompress;
 
   const processed = await ImageManipulator.manipulateAsync(uri, manipOptions, {
     compress: compression,
@@ -337,14 +282,19 @@ const processImage = async (uri: string, type: "photo" | "thumb" = "photo") => {
 
 // 🔹 Sync Primary Thumbnail -> UPDATED FOR R2
 const syncPrimaryThumbnail = async (
-  primaryPhoto: Photo,
+  primaryPhoto: string,
   uid: string,
-): Promise<string> => {
-  let sourceUri = primaryPhoto.localUrl;
+): Promise<number> => {
+  if (uid || !primaryPhoto)
+    throw new Error("No source image found for thumbnail");
 
-  if (!sourceUri && primaryPhoto.downloadURL) {
+  let sourceUri = isLocalUrl(primaryPhoto)
+    ? primaryPhoto
+    : resolveThumbUri(primaryPhoto, uid);
+
+  if (!sourceUri) {
     const downloadedFile = await File.downloadFileAsync(
-      primaryPhoto.downloadURL,
+      primaryPhoto,
       Paths.cache,
     );
     sourceUri = downloadedFile.uri;
@@ -353,14 +303,14 @@ const syncPrimaryThumbnail = async (
   if (!sourceUri) throw new Error("No source image found for thumbnail");
 
   // 1. Process thumbnail image
-  const processedThumb = await processImage(sourceUri, "thumb");
+  const processedThumb = await processImage(sourceUri);
 
   // 2. Convert to Blob
   const localRes = await fetch(processedThumb);
   const blob = await localRes.blob();
 
   // 3. Get Presigned URL using your API client
-  const { uploadUrl, finalThumbUrl } = await apiGenerateThumbUrl();
+  const { uploadUrl, tv } = await apiGenerateThumbUrl();
 
   // 4. Upload raw blob to R2
   const uploadRes = await fetch(uploadUrl, {
@@ -371,5 +321,5 @@ const syncPrimaryThumbnail = async (
 
   if (!uploadRes.ok) throw new Error("R2 Thumbnail Upload failed");
 
-  return finalThumbUrl;
+  return tv;
 };

@@ -2,7 +2,7 @@ import {
   getIdTokenResult,
   FirebaseAuthTypes,
 } from "@react-native-firebase/auth";
-import { appStorage, TIER_CACHE_KEY } from "@/cacheMMKV/cacheConfig";
+import { setTierCache } from "@/cacheMMKV/cacheConfig";
 import { UserTier } from "../types/auth.types";
 
 const TIER_MAPPING: Record<string, UserTier> = {
@@ -60,7 +60,7 @@ export const fetchAndSyncUserTier = async (
     const { activeTier } = calculateUserTier(idTokenResult);
 
     // Sync local storage cache
-    appStorage.set(TIER_CACHE_KEY, activeTier);
+    setTierCache(activeTier);
 
     return activeTier;
   } catch (error) {

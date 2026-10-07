@@ -1,18 +1,18 @@
 import { Profile } from "./profile";
+import { genderType, UserTier } from "@/context";
 
 export const getDefaultProfile = (): Profile => ({
   // Unchanged Backend Master Keys
   uid: "", // Will be filled dynamically by AuthContext
-  gender: "",
-  tier: "",
-  liked: false,
+  gender: "" as genderType,
+  tier: "none" as UserTier,
 
   // Compressed Basic Information
   photos: [], // photos array -> ph
   tn: "", // thumbnail URL -> tb
   ca: null, // createdAt -> ca
   ua: null, // updatedAt -> ua
-  iv: "", // isVerified -> iv
+  iv: "", // Verified -> iv
   ia: false, // isActive
   pid: "", // profileId -> pid
 

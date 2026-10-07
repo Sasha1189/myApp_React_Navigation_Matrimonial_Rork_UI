@@ -6,7 +6,7 @@ import {
 } from "../services/syncFeedService";
 
 export const useFeedDBSync = (enabled: boolean = false) => {
-  const { user, gender, isPaid } = useAuth();
+  const { user, gender, isFullyEntitled } = useAuth();
 
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const isSyncRunningRef = useRef<boolean>(false);
@@ -25,8 +25,8 @@ export const useFeedDBSync = (enabled: boolean = false) => {
       setIsSyncing(true);
 
       try {
-        await syncFeedProfiles(isPaid, gender);
-        await performDeltaSync(isPaid, gender);
+        await syncFeedProfiles(isFullyEntitled, gender);
+        await performDeltaSync(isFullyEntitled, gender);
       } catch (error) {
         console.error("[useFeedDbSync] Error during background sync:", error);
       } finally {
@@ -41,7 +41,7 @@ export const useFeedDBSync = (enabled: boolean = false) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled, userId, gender, isPaid]);
+  }, [enabled, userId, gender, isFullyEntitled]);
 
   return { isSyncing };
 };

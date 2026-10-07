@@ -48,10 +48,10 @@ interface SwipeCardProps {
 }
 
 // -----------------------------------------------------------------------------
-// 1. ISOLATED PHOTO GALLERY (Contains photo activeIndex state to avoid card re-renders)
+// 1. ISOLATED PHOTO GALLERY
 // -----------------------------------------------------------------------------
 interface PhotoGalleryProps {
-  photos?: any[];
+  photos?: string[];
   profileUid: string;
   cardWidth: number;
   styles: ReturnType<typeof createStyles>;
@@ -87,14 +87,16 @@ const CardPhotoGalleryComponent: React.FC<PhotoGalleryProps> = ({
   );
 
   const keyExtractor = useCallback(
-    (item: any, idx: number) =>
-      item?.downloadURL || `${profileUid}-photo-${idx}`,
+    (item: string | null, idx: number) =>
+      typeof item === "string" && item
+        ? `${profileUid}-photo-${item}`
+        : `${profileUid}-photo-fallback-${idx}`,
     [profileUid],
   );
 
   const renderPhotoItem = useCallback(
-    ({ item }: { item: any }) => {
-      const imageUri = resolvePhotoUri(item?.downloadURL, profileUid) || "";
+    ({ item }: { item: string }) => {
+      const imageUri = resolvePhotoUri(item, profileUid) || "";
       return (
         <View style={[styles.slideFrame, { width: cardWidth }]}>
           <Image
@@ -113,7 +115,10 @@ const CardPhotoGalleryComponent: React.FC<PhotoGalleryProps> = ({
     [cardWidth, profileUid, styles],
   );
 
-  const photoList = photos && photos.length > 0 ? photos : [null];
+  const photoList = useMemo(
+    () => (photos && photos.length > 0 ? photos : []),
+    [photos],
+  );
 
   return (
     <>
@@ -138,17 +143,19 @@ const CardPhotoGalleryComponent: React.FC<PhotoGalleryProps> = ({
         />
       </View>
 
-      <View style={styles.imageIndicators}>
-        {photoList.map((_, idx) => (
-          <View
-            key={idx}
-            style={[
-              styles.indicator,
-              idx === activeIndex && styles.activeIndicator,
-            ]}
-          />
-        ))}
-      </View>
+      {photoList.length > 1 && (
+        <View style={styles.imageIndicators}>
+          {photoList.map((_, idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.indicator,
+                idx === activeIndex && styles.activeIndicator,
+              ]}
+            />
+          ))}
+        </View>
+      )}
     </>
   );
 };
@@ -162,7 +169,7 @@ const CardPhotoGallery = React.memo(
 );
 
 // -----------------------------------------------------------------------------
-// 2. ISOLATED CARD DETAILS (Memoized static content & badges)
+// 2. ISOLATED CARD DETAILS
 // -----------------------------------------------------------------------------
 interface CardDetailsProps {
   profile: Profile;

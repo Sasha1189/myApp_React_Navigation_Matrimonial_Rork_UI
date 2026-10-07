@@ -1,23 +1,23 @@
-import { doc, getDoc, updateDoc, firestore } from "@/config/firebase";
+import { updateProfile } from "@/features/profile/api/profileApi";
 
+/**
+ * Deactivates user profile by delegating to updateProfile (sets ia: false)
+ */
 export const deactivateUserProfile = async (
   uid: string,
-  gender?: string,
+  gender: string,
 ): Promise<void> => {
-  if (!uid || !gender) return;
-
-  const collectionName = `${gender.toLowerCase()}Profiles`;
-  const docRef = doc(firestore, collectionName, uid);
+  const normalizedGender = gender.toLowerCase();
+  if (!uid || (normalizedGender !== "male" && normalizedGender !== "female")) {
+    return;
+  }
 
   try {
-    const snap = await getDoc(docRef);
-
-    // 🛑 If profile doesn't exist or is ALREADY inactive, abort to save writes
-    if (!snap.exists() || snap.data()?.ia === false) {
-      return;
-    }
-
-    await updateDoc(docRef, { ia: false });
+    await updateProfile({
+      uid,
+      gender: normalizedGender,
+      ia: false, // Update just the active status flag
+    });
   } catch (error) {
     console.error(
       `[profileService] Failed to set ia: false for ${uid}:`,

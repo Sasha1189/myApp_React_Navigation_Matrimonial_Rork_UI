@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Modal,
   View,
@@ -12,16 +12,8 @@ import { useDatabase } from "@/db/context/DatabaseContext";
 export function DatabaseErrorModal() {
   const { migrationError, handleRetry, handleReset, isResetting } =
     useDatabase();
-  const [retryCount, setRetryCount] = useState(0);
 
   if (!migrationError) return null;
-
-  const onRetry = async () => {
-    setRetryCount((prev) => prev + 1);
-    await handleRetry();
-  };
-
-  const hasAttemptedRetry = retryCount > 0;
 
   return (
     <Modal visible={!!migrationError} transparent animationType="slide">
@@ -29,12 +21,10 @@ export function DatabaseErrorModal() {
         <View style={styles.card}>
           <Text style={styles.title}>Database Sync Issue</Text>
           <Text style={styles.body}>
-            {hasAttemptedRetry
-              ? "Retry attempt failed. You can try again or reset local storage to re-sync your data from the server."
-              : "We encountered a problem setting up local offline storage. Please tap Retry to reconnect."}
+            We encountered a problem setting up local storage. You can retry
+            reconnecting or reset local storage to clear cached data.
           </Text>
 
-          {/* Dev-only detail view to inspect migration errors */}
           {__DEV__ && migrationError?.message && (
             <Text style={styles.errorDetails}>
               Debug Error: {migrationError.message}
@@ -47,22 +37,17 @@ export function DatabaseErrorModal() {
             ) : (
               <>
                 <Button
-                  title={hasAttemptedRetry ? "Try Again" : "Retry"}
-                  onPress={onRetry}
+                  title="Retry Reload"
+                  onPress={handleRetry}
                   disabled={isResetting}
                 />
-
-                {hasAttemptedRetry && (
-                  <>
-                    <View style={styles.spacer} />
-                    <Button
-                      title="Reset Local Storage"
-                      color="#d9534f"
-                      onPress={handleReset}
-                      disabled={isResetting}
-                    />
-                  </>
-                )}
+                <View style={styles.spacer} />
+                <Button
+                  title="Reset Local Storage"
+                  color="#d9534f"
+                  onPress={handleReset}
+                  disabled={isResetting}
+                />
               </>
             )}
           </View>

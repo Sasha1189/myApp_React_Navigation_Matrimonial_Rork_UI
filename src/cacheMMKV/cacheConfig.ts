@@ -1,10 +1,14 @@
 import { createMMKV, MMKV } from "react-native-mmkv";
 import { resetDatabase } from "@/db/client";
+import {
+  UserTier,
+  genderType,
+  VerificationStatus,
+} from "@/context/types/auth.types";
 
 // ==========================================
 // 1. ISOLATED MMKV INSTANCES
 // ==========================================
-
 export const likesStorage = createMMKV({ id: "cache-likes" });
 export const blocksStorage = createMMKV({ id: "cache-blocks" });
 export const appStorage = createMMKV({ id: "cache-app" });
@@ -14,38 +18,60 @@ const allStorages: MMKV[] = [likesStorage, blocksStorage, appStorage];
 // ==========================================
 // 2. MMKV KEYS
 // ==========================================
-
 export const TIER_CACHE_KEY = "self_tier_cache";
+export const GENDER_CACHE_KEY = "self_gender";
+export const VERIFIED_CACHE_KEY = "is_verified";
 export const PROFILE_CACHE_KEY = "self_profile_cache";
-export const IS_DOC_UPLOADED_CACHE_KEY = "isUploaded_cache";
-const DEVICE_ID_KEY = "device_id";
+export const DEVICE_ID_KEY = "device_id";
 
 // ==========================================
-// 3. GENERIC HELPERS
+// 3. tier
 // ==========================================
+export const getTierCache = (): UserTier => {
+  const status = appStorage.getString(TIER_CACHE_KEY) as UserTier | undefined;
+  return status ?? "none";
+};
 
-/** Safe JSON parser with strict fallback handling */
-export const safeParse = <T>(data: string | undefined, fallback: T): T => {
-  if (!data) return fallback;
-  try {
-    const parsed = JSON.parse(data);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
+export const setTierCache = (status: UserTier): void => {
+  appStorage.set(TIER_CACHE_KEY, status);
+};
+
+// ==========================================
+// 2. Verified status
+// ==========================================
+export const getGenderCache = (): genderType => {
+  const status = appStorage.getString(GENDER_CACHE_KEY) as
+    | genderType
+    | undefined;
+  return status ?? "";
+};
+
+export const setGenderCache = (status: genderType): void => {
+  appStorage.set(GENDER_CACHE_KEY, status);
+};
+
+// ==========================================
+// 3. Verified status
+// ==========================================
+export const getVerifiedCache = (): VerificationStatus => {
+  const status = appStorage.getString(VERIFIED_CACHE_KEY) as
+    | VerificationStatus
+    | undefined;
+  return status ?? "false";
+};
+
+export const setVerifiedCache = (status: VerificationStatus): void => {
+  appStorage.set(VERIFIED_CACHE_KEY, status);
 };
 
 // ==========================================
 // 4. PROFILE CACHE HELPERS
 // ==========================================
-
-/** Reads and parses the cached profile safely, returning the fallback if empty */
 export const getCachedProfile = <T>(fallback: T): T => {
   const cached = appStorage.getString(PROFILE_CACHE_KEY);
   return safeParse<T>(cached, fallback);
 };
 
-/** Serializes and saves the updated profile into MMKV */
 export const setCachedProfile = <T>(profile: T): void => {
   try {
     appStorage.set(PROFILE_CACHE_KEY, JSON.stringify(profile));
@@ -54,7 +80,6 @@ export const setCachedProfile = <T>(profile: T): void => {
   }
 };
 
-/** Purges only the cached profile key */
 export const clearCachedProfile = (): void => {
   appStorage.remove(PROFILE_CACHE_KEY);
 };
@@ -62,7 +87,6 @@ export const clearCachedProfile = (): void => {
 // ==========================================
 // 5. DEVICE & SYSTEM CONFIG
 // ==========================================
-
 export const getDBDeviceIdCache = (): string => {
   return appStorage.getString(DEVICE_ID_KEY) || "";
 };
@@ -74,11 +98,6 @@ export const setDBDeviceIdCache = (deviceId: string) => {
 // ==========================================
 // 6. TEARDOWN & PURGE
 // ==========================================
-
-/**
- * Wipes SQLite database tables and clears all isolated MMKV storage instances.
- * Call this directly during the logout lifecycle.
- */
 export async function clearCacheOnLogout() {
   try {
     // 1. Reset SQLite tables (Drizzle / Local DB)
@@ -120,4 +139,17 @@ export const incrementDailySentCount = (uid: string): number => {
   const next = current + 1;
   appStorage.set(key, next);
   return next;
+};
+
+// ==========================================
+// GENERIC HELPERS
+// ==========================================
+export const safeParse = <T>(data: string | undefined, fallback: T): T => {
+  if (!data) return fallback;
+  try {
+    const parsed = JSON.parse(data);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
 };

@@ -3,11 +3,12 @@ import { api } from "@/services/api";
 export interface PresignedUrlResponse {
   uploadUrl: string;
   finalPhotoUrl: string;
+  fileName: string;
 }
 
 export interface PresignedThumbResponse {
   uploadUrl: string;
-  finalThumbUrl: string;
+  tv: number;
 }
 
 // 🔹 Request presigned URL for main photo

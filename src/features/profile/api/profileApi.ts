@@ -1,62 +1,114 @@
-import { firestore, doc, setDoc, getDoc } from "../../../config/firebase";
+import { api } from "@/services/api";
 import { Profile } from "../types/profile";
 
-// Helper to sanitize and get collection name
-const getProfileCollection = (gender: string): string => {
-  return `${gender.toLowerCase().trim()}Profiles`;
+export type ProfileCollection = "maleProfiles" | "femaleProfiles";
+
+/**
+ * Helper to get collection name on the client side
+ */
+export const getProfileCollection = (gender: string): ProfileCollection => {
+  const normalized = gender.toLowerCase().trim();
+  if (normalized === "male") return "maleProfiles";
+  if (normalized === "female") return "femaleProfiles";
+  throw new Error(`Invalid gender '${gender}'. Must be 'male' or 'female'.`);
 };
 
+export interface CreateProfilePayload extends Partial<Profile> {
+  uid: string;
+  collectionName: ProfileCollection;
+}
+
+export interface CreateProfileParams {
+  uid: string;
+  gender: string;
+  [key: string]: any; // Allows the rest of the profile properties
+}
+
+export interface UpdateProfilePayload extends Partial<Profile> {
+  uid: string;
+  collectionName: ProfileCollection;
+}
+
+/**
+ * GET Profile by collectionName and uid
+ */
 export async function getProfile(
   uid: string,
   gender: string,
-): Promise<Profile | undefined> {
-  if (!uid || !gender || typeof gender !== "string") return undefined;
-
-  const collectionName = getProfileCollection(gender);
-  const docRef = doc(firestore, collectionName, uid);
+): Promise<Profile> {
+  if (!uid || !gender)
+    return Promise.reject(
+      new Error("Missing uid or gender for profile retrieval."),
+    );
 
   try {
-    const snap = await getDoc(docRef);
-    return snap.exists() ? (snap.data() as Profile) : undefined;
+    const collectionName = getProfileCollection(gender);
+    const res = await api.get<{ message: string; profile: Profile }>(
+      `/profile/profile/${collectionName}/${uid}`,
+    );
+    const profile = res.profile ?? res;
+    return profile as Profile;
   } catch (error) {
-    console.error("Error getting self profile:", error);
-    return undefined;
+    console.error("❌ [GET_PROFILE_CLIENT_ERROR]:", error);
+    throw error;
   }
 }
+
 /**
- * Updates or creates a user profile using pure Unix millisecond timestamps (`Date.now()`).
+ * CREATE Profile with explicit collectionName
  */
-export async function apiUpdateProfile(
-  payload: Partial<Profile> & { uid: string; gender: string },
+export async function createProfile(
+  payload: CreateProfileParams,
 ): Promise<Profile> {
-  const { uid, gender, ...data } = payload;
+  try {
+    const { gender, ...data } = payload;
+    const collectionName = getProfileCollection(gender);
 
-  if (!uid || !gender) {
-    throw new Error("Missing required uid or gender for profile update.");
+    console.log("✅ [CREATE_PROFILE_PAYLOAD]:", {
+      ...data,
+      gender,
+      collectionName,
+    });
+
+    const res = await api.post<{ message: string; profile: Profile }>(
+      `/profile/profile/create`,
+      {
+        ...data,
+        gender,
+        collectionName,
+      },
+    );
+
+    return res.profile;
+  } catch (error) {
+    console.error("❌ [CREATE_PROFILE_CLIENT_ERROR]:", error);
+    throw error;
   }
+}
 
-  const collectionName = getProfileCollection(gender);
-  const docRef = doc(firestore, collectionName, uid);
-  const now = Date.now();
+/**
+ * UPDATE Profile with explicit collectionName
+ */
+export async function updateProfile(
+  payload: Omit<UpdateProfilePayload, "collectionName"> & { gender: string },
+): Promise<void> {
+  try {
+    const { gender, ...data } = payload;
+    const collectionName = getProfileCollection(gender);
 
-  let createdAt = data.ca;
+    console.log("✅ [UPDATE_PROFILE_PAYLOAD]:", {
+      ...data,
+      gender,
+      collectionName,
+    });
 
-  if (!createdAt) {
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      createdAt = (docSnap.data() as Profile).ca;
-    }
+    await api.put(`/profile/update`, {
+      ...data,
+      gender,
+      collectionName,
+    });
+  } catch (error) {
+    console.error("❌ [UPDATE_PROFILE_CLIENT_ERROR]:", error);
+    throw error;
   }
-
-  const updatedProfile: Profile = {
-    ...(data as Profile),
-    uid,
-    gender,
-    ca: createdAt || now,
-    ua: now,
-  };
-
-  await setDoc(docRef, updatedProfile, { merge: true });
-
-  return updatedProfile;
 }

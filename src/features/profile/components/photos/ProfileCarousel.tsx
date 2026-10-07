@@ -44,12 +44,10 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item, index) => `${item.id}-${index}`}
+            keyExtractor={(item, index) => `${item}-${index}`}
             renderItem={({ item }) => {
               const imageUri =
-                resolvePhotoUri(item?.downloadURL, profile?.uid) ||
-                item?.localUrl ||
-                "";
+                resolvePhotoUri(item, profile?.uid) || item || "";
               return (
                 <View
                   style={{
@@ -62,7 +60,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
                     placeholder={require("../../../../../assets/images/profile.webp")}
                     placeholderContentFit="cover"
                     style={styles.profileImage}
-                    contentFit={item?.downloadURL ? "cover" : "contain"}
+                    contentFit={item ? "cover" : "contain"}
                     cachePolicy="disk"
                   />
                   <LinearGradient

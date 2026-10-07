@@ -1,4 +1,4 @@
-import { api } from "../../../services/api"; // Adjust based on your actual path
+import { api } from "@/services/api";
 
 export interface SubscriptionResponse {
   success: boolean;
@@ -6,7 +6,7 @@ export interface SubscriptionResponse {
   newTier: "basic" | "premium";
 }
 
-export async function apiSubscribe(payload: {
+export async function apiVerifySubscriptionReceipt(payload: {
   planId: string;
   purchaseToken: string;
   packageName: string;

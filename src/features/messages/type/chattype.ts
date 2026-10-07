@@ -12,7 +12,7 @@ export interface IMessage {
 export interface ChatUser {
   uid: string;
   name?: string; //used for inline push
-  photo?: string | null; // used for inline push
+  photo?: string | number | null; // used for inline push
 }
 
 export interface IInboxItem {

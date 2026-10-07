@@ -1,29 +1,28 @@
-import { firestore, doc, setDoc, getDoc } from "@/config/firebase";
+import { updateUser, getUser } from "@/features/auth/api/userApi";
 
-export async function updateUserDeviceId(uid: string, activeDeviceId: string) {
+/**
+ * Updates active device ID via backend API
+ */
+export async function updateUserDeviceId(
+  uid: string,
+  activeDeviceId: string,
+): Promise<void> {
   try {
-    const collectionName = "users";
-
-    const docRef = doc(firestore, collectionName, uid);
-    await setDoc(
-      docRef,
-      {
-        activeDeviceId,
-        updatedAt: new Date(),
-      },
-      { merge: true },
-    );
+    await updateUser({ activeDeviceId });
   } catch (error) {
     throw error;
   }
 }
 
-export async function getUserDeviceId(uid: string) {
+/**
+ * Gets user active device ID via backend API
+ */
+export async function getUserDeviceId(
+  uid: string,
+): Promise<string | undefined> {
   try {
-    const collectionName = "users";
-    const docRef = doc(firestore, collectionName, uid);
-    const snap = await getDoc(docRef);
-    return snap.data()?.activeDeviceId;
+    const userData = await getUser(uid);
+    return userData?.activeDeviceId;
   } catch (error) {
     throw error;
   }
