@@ -6,12 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F5F7FA"
-    },
     "ios": {
       "supportsTablet": true
     },
@@ -20,17 +14,13 @@
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
         "com.android.vending.BILLING"
       ],
       "googleServicesFile": "./google-services.json",
-      "versionCode": 13,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F5F7FA"
-      },
-      "edgeToEdgeEnabled": true
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +28,14 @@
     "owner": "sgherade",
     "plugins": [
       "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F5F7FA"
+        }
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "react-native-iap",
@@ -49,14 +47,27 @@
             "enableProguardInReleaseBuilds": true,
             "extraProguardRules": "-keep class com.facebook.react.bridge.** { *; }\n-keep class com.dooboolab.RNIap.** { *; }\n-keep class com.google.firebase.** { *; }\n-keep class com.mrousavy.nitro.** { *; }\n-keep class com.tencent.mmkv.** { *; }",
             "packagingOptions": {
-              "pickFirst": [
-                "**/libc++_shared.so"
-              ]
+              "pickFirst": ["**/libc++_shared.so"]
             }
           }
         }
       ],
-      "expo-sqlite",
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": true,
+          "useSQLCipher": true,
+          "android": {
+            "enableFTS": false,
+            "useSQLCipher": false
+          },
+          "ios": {
+            "customBuildFlags": [
+              "-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_SNAPSHOT=1"
+            ]
+          }
+        }
+      ],
       "@react-native-google-signin/google-signin"
     ],
     "runtimeVersion": {

@@ -112,7 +112,7 @@ const CardPhotoGalleryComponent: React.FC<PhotoGalleryProps> = ({
         </View>
       );
     },
-    [cardWidth, profileUid, styles],
+    [cardWidth, profileUid],
   );
 
   const photoList = useMemo(

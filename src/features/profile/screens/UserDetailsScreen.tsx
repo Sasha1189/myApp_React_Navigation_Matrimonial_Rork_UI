@@ -75,6 +75,7 @@ export default function UserDetailsScreen({ route }: any) {
   const { isPaid } = useAuth();
   const { myProfile } = useMyProfile();
   const profile = route.params?.profile as Profile;
+
   usePreventScreenCapture();
 
   const isSelf = myProfile?.uid === profile?.uid;

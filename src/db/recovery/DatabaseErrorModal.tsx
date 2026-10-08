@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -6,17 +6,45 @@ import {
   Button,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useDatabase } from "@/db/context/DatabaseContext";
 
 export function DatabaseErrorModal() {
   const { migrationError, handleRetry, handleReset, isResetting } =
     useDatabase();
+  const [isRetrying, setIsRetrying] = useState(false);
 
   if (!migrationError) return null;
 
+  const onRetryPress = async () => {
+    try {
+      setIsRetrying(true);
+      await handleRetry();
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const onResetPress = () => {
+    Alert.alert(
+      "Reset Local Storage?",
+      "This will clear locally stored profile feeds and cached offline data. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset Data",
+          style: "destructive",
+          onPress: handleReset,
+        },
+      ],
+    );
+  };
+
+  const isBusy = isResetting || isRetrying;
+
   return (
-    <Modal visible={!!migrationError} transparent animationType="slide">
+    <Modal visible={!!migrationError} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
           <Text style={styles.title}>Database Sync Issue</Text>
@@ -32,21 +60,21 @@ export function DatabaseErrorModal() {
           )}
 
           <View style={styles.actions}>
-            {isResetting ? (
+            {isBusy ? (
               <ActivityIndicator size="small" color="#d9534f" />
             ) : (
               <>
                 <Button
                   title="Retry Reload"
-                  onPress={handleRetry}
-                  disabled={isResetting}
+                  onPress={onRetryPress}
+                  disabled={isBusy}
                 />
                 <View style={styles.spacer} />
                 <Button
                   title="Reset Local Storage"
                   color="#d9534f"
-                  onPress={handleReset}
-                  disabled={isResetting}
+                  onPress={onResetPress}
+                  disabled={isBusy}
                 />
               </>
             )}
@@ -81,7 +109,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 6,
     marginBottom: 16,
-    fontFamily: "monospace",
   },
   actions: { marginTop: 10 },
   spacer: { height: 10 },

@@ -5,7 +5,7 @@ import { useStyles } from "@/theme/useStyles";
 import { useAppTheme } from "@/theme/ThemeContext";
 import { IMessage } from "../type/chattype";
 import { ReadStatus } from "./ReadStatus";
-import { Ionicons } from "@expo/vector-icons";
+import { Trash } from "lucide-react-native";
 
 export const ChatBubble = React.memo(
   ({
@@ -92,7 +92,7 @@ export const ChatBubble = React.memo(
               { opacity: pressed ? 0.5 : 1 },
             ]}
           >
-            <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+            <Trash size={22} color={theme.colors.danger} />
           </Pressable>
         )}
       </Pressable>

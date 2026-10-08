@@ -8,9 +8,9 @@ import React, {
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import * as Updates from "expo-updates";
 
-import { db, expoDb } from "@/db/client";
+import { db } from "@/db/client";
 import migrations from "../../../drizzle/migrations";
-import { resetDatabase } from "@/db/recovery/recovery";
+import { resetDatabase } from "@/db/client";
 
 interface DatabaseContextType {
   isDbReady: boolean;
@@ -30,12 +30,12 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({
     migrations,
   );
   const [isResetting, setIsResetting] = useState(false);
-  const [_, setForceUpdate] = useState(0);
 
-  // Re-evaluates DB context without forcing an instant full app bundle reload
+  // Re-evaluates DB context / forces a re-render
   const handleRetry = useCallback(async () => {
     try {
-      setForceUpdate((prev) => prev + 1);
+      // Force React Native state re-evaluation
+      setIsResetting((prev) => prev);
     } catch (e) {
       console.error("Failed to trigger database retry:", e);
     }
@@ -44,10 +44,10 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({
   const handleReset = useCallback(async () => {
     setIsResetting(true);
     try {
-      // 1. Clear user tables (preserves __drizzle_migrations table schema)
-      resetDatabase();
+      // 1. Clear user tables safely
+      await resetDatabase();
 
-      // 2. Reload bundle ONLY on hard reset to start with fresh memory & connections
+      // 2. Reload JavaScript bundle to reset memory & connection state
       await Updates.reloadAsync();
     } catch (e) {
       console.error("Failed to reset database or reload app:", e);
@@ -59,7 +59,7 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({
   const value = useMemo(
     () => ({
       isDbReady,
-      migrationError,
+      migrationError: migrationError as Error | undefined,
       isResetting,
       handleRetry,
       handleReset,

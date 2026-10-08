@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import { useAppTheme } from "@/theme/ThemeContext";
 import { Profile } from "../../types/profile";
 import { resolvePhotoUri } from "@/utils/photoUtils";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const { width: screenWidth } = Dimensions.get("window");
 
 interface ProfileCarouselProps {
   profile: Profile;
@@ -28,49 +28,61 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   const { theme } = useAppTheme();
   const styles = useStyles(createStyles);
 
+  const uid = profile?.uid ?? "";
+
   const [activeIndex, setActiveIndex] = useState(0);
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
     setActiveIndex(index);
   };
+
+  const photoList = useMemo(
+    () => (profile?.photos && profile.photos.length > 0 ? profile.photos : []),
+    [profile?.photos],
+  );
+
+  const renderPhotoItem = useCallback(
+    ({ item }: { item: string }) => {
+      const imageUri = resolvePhotoUri(item, uid) || "";
+      return (
+        <View
+          style={{
+            width: screenWidth - 12 * 2,
+            height: "100%",
+          }}
+        >
+          <Image
+            source={{ uri: imageUri }}
+            placeholder={require("../../../../../assets/images/profile.webp")}
+            placeholderContentFit="cover"
+            style={styles.profileImage}
+            contentFit={item ? "cover" : "contain"}
+            cachePolicy="disk"
+          />
+          {/* <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.7)"]}
+              style={styles.imageGradient}
+              pointerEvents="none"
+            /> */}
+        </View>
+      );
+    },
+    [photoList],
+  );
+
   if (!theme) return null;
   return (
     <View style={styles.imageContainer}>
-      {profile?.photos && profile?.photos.length > 0 ? (
+      {photoList ? (
         <>
           <FlatList
-            data={profile.photos}
+            data={photoList}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item, index) => `${item}-${index}`}
-            renderItem={({ item }) => {
-              const imageUri =
-                resolvePhotoUri(item, profile?.uid) || item || "";
-              return (
-                <View
-                  style={{
-                    width: screenWidth - 12 * 2,
-                    height: "100%",
-                  }}
-                >
-                  <Image
-                    source={{ uri: imageUri }}
-                    placeholder={require("../../../../../assets/images/profile.webp")}
-                    placeholderContentFit="cover"
-                    style={styles.profileImage}
-                    contentFit={item ? "cover" : "contain"}
-                    cachePolicy="disk"
-                  />
-                  <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.7)"]}
-                    style={styles.imageGradient}
-                    pointerEvents="none"
-                  />
-                </View>
-              );
-            }}
+            renderItem={renderPhotoItem}
             onScroll={onScroll}
             scrollEventThrottle={16}
           />

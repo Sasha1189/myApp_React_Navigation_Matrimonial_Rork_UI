@@ -14,7 +14,7 @@ import {
   inArray,
 } from "drizzle-orm";
 import { Profile } from "@/features/profile/types/profile";
-import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
+import { userFeeds } from "@/db/schema/sqlprofiles";
 import { BlocksCache } from "@/features/block/cache/blockCache";
 import { LikesCache } from "@/features/likes/cache/likesCache";
 
@@ -35,10 +35,10 @@ export interface InitialFeedResult {
   profiles: Profile[];
   initialIndex: number;
 }
-export type FeedTable = typeof freeUserFeeds | typeof paidUserFeeds;
+export type FeedTable = typeof userFeeds;
 
 export const resolveFeedTable = (isPaid?: boolean): FeedTable => {
-  return isPaid ? paidUserFeeds : freeUserFeeds;
+  return isPaid ? userFeeds : userFeeds;
 };
 
 export const processFeedProfiles = (profiles: Profile[]): Profile[] => {

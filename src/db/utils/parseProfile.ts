@@ -1,11 +1,8 @@
 import { InferSelectModel } from "drizzle-orm";
-import { freeUserFeeds, paidUserFeeds } from "../schema/sqlprofiles";
+import { userFeeds } from "../schema/sqlprofiles";
 import { Profile } from "@/features/profile/types/profile";
 
-// Inferred types for both feed tables (share the same shape)
-export type FreeProfileRow = InferSelectModel<typeof freeUserFeeds>;
-export type PaidProfileRow = InferSelectModel<typeof paidUserFeeds>;
-export type SqlProfileRow = FreeProfileRow | PaidProfileRow;
+export type SqlProfileRow = InferSelectModel<typeof userFeeds>;
 
 export function parseProfileRow(row: SqlProfileRow): Profile {
   const { profileData, ...dbColumns } = row;

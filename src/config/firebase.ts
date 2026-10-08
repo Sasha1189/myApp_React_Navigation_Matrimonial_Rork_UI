@@ -1,9 +1,5 @@
 import { getApp } from "@react-native-firebase/app";
 import { getAuth } from "@react-native-firebase/auth";
-// import {
-//   getFirestore,
-//   initializeFirestore,
-// } from "@react-native-firebase/firestore";
 import {
   getDatabase,
   setPersistenceEnabled,
@@ -50,35 +46,6 @@ export {
   goOffline,
   keepSynced,
 } from "@react-native-firebase/database";
-
-// 5. Firestore Exports (Modular)
-// export {
-//   doc,
-//   collection,
-//   getDoc,
-//   getDocs,
-//   setDoc,
-//   updateDoc,
-//   deleteDoc,
-//   onSnapshot,
-//   query as queryFs, // Alias to avoid conflict with RTDB query
-//   where,
-//   orderBy,
-//   limit,
-//   writeBatch,
-//   deleteField,
-//   getDocFromCache,
-//   getDocsFromCache,
-//   getDocsFromServer,
-//   arrayUnion,
-//   arrayRemove,
-//   getFirestore,
-//   terminate,
-//   clearIndexedDbPersistence,
-//   serverTimestamp as firestoreServerTimestamp,
-//   Timestamp,
-// } from "@react-native-firebase/firestore";
-
 export {
   getIdToken,
   updateProfile,

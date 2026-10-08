@@ -1,15 +1,6 @@
 import { appStorage } from "@/cacheMMKV/cacheConfig";
-// import {
-//   firestore,
-//   getDocsFromServer,
-//   collection,
-//   queryFs,
-//   where,
-//   limit,
-//   Timestamp,
-// } from "@/config/firebase";
 import { db } from "@/db/client";
-import { freeUserFeeds, paidUserFeeds } from "@/db/schema/sqlprofiles";
+import { userFeeds } from "@/db/schema/sqlprofiles";
 import { sql, inArray } from "drizzle-orm";
 
 const SQLITE_DELETE_CHUNK_SIZE = 500;
